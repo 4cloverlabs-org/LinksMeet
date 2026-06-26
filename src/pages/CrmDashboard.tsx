@@ -9,11 +9,11 @@ import {
   Copy, Rocket, Calendar, Trash2, LogOut, Loader2
 } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
-import { listContacts, addContact, updateContact, deleteContact, type Contact, type ContactStatus } from '../lib/crm';
+import { listContacts, addContact, updateContact, deleteContact, listEventTypes, addEventType, updateEventType, deleteEventType, listBookings, addBooking, updateBooking, deleteBooking, type Contact, type ContactStatus, type EventType, type Booking } from '../lib/crm';
 import './CrmDashboard.css';
 
 type View =
-  | 'dashboard' | 'setup' | 'eventTypes' | 'bookings' | 'availability' | 'people'
+  | 'dashboard' | 'eventTypes' | 'bookings' | 'availability' | 'people'
   | 'workflows' | 'campaigns' | 'routing' | 'insights' | 'apps' | 'payments'
   | 'admin' | 'help';
 
@@ -66,7 +66,7 @@ const CONTACT_STATUSES: ContactStatus[] = ['New', 'Contacted', 'Follow-up', 'Won
 // Statuses that still need attention from the user
 const OPEN_STATUSES: ContactStatus[] = ['New', 'Follow-up', 'Contacted'];
 
-const EVENT_TYPES = [
+const DEFAULT_EVENT_TYPES = [
   { title: '15 Min Meeting', dur: '15m', slug: '15min', desc: 'A quick intro or sync call.' },
   { title: '30 Min Meeting', dur: '30m', slug: '30min', desc: 'Standard discovery conversation.' },
   { title: 'Product Demo', dur: '45m', slug: 'demo', desc: 'Guided walkthrough of SaleMail.' },
@@ -74,7 +74,7 @@ const EVENT_TYPES = [
   { title: 'Group Webinar', dur: '90m', slug: 'webinar', desc: 'Multi-attendee live session.' },
 ];
 
-const BOOKINGS = [
+const DEFAULT_BOOKINGS = [
   { name: 'Logan Mitchell', event: 'Product Demo', when: 'Today · 10:00 AM', status: 'upcoming' },
   { name: 'Priya Anand', event: '30 Min Meeting', when: 'Today · 2:30 PM', status: 'upcoming' },
   { name: 'Maya Coleman', event: 'Strategy Session', when: 'Tomorrow · 11:00 AM', status: 'upcoming' },
@@ -181,7 +181,6 @@ type NavItem = { id: View; label: string; icon: typeof Users; badge?: string; ba
 const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   { label: 'Scheduling', items: [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutGrid },
-    { id: 'setup', label: 'Setup', icon: Rocket },
     { id: 'eventTypes', label: 'Event Types', icon: CalendarRange },
     { id: 'bookings', label: 'Bookings', icon: CalendarCheck },
     { id: 'availability', label: 'Availability', icon: Clock },
@@ -201,7 +200,6 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
 
 const PAGE_META: Record<View, { title: string; sub: string }> = {
   dashboard: { title: 'Dashboard', sub: 'Your leads and follow-ups at a glance.' },
-  setup: { title: 'Setup', sub: 'Connect your calendar, embed the widget, and start taking bookings.' },
   eventTypes: { title: 'Event Types', sub: 'Create scheduling links people can book.' },
   bookings: { title: 'Bookings', sub: 'Your upcoming and past meetings.' },
   availability: { title: 'Availability', sub: 'Set the hours you’re open for bookings.' },
@@ -234,8 +232,10 @@ export default function CrmDashboard() {
   const [appsTab, setAppsTab] = useState<'store' | 'installed'>('store');
   const [peopleTab, setPeopleTab] = useState<'contacts' | 'teams'>('contacts');
 
-  // ----- Contacts (live, per-user, from Firestore) -----
+  // ----- Live Data (Firestore) -----
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const [eventTypes, setEventTypes] = useState<EventType[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [contactsLoading, setContactsLoading] = useState(true);
   const [contactErr, setContactErr] = useState('');
   const [showContactForm, setShowContactForm] = useState(false);
@@ -243,18 +243,66 @@ export default function CrmDashboard() {
   const blankContact = { name: '', company: '', email: '', phone: '', status: 'New' as ContactStatus };
   const [cForm, setCForm] = useState(blankContact);
 
-  const loadContacts = async () => {
+  const loadData = async () => {
     setContactsLoading(true);
     setContactErr('');
     try {
-      setContacts(await listContacts(uid));
-    } catch (e) {
-      setContactErr((e as Error)?.message || 'Could not load contacts.');
+      let [c, e, b] = await Promise.all([
+        listContacts(uid),
+        listEventTypes(uid),
+        listBookings(uid)
+      ]);
+      setContacts(c);
+
+      // Deduplicate event types on load (fixes React strict mode double mount bugs)
+      if (e.length > 0) {
+        const seenE = new Set();
+        const toDeleteE = [];
+        for (const doc of e) {
+          if (seenE.has(doc.slug)) toDeleteE.push(doc.id);
+          else seenE.add(doc.slug);
+        }
+        for (const id of toDeleteE) await deleteEventType(uid, id);
+        if (toDeleteE.length > 0) e = e.filter(doc => !toDeleteE.includes(doc.id));
+      }
+
+      if (e.length === 0 && uid !== 'anon') {
+        for (const type of DEFAULT_EVENT_TYPES) {
+           await addEventType(uid, { ...type, active: true });
+        }
+        setEventTypes(await listEventTypes(uid));
+      } else {
+        setEventTypes(e);
+      }
+
+      // Deduplicate bookings on load
+      if (b.length > 0) {
+        const seenB = new Set();
+        const toDeleteB = [];
+        for (const doc of b) {
+          const key = doc.name + doc.slot;
+          if (seenB.has(key)) toDeleteB.push(doc.id);
+          else seenB.add(key);
+        }
+        for (const id of toDeleteB) await deleteBooking(uid, id);
+        if (toDeleteB.length > 0) b = b.filter(doc => !toDeleteB.includes(doc.id));
+      }
+
+      if (b.length === 0 && uid !== 'anon') {
+        for (const bk of DEFAULT_BOOKINGS) {
+           await addBooking(uid, { name: bk.name, email: bk.name.split(' ')[0].toLowerCase() + '@example.com', slot: bk.when, event: bk.event, status: bk.status as any });
+        }
+        setBookings(await listBookings(uid));
+      } else {
+        setBookings(b);
+      }
+    } catch (err) {
+      setContactErr((err as Error)?.message || 'Could not load data.');
     } finally {
       setContactsLoading(false);
     }
   };
-  useEffect(() => { loadContacts(); }, [uid]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadData(); }, [uid]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const submitContact = async (e: FormEvent) => {
     e.preventDefault();
@@ -267,7 +315,7 @@ export default function CrmDashboard() {
       });
       setShowContactForm(false);
       setCForm(blankContact);
-      await loadContacts();
+      await loadData();
       setToast('Contact added');
       window.setTimeout(() => setToast(null), 2400);
     } catch (e) {
@@ -291,14 +339,31 @@ export default function CrmDashboard() {
   const changeStatus = async (id: string, status: ContactStatus) => {
     setContacts(prev => prev.map(c => c.id === id ? { ...c, status } : c)); // optimistic
     try { await updateContact(uid, id, { status }); }
-    catch { await loadContacts(); }
+    catch { await loadData(); }
+  };
+
+  const toggleEventType = async (id: string, active: boolean) => {
+    setEventTypes(prev => prev.map(e => e.id === id ? { ...e, active } : e));
+    try { await updateEventType(uid, id, { active }); }
+    catch { await loadData(); }
+  };
+
+  const removeEventType = async (id: string, title: string) => {
+    if (!window.confirm(`Delete ${title}?`)) return;
+    try {
+      await deleteEventType(uid, id);
+      setEventTypes(prev => prev.filter(e => e.id !== id));
+    } catch (e) {
+      setToast((e as Error)?.message || 'Could not delete.');
+      window.setTimeout(() => setToast(null), 2600);
+    }
   };
 
   // Create a lead from a booking (this is what the embedded widget does on a real site)
   const createLeadFromBooking = async (name: string, email: string, slot: string) => {
     try {
       await addContact(uid, { name, email, company: '', phone: '', status: 'New', source: `Booking · ${slot}` });
-      await loadContacts();
+      await loadData();
     } catch { /* booking still records locally even if lead write fails */ }
   };
 
@@ -347,9 +412,10 @@ export default function CrmDashboard() {
   const disconnectGoogle = () => { setGEmail(''); localStorage.removeItem(`cc_gmail_${uid}`); };
 
   const embedSnippet =
-    `<!-- SaleMail booking widget -->\n` +
-    `<script src="https://cdn.salemail.io/widget.js"\n        data-key="${siteKey}" defer></script>\n` +
-    `<div class="salemail-booking" data-event="discovery-call"></div>`;
+    `<!-- SaleMail inline widget begin -->\n` +
+    `<div class="salemail-inline-widget" data-url="${window.location.origin}/book/${uid}/15min" style="min-width:320px;height:700px;"></div>\n` +
+    `<script type="text/javascript" src="${window.location.origin}/widget.js" async></script>\n` +
+    `<!-- SaleMail inline widget end -->`;
 
   const copyEmbed = () => {
     navigator.clipboard?.writeText(embedSnippet).catch(() => {});
@@ -357,19 +423,22 @@ export default function CrmDashboard() {
     window.setTimeout(() => setEmbedCopied(false), 1800);
   };
 
-  const simulateBooking = (e: FormEvent) => {
+  const simulateBooking = async (e: FormEvent) => {
     e.preventDefault();
     if (!gConnected || !bForm.name.trim() || !bForm.email.trim()) return;
+    const meet = `https://meet.google.com/${genMeetCode()}`;
     const booking: DemoBooking = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       client: bForm.name.trim(),
       email: bForm.email.trim(),
       slot: bForm.slot,
-      meet: `https://meet.google.com/${genMeetCode()}`,
+      meet,
       created: new Date().toLocaleString(),
     };
     setDemoBookings(prev => [booking, ...prev]);
-    createLeadFromBooking(booking.client, booking.email, booking.slot); // booking → lead
+    // Live update
+    await addBooking(uid, { name: booking.client, email: booking.email, slot: booking.slot, event: 'Test Booking', status: 'upcoming', meetLink: meet });
+    await createLeadFromBooking(booking.client, booking.email, booking.slot);
     setBForm({ name: '', email: '', slot: bForm.slot });
     setToast('Booking confirmed — Meet link sent & lead created');
     window.setTimeout(() => setToast(null), 3200);
@@ -417,7 +486,7 @@ export default function CrmDashboard() {
     .filter(s => s.value > 0);
   const followUps = contacts.filter(c => OPEN_STATUSES.includes(c.status));
 
-  const filteredBookings = BOOKINGS.filter(b => b.status === bookingTab);
+  const filteredBookings = bookings.filter(b => b.status === bookingTab);
   const appCats = ['All', ...Array.from(new Set(APPS.map(a => a.cat)))];
   const filteredApps = appCat === 'All' ? APPS : APPS.filter(a => a.cat === appCat);
 
@@ -593,19 +662,21 @@ export default function CrmDashboard() {
                         <h3>You’re all caught up</h3>
                         <p>New leads from your booking page will appear here to follow up.</p>
                       </div>
-                    ) : followUps.slice(0, 5).map(c => (
-                      <div className="crm-task" key={c.id} style={{ padding: '13px 0' }}>
-                        <span className="crm-av" style={{ background: ACCENT }}>{initials(c.name)}</span>
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: '0.86rem', fontWeight: 600 }}>{c.name}</div>
-                          <div style={{ fontSize: '0.76rem', color: 'var(--muted)' }}>{c.source || c.email}</div>
+                    ) : (
+                      followUps.slice(0, 5).map(c => (
+                        <div className="crm-task" key={c.id} style={{ padding: '13px 0' }}>
+                          <span className="crm-av" style={{ background: ACCENT }}>{initials(c.name)}</span>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: '0.86rem', fontWeight: 500 }}>{c.name}</div>
+                            <div style={{ fontSize: '0.76rem', color: 'var(--muted)' }}>{c.source || c.email}</div>
+                          </div>
+                          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <span className={`crm-tag ${STATUS_META[c.status].tag}`}>{c.status}</span>
+                            <button className="crm-btn crm-btn-ghost" onClick={() => changeStatus(c.id, 'Won')}>Mark won</button>
+                          </div>
                         </div>
-                        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <span className={`crm-tag ${STATUS_META[c.status].tag}`}>{c.status}</span>
-                          <button className="crm-btn crm-btn-ghost" onClick={() => changeStatus(c.id, 'Won')}>Mark won</button>
-                        </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
 
                   {/* By status donut */}
@@ -668,146 +739,45 @@ export default function CrmDashboard() {
               </div>
             )}
 
-            {/* ---------- SETUP / ONBOARDING ---------- */}
-            {view === 'setup' && (
-              <div className="crm-fade" style={{ maxWidth: 760 }}>
-                {/* Step 1 — connect Google */}
-                <div className="crm-card crm-step">
-                  <div className="crm-step-head">
-                    <span className={`crm-step-num${gConnected ? ' done' : ''}`}>{gConnected ? <Check size={15} /> : 1}</span>
-                    <div style={{ flex: 1 }}>
-                      <h3>Connect your Google account</h3>
-                      <p>We add each booking to your Google Calendar and auto-generate a Google Meet link for every call.</p>
-                    </div>
-                  </div>
-                  <div className="crm-step-body">
-                    {gConnected ? (
-                      <div className="crm-connected">
-                        <span className="crm-connected-ic"><Check size={15} /></span>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>Connected</div>
-                          <div style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>{gEmail}</div>
-                        </div>
-                        <button className="crm-btn crm-btn-ghost" onClick={disconnectGoogle}>Disconnect</button>
-                      </div>
-                    ) : (
-                      <button className="crm-btn crm-btn-ghost" onClick={connectGoogle} disabled={connecting}>
-                        {connecting ? <><span className="crm-spin" /> Connecting…</> : <><GoogleG /> Connect Google</>}
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Step 2 — embed code */}
-                <div className="crm-card crm-step" style={{ opacity: gConnected ? 1 : 0.55, pointerEvents: gConnected ? 'auto' : 'none' }}>
-                  <div className="crm-step-head">
-                    <span className="crm-step-num">2</span>
-                    <div style={{ flex: 1 }}>
-                      <h3>Add the widget to your website</h3>
-                      <p>Paste this snippet into your site's HTML. Once it's live, visitors can book you directly — the widget activates automatically with your key.</p>
-                    </div>
-                    {gConnected && <span className="crm-tag green" style={{ alignSelf: 'flex-start' }}>Active</span>}
-                  </div>
-                  <div className="crm-step-body">
-                    <pre className="crm-code">{embedSnippet}</pre>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
-                      <button className="crm-btn crm-btn-primary" onClick={copyEmbed}>
-                        {embedCopied ? <><Check size={14} /> Copied</> : <><Copy size={14} /> Copy code</>}
-                      </button>
-                      <span style={{ fontSize: '0.76rem', color: 'var(--muted)' }}>Site key: <strong style={{ color: 'var(--ink)' }}>{siteKey}</strong></span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Step 3 — test booking engine */}
-                <div className="crm-card crm-step" style={{ opacity: gConnected ? 1 : 0.55, pointerEvents: gConnected ? 'auto' : 'none' }}>
-                  <div className="crm-step-head">
-                    <span className="crm-step-num">3</span>
-                    <div style={{ flex: 1 }}>
-                      <h3>Test a booking</h3>
-                      <p>This is what happens when a visitor books on your site. Each booking generates its own unique Meet link and sends a calendar invite to both you and the client.</p>
-                    </div>
-                  </div>
-                  <div className="crm-step-body">
-                    <form onSubmit={simulateBooking} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                      <div className="crm-field" style={{ marginBottom: 0 }}>
-                        <label>Client name</label>
-                        <input value={bForm.name} onChange={e => setBForm({ ...bForm, name: e.target.value })} placeholder="Jane Cooper" />
-                      </div>
-                      <div className="crm-field" style={{ marginBottom: 0 }}>
-                        <label>Client email</label>
-                        <input value={bForm.email} onChange={e => setBForm({ ...bForm, email: e.target.value })} placeholder="jane@acme.com" />
-                      </div>
-                      <div className="crm-field" style={{ marginBottom: 0 }}>
-                        <label>Slot</label>
-                        <select value={bForm.slot} onChange={e => setBForm({ ...bForm, slot: e.target.value })}>
-                          <option>Today · 3:00 PM</option>
-                          <option>Tomorrow · 10:00 AM</option>
-                          <option>Tomorrow · 2:30 PM</option>
-                          <option>Fri · 11:00 AM</option>
-                        </select>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-                        <button type="submit" className="crm-btn crm-btn-primary" style={{ width: '100%' }}>
-                          <Video size={15} /> Book & generate Meet link
-                        </button>
-                      </div>
-                    </form>
-
-                    {demoBookings.length > 0 && (
-                      <div style={{ marginTop: 18 }}>
-                        <div style={{ fontSize: '0.74rem', fontWeight: 600, color: 'var(--muted)', marginBottom: 8 }}>
-                          Generated bookings — each with a unique Meet link
-                        </div>
-                        {demoBookings.map(b => (
-                          <div className="crm-booking-row" key={b.id}>
-                            <span className="crm-booking-ic"><Calendar size={15} /></span>
-                            <div style={{ minWidth: 0, flex: 1 }}>
-                              <div style={{ fontSize: '0.84rem', fontWeight: 600 }}>{b.client} <span style={{ color: 'var(--muted)', fontWeight: 400 }}>· {b.slot}</span></div>
-                              <div style={{ fontSize: '0.74rem', color: 'var(--muted)' }}>
-                                Invite + Meet sent to <strong style={{ color: 'var(--ink)' }}>{b.email}</strong> and <strong style={{ color: 'var(--ink)' }}>{gEmail || 'you'}</strong>
-                              </div>
-                              <a className="crm-meet" href={b.meet} target="_blank" rel="noopener noreferrer">
-                                <Video size={12} /> {b.meet.replace('https://', '')}
-                              </a>
-                            </div>
-                            <button
-                              className="crm-row-act"
-                              title="Copy Meet link"
-                              onClick={() => { navigator.clipboard?.writeText(b.meet).catch(() => {}); setToast('Meet link copied'); window.setTimeout(() => setToast(null), 1800); }}
-                            >
-                              <Copy size={15} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <p style={{ fontSize: '0.74rem', color: 'var(--muted)', marginTop: 4 }}>
-                  Demo mode: Google connect, calendar invites and Meet links are simulated locally. Going live wires these to the Google Calendar API on your backend.
-                </p>
-              </div>
-            )}
-
             {/* ---------- EVENT TYPES ---------- */}
             {view === 'eventTypes' && (
               <div className="crm-fade crm-et-grid">
-                {EVENT_TYPES.map((e, i) => (
-                  <div className="crm-et-card" key={e.slug}>
+                {eventTypes.map((e, i) => (
+                  <div className="crm-et-card" key={e.slug} style={{ display: 'flex', flexDirection: 'column' }}>
                     <div className="crm-et-top">
                       <div>
                         <h4>{e.title}</h4>
                         <span className="crm-chip" style={{ marginTop: 8, display: 'inline-block' }}>{e.dur}</span>
                       </div>
-                      <button className={`crm-switch${i !== 4 ? ' on' : ''}`} aria-label="Active" />
+                      <button 
+                        className={`crm-switch${e.active ? ' on' : ''}`} 
+                        aria-label="Active" 
+                        onClick={() => toggleEventType(e.id, !e.active)}
+                      />
                     </div>
                     <p style={{ fontSize: '0.82rem', color: '#6a6a78', marginTop: 10 }}>{e.desc}</p>
-                    <div className="crm-et-link">salemail.io/alex/{e.slug}</div>
-                    <div className="crm-et-foot">
-                      <button className="crm-btn crm-btn-ghost" style={{ flex: 1 }}><Link2 size={14} /> Copy link</button>
-                      <button className="crm-btn crm-btn-ghost" style={{ flex: 1 }}>Edit</button>
+                    <div className="crm-et-link">salemail.io/book/{uid}/{e.slug}</div>
+                    
+                    <div style={{ marginTop: 16, background: '#fafafb', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
+                      <div style={{ padding: '8px 12px', fontSize: '0.74rem', fontWeight: 500, color: 'var(--ink)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        Embed Widget
+                        <button className="crm-btn crm-btn-ghost" style={{ padding: '4px 8px', fontSize: '0.7rem', height: 'auto', minHeight: 0 }} onClick={() => {
+                          const code = `<!-- SaleMail inline widget begin -->\n<div class="salemail-inline-widget" data-url="${window.location.origin}/book/${uid}/${e.slug}" style="min-width:320px;height:700px;"></div>\n<script type="text/javascript" src="${window.location.origin}/widget.js" async></script>\n<!-- SaleMail inline widget end -->`;
+                          navigator.clipboard?.writeText(code).catch(() => {});
+                          setToast('Embed code copied'); window.setTimeout(() => setToast(null), 1800);
+                        }}>
+                           <Copy size={12} style={{ marginRight: 4 }} /> Copy
+                        </button>
+                      </div>
+                      <pre className="crm-code" style={{ margin: 0, padding: 12, border: 'none', borderRadius: 0, fontSize: '0.7rem', overflowX: 'auto', whiteSpace: 'pre-wrap', color: 'var(--text)' }}>
+                        {`<!-- SaleMail inline widget begin -->\n<div class="salemail-inline-widget" data-url="${window.location.origin}/book/${uid}/${e.slug}" style="min-width:320px;height:700px;"></div>\n<script type="text/javascript" src="${window.location.origin}/widget.js" async></script>\n<!-- SaleMail inline widget end -->`}
+                      </pre>
+                    </div>
+
+                    <div className="crm-et-foot" style={{ marginTop: 'auto', paddingTop: 16 }}>
+                      <button className="crm-btn crm-btn-ghost" style={{ flex: 1 }} onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/book/${uid}/${e.slug}`); setToast('Link copied'); window.setTimeout(() => setToast(null), 1800); }}><Link2 size={14} /> Copy link</button>
+                      <button className="crm-btn crm-btn-ghost" style={{ flex: 1 }} onClick={() => window.open(`/book/${uid}/${e.slug}`, '_blank')}>Preview</button>
+                      <button className="crm-btn crm-btn-ghost" style={{ padding: '0 8px', color: 'var(--rose)' }} onClick={() => removeEventType(e.id, e.title)} title="Delete Event Type"><Trash2 size={14} /></button>
                     </div>
                   </div>
                 ))}
@@ -832,8 +802,8 @@ export default function CrmDashboard() {
                   <div className="crm-task" key={i} style={{ padding: '14px 0' }}>
                     <span className="crm-av" style={{ background: avColor(i) }}>{initials(b.name)}</span>
                     <div>
-                      <div style={{ fontSize: '0.88rem', fontWeight: 600 }}>{b.name}</div>
-                      <div style={{ fontSize: '0.78rem', color: '#9b9bab' }}>{b.event} · {b.when}</div>
+                      <div style={{ fontSize: '0.88rem', fontWeight: 500 }}>{b.name}</div>
+                      <div style={{ fontSize: '0.78rem', color: '#9b9bab' }}>{b.event} · {b.slot}</div>
                     </div>
                     <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
                       {b.status === 'upcoming' && <button className="crm-btn crm-btn-ghost"><Video size={14} /> Join</button>}
@@ -1009,7 +979,7 @@ export default function CrmDashboard() {
                       ].map(f => (
                         <div key={f.l}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: 5 }}>
-                            <span style={{ color: '#6a6a78' }}>{f.l}</span><span style={{ fontWeight: 600 }}>{f.n.toLocaleString()}</span>
+                            <span style={{ color: '#6a6a78' }}>{f.l}</span><span style={{ fontWeight: 500 }}>{f.n.toLocaleString()}</span>
                           </div>
                           <div className="crm-prog"><span style={{ width: `${f.w}%`, background: f.c }} /></div>
                         </div>
@@ -1070,7 +1040,7 @@ export default function CrmDashboard() {
                     {INSTALLED.map(a => (
                       <div className="crm-task" key={a.nm} style={{ padding: '14px 0' }}>
                         <span className="crm-app-ic" style={{ background: a.c, width: 34, height: 34, fontSize: '0.85rem' }}>{a.ltr}</span>
-                        <div><div style={{ fontSize: '0.88rem', fontWeight: 600 }}>{a.nm}</div><div style={{ fontSize: '0.76rem', color: '#9b9bab' }}>{a.cat}</div></div>
+                        <div><div style={{ fontSize: '0.88rem', fontWeight: 500 }}>{a.nm}</div><div style={{ fontSize: '0.76rem', color: '#9b9bab' }}>{a.cat}</div></div>
                         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
                           <span className="crm-tag green">Connected</span>
                           <button className="crm-btn crm-btn-ghost">Manage</button>
@@ -1111,7 +1081,7 @@ export default function CrmDashboard() {
                       <div className="crm-tr contacts" key={i} style={{ gridTemplateColumns: '1.6fr 1.6fr 1fr 1fr 40px' }}>
                         <span className="crm-nm"><span className="crm-av" style={{ background: avColor(i) }}>{initials(t.name)}</span>{t.name}</span>
                         <span className="crm-muted">{t.event}</span>
-                        <span style={{ fontWeight: 600 }}>{t.amt}</span>
+                        <span style={{ fontWeight: 500 }}>{t.amt}</span>
                         <span className={`crm-tag ${t.tag}`}>{t.tagLabel}</span>
                         <button className="crm-row-act"><MoreHorizontal size={16} /></button>
                       </div>
@@ -1128,7 +1098,7 @@ export default function CrmDashboard() {
                   <div className="crm-card-head"><h3>Profile</h3></div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
                     <span className="crm-av" style={{ width: 54, height: 54, fontSize: '1.1rem', background: '#4f46e5' }}>{userInitials}</span>
-                    <div><div style={{ fontWeight: 600 }}>{displayName}</div><div style={{ fontSize: '0.78rem', color: '#9b9bab' }}>{user?.email}</div></div>
+                    <div><div style={{ fontWeight: 500 }}>{displayName}</div><div style={{ fontSize: '0.78rem', color: '#9b9bab' }}>{user?.email}</div></div>
                   </div>
                   <div className="crm-field"><label>Full name</label><input defaultValue={displayName} /></div>
                   <div className="crm-field"><label>Email</label><input defaultValue={user?.email || ''} disabled /></div>

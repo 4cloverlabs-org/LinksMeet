@@ -1,6 +1,6 @@
 import {
   collection, doc, addDoc, getDocs, updateDoc, deleteDoc,
-  query, orderBy, serverTimestamp,
+  query, orderBy, serverTimestamp, setDoc
 } from 'firebase/firestore';
 import { requireDb } from './firebase';
 
@@ -62,4 +62,53 @@ export async function updateDeal(uid: string, id: string, data: Partial<Omit<Dea
 }
 export async function deleteDeal(uid: string, id: string): Promise<void> {
   await deleteDoc(userDoc(uid, 'deals', id));
+}
+
+// ---- Event Types ----
+export interface EventType {
+  id: string;
+  title: string;
+  dur: string;
+  slug: string;
+  desc: string;
+  active: boolean;
+  createdAt?: number;
+}
+export async function listEventTypes(uid: string): Promise<EventType[]> {
+  const snap = await getDocs(query(userCol(uid, 'eventTypes'), orderBy('createdAt', 'asc')));
+  return snap.docs.map(d => ({ id: d.id, ...(d.data() as Omit<EventType, 'id'>) }));
+}
+export async function addEventType(uid: string, data: Omit<EventType, 'id' | 'createdAt'>): Promise<void> {
+  await setDoc(userDoc(uid, 'eventTypes', data.slug), { ...data, createdAt: Date.now(), createdAtServer: serverTimestamp() });
+}
+export async function updateEventType(uid: string, id: string, data: Partial<Omit<EventType, 'id'>>): Promise<void> {
+  await updateDoc(userDoc(uid, 'eventTypes', id), data);
+}
+export async function deleteEventType(uid: string, id: string): Promise<void> {
+  await deleteDoc(userDoc(uid, 'eventTypes', id));
+}
+
+// ---- Bookings ----
+export interface Booking {
+  id: string;
+  name: string;
+  email: string;
+  slot: string;
+  event: string;
+  status: 'upcoming' | 'past' | 'cancelled';
+  meetLink?: string;
+  createdAt?: number;
+}
+export async function listBookings(uid: string): Promise<Booking[]> {
+  const snap = await getDocs(query(userCol(uid, 'bookings'), orderBy('createdAt', 'desc')));
+  return snap.docs.map(d => ({ id: d.id, ...(d.data() as Omit<Booking, 'id'>) }));
+}
+export async function addBooking(uid: string, data: Omit<Booking, 'id' | 'createdAt'>): Promise<void> {
+  await addDoc(userCol(uid, 'bookings'), { ...data, createdAt: Date.now(), createdAtServer: serverTimestamp() });
+}
+export async function updateBooking(uid: string, id: string, data: Partial<Omit<Booking, 'id'>>): Promise<void> {
+  await updateDoc(userDoc(uid, 'bookings', id), data);
+}
+export async function deleteBooking(uid: string, id: string): Promise<void> {
+  await deleteDoc(userDoc(uid, 'bookings', id));
 }

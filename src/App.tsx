@@ -20,6 +20,7 @@ import VisitorHome from './pages/VisitorHome';
 import BookingFlow from './pages/BookingFlow';
 import SuccessPage from './pages/SuccessPage';
 import Dashboard from './pages/Dashboard';
+import BookingPage from './pages/BookingPage';
 
 function App() {
   return (
@@ -55,6 +56,9 @@ function App() {
           <Route path="/success" element={<Layout><SuccessPage /></Layout>} />
           <Route path="/admin" element={<Layout><Dashboard /></Layout>} />
           <Route path="/legacy" element={<Navigate to="/schedule" replace />} />
+          
+          {/* ---- Public Booking Page ---- */}
+          <Route path="/book/:uid/:slug" element={<BookingPage />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

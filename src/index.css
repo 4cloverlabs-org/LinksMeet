@@ -84,7 +84,7 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: Geist, "Geist Placeholder", sans-serif;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.02em;
   line-height: 1.15;
 }
@@ -136,7 +136,7 @@ a {
   gap: 8px;
   padding: 12px 24px;
   font-size: 0.95rem;
-  font-weight: 550;
+  font-weight: 500;
   border-radius: var(--border-radius-full);
   border: 1px solid transparent;
   cursor: pointer;
@@ -289,7 +289,7 @@ a {
 .logo {
   font-family: Geist, "Geist Placeholder", sans-serif;
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: 500;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -314,7 +314,7 @@ a {
   padding: 4px 10px;
   border-radius: var(--border-radius-full);
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -450,7 +450,7 @@ a {
   border: 1px solid hsl(var(--border-color));
   box-shadow: var(--shadow-lg);
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 500;
   z-index: 3;
 }
 
@@ -661,7 +661,7 @@ a {
   padding: 4px 12px;
   border-radius: var(--border-radius-full);
   font-size: 0.7rem;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: 0.03em;
 }
 
@@ -701,7 +701,7 @@ a {
   border: none;
   text-align: left;
   font-size: 1.05rem;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   color: hsl(var(--text-primary));
 }
