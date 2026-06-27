@@ -1,4 +1,3 @@
-import emailjs from '@emailjs/browser';
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY || localStorage.getItem('sm_groq_key') || "";
 
 async function callGroqAI(systemPrompt: string, userPrompt: string): Promise<string> {
@@ -121,13 +120,9 @@ export interface CampaignSettingsData {
   linkTracking: boolean;
   autoUnsubscribe: boolean;
   signature: string;
-  directMailEngine?: 'gmail' | 'web3forms' | 'emailjs';
+  directMailEngine?: 'gmail';
   gmailAccessToken?: string;
   gmailUserEmail?: string;
-  web3FormsKey?: string;
-  emailJsServiceId?: string;
-  emailJsTemplateId?: string;
-  emailJsPublicKey?: string;
 }
 
 // Initial default settings
@@ -145,10 +140,6 @@ let settings: CampaignSettingsData = {
   directMailEngine: 'gmail',
   gmailAccessToken: '',
   gmailUserEmail: '',
-  web3FormsKey: '',
-  emailJsServiceId: '',
-  emailJsTemplateId: '',
-  emailJsPublicKey: '',
 };
 
 // Mock data initialization
@@ -336,8 +327,6 @@ class CampaignEngine {
     if (!recipient) return;
     const s = this.getSettings();
     try {
-      const cleanMessage = htmlBody.replace(/<[^>]*>?/gm, '\n').trim() || 'Please check the HTML content.';
-      
       // 1. Direct Gmail API Shoot (Appears in user's Sent folder!)
       const gmailToken = s.gmailAccessToken || localStorage.getItem('sm_gmail_token');
       const senderEmail = s.gmailUserEmail || localStorage.getItem('sm_gmail_email') || 'me';
@@ -375,38 +364,7 @@ class CampaignEngine {
         }
       }
 
-      // 2. Direct Web3Forms Shoot (No activation link required)
-      if (s.directMailEngine === 'web3forms' && s.web3FormsKey) {
-        const res = await fetch("https://api.web3forms.com/submit", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Accept": "application/json" },
-          body: JSON.stringify({
-            access_key: s.web3FormsKey,
-            subject: subject || 'SaleMail Outreach',
-            from_name: "Kushal (SaleMail)",
-            email: recipient,
-            message: cleanMessage,
-          })
-        });
-        const data = await res.json();
-        console.log(`[SaleMail Direct Shoot] Web3Forms result for ${recipient}:`, data);
-        return;
-      }
-
-      // 2. Direct EmailJS Shoot (No activation link required)
-      if (s.directMailEngine === 'emailjs' && s.emailJsServiceId && s.emailJsTemplateId && s.emailJsPublicKey) {
-        await emailjs.send(s.emailJsServiceId, s.emailJsTemplateId, {
-          to_email: recipient,
-          subject: subject || 'SaleMail Outreach',
-          message: cleanMessage,
-          html_message: htmlBody,
-          from_name: 'Kushal'
-        }, s.emailJsPublicKey);
-        console.log(`[SaleMail Direct Shoot] EmailJS dispatched directly to ${recipient}.`);
-        return;
-      }
-
-      console.log(`[SaleMail Direct Engine] Prepared direct mail shoot for ${recipient}. Connect Gmail API / Web3Forms for live SMTP transmission.`);
+      console.log(`[SaleMail Direct Engine] Prepared direct mail shoot for ${recipient}. Connect Gmail account for live API transmission.`);
     } catch (err) {
       console.warn("Real email dispatch warning:", err);
     }
