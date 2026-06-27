@@ -8,8 +8,10 @@ import {
   Sparkles, Link2, Video, Zap, BookOpen, MessageCircle, Keyboard, Check, X,
   Copy, Rocket, Calendar, Trash2, LogOut, Loader2
 } from 'lucide-react';
+import { doc, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../lib/AuthContext';
-import { listContacts, addContact, updateContact, deleteContact, listEventTypes, addEventType, updateEventType, deleteEventType, listBookings, addBooking, updateBooking, deleteBooking, type Contact, type ContactStatus, type EventType, type Booking } from '../lib/crm';
+import { requireDb } from '../lib/firebase';
+import { listContacts, addContact, updateContact, deleteContact, listEventTypes, addEventType, updateEventType, deleteEventType, listBookings, addBooking, deleteBooking, type Contact, type ContactStatus, type EventType, type Booking } from '../lib/crm';
 import './CrmDashboard.css';
 
 type View =
@@ -27,26 +29,6 @@ const ACCENT = '#4f46e5';
 const ACCENT_SOFT = '#eef0fe';
 const initials = (n: string) => n.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
-// Unique Google-Meet-style code per booking, e.g. abc-defg-hij
-function genMeetCode() {
-  const a = 'abcdefghijklmnopqrstuvwxyz';
-  const pick = (n: number) => Array.from({ length: n }, () => a[Math.floor(Math.random() * a.length)]).join('');
-  return `${pick(3)}-${pick(4)}-${pick(3)}`;
-}
-
-type DemoBooking = { id: string; client: string; email: string; slot: string; meet: string; created: string };
-
-// 4-color Google "G"
-function GoogleG({ size = 16 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden style={{ flexShrink: 0 }}>
-      <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.4 29.3 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.4 1.1 7.3 2.8l5.7-5.7C33.6 6.2 29.1 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.3-.4-3.5z" />
-      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c2.8 0 5.4 1.1 7.3 2.8l5.7-5.7C33.6 6.2 29.1 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
-      <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35 26.7 36 24 36c-5.3 0-9.7-2.6-11.3-7l-6.5 5C9.5 39.6 16.2 44 24 44z" />
-      <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.6l6.2 5.2C42.6 35.4 44 30.1 44 24c0-1.2-.1-2.3-.4-3.5z" />
-    </svg>
-  );
-}
 
 const REVENUE = [
   { m: 'Jan', v: 42 }, { m: 'Feb', v: 55 }, { m: 'Mar', v: 48 }, { m: 'Apr', v: 67 },
@@ -242,7 +224,7 @@ export default function CrmDashboard() {
       localStorage.setItem('googleCalConnected', 'true');
       setGoogleConnected(true);
       if (user?.uid) {
-        await updateDoc(doc(db, 'users', user.uid), { googleCalendarConnected: true }).catch(() => {});
+        await updateDoc(doc(requireDb(), 'users', user.uid), { googleCalendarConnected: true }).catch(() => {});
       }
       setToast('Google Calendar connected successfully!');
       setTimeout(() => setToast(null), 2000);
@@ -252,7 +234,7 @@ export default function CrmDashboard() {
     localStorage.removeItem('googleCalConnected');
     setGoogleConnected(false);
     if (user?.uid) {
-      await updateDoc(doc(db, 'users', user.uid), { googleCalendarConnected: false }).catch(() => {});
+      await updateDoc(doc(requireDb(), 'users', user.uid), { googleCalendarConnected: false }).catch(() => {});
     }
     setToast('Google Calendar disconnected.');
     setTimeout(() => setToast(null), 2000);
@@ -385,14 +367,6 @@ export default function CrmDashboard() {
     }
   };
 
-  // Create a lead from a booking (this is what the embedded widget does on a real site)
-  const createLeadFromBooking = async (name: string, email: string, slot: string) => {
-    try {
-      await addContact(uid, { name, email, company: '', phone: '', status: 'New', source: `Booking · ${slot}` });
-      await loadData();
-    } catch { /* booking still records locally even if lead write fails */ }
-  };
-
   const exportContactsCSV = () => {
     const head = ['Name', 'Company', 'Email', 'Phone', 'Status', 'Source'];
     const rows = contacts.map(c => [c.name, c.company, c.email, c.phone, c.status, c.source || ''].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
@@ -405,70 +379,6 @@ export default function CrmDashboard() {
 
   const logoutAndGo = async () => { try { await logOut(); } catch { /* ignore */ } navigate('/'); };
 
-  // ----- Onboarding / embed / booking-engine state (namespaced per user) -----
-  const [gEmail, setGEmail] = useState<string>(() => localStorage.getItem(`cc_gmail_${uid}`) || '');
-  const [connecting, setConnecting] = useState(false);
-  const [siteKey] = useState<string>(() => {
-    let k = localStorage.getItem(`cc_sitekey_${uid}`);
-    if (!k) { k = 'cc_live_' + Math.random().toString(36).slice(2, 12); localStorage.setItem(`cc_sitekey_${uid}`, k); }
-    return k;
-  });
-  const [embedCopied, setEmbedCopied] = useState(false);
-  const [bForm, setBForm] = useState({ name: '', email: '', slot: 'Tomorrow · 10:00 AM' });
-  const [demoBookings, setDemoBookings] = useState<DemoBooking[]>(() => {
-    try { return JSON.parse(localStorage.getItem(`cc_demo_bookings_${uid}`) || '[]'); } catch { return []; }
-  });
-  const gConnected = !!gEmail;
-
-  useEffect(() => {
-    localStorage.setItem(`cc_demo_bookings_${uid}`, JSON.stringify(demoBookings));
-  }, [demoBookings, uid]);
-
-  const connectGoogle = () => {
-    setConnecting(true);
-    window.setTimeout(() => {
-      const email = user?.email || 'you@example.com';
-      setGEmail(email);
-      localStorage.setItem(`cc_gmail_${uid}`, email);
-      setConnecting(false);
-      setToast('Google Calendar connected');
-      window.setTimeout(() => setToast(null), 2600);
-    }, 1200);
-  };
-  const disconnectGoogle = () => { setGEmail(''); localStorage.removeItem(`cc_gmail_${uid}`); };
-
-  const embedSnippet =
-    `<!-- SaleMail inline widget begin -->\n` +
-    `<div class="salemail-inline-widget" data-url="${window.location.origin}/book/${uid}/15min" style="min-width:320px;height:700px;"></div>\n` +
-    `<script type="text/javascript" src="${window.location.origin}/widget.js" async></script>\n` +
-    `<!-- SaleMail inline widget end -->`;
-
-  const copyEmbed = () => {
-    navigator.clipboard?.writeText(embedSnippet).catch(() => {});
-    setEmbedCopied(true);
-    window.setTimeout(() => setEmbedCopied(false), 1800);
-  };
-
-  const simulateBooking = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!gConnected || !bForm.name.trim() || !bForm.email.trim()) return;
-    const meet = `https://meet.google.com/${genMeetCode()}`;
-    const booking: DemoBooking = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      client: bForm.name.trim(),
-      email: bForm.email.trim(),
-      slot: bForm.slot,
-      meet,
-      created: new Date().toLocaleString(),
-    };
-    setDemoBookings(prev => [booking, ...prev]);
-    // Live update
-    await addBooking(uid, { name: booking.client, email: booking.email, slot: booking.slot, event: 'Test Booking', status: 'upcoming', meetLink: meet });
-    await createLeadFromBooking(booking.client, booking.email, booking.slot);
-    setBForm({ name: '', email: '', slot: bForm.slot });
-    setToast('Booking confirmed — Meet link sent & lead created');
-    window.setTimeout(() => setToast(null), 3200);
-  };
   const [wf, setWf] = useState(WORKFLOWS.map(w => w.on));
   const [notifs, setNotifs] = useState<Notif[]>(NOTIFS_INIT);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -742,7 +652,7 @@ export default function CrmDashboard() {
                       <span className="ic"><Users size={24} /></span>
                       <h3>Your leads will show here</h3>
                       <p>Every booking from your embedded widget becomes a lead you can follow up.</p>
-                      <button className="crm-btn crm-btn-primary" style={{ margin: '0 auto' }} onClick={() => setView('setup')}><Rocket size={15} /> Set up your booking widget</button>
+                      <button className="crm-btn crm-btn-primary" style={{ margin: '0 auto' }} onClick={() => setView('eventTypes')}><Rocket size={15} /> Set up your booking widget</button>
                     </div>
                   ) : (
                     <div className="crm-table">
@@ -768,7 +678,7 @@ export default function CrmDashboard() {
             {/* ---------- EVENT TYPES ---------- */}
             {view === 'eventTypes' && (
               <div className="crm-fade crm-et-grid">
-                {eventTypes.map((e, i) => (
+                {eventTypes.map((e) => (
                   <div className="crm-et-card" key={e.slug} style={{ display: 'flex', flexDirection: 'column' }}>
                     <div className="crm-et-top">
                       <div>

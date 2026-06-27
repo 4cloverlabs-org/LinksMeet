@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { requireDb } from '../lib/firebase';
 import { Calendar as CalendarIcon, Video, Loader2, ChevronLeft, ChevronRight, Clock, Globe } from 'lucide-react';
@@ -38,8 +38,7 @@ const calcEndTime = (start: string, duration: string) => {
 
 export default function BookingPage() {
   const { uid, slug } = useParams<{ uid: string; slug: string }>();
-  const navigate = useNavigate();
-  
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [hostName, setHostName] = useState('');
