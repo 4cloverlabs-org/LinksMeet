@@ -57,7 +57,7 @@ export default function SuccessPage() {
 
       const datesParam = `${formatToUtcString(startDate)}/${formatToUtcString(endDate)}`;
       const title = encodeURIComponent(booking.eventTitle);
-      const details = encodeURIComponent(`Meeting booked on Schedulify.\n\nVideo Meeting Link: ${booking.meetLink}\n\nClient notes: ${booking.message || 'None'}`);
+      const details = encodeURIComponent(`Meeting booked on SaleMail.\n\nVideo Meeting Link: ${booking.meetLink}\n\nClient notes: ${booking.message || 'None'}`);
       const locationVal = encodeURIComponent(booking.meetLink);
 
       return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${datesParam}&details=${details}&location=${locationVal}`;

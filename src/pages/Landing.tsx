@@ -173,25 +173,33 @@ export default function Landing() {
               </div>
             </motion.div>
 
-            {/* Bottom Graphic & Input */}
-            <motion.div 
-              className="hero-graphic-container"
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-            >
-              <img src="/hero-landscape.png" alt="Landscape" className="hero-landscape-img" />
-              
-              {/* Floating Input Box */}
-              <div className="hero-prompt-box">
-                <span style={{ color: '#000', fontSize: '0.95rem', fontWeight: 500 }}>Show me how marketing spend is performing</span>
-                <span className="blinking-cursor">|</span>
-                
-                <button className="prompt-submit-btn">
-                  <span>➔</span>
-                </button>
-              </div>
-            </motion.div>
+            {/* Bottom Graphic Showcase */}
+            <div style={{ perspective: '2000px', padding: '10px 0 120px', display: 'flex', justifyContent: 'center' }}>
+              <motion.div 
+                className="hero-graphic-container"
+                initial={{ opacity: 0, y: 80, x: 60, rotateX: 30, rotateY: 30, rotateZ: -15 }}
+                animate={{ opacity: 1, y: 0, x: 60, rotateX: 15, rotateY: 25, rotateZ: -5 }}
+                transition={{ duration: 1.2, delay: 0.2, ease: "easeOut" }}
+                style={{
+                  marginTop: '10px',
+                  width: '100%',
+                  maxWidth: '1050px',
+                  overflow: 'visible',
+                  display: 'block',
+                  position: 'relative'
+                }}
+              >
+                <img 
+                  src="/hero.png" 
+                  alt="Hero Graphic" 
+                  style={{ 
+                    width: '100%', 
+                    height: 'auto', 
+                    display: 'block'
+                  }} 
+                />
+              </motion.div>
+            </div>
           </div>
           <SectionGridLine />
         </section>
@@ -1128,7 +1136,7 @@ export default function Landing() {
         </div>
 
         <div style={{ position: 'relative', width: '100%', maxWidth: '1120px', height: '480px', margin: '0 auto', display: 'flex', justifyContent: 'center', overflow: 'hidden' }}>
-          <img src="/campaign-village.png" alt="Campaign Village" style={{ width: '100%', height: '100%', display: 'block', objectFit: 'cover', objectPosition: 'center 60%' }} />
+          <img src="/hero-landscape.png" alt="Landscape Graphic" style={{ width: '100%', height: '100%', display: 'block', objectFit: 'cover', objectPosition: 'center 60%' }} />
         </div>
         
         <SectionGridLine />

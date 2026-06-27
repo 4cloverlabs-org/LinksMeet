@@ -50,7 +50,7 @@ function App() {
           {/* ---- App (requires a logged-in user) ---- */}
           <Route path="/dashboard" element={<RequireAuth><CrmDashboard /></RequireAuth>} />
 
-          {/* ---- Legacy Schedulify app ---- */}
+          {/* ---- Legacy SaleMail app ---- */}
           <Route path="/schedule" element={<Layout><VisitorHome /></Layout>} />
           <Route path="/book/:eventTypeId" element={<Layout><BookingFlow /></Layout>} />
           <Route path="/success" element={<Layout><SuccessPage /></Layout>} />

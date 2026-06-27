@@ -88,11 +88,11 @@ export default function VisitorHome() {
   const faqs = [
     {
       q: 'How does the automatic timezone translation work?',
-      a: "Schedulify reads the host's primary operating timezone and translates active slot windows into the visitor's local browser timezone offset dynamically. Guests see available options instantly synced to their local clock without having to calculate offsets manually."
+      a: "SaleMail reads the host's primary operating timezone and translates active slot windows into the visitor's local browser timezone offset dynamically. Guests see available options instantly synced to their local clock without having to calculate offsets manually."
     },
     {
-      q: 'Can I use Schedulify completely offline?',
-      a: "Yes! Schedulify features a built-in local fallback engine. If live connection keys are missing or disabled, the application seeds default configurations and writes reservations locally to your browser's localStorage. Once database configurations are set, you can toggle live synchronization."
+      q: 'Can I use SaleMail completely offline?',
+      a: "Yes! SaleMail features a built-in local fallback engine. If live connection keys are missing or disabled, the application seeds default configurations and writes reservations locally to your browser's localStorage. Once database configurations are set, you can toggle live synchronization."
     },
     {
       q: 'How do I configure my weekly working hours?',
@@ -122,7 +122,7 @@ export default function VisitorHome() {
               S
             </div>
             <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.02em' }}>
-              Schedulify
+              SaleMail
             </span>
           </div>
 
@@ -162,7 +162,7 @@ export default function VisitorHome() {
             border: '1px solid hsl(var(--accent-primary) / 0.2)'
           }}>
             <Sparkles size={12} />
-            <span>Meet Schedulify Premium</span>
+            <span>Meet SaleMail Premium</span>
           </div>
 
           <h1 className="animate-stagger-2" style={{ fontSize: 'clamp(2.4rem, 5vw, 3.6rem)', lineHeight: 1.08, letterSpacing: '-0.03em', fontWeight: 700 }}>
@@ -241,7 +241,7 @@ export default function VisitorHome() {
                 <circle cx="35" cy="20" r="5" fill="#F59E0B" />
                 <circle cx="50" cy="20" r="5" fill="#10B981" />
                 <text x="200" y="25" fontSize="10" textAnchor="middle" fill="hsl(var(--text-muted))" fontWeight="500">
-                  schedulify.io/book/discovery-call
+                  salemail.io/book/discovery-call
                 </text>
 
                 {/* Calendar grid mockup */}
@@ -316,11 +316,11 @@ export default function VisitorHome() {
           <div className="reveal" style={{ textAlign: 'center', marginBottom: '10px' }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'hsl(var(--accent-primary) / 0.08)', color: 'hsl(var(--accent-primary))', padding: '6px 16px', borderRadius: 'var(--border-radius-full)', fontSize: '0.8rem', fontWeight: 600, marginBottom: '14px' }}>
               <Zap size={12} />
-              <span>Why Schedulify</span>
+              <span>Why SaleMail</span>
             </div>
             <h2 style={{ fontSize: 'clamp(1.9rem, 4vw, 2.4rem)', marginBottom: '12px', fontWeight: 700 }}>Engineered for seamless meetings.</h2>
             <p style={{ color: 'hsl(var(--text-secondary))', maxWidth: '600px', margin: '0 auto', fontSize: '1rem', fontWeight: 300 }}>
-              Say goodbye to double-booking issues and timezone calculation blocks. Schedulify works smoothly to coordinate schedules.
+              Say goodbye to double-booking issues and timezone calculation blocks. SaleMail works smoothly to coordinate schedules.
             </p>
           </div>
 
@@ -460,7 +460,7 @@ export default function VisitorHome() {
             </div>
             <h2 style={{ fontSize: 'clamp(1.9rem, 4vw, 2.4rem)', marginBottom: '12px', fontWeight: 700 }}>Choose a plan that fits you.</h2>
             <p style={{ color: 'hsl(var(--text-secondary))', fontSize: '1rem', maxWidth: '500px', margin: '0 auto', fontWeight: 300 }}>
-              Deploy Schedulify and upgrade to unlock advanced cloud operations and database tools.
+              Deploy SaleMail and upgrade to unlock advanced cloud operations and database tools.
             </p>
           </div>
 
@@ -522,7 +522,7 @@ export default function VisitorHome() {
         <div style={{ textAlign: 'center', marginBottom: '10px' }}>
           <h2 style={{ fontSize: 'clamp(1.9rem, 4vw, 2.4rem)', fontWeight: 700, marginBottom: '12px' }}>Frequently Asked Questions</h2>
           <p style={{ color: 'hsl(var(--text-secondary))', fontSize: '1rem', fontWeight: 300 }}>
-            Everything you need to know about the Schedulify workflow.
+            Everything you need to know about the SaleMail workflow.
           </p>
         </div>
 

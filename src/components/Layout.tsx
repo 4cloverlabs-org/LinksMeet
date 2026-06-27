@@ -8,7 +8,7 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const saved = localStorage.getItem('schedulify_theme');
+    const saved = localStorage.getItem('salemail_theme');
     if (saved === 'dark' || saved === 'light') return saved;
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   });
@@ -18,7 +18,7 @@ export default function Layout({ children }: LayoutProps) {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('schedulify_theme', theme);
+    localStorage.setItem('salemail_theme', theme);
   }, [theme]);
 
   const toggleTheme = () => {
@@ -59,7 +59,7 @@ export default function Layout({ children }: LayoutProps) {
         <footer style={{ borderTop: '1px solid hsl(var(--border-color))', padding: '30px 0', backgroundColor: 'hsl(var(--bg-secondary))', color: 'hsl(var(--text-secondary))', fontSize: '0.85rem' }}>
           <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
             <div>
-              &copy; {new Date().getFullYear()} Schedulify Inc. Built for premium meetings.
+              &copy; {new Date().getFullYear()} SaleMail Inc. Built for premium meetings.
             </div>
             <div style={{ display: 'flex', gap: '20px' }}>
               <Link to="/" style={{ color: 'inherit', textDecoration: 'none' }}>Book a Slot</Link>
