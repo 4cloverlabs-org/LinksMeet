@@ -1,0 +1,531 @@
+/* ==========================================================================
+   SaleMail Campaign Module Styles
+   Inspired by Linear, Notion, Vercel, Raycast, & Stripe Dashboard
+   ========================================================================== */
+
+:root {
+  --camp-accent: #4f46e5;
+  --camp-accent-hover: #4338ca;
+  --camp-accent-soft: #eef0fe;
+  --camp-accent-light: #818cf8;
+  --camp-bg: #ffffff;
+  --camp-subtle-bg: #f8fafc;
+  --camp-border: #e2e8f0;
+  --camp-border-hover: #cbd5e1;
+  --camp-text: #0f172a;
+  --camp-text-muted: #64748b;
+  --camp-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --camp-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  --camp-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  --camp-shadow-floating: 0 20px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
+  --camp-radius-sm: 8px;
+  --camp-radius-md: 12px;
+  --camp-radius-lg: 16px;
+  --camp-radius-xl: 24px;
+}
+
+/* Base Module Layout */
+.camp-module-wrap {
+  font-family: 'Geist Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--camp-text);
+  background: #fcfcfd;
+  min-height: calc(100vh - 80px);
+  padding: 8px 24px 40px;
+  position: relative;
+}
+
+/* Header & Sub-Nav Tabs */
+.camp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--camp-border);
+}
+
+.camp-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: var(--camp-radius-md);
+  border: 1px solid #e2e8f0;
+}
+
+.camp-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--camp-text-muted);
+  background: transparent;
+  border: none;
+  border-radius: var(--camp-radius-sm);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.camp-tab-btn:hover {
+  color: var(--camp-text);
+}
+
+.camp-tab-btn.active {
+  background: var(--camp-bg);
+  color: var(--camp-accent);
+  font-weight: 600;
+  box-shadow: var(--camp-shadow-sm);
+}
+
+.camp-badge {
+  background: var(--camp-accent-soft);
+  color: var(--camp-accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 9999px;
+}
+
+/* Campaign Builder Layout (2 Columns) */
+.camp-builder-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 28px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .camp-builder-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Left Side Flow Container */
+.camp-flow-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.camp-flow-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--camp-bg);
+  padding: 14px 20px;
+  border-radius: var(--camp-radius-md);
+  border: 1px solid var(--camp-border);
+  box-shadow: var(--camp-shadow-sm);
+  margin-bottom: 12px;
+}
+
+/* Premium Buttons */
+.camp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 18px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border-radius: var(--camp-radius-sm);
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  border: none;
+}
+
+.camp-btn-primary {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+}
+
+.camp-btn-primary:hover {
+  background: linear-gradient(135deg, #4f46e5, #4338ca);
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
+  transform: translateY(-1px);
+}
+
+.camp-btn-ghost {
+  background: var(--camp-subtle-bg);
+  color: var(--camp-text);
+  border: 1px solid var(--camp-border);
+}
+
+.camp-btn-ghost:hover {
+  background: #f1f5f9;
+  border-color: var(--camp-border-hover);
+}
+
+.camp-btn-danger {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.camp-btn-danger:hover {
+  background: #fee2e2;
+}
+
+/* Sequence Blocks (Linear / Stripe style cards) */
+.camp-block-card {
+  background: var(--camp-bg);
+  border: 1px solid var(--camp-border);
+  border-radius: var(--camp-radius-lg);
+  box-shadow: var(--camp-shadow-sm);
+  padding: 22px;
+  position: relative;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.camp-block-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: var(--camp-shadow-md);
+}
+
+.camp-block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--camp-border);
+}
+
+.camp-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--camp-accent-soft);
+  color: var(--camp-accent);
+  font-weight: 700;
+  font-size: 0.85rem;
+  border-radius: 9999px;
+}
+
+/* Status Badges */
+.camp-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.camp-status-badge.sent { background: #dcfce7; color: #166534; }
+.camp-status-badge.opened { background: #e0e7ff; color: #3730a3; }
+.camp-status-badge.clicked { background: #f3e8ff; color: #6b21a8; }
+.camp-status-badge.replied { background: #fef9c3; color: #854d0e; }
+.camp-status-badge.queued { background: #f1f5f9; color: #475569; }
+.camp-status-badge.sending { background: #e0f2fe; color: #0369a1; }
+.camp-status-badge.pending { background: #f8fafc; color: #94a3b8; border: 1px solid #e2e8f0; }
+
+.camp-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: campPulse 1.4s infinite ease-in-out;
+}
+
+@keyframes campPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.5; }
+}
+
+/* Inputs & Form Rows */
+.camp-form-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 14px;
+  gap: 12px;
+}
+
+.camp-form-label {
+  width: 80px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--camp-text-muted);
+}
+
+.camp-input {
+  flex: 1;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  border: 1px solid var(--camp-border);
+  border-radius: var(--camp-radius-sm);
+  background: #f8fafc;
+  color: var(--camp-text);
+  outline: none;
+  transition: all 0.18s ease;
+}
+
+.camp-input:focus {
+  background: #ffffff;
+  border-color: var(--camp-accent);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+}
+
+/* Rich Text Editor Toolbar */
+.camp-rte-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #f1f5f9;
+  border: 1px solid var(--camp-border);
+  border-bottom: none;
+  border-radius: var(--camp-radius-sm) var(--camp-radius-sm) 0 0;
+}
+
+.camp-rte-btn {
+  padding: 5px 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  color: var(--camp-text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.camp-rte-btn:hover {
+  background: var(--camp-accent-soft);
+  color: var(--camp-accent);
+  border-color: var(--camp-accent-light);
+}
+
+.camp-textarea {
+  width: 100%;
+  min-height: 140px;
+  padding: 14px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  line-height: 1.5;
+  border: 1px solid var(--camp-border);
+  border-radius: 0 0 var(--camp-radius-sm) var(--camp-radius-sm);
+  background: #ffffff;
+  color: var(--camp-text);
+  outline: none;
+  resize: vertical;
+}
+
+.camp-textarea:focus {
+  border-color: var(--camp-accent);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+}
+
+/* Delay Block Pill */
+.camp-delay-block {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 9999px;
+  padding: 10px 24px;
+  margin: 6px auto;
+  max-width: 480px;
+  box-shadow: var(--camp-shadow-sm);
+}
+
+.camp-countdown-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #1e1b4b;
+  color: #c7d2fe;
+  font-family: monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 9999px;
+}
+
+/* AI Studio Right Panel (Glassmorphism & Raycast vibes) */
+.camp-ai-studio {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid var(--camp-border);
+  border-radius: var(--camp-radius-xl);
+  box-shadow: var(--camp-shadow-lg);
+  padding: 24px;
+  position: sticky;
+  top: 24px;
+}
+
+.camp-ai-banner {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed, #ec4899);
+  color: #ffffff;
+  padding: 16px 20px;
+  border-radius: var(--camp-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 20px rgba(124, 58, 237, 0.25);
+}
+
+.camp-ai-tag {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.camp-ai-tip {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  font-size: 0.82rem;
+  padding: 12px 16px;
+  border-radius: var(--camp-radius-md);
+  margin-top: 20px;
+  line-height: 1.4;
+}
+
+/* Floating Reply Popup */
+.camp-reply-popup {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  z-index: 9999;
+  background: #ffffff;
+  border: 1px solid var(--camp-border);
+  border-left: 5px solid var(--camp-accent);
+  border-radius: var(--camp-radius-lg);
+  box-shadow: var(--camp-shadow-floating);
+  padding: 18px 22px;
+  width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Activity Feed Timeline */
+.camp-feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.camp-feed-card {
+  background: var(--camp-bg);
+  border: 1px solid var(--camp-border);
+  border-radius: var(--camp-radius-md);
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--camp-shadow-sm);
+  transition: all 0.15s ease;
+}
+
+.camp-feed-card:hover {
+  border-color: #cbd5e1;
+  transform: translateX(3px);
+}
+
+/* Conversation Thread View */
+.camp-thread-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 24px;
+  height: 640px;
+  background: var(--camp-bg);
+  border: 1px solid var(--camp-border);
+  border-radius: var(--camp-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--camp-shadow-sm);
+}
+
+.camp-thread-sidebar {
+  border-right: 1px solid var(--camp-border);
+  overflow-y: auto;
+  background: #f8fafc;
+}
+
+.camp-thread-item {
+  padding: 16px;
+  border-bottom: 1px solid var(--camp-border);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.camp-thread-item:hover, .camp-thread-item.active {
+  background: #ffffff;
+}
+
+.camp-thread-main {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.camp-msg-bubble {
+  padding: 16px 20px;
+  border-radius: var(--camp-radius-md);
+  margin-bottom: 16px;
+  max-width: 82%;
+}
+
+.camp-msg-lead {
+  background: #f1f5f9;
+  align-self: flex-start;
+}
+
+.camp-msg-you {
+  background: var(--camp-accent-soft);
+  color: #1e1b4b;
+  align-self: flex-end;
+  border: 1px solid #c7d2fe;
+}
+
+/* Analytics Cards */
+.camp-analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.camp-stat-card {
+  background: var(--camp-bg);
+  border: 1px solid var(--camp-border);
+  border-radius: var(--camp-radius-lg);
+  padding: 20px;
+  box-shadow: var(--camp-shadow-sm);
+}
+
+.camp-stat-val {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--camp-text);
+  margin: 8px 0 4px;
+}
+
+/* Skeleton Loader */
+.camp-skeleton {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: campShimmer 1.5s infinite;
+  border-radius: var(--camp-radius-sm);
+}
+
+@keyframes campShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

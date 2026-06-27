@@ -13,6 +13,7 @@ import { useAuth } from '../lib/AuthContext';
 import { requireDb } from '../lib/firebase';
 import { listContacts, addContact, updateContact, deleteContact, listEventTypes, addEventType, updateEventType, deleteEventType, listBookings, addBooking, deleteBooking, type Contact, type ContactStatus, type EventType, type Booking } from '../lib/crm';
 import './CrmDashboard.css';
+import CampaignModule from '../components/campaigns/CampaignModule';
 
 type View =
   | 'dashboard' | 'eventTypes' | 'bookings' | 'availability' | 'people'
@@ -872,7 +873,7 @@ export default function CrmDashboard() {
 
             {/* ---------- CAMPAIGNS ---------- */}
             {view === 'campaigns' && (
-              <EmptyState icon={MessageCircle} title="Create your first campaign" body="Design outbound sequences to engage leads and drive pipeline." cta="New campaign" />
+              <CampaignModule />
             )}
 
             {/* ---------- ROUTING ---------- */}
