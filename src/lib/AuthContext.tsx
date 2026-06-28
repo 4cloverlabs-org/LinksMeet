@@ -1,10 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import {
-  createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut,
-  onAuthStateChanged, updateProfile, type User, GoogleAuthProvider, signInWithPopup
-} from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
-import { auth, requireAuth, requireDb, isFirebaseConfigured } from './firebase';
+import { type User } from '@supabase/supabase-js';
+import { supabase } from './supabase';
+import { setGmailToken, markGmailConnected, clearGmail } from './gmailToken';
 import { campaignEngine } from '../components/campaigns/campaignEngine';
 
 interface AuthContextValue {
@@ -22,63 +19,102 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const configured = !!import.meta.env.VITE_SUPABASE_URL;
 
   useEffect(() => {
-    if (!isFirebaseConfigured || !auth) {
+    if (!configured) {
       setLoading(false);
       return;
     }
-    const unsub = onAuthStateChanged(auth, u => {
-      setUser(u);
-      setLoading(false);
+
+    let mounted = true;
+
+    // Get initial session which parses the URL hash if returning from Google
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (mounted) {
+        setUser(session?.user ?? null);
+        if (session?.provider_token) {
+          // Keep the live token in memory only (never localStorage).
+          setGmailToken(session.provider_token);
+          markGmailConnected(session.user?.email ?? undefined);
+        }
+        setLoading(false);
+      }
     });
-    return unsub;
-  }, []);
+
+    // Listen for auth changes, but don't stop loading if we haven't finished the initial getSession
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (mounted) {
+        setUser(session?.user ?? null);
+        if (session?.provider_token) {
+          // Keep the live token in memory only (never localStorage).
+          setGmailToken(session.provider_token);
+          markGmailConnected(session.user?.email ?? undefined);
+        }
+        // Only turn off loading for actual sign in/out events, not the initial mount
+        if (event !== 'INITIAL_SESSION') {
+          setLoading(false);
+        }
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [configured]);
 
   const signUp = async (name: string, email: string, password: string) => {
-    const cred = await createUserWithEmailAndPassword(requireAuth(), email, password);
-    await updateProfile(cred.user, { displayName: name });
-    // Seed a profile doc so the user has a record from day one.
-    await setDoc(doc(requireDb(), 'users', cred.user.uid), {
-      name, email, createdAt: Date.now(),
-    }, { merge: true });
-    setUser({ ...cred.user });
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          first_name: name,
+        }
+      }
+    });
+    if (error) throw error;
+    
+    // Note: The Postgres Trigger will automatically create the row in public.users
+    // But we can update the first_name here if needed.
+    if (data.user) {
+      await supabase.from('users').update({ first_name: name }).eq('id', data.user.id);
+      setUser(data.user);
+    }
   };
 
-  const logIn = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(requireAuth(), email, password);
+  const logIn = async (email: string, pass: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+    if (error) throw error;
+    if (data.user) setUser(data.user);
   };
 
   const signInWithGoogle = async () => {
-    const provider = new GoogleAuthProvider();
-    provider.addScope('https://www.googleapis.com/auth/gmail.send');
-    provider.setCustomParameters({ prompt: 'select_account' });
-    const cred = await signInWithPopup(requireAuth(), provider);
-    const credential = GoogleAuthProvider.credentialFromResult(cred);
-    if (credential?.accessToken) {
-      localStorage.setItem('sm_gmail_token', credential.accessToken);
-      localStorage.setItem('sm_gmail_email', cred.user.email || '');
-      const currentSettings = campaignEngine.getSettings();
-      campaignEngine.updateSettings({
-        ...currentSettings,
-        directMailEngine: 'gmail',
-        gmailAccessToken: credential.accessToken,
-        gmailUserEmail: cred.user.email || ''
-      });
-    }
-    await setDoc(doc(requireDb(), 'users', cred.user.uid), {
-      name: cred.user.displayName || 'Google User', 
-      email: cred.user.email, 
-      createdAt: Date.now(),
-    }, { merge: true });
+    // For Supabase, Google OAuth requires setting up the provider in the Supabase Dashboard.
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        scopes: 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/gmail.send',
+        redirectTo: window.location.origin + '/dashboard',
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        }
+      }
+    });
+    if (error) throw error;
   };
 
   const logOut = async () => {
-    await signOut(requireAuth());
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    // Drop the in-memory token and clear connection flags on sign out.
+    clearGmail();
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, configured: isFirebaseConfigured, signUp, logIn, signInWithGoogle, logOut }}>
+    <AuthContext.Provider value={{ user, loading, configured, signUp, logIn, signInWithGoogle, logOut }}>
       {children}
     </AuthContext.Provider>
   );
@@ -90,17 +126,11 @@ export function useAuth() {
   return ctx;
 }
 
-// Map Firebase auth error codes to friendly messages.
+// Map Supabase auth error codes to friendly messages.
 export function authErrorMessage(e: unknown): string {
-  const code = (e as { code?: string })?.code || '';
-  switch (code) {
-    case 'auth/email-already-in-use': return 'That email is already registered. Try logging in.';
-    case 'auth/invalid-email': return 'Please enter a valid email address.';
-    case 'auth/weak-password': return 'Password should be at least 6 characters.';
-    case 'auth/invalid-credential':
-    case 'auth/wrong-password':
-    case 'auth/user-not-found': return 'Incorrect email or password.';
-    case 'auth/too-many-requests': return 'Too many attempts. Please try again later.';
-    default: return (e as Error)?.message || 'Something went wrong. Please try again.';
-  }
+  const msg = (e as { message?: string })?.message || '';
+  if (msg.includes('User already registered')) return 'That email is already registered. Try logging in.';
+  if (msg.includes('Invalid login credentials')) return 'Incorrect email or password.';
+  if (msg.includes('Password should be at least')) return 'Password should be at least 6 characters.';
+  return msg || 'Something went wrong. Please try again.';
 }

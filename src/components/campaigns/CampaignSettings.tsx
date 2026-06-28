@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Shield, Clock, Sliders, Mail, Check } from 'lucide-react';
 import { campaignEngine, type CampaignSettingsData } from './campaignEngine';
 import { useAuth } from '../../lib/AuthContext';
+import { isGmailConnected, getGmailToken, getGmailEmail } from '../../lib/gmailToken';
 
 export const CampaignSettings: React.FC = () => {
   const { signInWithGoogle, user } = useAuth();
@@ -51,10 +52,10 @@ export const CampaignSettings: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#1e293b' }}>
-                  {settings.gmailAccessToken || localStorage.getItem('sm_gmail_token') ? '✅ Connected Mailbox Authorized' : '⚠️ No Gmail Mailbox Connected'}
+                  {settings.gmailAccessToken || isGmailConnected() ? '✅ Connected Mailbox Authorized' : '⚠️ No Gmail Mailbox Connected'}
                 </div>
                 <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '2px' }}>
-                  {settings.gmailUserEmail || localStorage.getItem('sm_gmail_email') || user?.email || 'Click below to connect your Google account'}
+                  {settings.gmailUserEmail || getGmailEmail() || user?.email || 'Click below to connect your Google account'}
                 </div>
               </div>
               <button
@@ -62,8 +63,8 @@ export const CampaignSettings: React.FC = () => {
                 onClick={async () => {
                   try {
                     await signInWithGoogle();
-                    const updatedToken = localStorage.getItem('sm_gmail_token') || '';
-                    const updatedEmail = localStorage.getItem('sm_gmail_email') || user?.email || '';
+                    const updatedToken = getGmailToken() || '';
+                    const updatedEmail = getGmailEmail() || user?.email || '';
                     handleUpdate({ directMailEngine: 'gmail', gmailAccessToken: updatedToken, gmailUserEmail: updatedEmail });
                   } catch (e) {
                     console.error("Gmail OAuth connection failed:", e);

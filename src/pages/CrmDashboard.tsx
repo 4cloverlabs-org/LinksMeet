@@ -8,12 +8,17 @@ import {
   Sparkles, Link2, Video, Zap, BookOpen, MessageCircle, Keyboard, Check, X,
   Copy, Rocket, Calendar, Trash2, LogOut, Loader2, Play, EyeOff, ExternalLink, Edit2, Code, Info, ArrowLeft, Globe
 } from 'lucide-react';
-import { doc, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../lib/AuthContext';
-import { requireDb } from '../lib/firebase';
-import { listContacts, addContact, updateContact, deleteContact, listEventTypes, addEventType, updateEventType, deleteEventType, listBookings, addBooking, deleteBooking, type Contact, type ContactStatus, type EventType, type Booking } from '../lib/crm';
+import { supabase } from '../lib/supabase';
+import { API_BASE_URL } from '../lib/config';
+import { 
+  listContacts, addContact, updateContact, deleteContact,
+  listenEventTypes, addEventType, updateEventType, deleteEventType,
+  listenBookings, addBooking, deleteBooking, type Contact, type ContactStatus, type EventType, type Booking 
+} from '../lib/crm';
 import './CrmDashboard.css';
 import CampaignModule from '../components/campaigns/CampaignModule';
+import EventTypeEditor from '../components/EventTypeEditor';
 
 type View =
   | 'dashboard' | 'eventTypes' | 'bookings' | 'availability' | 'people'
@@ -28,7 +33,12 @@ const avColor = (i: number) => AV_COLORS[i % AV_COLORS.length];
 const RAMP = ['#C9DBFF', '#9BBDFD', '#6A98F9', '#0E61F3', '#0849C2'];
 const ACCENT = '#0E61F3';
 const ACCENT_SOFT = '#EAF2FF';
-const initials = (n: string) => n.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+const initials = (n?: string) => {
+  if (!n) return '?';
+  const words = n.trim().split(' ').filter(Boolean);
+  if (words.length === 0) return '?';
+  return words.map(w => w[0]).join('').slice(0, 2).toUpperCase();
+};
 
 
 const REVENUE = [
@@ -230,10 +240,10 @@ const PAGE_META: Record<View, { title: string; sub: string }> = {
 export default function CrmDashboard() {
   const navigate = useNavigate();
   const { user, logOut } = useAuth();
-  const uid = user?.uid || 'anon';
-  const displayName = user?.displayName || user?.email?.split('@')[0] || 'there';
+  const uid = user?.id || 'anon';
+  const displayName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'there';
   const firstName = displayName.split(' ')[0];
-  const userInitials = displayName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const userInitials = displayName.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
 
   const [view, setView] = useState<View>('dashboard');
   const [sideOpen, setSideOpen] = useState(false);
@@ -265,8 +275,9 @@ export default function CrmDashboard() {
     setTimeout(async () => {
       localStorage.setItem('googleCalConnected', 'true');
       setGoogleConnected(true);
-      if (user?.uid) {
-        await updateDoc(doc(requireDb(), 'users', user.uid), { googleCalendarConnected: true }).catch(() => {});
+      if (user?.id) {
+        // We simulate saving a google_token boolean just to mock it
+        await supabase.from('users').update({ google_tokens: 'mock_connected' }).eq('id', user.id).catch(() => {});
       }
       setToast('Google Calendar connected successfully!');
       setTimeout(() => setToast(null), 2000);
@@ -275,8 +286,8 @@ export default function CrmDashboard() {
   const handleDisconnectGoogle = async () => {
     localStorage.removeItem('googleCalConnected');
     setGoogleConnected(false);
-    if (user?.uid) {
-      await updateDoc(doc(requireDb(), 'users', user.uid), { googleCalendarConnected: false }).catch(() => {});
+    if (user?.id) {
+      await supabase.from('users').update({ google_tokens: null }).eq('id', user.id).catch(() => {});
     }
     setToast('Google Calendar disconnected.');
     setTimeout(() => setToast(null), 2000);
@@ -290,68 +301,62 @@ export default function CrmDashboard() {
   const [contactErr, setContactErr] = useState('');
   const [showContactForm, setShowContactForm] = useState(false);
   const [savingContact, setSavingContact] = useState(false);
-  const blankContact = { name: '', company: '', email: '', phone: '', status: 'New' as ContactStatus };
+  const blankContact: Omit<Contact, 'id' | 'createdAt'> = { name: '', company: '', email: '', phone: '', status: 'New', source: '' };
   const [cForm, setCForm] = useState(blankContact);
+  const [editingEvent, setEditingEvent] = useState<Partial<EventType> | 'new' | null>(null);
 
   const loadData = async () => {
     setContactsLoading(true);
     setContactErr('');
     try {
-      let [c, e, b] = await Promise.all([
-        listContacts(uid),
-        listEventTypes(uid),
-        listBookings(uid)
-      ]);
+      // Ensure the user exists in public.users to prevent foreign key errors
+      if (user?.id && user?.email) {
+        await supabase.from('users').upsert({
+          id: user.id,
+          email: user.email,
+          first_name: firstName,
+        }, { onConflict: 'id' });
+      }
+
+      const c = await listContacts(uid);
       setContacts(c);
-
-      // Deduplicate event types on load (fixes React strict mode double mount bugs)
-      if (e.length > 0) {
-        const seenE = new Set();
-        const toDeleteE = [];
-        for (const doc of e) {
-          if (seenE.has(doc.slug)) toDeleteE.push(doc.id);
-          else seenE.add(doc.slug);
-        }
-        for (const id of toDeleteE) await deleteEventType(uid, id);
-        if (toDeleteE.length > 0) e = e.filter(doc => !toDeleteE.includes(doc.id));
-      }
-
-      if (e.length === 0 && uid !== 'anon') {
-        for (const type of DEFAULT_EVENT_TYPES) {
-           await addEventType(uid, { ...type, active: true });
-        }
-        setEventTypes(await listEventTypes(uid));
-      } else {
-        setEventTypes(e);
-      }
-
-      // Deduplicate bookings on load
-      if (b.length > 0) {
-        const seenB = new Set();
-        const toDeleteB = [];
-        for (const doc of b) {
-          const key = doc.name + doc.slot;
-          if (seenB.has(key)) toDeleteB.push(doc.id);
-          else seenB.add(key);
-        }
-        for (const id of toDeleteB) await deleteBooking(uid, id);
-        if (toDeleteB.length > 0) b = b.filter(doc => !toDeleteB.includes(doc.id));
-      }
-
-      if (b.length === 0 && uid !== 'anon') {
-        for (const bk of DEFAULT_BOOKINGS) {
-           await addBooking(uid, { name: bk.name, email: bk.name.split(' ')[0].toLowerCase() + '@example.com', slot: bk.when, event: bk.event, status: bk.status as any });
-        }
-        setBookings(await listBookings(uid));
-      } else {
-        setBookings(b);
-      }
     } catch (err) {
-      setContactErr((err as Error)?.message || 'Could not load data.');
+      console.error(err);
+      setContactErr('Failed to load some CRM data.');
     } finally {
       setContactsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (uid === 'anon') return;
+    
+    // Listen to real-time Event Types
+    const unsubET = listenEventTypes(uid, (data) => {
+      if (data.length === 0) {
+        // Seed default event types if none exist
+        Promise.all(DEFAULT_EVENT_TYPES.map(type => addEventType(uid, { ...type, active: true })))
+          .then(() => {
+            // Optimistically set the event types so they appear immediately
+            setEventTypes(DEFAULT_EVENT_TYPES.map(t => ({ id: t.slug, ...t, active: true, createdAt: Date.now() }) as any));
+          })
+          .catch(e => console.error("Failed to seed event types:", e));
+      } else {
+        setEventTypes(data);
+      }
+    });
+
+    // Listen to real-time Bookings
+    const unsubBookings = listenBookings(uid, (data) => {
+      setBookings(data);
+    });
+
+    return () => {
+      unsubET();
+      unsubBookings();
+    };
+  }, [uid]);
+
   useEffect(() => { loadData(); }, [uid]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const submitContact = async (e: FormEvent) => {
@@ -531,7 +536,17 @@ export default function CrmDashboard() {
         </aside>
 
         {/* ============ MAIN ============ */}
-        <div className="crm-main">
+      {editingEvent ? (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+          <EventTypeEditor 
+            uid={uid}
+            initialData={editingEvent === 'new' ? null : editingEvent}
+            onClose={() => setEditingEvent(null)}
+            onSaved={() => setEditingEvent(null)}
+          />
+        </div>
+      ) : (
+      <div className="crm-main" style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
           <div className="crm-topbar">
             <button className="crm-icon-btn crm-menu-btn" onClick={() => setSideOpen(true)} aria-label="Menu"><Menu size={18} /></button>
             <div className="crm-search">
@@ -594,11 +609,20 @@ export default function CrmDashboard() {
                 </div>
                 {view === 'dashboard' && (
                   <div style={{ display: 'flex', gap: 10 }}>
+                    <button 
+                      className="crm-btn" 
+                      style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#0f172a' }}
+                      onClick={() => {
+                        window.location.href = `${API_BASE_URL}/auth/google?uid=${uid}`;
+                      }}
+                    >
+                      <CalendarCheck size={15} color="#0E61F3" /> Connect Google Calendar
+                    </button>
                     <button className="crm-btn crm-btn-ghost" onClick={exportContactsCSV} disabled={contacts.length === 0}><FileText size={15} /> Export</button>
                     <button className="crm-btn crm-btn-primary" onClick={() => { setCForm(blankContact); setContactErr(''); setShowContactForm(true); }}><Plus size={15} /> Add lead</button>
                   </div>
                 )}
-                {view === 'eventTypes' && etTab === 'eventTypes' && <button className="crm-btn crm-btn-primary"><Plus size={15} /> New event type</button>}
+                {view === 'eventTypes' && etTab === 'eventTypes' && <button className="crm-btn crm-btn-primary" onClick={() => setEditingEvent('new')}><Plus size={15} /> New event type</button>}
                 {view === 'workflows' && <button className="crm-btn crm-btn-primary"><Plus size={15} /> New workflow</button>}
               </div>
             )}
@@ -744,7 +768,10 @@ export default function CrmDashboard() {
                       borderBottom: index < eventTypes.length - 1 ? '1px solid #e2e8f0' : 'none',
                     }}>
                       {/* Left */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <div 
+                        style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, cursor: 'pointer' }}
+                        onClick={() => setEditingEvent(e)}
+                      >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>{e.title}</span>
                           <span style={{ fontSize: '0.85rem', color: '#64748b' }}>/{uid}/{e.slug}</span>
@@ -821,10 +848,21 @@ export default function CrmDashboard() {
                                 borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
                                 minWidth: '160px', zIndex: 50, padding: '4px'
                               }}>
-                                <button className="et-dd-btn" onClick={() => { setEtDropdown(null); setToast('Edit Event Type'); }}>
+                                <button className="et-dd-btn" onClick={() => { 
+                                  setEtDropdown(null); 
+                                  setEditingEvent(e);
+                                }}>
                                   <Edit2 size={14} /> Edit
                                 </button>
-                                <button className="et-dd-btn" onClick={() => { setEtDropdown(null); setToast('Duplicate Event Type'); }}>
+                                <button className="et-dd-btn" onClick={async () => { 
+                                  setEtDropdown(null); 
+                                  try {
+                                    await addEventType(uid, { ...e, slug: e.slug + '-copy', title: e.title + ' (Copy)' });
+                                    setToast('Event type duplicated');
+                                  } catch (err: any) {
+                                    setToast('Failed to duplicate');
+                                  }
+                                }}>
                                   <Copy size={14} /> Duplicate
                                 </button>
                                 <button className="et-dd-btn" onClick={() => { 
@@ -839,7 +877,17 @@ export default function CrmDashboard() {
                                   <CalendarCheck size={14} /> Troubleshoot
                                 </button>
                                 <div style={{ height: '1px', background: '#e2e8f0', margin: '4px 0' }} />
-                                <button className="et-dd-btn delete" onClick={() => { setEtDropdown(null); removeEventType(e.id, e.title); }}>
+                                <button className="et-dd-btn" style={{ color: '#ef4444' }} onClick={async () => {
+                                  setEtDropdown(null);
+                                  if (confirm(`Delete ${e.title}?`)) {
+                                    try {
+                                      await deleteEventType(uid, e.id);
+                                      setToast('Event type deleted');
+                                    } catch(err) {
+                                      setToast('Failed to delete');
+                                    }
+                                  }
+                                }}>
                                   <Trash2 size={14} /> Delete
                                 </button>
                               </div>
@@ -1341,7 +1389,7 @@ export default function CrmDashboard() {
             )}
           </div>
         </div>
-      </div>
+      )}
 
       {/* ---------- Upgrade modal ---------- */}
       {upgradeOpen && (
@@ -1380,8 +1428,6 @@ export default function CrmDashboard() {
           </div>
         </div>
       )}
-
-      {/* ---------- Add lead modal ---------- */}
       {showContactForm && (
         <div className="crm-modal-overlay" onClick={() => setShowContactForm(false)}>
           <form className="crm-modal" style={{ maxWidth: 460 }} onClick={e => e.stopPropagation()} onSubmit={submitContact}>
@@ -1412,6 +1458,7 @@ export default function CrmDashboard() {
       {toast && (
         <div className="crm-toast"><Check size={15} /> {toast}</div>
       )}
+      </div>
     </div>
   );
 }

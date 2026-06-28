@@ -1,37 +1,33 @@
-const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY || localStorage.getItem('sm_groq_key') || "";
+import { supabase } from '../../lib/supabase';
+import { API_BASE_URL } from '../../lib/config';
+import { getGmailToken, setGmailToken, markGmailConnected, getGmailEmail } from '../../lib/gmailToken';
 
 async function callGroqAI(systemPrompt: string, userPrompt: string): Promise<string> {
-  const models = ["openai/gpt-oss-120b", "llama-3.3-70b-versatile", "llama-3.1-70b-versatile", "mixtral-8x7b-32768"];
-  for (const model of models) {
-    try {
-      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${GROQ_API_KEY}`
-        },
-        body: JSON.stringify({
-          model,
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt }
-          ],
-          temperature: 0.7,
-        })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const content = data.choices?.[0]?.message?.content;
-        if (content) return content;
-      } else {
-        const err = await res.text();
-        console.warn(`Groq model ${model} error:`, err);
-      }
-    } catch (e) {
-      console.warn(`Groq fetch error (${model}):`, e);
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    if (!accessToken) throw new Error("You must be signed in to use AI generation.");
+
+    const res = await fetch(`${API_BASE_URL}/api/ai/generate`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${accessToken}`
+      },
+      body: JSON.stringify({ systemPrompt, userPrompt })
+    });
+    
+    if (res.ok) {
+      const data = await res.json();
+      return data.content;
+    } else {
+      const err = await res.text();
+      console.warn("Backend AI Error:", err);
     }
+  } catch (e) {
+    console.warn("Backend AI fetch error:", e);
   }
-  throw new Error("Groq API calls failed");
+  throw new Error("AI sequence generation failed on the backend.");
 }
 
 export type EmailStatus =
@@ -327,9 +323,33 @@ class CampaignEngine {
     if (!recipient) return { success: false, message: 'No recipient specified.' };
     const s = this.getSettings();
     try {
-      const gmailToken = s.gmailAccessToken || localStorage.getItem('sm_gmail_token');
-      const senderEmail = s.gmailUserEmail || localStorage.getItem('sm_gmail_email') || 'me';
-      
+      let gmailToken = s.gmailAccessToken || getGmailToken();
+      let senderEmail = s.gmailUserEmail || getGmailEmail() || 'me';
+
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const uid = sessionData.session?.user?.id;
+        const accessToken = sessionData.session?.access_token;
+        if (uid && accessToken) {
+          const res = await fetch(`${API_BASE_URL}/api/gmail-token/${uid}`, {
+            headers: { "Authorization": `Bearer ${accessToken}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.access_token) {
+              gmailToken = data.access_token;
+              if (data.email) senderEmail = data.email;
+
+              // Cache the fresh token in memory only (not localStorage).
+              setGmailToken(gmailToken);
+              markGmailConnected(senderEmail);
+            }
+          }
+        }
+      } catch(e) {
+        // In-memory/settings token will be used as a fallback.
+      }
+
       if (!gmailToken) {
         const msg = "⚠️ Gmail Mailbox not connected! Go to Settings -> click '🔗 1-Click Connect Gmail'.";
         console.warn(msg);

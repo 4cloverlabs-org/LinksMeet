@@ -1,9 +1,9 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useParams } from 'react-router-dom';
-import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
-import { requireDb } from '../lib/firebase';
+import { supabase } from '../lib/supabase';
+import { API_BASE_URL } from '../lib/config';
 import { Calendar as CalendarIcon, Video, Loader2, ChevronLeft, ChevronRight, Clock, Globe } from 'lucide-react';
-import { type EventType } from '../lib/crm';
+import { type EventType, addContact } from '../lib/crm';
 import '../pages/CrmDashboard.css';
 
 // Unique Google-Meet-style code generator for mock
@@ -86,23 +86,29 @@ export default function BookingPage() {
     async function loadEvent() {
       if (!uid || !slug) return setError('Invalid booking link.');
       try {
-        const userDoc = await getDoc(doc(requireDb(), 'users', uid));
-        if (!userDoc.exists()) return setError('User not found.');
-        const uData = userDoc.data();
-        setHostName(uData.name || 'SaleMail User');
-        setOwnerHasGoogle(!!uData.googleCalendarConnected);
+        const res = await fetch(`${API_BASE_URL}/api/public-profile/${uid}`);
+        if (!res.ok) return setError('User not found.');
+        const uData = await res.json();
+        
+        setHostName(uData.firstName || 'SaleMail User');
+        setOwnerHasGoogle(uData.hasGoogle);
 
-        const etQuery = query(collection(requireDb(), 'users', uid, 'eventTypes'), where('slug', '==', slug));
-        const etSnap = await getDocs(etQuery);
-        if (etSnap.empty) return setError('Event type not found or is no longer active.');
+        const { data: etData, error: etError } = await supabase.from('event_types')
+          .select('*')
+          .eq('user_id', uid)
+          .eq('slug', slug)
+          .limit(1)
+          .maybeSingle();
+          
+        if (etError || !etData) return setError('Event type not found or is no longer active.');
         
-        const etData = etSnap.docs[0].data() as EventType;
         if (!etData.active) return setError('This event type is currently paused.');
-        
-        setEventType(etData);
+
+        setEventType({ ...etData, desc: etData.description });
+        setLoading(false);
       } catch (err) {
-        setError('Failed to load booking page.');
-      } finally {
+        console.error("Load Event Error:", err);
+        setError('Failed to load scheduling page.');
         setLoading(false);
       }
     }
@@ -133,23 +139,46 @@ export default function BookingPage() {
     if (!name.trim() || !email.trim() || !eventType || !uid || !selectedDate || !selectedTime) return;
     setBookingStatus('booking');
     try {
-      const generatedMeet = ownerHasGoogle ? `https://meet.google.com/${genMeetCode()}` : '';
-      const slot = `June ${selectedDate}, 2026 · ${selectedTime}`;
+      // Create a proper start/end time for the backend
+      // selectedDate is a number (e.g., 25), selectedTime is a string (e.g., "09:00am")
+      const timePart = selectedTime.substring(0, 5);
+      const ampm = selectedTime.substring(5).toLowerCase();
+      let [hStr, mStr] = timePart.split(':');
+      let hr = parseInt(hStr, 10);
+      const min = parseInt(mStr, 10);
       
-      await addDoc(collection(requireDb(), 'users', uid, 'bookings'), {
-        name, email, slot,
-        event: eventType.title,
-        status: 'upcoming', meetLink: generatedMeet,
-        createdAt: Date.now(), createdAtServer: serverTimestamp()
-      });
+      if (ampm === 'pm' && hr !== 12) hr += 12;
+      if (ampm === 'am' && hr === 12) hr = 0;
       
-      setMeetLink(generatedMeet);
+      // Date constructor: new Date(year, monthIndex (0-11), day, hours, minutes)
+      // Hardcoding June 2026 for the demo context
+      const d = new Date(2026, 5, parseInt(selectedDate.toString(), 10), hr, min);
+      const startTime = d.toISOString();
+      
+      // add duration
+      const durMinutes = parseInt(eventType.dur) || 30;
+      const endTime = new Date(d.getTime() + durMinutes * 60000).toISOString();
 
-      await addDoc(collection(requireDb(), 'users', uid, 'contacts'), {
-        name, email, company: '', phone: '', status: 'New',
-        source: `Booking · ${eventType.title}`,
-        createdAt: Date.now(), createdAtServer: serverTimestamp()
+      const res = await fetch(`${API_BASE_URL}/api/bookings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ownerUid: uid,
+          bookerName: name,
+          bookerEmail: email,
+          startTime,
+          endTime,
+          eventTitle: eventType.title,
+          eventTypeSlug: slug
+        })
       });
+
+      if (!res.ok) {
+        throw new Error('Backend failed to book');
+      }
+      const data = await res.json();
+      
+      setMeetLink(data.booking?.meet_link || '');
 
       setBookingStatus('success');
     } catch (err) {
