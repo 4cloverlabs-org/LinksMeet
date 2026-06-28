@@ -1,13 +1,19 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth, authErrorMessage } from '../lib/AuthContext';
 import './Auth.css';
 
 export default function Login() {
-  const { logIn, signInWithGoogle, configured } = useAuth();
+  const { logIn, signInWithGoogle, configured, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || '/dashboard';
+
+  useEffect(() => {
+    if (user) {
+      navigate(from, { replace: true });
+    }
+  }, [user, navigate, from]);
 
   const [form, setForm] = useState({ email: '', password: '' });
   const [err, setErr] = useState('');

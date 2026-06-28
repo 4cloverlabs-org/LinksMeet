@@ -103,10 +103,19 @@ export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, onCreateN
                     </div>
                   </td>
                   <td style={{ padding: '20px 24px' }}>
-                    <span className={`camp-status-badge ${camp.status === 'Running' ? 'sent' : camp.status === 'Paused' ? 'replied' : camp.status === 'Completed' ? 'failed' : 'pending'}`} style={{ padding: '4px 10px', borderRadius: '100px', fontSize: '0.75rem' }}>
-                      {camp.status === 'Running' && <span className="camp-pulse-dot" style={{ width: 6, height: 6 }} />}
-                      {camp.status === 'Running' ? 'Active' : camp.status === 'Completed' ? 'Cancelled' : camp.status}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span className={`camp-status-badge ${camp.status === 'Running' ? 'sent' : camp.status === 'Paused' ? 'replied' : camp.status === 'Completed' ? 'failed' : 'pending'}`} style={{ padding: '4px 10px', borderRadius: '100px', fontSize: '0.75rem' }}>
+                        {camp.status === 'Running' && <span className="camp-pulse-dot" style={{ width: 6, height: 6 }} />}
+                        {camp.status === 'Running' ? 'Active' : camp.status === 'Completed' ? 'Cancelled' : camp.status}
+                      </span>
+                      
+                      {camp.status === 'Running' && camp.activeStepIndex !== undefined && camp.steps[camp.activeStepIndex]?.type === 'delay' && camp.steps[camp.activeStepIndex]?.status === 'Queued' && (
+                        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#f59e0b', background: '#fef3c7', padding: '4px 8px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Clock size={10} />
+                          {Math.floor((camp.steps[camp.activeStepIndex].remainingSeconds || 0) / 3600)}h {Math.floor(((camp.steps[camp.activeStepIndex].remainingSeconds || 0) % 3600) / 60)}m {(camp.steps[camp.activeStepIndex].remainingSeconds || 0) % 60}s
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td style={{ padding: '20px 24px', color: '#64748b', fontSize: '0.85rem', fontWeight: 500 }}>
                     {camp.steps.length} Steps

@@ -1,6 +1,4 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, query, updateDoc } from 'firebase/firestore';
-
+// Expantra DB (Legacy)
 export interface EventType {
   id: string;
   title: string;
@@ -9,6 +7,7 @@ export interface EventType {
   color: string;    // CSS class or hex
   active: boolean;
 }
+
 
 export interface Booking {
   id: string;
@@ -123,22 +122,6 @@ const DEFAULT_INTEGRATION_SETTINGS: IntegrationSettings = {
 let firebaseDb: any = null;
 
 function getFirebaseDb(settings: IntegrationSettings) {
-  if (firebaseDb) return firebaseDb;
-  
-  const config = settings.firebaseConfig;
-  const isConfigured = !!(config.apiKey && config.projectId && config.appId);
-  
-  if (settings.isLiveMode && isConfigured) {
-    try {
-      const app = getApps().length === 0 ? initializeApp(config) : getApp();
-      firebaseDb = getFirestore(app);
-      console.log('[Firebase Live Mode] Firestore database initialized successfully.');
-      return firebaseDb;
-    } catch (error) {
-      console.error('[Firebase Live Mode] Failed to initialize Firebase SDK:', error);
-      return null;
-    }
-  }
   return null;
 }
 

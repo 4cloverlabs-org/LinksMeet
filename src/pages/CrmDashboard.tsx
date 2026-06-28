@@ -266,30 +266,38 @@ export default function CrmDashboard() {
     window.setTimeout(() => setToast(null), 2000);
   };
   
-  // Google Calendar Integration Mock State
-  const [googleConnected, setGoogleConnected] = useState(localStorage.getItem('googleCalConnected') === 'true');
+  // Google Integration State
+  const [googleConnected, setGoogleConnected] = useState(false);
 
-  const handleConnectGoogle = async () => {
-    // Simulate OAuth flow
-    setToast('Redirecting to Google...');
-    setTimeout(async () => {
-      localStorage.setItem('googleCalConnected', 'true');
-      setGoogleConnected(true);
-      if (user?.id) {
-        // We simulate saving a google_token boolean just to mock it
-        await supabase.from('users').update({ google_tokens: 'mock_connected' }).eq('id', user.id).catch(() => {});
+  useEffect(() => {
+    async function checkGoogle() {
+      if (localStorage.getItem('sm_gmail_token')) {
+        setGoogleConnected(true);
+        return;
       }
-      setToast('Google Calendar connected successfully!');
-      setTimeout(() => setToast(null), 2000);
-    }, 1500);
+      if (uid && uid !== 'anon') {
+        try {
+          const { data } = await supabase.from('users').select('google_tokens').eq('id', uid).single();
+          if (data?.google_tokens?.access_token || data?.google_tokens?.refresh_token) {
+            setGoogleConnected(true);
+          }
+        } catch(e) {}
+      }
+    }
+    checkGoogle();
+  }, [uid]);
+
+  const handleConnectGoogle = () => {
+    window.location.href = `${API_BASE_URL}/auth/google?uid=${uid}`;
   };
   const handleDisconnectGoogle = async () => {
-    localStorage.removeItem('googleCalConnected');
+    localStorage.removeItem('sm_gmail_token');
+    localStorage.removeItem('sm_gmail_email');
     setGoogleConnected(false);
     if (user?.id) {
       await supabase.from('users').update({ google_tokens: null }).eq('id', user.id).catch(() => {});
     }
-    setToast('Google Calendar disconnected.');
+    setToast('Google disconnected.');
     setTimeout(() => setToast(null), 2000);
   };
 
@@ -609,20 +617,33 @@ export default function CrmDashboard() {
                 </div>
                 {view === 'dashboard' && (
                   <div style={{ display: 'flex', gap: 10 }}>
-                    <button 
-                      className="crm-btn" 
-                      style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#0f172a' }}
-                      onClick={() => {
-                        window.location.href = `${API_BASE_URL}/auth/google?uid=${uid}`;
-                      }}
-                    >
-                      <CalendarCheck size={15} color="#0E61F3" /> Connect Google Calendar
-                    </button>
                     <button className="crm-btn crm-btn-ghost" onClick={exportContactsCSV} disabled={contacts.length === 0}><FileText size={15} /> Export</button>
                     <button className="crm-btn crm-btn-primary" onClick={() => { setCForm(blankContact); setContactErr(''); setShowContactForm(true); }}><Plus size={15} /> Add lead</button>
                   </div>
                 )}
-                {view === 'eventTypes' && etTab === 'eventTypes' && <button className="crm-btn crm-btn-primary" onClick={() => setEditingEvent('new')}><Plus size={15} /> New event type</button>}
+                {view === 'eventTypes' && etTab === 'eventTypes' && (
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    {googleConnected ? (
+                       <span style={{ fontSize: '0.85rem', color: '#166534', background: '#dcfce7', padding: '6px 12px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
+                         <Check size={14}/> Connected to Google
+                       </span>
+                    ) : (
+                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                         <span style={{ fontSize: '0.85rem', color: '#991b1b', background: '#fee2e2', padding: '6px 12px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
+                           <X size={14}/> Not connected
+                         </span>
+                         <button 
+                           className="crm-btn" 
+                           style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#0f172a' }}
+                           onClick={handleConnectGoogle}
+                         >
+                           <CalendarCheck size={15} color="#0E61F3" /> Click to connect
+                         </button>
+                       </div>
+                    )}
+                    <button className="crm-btn crm-btn-primary" onClick={() => setEditingEvent('new')}><Plus size={15} /> New event type</button>
+                  </div>
+                )}
                 {view === 'workflows' && <button className="crm-btn crm-btn-primary"><Plus size={15} /> New workflow</button>}
               </div>
             )}
@@ -1361,7 +1382,12 @@ export default function CrmDashboard() {
                     {googleConnected ? (
                       <button className="crm-btn crm-btn-ghost" onClick={handleDisconnectGoogle} style={{ padding: '6px 12px', fontSize: '0.75rem', height: 'auto', minHeight: 0, color: 'var(--rose)' }}>Disconnect</button>
                     ) : (
-                      <button className="crm-btn crm-btn-primary" onClick={handleConnectGoogle} style={{ padding: '6px 12px', fontSize: '0.75rem', height: 'auto', minHeight: 0 }}>Connect Google</button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '0.85rem', color: '#991b1b', background: '#fee2e2', padding: '6px 12px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
+                          <X size={14}/> Not connected
+                        </span>
+                        <button className="crm-btn crm-btn-primary" onClick={handleConnectGoogle} style={{ padding: '6px 12px', fontSize: '0.75rem', height: 'auto', minHeight: 0 }}>Click to connect</button>
+                      </div>
                     )}
                   </div>
                 </div>

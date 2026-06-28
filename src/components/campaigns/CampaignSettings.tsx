@@ -52,29 +52,37 @@ export const CampaignSettings: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#1e293b' }}>
-                  {settings.gmailAccessToken || isGmailConnected() ? '✅ Connected Mailbox Authorized' : '⚠️ No Gmail Mailbox Connected'}
+                  {settings.gmailAccessToken || localStorage.getItem('sm_gmail_token') ? (
+                    <span style={{ color: '#166534', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Check size={16} /> Connected Mailbox Authorized
+                    </span>
+                  ) : (
+                    <span style={{ color: '#b91c1c' }}>⚠️ Not Connected</span>
+                  )}
                 </div>
                 <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '2px' }}>
-                  {settings.gmailUserEmail || getGmailEmail() || user?.email || 'Click below to connect your Google account'}
+                  {settings.gmailUserEmail || localStorage.getItem('sm_gmail_email') || user?.email || 'Click below to connect your Google account'}
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    await signInWithGoogle();
-                    const updatedToken = getGmailToken() || '';
-                    const updatedEmail = getGmailEmail() || user?.email || '';
-                    handleUpdate({ directMailEngine: 'gmail', gmailAccessToken: updatedToken, gmailUserEmail: updatedEmail });
-                  } catch (e) {
-                    console.error("Gmail OAuth connection failed:", e);
-                  }
-                }}
-                className="camp-btn camp-btn-primary"
-                style={{ fontSize: '0.82rem', padding: '8px 16px', background: '#0E61F3' }}
-              >
-                🔗 1-Click Connect Gmail
-              </button>
+              {!(settings.gmailAccessToken || localStorage.getItem('sm_gmail_token')) && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await signInWithGoogle();
+                      const updatedToken = localStorage.getItem('sm_gmail_token') || '';
+                      const updatedEmail = localStorage.getItem('sm_gmail_email') || user?.email || '';
+                      handleUpdate({ directMailEngine: 'gmail', gmailAccessToken: updatedToken, gmailUserEmail: updatedEmail });
+                    } catch (e) {
+                      console.error("Gmail OAuth connection failed:", e);
+                    }
+                  }}
+                  className="camp-btn camp-btn-primary"
+                  style={{ fontSize: '0.82rem', padding: '8px 16px', background: '#0E61F3' }}
+                >
+                  🔗 1-Click Connect Gmail
+                </button>
+              )}
             </div>
             <p style={{ margin: 0, fontSize: '0.78rem', color: '#475569' }}>
               💡 <strong>Why Gmail API?</strong> Outbound sequences are sent authenticated natively through Google's REST infrastructure. Copies are automatically indexed inside your Gmail <strong>Sent</strong> folder!

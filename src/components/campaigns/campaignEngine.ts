@@ -56,6 +56,7 @@ export interface CampaignStep {
   status: EmailStatus;
   remainingSeconds?: number;
   totalSeconds?: number;
+  waitUntil?: number;
 }
 
 export interface Campaign {
@@ -419,12 +420,23 @@ class CampaignEngine {
       this.campaigns.forEach(camp => {
         if (camp.status === 'Running' && camp.activeStepIndex !== undefined) {
           const step = camp.steps[camp.activeStepIndex];
-          if (step && step.type === 'delay' && step.remainingSeconds && step.remainingSeconds > 0) {
-            step.remainingSeconds -= 1;
-            changed = true;
+          if (step && step.type === 'delay' && step.status === 'Queued') {
+            if (!step.waitUntil || isNaN(Number(step.waitUntil))) {
+              step.waitUntil = Date.now() + (step.remainingSeconds || 0) * 1000;
+            }
+            
+            const now = Date.now();
+            const newRemaining = Math.max(0, Math.floor((Number(step.waitUntil) - now) / 1000));
+            
+            if (step.remainingSeconds !== newRemaining) {
+              step.remainingSeconds = newRemaining;
+              changed = true;
+            }
+            
             if (step.remainingSeconds <= 0) {
               step.status = 'Sent';
               this.advanceCampaign(camp);
+              changed = true;
             }
           }
         }
@@ -483,7 +495,9 @@ class CampaignEngine {
         else if (nextStep.delayUnit === 'hours') secs *= 3600;
         else if (nextStep.delayUnit === 'days') secs *= 86400;
         else if (nextStep.delayUnit === 'weeks') secs *= 604800;
+        else if (nextStep.delayUnit === 'months') secs *= 2592000;
         nextStep.totalSeconds = secs;
+        nextStep.waitUntil = Date.now() + secs * 1000;
         nextStep.remainingSeconds = secs;
         this.saveState();
         this.notify('update');
@@ -496,7 +510,7 @@ class CampaignEngine {
   }
 
   // API Methods
-  public getCampaigns(): Campaign[] { return [...this.campaigns]; }
+  public getCampaigns(): Campaign[] { return JSON.parse(JSON.stringify(this.campaigns)); }
   public getLogs(): SentEmailLog[] { return [...this.logs]; }
   public getThreads(): ConversationThread[] { return [...this.threads]; }
   public getSettings(): CampaignSettingsData { return { ...settings }; }
@@ -509,8 +523,34 @@ class CampaignEngine {
 
   public saveCampaign(campaign: Campaign) {
     const idx = this.campaigns.findIndex(c => c.id === campaign.id);
-    if (idx >= 0) this.campaigns[idx] = campaign;
-    else this.campaigns.unshift(campaign);
+    if (idx >= 0) {
+      const oldCamp = this.campaigns[idx];
+      
+      if (oldCamp.status === 'Running' && oldCamp.activeStepIndex !== undefined) {
+        const oldStep = oldCamp.steps[oldCamp.activeStepIndex];
+        const newStep = campaign.steps[oldCamp.activeStepIndex];
+        
+        if (oldStep && newStep && oldStep.type === 'delay' && newStep.type === 'delay' && oldStep.status === 'Queued') {
+          if (oldStep.delayValue !== newStep.delayValue || oldStep.delayUnit !== newStep.delayUnit) {
+            let secs = newStep.delayValue || 1;
+            if (newStep.delayUnit === 'minutes') secs *= 60;
+            else if (newStep.delayUnit === 'hours') secs *= 3600;
+            else if (newStep.delayUnit === 'days') secs *= 86400;
+            else if (newStep.delayUnit === 'weeks') secs *= 604800;
+            else if (newStep.delayUnit === 'months') secs *= 2592000;
+            
+            newStep.totalSeconds = secs;
+            newStep.waitUntil = Date.now() + secs * 1000;
+            newStep.remainingSeconds = secs;
+          }
+        }
+      }
+      
+      this.campaigns[idx] = campaign;
+    }
+    else {
+      this.campaigns.unshift(campaign);
+    }
     this.saveState();
     this.notify('update');
   }
@@ -524,41 +564,53 @@ class CampaignEngine {
   public startCampaign(id: string) {
     const camp = this.campaigns.find(c => c.id === id);
     if (!camp) return;
+    
+    // If it's already completed, don't restart
+    if (camp.status === 'Completed') return;
+    
     camp.status = 'Running';
-    camp.activeStepIndex = 0;
-    const firstStep = camp.steps[0];
-    if (firstStep && firstStep.type === 'email') {
-      firstStep.status = 'Sending';
-      this.notify('update');
-      setTimeout(() => {
-        firstStep.status = 'Sent';
-        const log: SentEmailLog = {
-          id: 'log_' + Math.random().toString(36).substring(2, 9),
-          campaignId: camp.id,
-          campaignName: camp.name,
-          recipient: camp.recipientEmail || 'client@company.com',
-          subject: firstStep.subject || 'Intro',
-          sentAt: 'Just now',
-          status: 'Sent',
-          opens: 0,
-          clicks: 0,
-          replied: false,
-          deliveryStatus: 'Delivered',
-          spamStatus: 'Passed',
-          stage: firstStep.title,
-        };
-        this.logs.unshift(log);
-        this.saveState();
-        this.notify('email_sent', log);
-        
-        // Move to step 2 if delay
-        if (camp.steps.length > 1) {
-          setTimeout(() => {
-            this.advanceCampaign(camp);
-          }, 1500);
-        }
-      }, 1800);
+    
+    // If it's a fresh campaign, initialize first step
+    if (camp.activeStepIndex === undefined) {
+      camp.activeStepIndex = 0;
+      const firstStep = camp.steps[0];
+      if (firstStep && firstStep.type === 'email') {
+        firstStep.status = 'Sending';
+        this.notify('update');
+        setTimeout(() => {
+          firstStep.status = 'Sent';
+          const log: SentEmailLog = {
+            id: 'log_' + Math.random().toString(36).substring(2, 9),
+            campaignId: camp.id,
+            campaignName: camp.name,
+            recipient: camp.recipientEmail || 'client@company.com',
+            subject: firstStep.subject || 'Intro',
+            sentAt: 'Just now',
+            status: 'Sent',
+            opens: 0,
+            clicks: 0,
+            replied: false,
+            deliveryStatus: 'Delivered',
+            spamStatus: 'Passed',
+            stage: firstStep.title,
+          };
+          this.logs.unshift(log);
+          this.saveState();
+          this.notify('email_sent', log);
+          
+          // Move to step 2 if delay
+          if (camp.steps.length > 1) {
+            setTimeout(() => {
+              this.advanceCampaign(camp);
+            }, 1500);
+          }
+        }, 1800);
+      }
+    } else {
+      // If resuming a delay step, we might want to ensure the absolute timer isn't completely expired.
+      // But startTicker handles expiry (if remaining <= 0, it advances automatically next tick).
     }
+    
     this.saveState();
     this.notify('update');
   }

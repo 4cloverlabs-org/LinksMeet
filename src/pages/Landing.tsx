@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../lib/AuthContext';
 import { motion } from 'framer-motion';
 import { Check, Target, Slack, Github, Twitter, Linkedin, CheckCircle2, FileText, GitMerge, BarChart3, Sparkles, Wand2, AlignLeft, ListChecks, Database } from 'lucide-react';
 import './Landing.css';
@@ -94,6 +96,14 @@ const SectionGridLine = () => (
 export default function Landing() {
   const navigate = useNavigate();
   const goSignup = () => navigate('/signup');
+  
+  const { user } = useAuth();
+  
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
 
   return (
     <div className="lexaro-landing" style={{ minHeight: '100vh', position: 'relative' }}>

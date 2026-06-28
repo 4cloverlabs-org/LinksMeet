@@ -7,6 +7,7 @@ export default function RequireAuth({ children }: { children: ReactNode }) {
   const location = useLocation();
 
   if (!configured) return <Navigate to="/login" replace state={{ from: location }} />;
+  
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
@@ -14,6 +15,19 @@ export default function RequireAuth({ children }: { children: ReactNode }) {
       </div>
     );
   }
-  if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
+
+  if (!user) {
+    if (window.location.hash.includes('error=')) {
+      return (
+        <div style={{ padding: 40, color: 'red', textAlign: 'center' }}>
+          <h2>Authentication Error</h2>
+          <p>{decodeURIComponent(window.location.hash)}</p>
+          <button onClick={() => window.location.href = '/login'}>Back to Login</button>
+        </div>
+      );
+    }
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+  
   return <>{children}</>;
 }

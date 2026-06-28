@@ -52,7 +52,6 @@ export const DelayBlock: React.FC<DelayBlockProps> = ({
             max={365}
             value={step.delayValue || 1}
             onChange={(e) => onUpdate({ ...step, delayValue: Math.max(1, parseInt(e.target.value) || 1) })}
-            disabled={isWaiting}
             style={{
               width: '46px',
               padding: '6px 12px',
@@ -69,7 +68,6 @@ export const DelayBlock: React.FC<DelayBlockProps> = ({
           <select
             value={step.delayUnit || 'days'}
             onChange={(e) => onUpdate({ ...step, delayUnit: e.target.value as any })}
-            disabled={isWaiting}
             style={{
               padding: '6px 12px',
               border: '1px solid #e2e8f0',
@@ -86,6 +84,7 @@ export const DelayBlock: React.FC<DelayBlockProps> = ({
             <option value="hours">Hours</option>
             <option value="days">Days</option>
             <option value="weeks">Weeks</option>
+            <option value="months">Months</option>
           </select>
         </div>
 
