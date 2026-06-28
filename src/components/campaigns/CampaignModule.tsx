@@ -62,7 +62,7 @@ export const CampaignModule: React.FC = () => {
             setCampaigns(campaignEngine.getCampaigns());
           }}
         />
-        <ReplyPopupNotification />
+        <ReplyPopupNotification onOpenConversation={() => setTab('conversations')} />
       </div>
     );
   }

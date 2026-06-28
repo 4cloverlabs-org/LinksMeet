@@ -56,6 +56,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
     newSteps.push({
       id: 's_delay_' + Math.random().toString(36).substring(2, 9),
       type: 'delay',
+      title: 'Wait 3 days',
       delayValue: 3,
       delayUnit: 'days',
       status: 'Pending',

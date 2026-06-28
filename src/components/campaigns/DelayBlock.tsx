@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Clock, Trash2, ArrowDown } from 'lucide-react';
+import { Clock, Trash2 } from 'lucide-react';
 import { type CampaignStep } from './campaignEngine';
 
 interface DelayBlockProps {

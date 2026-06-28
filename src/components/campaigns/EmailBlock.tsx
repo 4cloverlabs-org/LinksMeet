@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Eye, Trash2, CheckCircle2, AlertCircle, Link as LinkIcon, Bold, Italic, Mail, MoreVertical } from 'lucide-react';
+import { Send, Eye, CheckCircle2, AlertCircle, Link as LinkIcon, Bold, Italic, Mail, MoreVertical } from 'lucide-react';
 import { type CampaignStep, type EmailStatus, campaignEngine } from './campaignEngine';
 
 interface EmailBlockProps {
