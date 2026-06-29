@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { 
+import {
   ArrowLeft, Video, Link2, Clock, Settings, Calendar, CreditCard, LayoutTemplate,
   Check, Eye, ShieldCheck, ExternalLink, Bold, Italic, Edit2, Save, Link as LinkIcon, List, ListOrdered, Globe, ChevronDown, Mail
 } from 'lucide-react';
-import { addEventType, updateEventType, type EventType } from '../lib/crm'; 
+import { addEventType, updateEventType, type EventType } from '../lib/crm';
 
 interface Props {
   uid: string;
@@ -21,7 +21,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
     active: true,
     ...(initialData || {})
   });
-  
+
   const [activeTab, setActiveTab] = useState('basics');
   const [saving, setSaving] = useState(false);
   const [savedToast, setSavedToast] = useState(false);
@@ -55,7 +55,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
   const NavItem = ({ icon: Icon, label, id }: { icon: any, label: string, id: string }) => {
     const active = activeTab === id;
     return (
-      <button 
+      <button
         onClick={() => setActiveTab(id)}
         style={{
           width: '100%',
@@ -94,13 +94,13 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, display: 'flex', flexDirection: 'column', background: '#ffffff', color: '#0f172a', overflow: 'hidden', fontFamily: '"Inter", "Geist Sans", sans-serif' }}>
-      
+
       {/* TOP HEADER */}
       <div style={{ display: 'flex', alignItems: 'center', height: '72px', borderBottom: '1px solid #e2e8f0', background: '#ffffff', flexShrink: 0 }}>
-        
+
         {/* Header Left (Matches Sidebar Width) */}
         <div style={{ width: '260px', padding: '0 24px', borderRight: '1px solid #e2e8f0', height: '100%', display: 'flex', alignItems: 'center' }}>
-          <button 
+          <button
             onClick={onClose}
             style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: '#64748b', fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer', padding: 0 }}
           >
@@ -116,14 +116,14 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
               <Edit2 size={16} />
             </button>
           </div>
-          
+
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             {savedToast && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#ffffff', border: '1px solid #e2e8f0', padding: '8px 16px', borderRadius: '8px', color: '#10b981', fontSize: '0.9rem', fontWeight: 600 }}>
                 <Check size={16} /> All changes saved
               </div>
             )}
-            <button 
+            <button
               onClick={handleSave}
               style={{ background: '#2563eb', color: '#ffffff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)' }}
             >
@@ -135,7 +135,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
       {/* MAIN BODY */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        
+
         <div style={{ width: '260px', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', background: '#ffffff', overflowY: 'auto' }}>
           <div style={{ padding: '12px 16px' }}>
             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '16px 0 12px 12px' }}>Setup</div>
@@ -152,95 +152,95 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
         {/* CONTENT SPLIT (Editor + Preview) */}
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden', background: '#f8fafc' }}>
-          
+
           {/* Editor Pane */}
           <div style={{ flex: 1, padding: '40px 60px', overflowY: 'auto' }}>
-            
-            {activeTab === 'basics' && (
-            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '32px' }}>
-            <div style={{ marginBottom: '32px' }}>
-              <label style={{ display: 'block', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', marginBottom: '12px' }}>Title</label>
-              <div style={{ position: 'relative' }}>
-                <input 
-                  value={form.title}
-                  onChange={e => setForm({ ...form, title: e.target.value })}
-                  style={{ width: '100%', background: '#ffffff', border: '1px solid #cbd5e1', color: '#0f172a', padding: '14px 16px', borderRadius: '8px', fontSize: '1rem', outline: 'none' }}
-                />
-                <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '0.85rem' }}>
-                  {form.title?.length || 0}/100
-                </div>
-              </div>
-            </div>
 
-            <div style={{ marginBottom: '32px' }}>
-              <label style={{ display: 'block', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', marginBottom: '12px' }}>Description</label>
-              <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', overflow: 'hidden' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '8px 12px', borderBottom: '1px solid #cbd5e1', background: '#ffffff' }}>
-                  <button style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontWeight: 600, padding: '6px 12px' }}>Normal</button>
-                  <div style={{ width: '1px', height: '20px', background: '#cbd5e1', margin: '0 4px' }} />
-                  <ToolbarBtn icon={Bold} />
-                  <ToolbarBtn icon={Italic} />
-                  <ToolbarBtn icon={LinkIcon} />
-                  <div style={{ width: '1px', height: '20px', background: '#cbd5e1', margin: '0 4px' }} />
-                  <ToolbarBtn icon={List} />
-                  <ToolbarBtn icon={ListOrdered} />
-                </div>
-                <div style={{ position: 'relative' }}>
-                  <textarea 
-                    value={form.desc}
-                    onChange={e => setForm({ ...form, desc: e.target.value })}
-                    style={{ width: '100%', background: 'transparent', border: 'none', color: '#0f172a', padding: '16px', minHeight: '120px', fontSize: '1rem', outline: 'none', resize: 'vertical' }}
-                    placeholder="A quick intro or sync call."
-                  />
-                  <div style={{ position: 'absolute', right: '16px', bottom: '16px', color: '#94a3b8', fontSize: '0.85rem' }}>
-                    {form.desc?.length || 0}/500
+            {activeTab === 'basics' && (
+              <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '32px' }}>
+                <div style={{ marginBottom: '32px' }}>
+                  <label style={{ display: 'block', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', marginBottom: '12px' }}>Title</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      value={form.title}
+                      onChange={e => setForm({ ...form, title: e.target.value })}
+                      style={{ width: '100%', background: '#ffffff', border: '1px solid #cbd5e1', color: '#0f172a', padding: '14px 16px', borderRadius: '8px', fontSize: '1rem', outline: 'none' }}
+                    />
+                    <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '0.85rem' }}>
+                      {form.title?.length || 0}/100
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <div style={{ marginBottom: '32px' }}>
-              <label style={{ display: 'block', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', marginBottom: '12px' }}>URL</label>
-              <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '8px', overflow: 'hidden', background: '#ffffff' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '14px 16px', background: '#f1f5f9', color: '#64748b', fontSize: '0.95rem', borderRight: '1px solid #cbd5e1' }}>
-                  <ArrowLeft size={16} style={{ transform: 'rotate(180deg)', transformOrigin: 'center' }} />
-                  localhost:5173/book/4587d085-425a-4eca-a72a-591dccec003e/
+                <div style={{ marginBottom: '32px' }}>
+                  <label style={{ display: 'block', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', marginBottom: '12px' }}>Description</label>
+                  <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '8px 12px', borderBottom: '1px solid #cbd5e1', background: '#ffffff' }}>
+                      <button style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontWeight: 600, padding: '6px 12px' }}>Normal</button>
+                      <div style={{ width: '1px', height: '20px', background: '#cbd5e1', margin: '0 4px' }} />
+                      <ToolbarBtn icon={Bold} />
+                      <ToolbarBtn icon={Italic} />
+                      <ToolbarBtn icon={LinkIcon} />
+                      <div style={{ width: '1px', height: '20px', background: '#cbd5e1', margin: '0 4px' }} />
+                      <ToolbarBtn icon={List} />
+                      <ToolbarBtn icon={ListOrdered} />
+                    </div>
+                    <div style={{ position: 'relative' }}>
+                      <textarea
+                        value={form.desc}
+                        onChange={e => setForm({ ...form, desc: e.target.value })}
+                        style={{ width: '100%', background: 'transparent', border: 'none', color: '#0f172a', padding: '16px', minHeight: '120px', fontSize: '1rem', outline: 'none', resize: 'vertical' }}
+                        placeholder="A quick intro or sync call."
+                      />
+                      <div style={{ position: 'absolute', right: '16px', bottom: '16px', color: '#94a3b8', fontSize: '0.85rem' }}>
+                        {form.desc?.length || 0}/500
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <input 
-                  value={form.slug}
-                  onChange={e => setForm({ ...form, slug: e.target.value })}
-                  style={{ flex: 1, background: 'transparent', border: 'none', color: '#0f172a', padding: '14px 16px', fontSize: '1rem', outline: 'none', fontWeight: 500 }}
-                />
-                <div style={{ padding: '0 16px', color: '#94a3b8' }}>
-                  <LinkIcon size={18} />
-                </div>
-              </div>
-              <div style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '8px' }}>
-                This is your unique booking page link.
-              </div>
-            </div>
 
-            <div style={{ marginBottom: '32px' }}>
-              <label style={{ display: 'block', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', marginBottom: '12px' }}>Duration</label>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '14px 16px', cursor: 'pointer' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#0f172a', fontSize: '1rem', fontWeight: 600 }}>
-                  <Clock size={18} color="#64748b" /> {form.dur || '15 Minutes'}
+                <div style={{ marginBottom: '32px' }}>
+                  <label style={{ display: 'block', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', marginBottom: '12px' }}>URL</label>
+                  <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '8px', overflow: 'hidden', background: '#ffffff' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '14px 16px', background: '#f1f5f9', color: '#64748b', fontSize: '0.95rem', borderRight: '1px solid #cbd5e1' }}>
+                      <ArrowLeft size={16} style={{ transform: 'rotate(180deg)', transformOrigin: 'center' }} />
+                      localhost:5173/book/4587d085-425a-4eca-a72a-591dccec003e/
+                    </div>
+                    <input
+                      value={form.slug}
+                      onChange={e => setForm({ ...form, slug: e.target.value })}
+                      style={{ flex: 1, background: 'transparent', border: 'none', color: '#0f172a', padding: '14px 16px', fontSize: '1rem', outline: 'none', fontWeight: 500 }}
+                    />
+                    <div style={{ padding: '0 16px', color: '#94a3b8' }}>
+                      <LinkIcon size={18} />
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '8px' }}>
+                    This is your unique booking page link.
+                  </div>
                 </div>
-                <ChevronDown size={18} color="#64748b" />
-              </div>
-            </div>
 
-            <div style={{ marginBottom: 0 }}>
-              <label style={{ display: 'block', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', marginBottom: '12px' }}>Location</label>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '14px 16px', cursor: 'pointer' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#0f172a', fontSize: '1rem', fontWeight: 600 }}>
-                  <Video size={18} color="#2563eb" /> Google Meet (Default)
+                <div style={{ marginBottom: '32px' }}>
+                  <label style={{ display: 'block', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', marginBottom: '12px' }}>Duration</label>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '14px 16px', cursor: 'pointer' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#0f172a', fontSize: '1rem', fontWeight: 600 }}>
+                      <Clock size={18} color="#64748b" /> {form.dur || '15 Minutes'}
+                    </div>
+                    <ChevronDown size={18} color="#64748b" />
+                  </div>
                 </div>
-                <Settings size={18} color="#64748b" />
-              </div>
-            </div>
 
-            </div>
+                <div style={{ marginBottom: 0 }}>
+                  <label style={{ display: 'block', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', marginBottom: '12px' }}>Location</label>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '14px 16px', cursor: 'pointer' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#0f172a', fontSize: '1rem', fontWeight: 600 }}>
+                      <Video size={18} color="#2563eb" /> Google Meet (Default)
+                    </div>
+                    <Settings size={18} color="#64748b" />
+                  </div>
+                </div>
+
+              </div>
             )}
 
             {activeTab === 'availability' && (
@@ -255,14 +255,14 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
                 <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
                   <div style={{ fontSize: '1rem', fontWeight: 700, color: '#0f172a', marginBottom: '16px' }}>Availability</div>
-                  
+
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '12px 16px', marginBottom: '24px', cursor: 'pointer' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.95rem', fontWeight: 600, color: '#0f172a' }}>
                       Working hours <span style={{ background: '#eff6ff', color: '#2563eb', padding: '4px 10px', borderRadius: '16px', fontSize: '0.8rem', fontWeight: 700 }}>Default</span>
                     </div>
                     <ChevronDown size={18} color="#64748b" />
                   </div>
-                  
+
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '24px', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500 }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '16px', alignItems: 'center' }}>
                       <div>Sunday</div>
@@ -288,7 +288,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       <div style={{ color: '#94a3b8' }}>Unavailable</div>
                     </div>
                   </div>
-                  
+
                   <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.95rem', color: '#64748b', fontWeight: 600 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <Globe size={18} /> Asia/Calcutta
@@ -302,9 +302,9 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                 <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px' }}>
                   <h3 style={{ margin: '0 0 8px', fontSize: '1rem', fontWeight: 800, color: '#0f172a' }}>Check for conflicts</h3>
                   <p style={{ margin: 0, fontSize: '0.95rem', color: '#64748b', marginBottom: '24px' }}>Select which calendars you want to check for conflicts to prevent double bookings.</p>
-                  
+
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.95rem', color: '#64748b', marginBottom: '24px' }}>
-                     Use <div style={{ display: 'flex', alignItems: 'center', gap: '4px', borderBottom: '1px solid #cbd5e1', color: '#0f172a', fontWeight: 700, paddingBottom: '2px', cursor: 'pointer' }}>Account <ChevronDown size={14} /></div> Settings
+                    Use <div style={{ display: 'flex', alignItems: 'center', gap: '4px', borderBottom: '1px solid #cbd5e1', color: '#0f172a', fontWeight: 700, paddingBottom: '2px', cursor: 'pointer' }}>Account <ChevronDown size={14} /></div> Settings
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -343,7 +343,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                 </div>
 
                 <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', marginBottom: '24px' }}>
-                  
+
                   {/* Question Rows */}
                   {[
                     { title: 'Your name', badge: 'Required', badgeColor: '#0f172a', desc: 'Name', toggled: true, hideToggle: true },
@@ -448,9 +448,9 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                 <div style={{ marginBottom: '32px' }}>
                   <h3 style={{ margin: '0 0 8px', fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>Layout</h3>
                   <p style={{ margin: 0, fontSize: '0.95rem', color: '#64748b', marginBottom: '16px' }}>You can select multiple and your guests can switch views.</p>
-                  
+
                   <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
-                    
+
                     {/* Month Layout */}
                     <div>
                       <div style={{ width: '140px', height: '90px', border: '2px solid #2563eb', borderRadius: '12px', padding: '8px', marginBottom: '8px', cursor: 'pointer', background: '#ffffff', display: 'flex', flexDirection: 'column' }}>
@@ -552,99 +552,99 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                 </div>
               </div>
             )}
-            
+
           </div>
 
           {/* Preview Pane */}
-          <div style={{ width: '420px', padding: '40px 40px 40px 0', display: 'flex', flexDirection: 'column' }}>
-            
+          <div style={{ width: '420px', padding: '40px 40px 40px 40px', display: 'flex', flexDirection: 'column' }}>
+
             {activeTab !== 'form' && activeTab !== 'conf' && activeTab !== 'app' && activeTab !== 'pay' && (
               <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '0.95rem', fontWeight: 600, marginBottom: '16px' }}>
-              <Eye size={18} /> Preview
-            </div>
-
-            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column' }}>
-              
-              {/* Preview Content */}
-              <div style={{ padding: '24px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
-                  <div style={{ width: '48px', height: '48px', background: '#2563eb', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Calendar size={24} color="#ffffff" />
-                  </div>
-                  <h3 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 800, color: '#0f172a' }}>{form.title || '15 Min Meeting'}</h3>
-                </div>
-                
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '0.95rem', fontWeight: 500 }}>
-                    <Clock size={16} /> {form.dur?.replace(' Minutes', 'm') || '15m'}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '0.95rem', fontWeight: 500 }}>
-                    <Video size={16} /> Google Meet
-                  </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '0.95rem', fontWeight: 600, marginBottom: '16px' }}>
+                  <Eye size={18} /> Preview
                 </div>
 
-                <div style={{ fontSize: '0.95rem', color: '#475569', lineHeight: 1.5, paddingBottom: '24px', borderBottom: '1px solid #e2e8f0', marginBottom: '24px' }}>
-                  {form.desc || 'A quick intro or sync call.'}
+                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column' }}>
+
+                  {/* Preview Content */}
+                  <div style={{ padding: '24px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
+                      <div style={{ width: '48px', height: '48px', background: '#2563eb', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Calendar size={24} color="#ffffff" />
+                      </div>
+                      <h3 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 800, color: '#0f172a' }}>{form.title || '15 Min Meeting'}</h3>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '16px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '0.95rem', fontWeight: 500 }}>
+                        <Clock size={16} /> {form.dur?.replace(' Minutes', 'm') || '15m'}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '0.95rem', fontWeight: 500 }}>
+                        <Video size={16} /> Google Meet
+                      </div>
+                    </div>
+
+                    <div style={{ fontSize: '0.95rem', color: '#475569', lineHeight: 1.5, paddingBottom: '24px', borderBottom: '1px solid #e2e8f0', marginBottom: '24px' }}>
+                      {form.desc || 'A quick intro or sync call.'}
+                    </div>
+
+                    {/* Calendar Area */}
+                    <div>
+                      <h4 style={{ margin: '0 0 16px', fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>Select a Date & Time</h4>
+
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                        <ArrowLeft size={16} color="#64748b" />
+                        <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.95rem' }}>May 2025</div>
+                        <ArrowLeft size={16} color="#64748b" style={{ transform: 'rotate(180deg)' }} />
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', textAlign: 'center', marginBottom: '12px', fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8' }}>
+                        <div>SU</div><div>MO</div><div>TU</div><div>WE</div><div>TH</div><div>FR</div><div>SA</div>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', rowGap: '12px' }}>
+                        {/* Blank spaces for offset */}
+                        <div style={{ color: '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.95rem', fontWeight: 500 }}>28</div>
+                        <div style={{ color: '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.95rem', fontWeight: 500 }}>29</div>
+                        <div style={{ color: '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.95rem', fontWeight: 500 }}>30</div>
+
+                        {/* Dates */}
+                        {[...Array(11)].map((_, i) => {
+                          const date = i + 1;
+                          const isSelected = date === 1;
+                          return (
+                            <div key={date} style={{
+                              aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              borderRadius: '50%', fontSize: '0.95rem', fontWeight: 600,
+                              background: isSelected ? '#2563eb' : 'transparent',
+                              color: isSelected ? '#ffffff' : '#0f172a',
+                              cursor: 'pointer'
+                            }}>
+                              {date}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Calendar Area */}
-                <div>
-                  <h4 style={{ margin: '0 0 16px', fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>Select a Date & Time</h4>
-                  
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                    <ArrowLeft size={16} color="#64748b" />
-                    <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.95rem' }}>May 2025</div>
-                    <ArrowLeft size={16} color="#64748b" style={{ transform: 'rotate(180deg)' }} />
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', textAlign: 'center', marginBottom: '12px', fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8' }}>
-                    <div>SU</div><div>MO</div><div>TU</div><div>WE</div><div>TH</div><div>FR</div><div>SA</div>
-                  </div>
-                  
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', rowGap: '12px' }}>
-                    {/* Blank spaces for offset */}
-                    <div style={{ color: '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.95rem', fontWeight: 500 }}>28</div>
-                    <div style={{ color: '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.95rem', fontWeight: 500 }}>29</div>
-                    <div style={{ color: '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.95rem', fontWeight: 500 }}>30</div>
-                    
-                    {/* Dates */}
-                    {[...Array(11)].map((_, i) => {
-                      const date = i + 1;
-                      const isSelected = date === 1;
-                      return (
-                        <div key={date} style={{ 
-                          aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          borderRadius: '50%', fontSize: '0.95rem', fontWeight: 600,
-                          background: isSelected ? '#2563eb' : 'transparent',
-                          color: isSelected ? '#ffffff' : '#0f172a',
-                          cursor: 'pointer'
-                        }}>
-                          {date}
-                        </div>
-                      )
-                    })}
+                <div style={{ marginTop: '24px' }}>
+                  <button style={{ width: '100%', padding: '14px', background: '#ffffff', border: '1px solid #bfdbfe', borderRadius: '12px', color: '#2563eb', fontSize: '0.95rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer' }}>
+                    <Globe size={18} /> Open live booking page
+                  </button>
+                  <div style={{ textAlign: 'center', fontSize: '0.85rem', color: '#64748b', marginTop: '12px' }}>
+                    Share this link to start accepting bookings.
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <div style={{ marginTop: '24px' }}>
-              <button style={{ width: '100%', padding: '14px', background: '#ffffff', border: '1px solid #bfdbfe', borderRadius: '12px', color: '#2563eb', fontSize: '0.95rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer' }}>
-                <Globe size={18} /> Open live booking page
-              </button>
-              <div style={{ textAlign: 'center', fontSize: '0.85rem', color: '#64748b', marginTop: '12px' }}>
-                Share this link to start accepting bookings.
-              </div>
-            </div>
-            
-            </>
+              </>
             )}
 
             {(activeTab === 'form' || activeTab === 'app' || activeTab === 'pay') && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.04)' }}>
-                  
+
                   {/* Top Success Area */}
                   <div style={{ padding: '32px 32px 24px', textAlign: 'center' }}>
                     <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
@@ -657,7 +657,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   {/* Details Table */}
                   <div style={{ padding: '0 32px' }}>
                     <div style={{ borderTop: '1px solid #e2e8f0', padding: '24px 0', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                      
+
                       <div style={{ display: 'flex' }}>
                         <div style={{ width: '100px', fontSize: '0.9rem', fontWeight: 700, color: '#0f172a' }}>What</div>
                         <div style={{ flex: 1, fontSize: '0.9rem', color: '#475569', fontWeight: 500 }}>15 min meeting between Kontham sohith and Jane Doe</div>
@@ -709,7 +709,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
             )}
 
 
-            
+
           </div>
         </div>
       </div>
