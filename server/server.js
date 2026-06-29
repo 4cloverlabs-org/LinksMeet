@@ -146,7 +146,8 @@ app.get('/auth/google/callback', async (req, res) => {
 
     // Redirect back to CRM Dashboard
     console.log("Redirecting to dashboard...");
-    res.redirect('http://localhost:5173/dashboard?google_connected=true');
+    const frontendUrl = process.env.FRONTEND_URL || (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',')[0] : 'http://localhost:5173');
+    res.redirect(`${frontendUrl}/dashboard?google_connected=true`);
   } catch (error) {
     console.error("Auth Error in callback:", error);
     res.status(500).send("Authentication failed: " + error.message);
