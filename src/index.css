@@ -6,7 +6,7 @@
   --bg-secondary: 0deg 0% 100%;     /* Pure White: #FFFFFF */
   --bg-tertiary: 0deg 0% 100%;     /* Pure White: #FFFFFF */
 
-  --text-primary: 240deg 10% 8%;     /* Dark Charcoal: #121214 */
+  --text-primary: 0deg 0% 6.7%;     /* Dark Charcoal: rgb(17, 17, 17) */
   --text-secondary: 240deg 5% 45%;   /* Slate Gray: #6B6B75 */
   --text-muted: 240deg 4% 65%;       /* Muted Gray: #A3A3AC */
 
@@ -73,24 +73,31 @@
 
 body {
   background-color: hsl(var(--bg-primary));
-  color: hsl(var(--text-primary));
-  font-family: 'Geist', 'Geist Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: rgb(17, 17, 17);
+  font-family: "Labil Grotesk Variable", Arial, sans-serif;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 26px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  line-height: 1.5;
   overflow-x: hidden;
   transition: background-color var(--transition-normal), color var(--transition-normal);
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Geist', 'Geist Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-weight: 600;
+  font-family: "Labil Grotesk Variable", Arial, sans-serif;
+  font-weight: 400;
   letter-spacing: -0.02em;
-  line-height: 1.15;
+  color: rgb(17, 17, 17);
+}
+
+h1 {
+  font-size: 56px;
+  line-height: 56px;
 }
 
 button, input, textarea, select {
-  font-family: 'Geist', 'Geist Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "Labil Grotesk Variable", Arial, sans-serif;
   color: inherit;
 }
 
