@@ -602,17 +602,11 @@ export default function CrmDashboard() {
                           <button
                             key={n.id}
                             className={`crm-notif-item${n.read ? '' : ' unread'}`}
-                            onClick={() => {
-                              setNotifs(l => l.map(x => x.id === n.id ? { ...x, read: true } : x));
-                              if (n.view) {
-                                setView(n.view as any);
-                                setNotifOpen(false);
-                              }
-                            }}
+                            onClick={() => openNotif(n)}
                           >
                             <span className="ic"><Icon size={15} /></span>
                             <span className="txt">
-                              <span className="tb">{n.text}</span>
+                              <span className="tb">{n.title}</span>
                               <span className="tm">{n.time} ago</span>
                             </span>
                             {!n.read && <span className="crm-notif-unread-dot" />}

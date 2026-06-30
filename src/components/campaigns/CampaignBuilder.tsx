@@ -10,7 +10,7 @@ interface CampaignBuilderProps {
 }
 
 export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, campaignId }) => {
-  const { user } = useAuth();
+  const { } = useAuth();
   const [campaigns, setCampaigns] = useState<Campaign[]>(campaignEngine.getCampaigns());
   const [selectedStepId, setSelectedStepId] = useState<string>('');
   const [toastMsg, setToastMsg] = useState<string | null>(null);

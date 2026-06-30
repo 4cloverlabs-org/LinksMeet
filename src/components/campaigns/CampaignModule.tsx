@@ -16,7 +16,7 @@ export const CampaignModule: React.FC = () => {
   const [activeCampaignId, setActiveCampaignId] = useState<string | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>(campaignEngine.getCampaigns());
   const [tab, setTab] = useState<'builder' | 'sent' | 'conversations' | 'analytics' | 'settings'>('builder');
-  const [unreadReplies, setUnreadReplies] = useState(0);
+  const [, setUnreadReplies] = useState(0);
 
   useEffect(() => {
     const checkUnread = () => {

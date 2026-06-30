@@ -2,7 +2,7 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { API_BASE_URL } from '../lib/config';
-import { Calendar as CalendarIcon, Video, Loader2, ChevronLeft, ChevronRight, Clock, Globe, UserPlus, Check, ExternalLink } from 'lucide-react';
+import { Calendar as CalendarIcon, Video, Loader2, Clock, Globe, UserPlus, Check, ExternalLink } from 'lucide-react';
 import { type EventType } from '../lib/crm';
 import '../pages/CrmDashboard.css';
 
@@ -13,7 +13,7 @@ import '../pages/CrmDashboard.css';
 //   return `${pick(3)}-${pick(4)}-${pick(3)}`;
 // }
 
-const TIMES = ['09:00am', '09:30am', '10:00am', '10:30am', '11:00am', '01:00pm', '01:30pm', '02:00pm', '02:30pm', '03:00pm'];
+// const TIMES = ['09:00am', '09:30am', '10:00am', '10:30am', '11:00am', '01:00pm', '01:30pm', '02:00pm', '02:30pm', '03:00pm'];
 const MONTHS = ['May 2026', 'June 2026', 'July 2026'];
 const DAYS_IN_MONTH = [31, 30, 31];
 

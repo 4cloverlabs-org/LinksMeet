@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import {
-  ArrowLeft, Video, Link2, Clock, Settings, Calendar, CreditCard, LayoutTemplate,
-  Check, Eye, ShieldCheck, ExternalLink, Bold, Italic, Edit2, Save, Link as LinkIcon,
-  List, ListOrdered, Globe, ChevronDown, Mail, Code, Trash2, Plus, Info, Zap, RefreshCw, X, MessageSquare,
+  ArrowLeft, Video, Link2, Clock, Calendar, CreditCard, LayoutTemplate,
+  Check, Eye, ShieldCheck, ExternalLink, Bold, Italic, Edit2, Link as LinkIcon,
+  Globe, ChevronDown, Code, Trash2, Plus, Info, Zap, RefreshCw, X, MessageSquare,
   Phone, MapPin, Copy, Download, AlertTriangle
 } from 'lucide-react';
 import { addEventType, updateEventType, type EventType } from '../lib/crm';
@@ -56,8 +56,6 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
   // Interactive calendar preview states
   const [monthIdx, setMonthIdx] = useState(1); // 1 = June 2026
   const [selectedDate, setSelectedDate] = useState(30);
-  const [selectedDayTab, setSelectedDayTab] = useState(6);
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState('9:30 AM');
   const [timeFormat, setTimeFormat] = useState<'12h' | '24h'>('12h');
 
   const [schedule, setSchedule] = useState([
@@ -126,7 +124,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
   // Compute dynamic time slots based on duration
   const durMinutes = parseInt(form.dur || '15') || 15;
-  const generateSlots = () => {
+  /* const generateSlots = () => {
     const slots = [];
     let startMins = 9 * 60; // 9:00 AM
     for (let i = 0; i < 5; i++) {
@@ -139,16 +137,14 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
       startMins += durMinutes;
     }
     return slots;
-  };
-  const liveSlots = generateSlots();
+  }; */
 
   // Compute dynamic day tabs around selected date
-  const computeDayTabs = () => {
+  /* const computeDayTabs = () => {
     const maxDays = DAYS_IN_MONTH[monthIdx] || 30;
     let base = Math.min(Math.max(selectedDate - 2, 1), maxDays - 4);
     return [base, base + 1, base + 2, base + 3, base + 4];
-  };
-  const liveDayTabs = computeDayTabs();
+  }; */
 
   const handleSave = async () => {
     if (!form.title || !form.slug) return;
@@ -703,7 +699,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                         return (
                           <div
                             key={d}
-                            onClick={() => { setSelectedDate(d); setSelectedDayTab(d); }}
+                            onClick={() => { setSelectedDate(d); }}
                             style={{
                               width: '26px',
                               height: '26px',
