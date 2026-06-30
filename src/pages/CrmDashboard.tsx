@@ -570,6 +570,7 @@ export default function CrmDashboard() {
         </div>
       ) : (
       <div className="crm-main" style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+          {view !== 'campaigns' && (
           <div className="crm-topbar">
             <button className="crm-icon-btn crm-menu-btn" onClick={() => setSideOpen(true)} aria-label="Menu"><Menu size={18} /></button>
             <div className="crm-search">
@@ -601,12 +602,17 @@ export default function CrmDashboard() {
                           <button
                             key={n.id}
                             className={`crm-notif-item${n.read ? '' : ' unread'}`}
-                            onClick={() => openNotif(n)}
+                            onClick={() => {
+                              setNotifs(l => l.map(x => x.id === n.id ? { ...x, read: true } : x));
+                              if (n.view) {
+                                setView(n.view as any);
+                                setNotifOpen(false);
+                              }
+                            }}
                           >
-                            <span className="crm-notif-ic"><Icon size={15} /></span>
-                            <span className="crm-notif-tx">
-                              <span className="t">{n.title}</span>
-                              <span className="d">{n.desc}</span>
+                            <span className="ic"><Icon size={15} /></span>
+                            <span className="txt">
+                              <span className="tb">{n.text}</span>
                               <span className="tm">{n.time} ago</span>
                             </span>
                             {!n.read && <span className="crm-notif-unread-dot" />}
@@ -622,8 +628,9 @@ export default function CrmDashboard() {
               </div>
             </div>
           </div>
+          )}
 
-          <div className="crm-content" style={view === 'campaigns' ? { padding: 0, background: '#fcfcfd', display: 'flex', flexDirection: 'column' } : {}}>
+          <div className="crm-content" style={view === 'campaigns' ? { padding: 0, background: '#fcfcfd', display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' } : {}}>
             {view !== 'campaigns' && (
               <div className="crm-page-head">
                 <div>

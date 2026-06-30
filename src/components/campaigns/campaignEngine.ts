@@ -57,6 +57,9 @@ export interface CampaignStep {
   remainingSeconds?: number;
   totalSeconds?: number;
   waitUntil?: number;
+  opens?: number;
+  replies?: number;
+  clicks?: number;
 }
 
 export interface Campaign {
@@ -139,58 +142,89 @@ let settings: CampaignSettingsData = {
   gmailUserEmail: '',
 };
 
-// Mock data initialization
 const INITIAL_CAMPAIGNS: Campaign[] = [
   {
     id: 'camp_1',
-    name: 'SaaS Founders Outbound Q3',
+    name: 'SaaS Founders Outreach Q3',
     status: 'Running',
-    recipientEmail: 'joshikushal148@gmail.com',
-    recipientName: 'Joshi Kushal',
-    createdAt: Date.now() - 3600000 * 2,
+    recipientEmail: 'client@company.com',
+    recipientName: 'SaaS Founder',
+    createdAt: new Date('2025-05-24T10:00:00Z').getTime(),
     activeStepIndex: 1,
     steps: [
       {
         id: 's_1',
         type: 'email',
         title: 'Initial Email',
-        subject: '⚡ Pipeline velocity optimization — quick query',
-        body: '<p>Hello Joshi Kushal,</p><p>We noticed your organization has been rapidly expanding its operations. 🚀 Many B2B leaders we partner with mention that scaling autonomous sales outbound while maintaining high personalization is a critical bottleneck.</p><p>Our AI platform automatically crafts and delivers highly targeted, multi-step email workflows that increase response rates by 40%. 📊</p><p>Would you be open to a brief 10-minute executive walkthrough next week? 📅</p><p>Best regards,<br><strong>Kushal</strong></p>',
-        status: 'Opened',
+        subject: 'Helping {{company}} streamline their operations',
+        body: '<p>Hi {{first_name}},</p><p>I came across {{company}} and loved what you\'re building in the {{industry}} space.</p><p>Many {{industry}} teams we work with face similar challenges around automation and operational efficiency.</p><p>We help companies like {{company}} streamline workflows, reduce manual work, and scale faster.</p><p>Would you be open to a quick 15-min chat next week?</p><p>Best,<br>Kushal</p>',
+        status: 'Sent',
+        opens: 124,
+        replies: 23,
+        clicks: 8,
       },
       {
         id: 's_2',
         type: 'delay',
-        title: 'Wait 1 day',
-        delayValue: 1,
+        title: 'Wait for 2 days',
+        delayValue: 2,
         delayUnit: 'days',
         status: 'Queued',
-        remainingSeconds: 38450, // approx 10h 40m
-        totalSeconds: 86400,
+        remainingSeconds: 172800,
+        totalSeconds: 172800,
       },
       {
         id: 's_3',
         type: 'email',
         title: 'Follow-up 1',
-        subject: '💼 Case study: Automating outreach workflows',
-        body: '<p>Hello Joshi Kushal,</p><p>Following up on my previous note. We recently published a 90-second benchmark study demonstrating how teams cut manual prospecting hours by 70% while improving inbox deliverability. 📈</p><p>If exploring automated growth infrastructure aligns with your current roadmap, I would be delighted to send over the calendar link. 🤝</p><p>Warmly,<br><strong>Kushal</strong></p>',
+        subject: 'Quick follow-up regarding automation at {{company}}',
+        body: '<p>Hi {{first_name}},</p><p>Wanted to float this back to the top of your inbox. We recently helped a similar {{industry}} platform cut their manual operations time by over 40% using custom AI workflows.</p><p>Happy to send over a 2-min demo overview if that would be helpful before jumping on a call.</p><p>Best,<br>Kushal</p>',
         status: 'Pending',
+        opens: 98,
+        replies: 17,
+        clicks: 5,
       },
       {
         id: 's_4',
         type: 'delay',
-        title: 'Wait 3 days',
+        title: 'Wait for 3 days',
         delayValue: 3,
         delayUnit: 'days',
         status: 'Pending',
+        remainingSeconds: 259200,
+        totalSeconds: 259200,
       },
       {
         id: 's_5',
         type: 'email',
         title: 'Follow-up 2',
-        subject: '🤝 Permission to close your file, Joshi Kushal?',
-        body: '<p>Hello Joshi Kushal,</p><p>I understand priorities shift rapidly in fast-growing teams. If scaling outbound efficiency is not a focal point right now, I will go ahead and pause my follow-ups. ✨</p><p>Whenever you are ready to supercharge your sales pipeline with AI, feel free to reach out anytime!</p><p>Sincerely,<br><strong>Kushal</strong></p>',
+        subject: 'Automation architecture for {{company}}',
+        body: '<p>Hi {{first_name}},</p><p>I know Q3 roadmap execution is fast-paced right now. If scaling workflow automation is on your radar for the coming weeks, our team can set up an autonomous pilot in under 48 hours.</p><p>Let me know if next Tuesday or Wednesday works for a quick intro.</p><p>Best,<br>Kushal</p>',
         status: 'Pending',
+        opens: 63,
+        replies: 11,
+        clicks: 4,
+      },
+      {
+        id: 's_6',
+        type: 'delay',
+        title: 'Wait for 4 days',
+        delayValue: 4,
+        delayUnit: 'days',
+        status: 'Pending',
+        remainingSeconds: 345600,
+        totalSeconds: 345600,
+      },
+      {
+        id: 's_7',
+        type: 'email',
+        title: 'Follow-up 3',
+        subject: 'Closing the loop on {{company}} automation',
+        body: '<p>Hi {{first_name}},</p><p>Since I haven\'t heard back, I assume improving workflow automation isn\'t a top priority right now, so I won\'t reach out again for now.</p><p>If things change down the line, feel free to reply anytime. Wishing you and the {{company}} team a successful quarter ahead!</p><p>Best,<br>Kushal</p>',
+        status: 'Pending',
+        opens: 37,
+        replies: 7,
+        clicks: 2,
       },
     ],
   },
@@ -289,7 +323,13 @@ class CampaignEngine {
   private loadState() {
     const savedCamps = localStorage.getItem('sm_campaigns');
     if (savedCamps) {
-      try { this.campaigns = JSON.parse(savedCamps); } catch { this.campaigns = INITIAL_CAMPAIGNS; }
+      try { 
+        this.campaigns = JSON.parse(savedCamps); 
+        if (this.campaigns[0] && (this.campaigns[0].name?.includes('SaaS Founders') || !this.campaigns[0].steps[0]?.opens)) {
+          this.campaigns[0] = { ...INITIAL_CAMPAIGNS[0], id: this.campaigns[0].id };
+          localStorage.setItem('sm_campaigns', JSON.stringify(this.campaigns));
+        }
+      } catch { this.campaigns = INITIAL_CAMPAIGNS; }
     } else {
       this.campaigns = INITIAL_CAMPAIGNS;
     }
