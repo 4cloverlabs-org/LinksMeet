@@ -1,24 +1,106 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Mail, Send, MoreVertical, CheckCircle2, ChevronDown, ChevronUp, Trash2, Bold, Italic, Underline as UnderlineIcon, Link2, List, Image as ImageIcon, Smile, Eye, Hourglass, LayoutGrid } from 'lucide-react';
+import { Plus, Mail, Send, MoreVertical, CheckCircle2, ChevronDown, ChevronUp, Trash2, Bold, Italic, Underline as UnderlineIcon, Link2, List, Image as ImageIcon, Smile, Eye, ArrowLeft, Pause, Edit2, Sparkles, Clock, LayoutGrid, Hourglass } from 'lucide-react';
 import { campaignEngine, type Campaign, type CampaignStep } from './campaignEngine';
 import { useAuth } from '../../lib/AuthContext';
 import { AICampaignStudio } from './AICampaignStudio';
 
+const DelayUnitSelect = ({ value, onChange }: { value: string, onChange: (val: string) => void }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const options = ['minutes', 'hours', 'days', 'weeks'];
+  
+  return (
+    <div style={{ position: 'relative' }} onMouseLeave={() => setIsOpen(false)}>
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        style={{ 
+          border: '1px solid transparent', 
+          background: '#f8fafc',
+          borderRadius: '6px', 
+          padding: '4px 8px', 
+          fontWeight: 700, 
+          fontSize: '0.9rem',
+          color: '#0f172a', 
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px'
+        }}
+        onMouseOver={(e) => e.currentTarget.style.border = '1px solid #cbd5e1'}
+        onMouseOut={(e) => e.currentTarget.style.border = '1px solid transparent'}
+      >
+        {value} <ChevronDown size={14} color="#64748b" />
+      </div>
+      
+      {isOpen && (
+        <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '4px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', overflow: 'hidden', zIndex: 50, minWidth: '100px' }}>
+          {options.map(opt => (
+            <div
+              key={opt}
+              onClick={() => { onChange(opt); setIsOpen(false); }}
+              style={{ padding: '8px 12px', fontSize: '0.85rem', fontWeight: 600, color: opt === value ? '#0E61F3' : '#334155', background: opt === value ? '#eff6ff' : '#ffffff', cursor: 'pointer', transition: 'background 0.15s ease' }}
+              onMouseOver={(e) => e.currentTarget.style.background = opt === value ? '#eff6ff' : '#f1f5f9'}
+              onMouseOut={(e) => e.currentTarget.style.background = opt === value ? '#eff6ff' : '#ffffff'}
+            >
+              {opt}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 interface CampaignBuilderProps {
   userEmail: string;
   campaignId: string;
+  onBack?: () => void;
 }
 
-export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, campaignId }) => {
+export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, campaignId, onBack }) => {
   const { } = useAuth();
   const [campaigns, setCampaigns] = useState<Campaign[]>(campaignEngine.getCampaigns());
   const [selectedStepId, setSelectedStepId] = useState<string>('');
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [promptState, setPromptState] = useState<{ type: 'link' | 'image', selection: Range | null } | null>(null);
+  const [promptInput, setPromptInput] = useState('');
+  const [showSubjectTokens, setShowSubjectTokens] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const commonEmojis = ['😀', '🚀', '🔥', '✨', '💡', '📈', '👋', '🎉', '✅', '👀', '💪', '📅'];
+
+  const saveSelectionAndPrompt = (type: 'link' | 'image') => {
+    const sel = window.getSelection();
+    const range = sel && sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
+    setPromptState({ type, selection: range });
+    setPromptInput('');
+  };
+
+  const handlePromptSubmit = () => {
+    if (promptState && promptInput) {
+      const ed = document.getElementById('rich-text-editor');
+      if (ed) ed.focus();
+      const sel = window.getSelection();
+      if (sel && promptState.selection) {
+        sel.removeAllRanges();
+        sel.addRange(promptState.selection);
+      }
+      document.execCommand(promptState.type === 'link' ? 'createLink' : 'insertImage', false, promptInput);
+      
+      if (ed) {
+        handleUpdateStep(selIdx, { ...selectedStep, body: ed.innerHTML } as any);
+      }
+    }
+    setPromptState(null);
+    setPromptInput('');
+  };
+
+  const [logs, setLogs] = useState(campaignEngine.getLogs());
 
   useEffect(() => {
     const unsub = campaignEngine.subscribe((event) => {
-      if (['update', 'tick', 'campaign_completed'].includes(event)) {
+      if (['update', 'tick', 'campaign_completed', 'email_sent'].includes(event)) {
         setCampaigns(campaignEngine.getCampaigns());
+        setLogs(campaignEngine.getLogs());
       }
     });
     return () => unsub();
@@ -26,6 +108,16 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
 
   const activeCamp = campaigns.find(c => c.id === campaignId) || campaigns[0];
   if (!activeCamp) return null;
+
+  const campLogs = logs.filter(l => l.campaignId === activeCamp.id);
+  const emailsSent = campLogs.filter(l => ['Sent', 'Opened', 'Clicked', 'Replied'].includes(l.status)).length;
+  const emailsOpened = campLogs.filter(l => ['Opened', 'Clicked', 'Replied'].includes(l.status)).length;
+  const emailsReplied = campLogs.filter(l => l.replied).length;
+  
+  const openRate = emailsSent > 0 ? ((emailsOpened / emailsSent) * 100).toFixed(1) + '%' : '0%';
+  const replyRate = emailsSent > 0 ? ((emailsReplied / emailsSent) * 100).toFixed(1) + '%' : '0%';
+  // For the prototype, there's 1 recipient per campaign setup
+  const totalEnrolled = activeCamp.recipientEmail ? 1 : 0;
 
   const emailSteps = activeCamp.steps.filter(s => s.type === 'email');
   const selectedStep = activeCamp.steps.find(s => s.id === selectedStepId) || emailSteps[0] || activeCamp.steps[0];
@@ -51,26 +143,41 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
     const newSteps = [...activeCamp.steps];
     newSteps.splice(index, 1);
     handleUpdateCamp({ steps: newSteps });
+    
+    // Auto-select the first available email step if the current one was deleted
+    const remainingEmails = newSteps.filter(s => s.type === 'email');
+    if (remainingEmails.length > 0) {
+      setSelectedStepId(remainingEmails[0].id);
+    } else {
+      setSelectedStepId('');
+    }
+    showToast('Step deleted');
   };
 
   const handleAddFollowUp = () => {
     const newSteps = [...activeCamp.steps];
     const seqNum = newSteps.filter(s => s.type === 'email').length + 1;
+    
+    // Auto-insert a wait delay if the previous step is an email
+    const lastStep = newSteps[newSteps.length - 1];
+    if (lastStep && lastStep.type === 'email') {
+      newSteps.push({
+        id: 'd_wait_' + Date.now(),
+        type: 'delay',
+        title: 'Wait 2 days',
+        delayValue: 2,
+        delayUnit: 'days',
+        status: 'Pending',
+      });
+    }
+
     const newEmailId = 's_fup_' + Date.now();
-    newSteps.push({
-      id: 's_delay_' + Date.now(),
-      type: 'delay',
-      title: 'Wait 3 days',
-      delayValue: 3,
-      delayUnit: 'days',
-      status: 'Pending',
-    });
     newSteps.push({
       id: newEmailId,
       type: 'email',
       title: 'Follow-up ' + (seqNum - 1),
       subject: '',
-      body: 'Hi {{first_name}},\n\nJust checking in on my previous note...\n\nBest,\nKushal',
+      body: 'Hi {{invitee_name}},\n\nJust checking in on my previous note...',
       status: 'Pending',
       opens: 0,
       replies: 0,
@@ -83,288 +190,453 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
 
   let emailCounter = 0;
   const selIdx = selectedStep ? activeCamp.steps.findIndex(s => s.id === selectedStep.id) : -1;
+  const tokens = ['{{invitee_name}}', '{{host_name}}', '{{meeting_date}}', '{{meeting_time}}', '{{meeting_link}}'];
 
   return (
-    <div style={{ position: 'relative', fontFamily: "'Geist', 'Geist Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
+    <div style={{ padding: '32px 40px', fontFamily: "'Geist', 'Geist Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
       {toastMsg && (
         <div style={{ position: 'fixed', bottom: '40px', right: '32px', zIndex: 100, background: '#0E61F3', color: '#fff', padding: '10px 18px', borderRadius: '10px', fontWeight: 700, fontSize: '0.88rem', boxShadow: '0 8px 20px rgba(14, 97, 243, 0.35)', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <CheckCircle2 size={16} /> {toastMsg}
         </div>
       )}
 
-      {/* 3-Column Grid: Timeline | Step Editor | AI Link & Pitch Analysis */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(380px, 420px) minmax(440px, 1fr) 350px', gap: '28px', alignItems: 'start' }}>
-        
-        {/* COLUMN 1: Sequence Timeline */}
-        <div style={{ position: 'relative' }}>
-          {/* Top row above timeline: Add Step button & Grid icon button side-by-side */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-            <button
-              onClick={handleAddFollowUp}
-              style={{ background: '#0E61F3', color: '#ffffff', border: 'none', padding: '8px 16px', borderRadius: '8px', fontWeight: 600, fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(14, 97, 243, 0.2)' }}
-            >
-              <Plus size={16} /> Add Step
-            </button>
-            <button style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#ffffff', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer' }}>
-              <LayoutGrid size={16} />
-            </button>
+      <div style={{ marginBottom: '32px' }}>
+        <button
+          onClick={onBack}
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: '#0E61F3', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', padding: 0, marginBottom: '16px' }}
+        >
+          <ArrowLeft size={16} /> Back to all sequences
+        </button>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+              <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                {activeCamp.name}
+              </h1>
+              <span style={{ background: '#dcfce7', color: '#166534', padding: '4px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700 }}>
+                {activeCamp.status === 'Running' ? 'Active' : activeCamp.status}
+              </span>
+            </div>
+            <div style={{ color: '#64748b', fontSize: '0.95rem' }}>For upcoming scheduled meetings</div>
           </div>
 
-          {/* Vertical timeline connector line */}
-          <div style={{ position: 'absolute', left: '16px', top: '70px', bottom: '60px', width: '2px', background: '#cbd5e1', zIndex: 0 }} />
-
-          {activeCamp.steps.map((step, idx) => {
-            if (step.type === 'email') {
-              emailCounter++;
-              const isSel = selectedStep?.id === step.id;
-              const curNum = emailCounter;
-
-              return (
-                <div key={step.id} style={{ position: 'relative', marginBottom: '16px' }}>
-                  {/* Circle indicator on vertical line outside the card */}
-                  {curNum === 1 ? (
-                    <div style={{ position: 'absolute', left: '10px', top: '30px', width: '14px', height: '14px', borderRadius: '50%', border: '2px solid #0E61F3', background: '#ffffff', zIndex: 2 }} />
-                  ) : (
-                    <div style={{ position: 'absolute', left: '3px', top: '24px', width: '28px', height: '28px', borderRadius: '50%', background: '#0E61F3', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.82rem', zIndex: 2, boxShadow: '0 2px 4px rgba(14, 97, 243, 0.2)' }}>
-                      {curNum}
-                    </div>
-                  )}
-
-                  {/* Email Step Card */}
-                  <div
-                    onClick={() => setSelectedStepId(step.id)}
-                    style={{ marginLeft: '48px', background: '#ffffff', border: isSel ? '2px solid #0E61F3' : '1px solid #e2e8f0', borderRadius: '14px', padding: '16px 18px', cursor: 'pointer', transition: 'all 0.15s ease', boxShadow: isSel ? '0 4px 16px rgba(14, 97, 243, 0.08)' : '0 1px 4px rgba(0,0,0,0.02)' }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        {/* Blue square icon box */}
-                        <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#0E61F3', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          {curNum === 1 ? <Mail size={18} /> : <Send size={18} />}
-                        </div>
-
-                        {/* Light blue round pill number inside card */}
-                        <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: '#dbeafe', color: '#1e40af', fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          {curNum}
-                        </div>
-
-                        <div>
-                          <div style={{ fontWeight: 700, fontSize: '1rem', color: '#0f172a' }}>
-                            {step.title || (curNum === 1 ? 'Initial Email' : `Follow-up ${curNum - 1}`)}
-                          </div>
-                          <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '2px', fontWeight: 500 }}>
-                            {curNum === 1 ? 'Sent immediately' : 'If no reply'}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Right Analytics & Menu */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <div style={{ display: 'flex', gap: '14px', textAlign: 'center' }}>
-                          <div>
-                            <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0f172a' }}>
-                              <span style={{ fontSize: '0.78rem', marginRight: '3px' }}>👁</span>{step.opens ?? (curNum === 1 ? 124 : curNum === 2 ? 98 : curNum === 3 ? 63 : 37)}
-                            </div>
-                            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 500 }}>Opens</div>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0f172a' }}>
-                              <span style={{ fontSize: '0.78rem', marginRight: '3px' }}>↩</span>{step.replies ?? (curNum === 1 ? 23 : curNum === 2 ? 17 : curNum === 3 ? 11 : 7)}
-                            </div>
-                            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 500 }}>Replies</div>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0f172a' }}>
-                              <span style={{ fontSize: '0.78rem', marginRight: '3px' }}>⚡</span>{step.clicks ?? (curNum === 1 ? 8 : curNum === 2 ? 5 : curNum === 3 ? 4 : 2)}
-                            </div>
-                            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 500 }}>Clicks</div>
-                          </div>
-                        </div>
-
-                        <button
-                          onClick={(e) => { e.stopPropagation(); if (curNum > 1) handleDeleteStep(idx); }}
-                          style={{ background: 'none', border: 'none', color: '#64748b', padding: '4px', cursor: 'pointer' }}
-                        >
-                          <MoreVertical size={18} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            } else {
-              return (
-                <div key={step.id} style={{ position: 'relative', marginBottom: '16px' }}>
-                  {/* Dot on line */}
-                  <div style={{ position: 'absolute', left: '13px', top: '20px', width: '8px', height: '8px', borderRadius: '50%', background: '#94a3b8', zIndex: 2 }} />
-
-                  {/* Delay Card */}
-                  <div style={{ marginLeft: '48px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '12px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <Hourglass size={18} color="#0E61F3" />
-                      <div>
-                        <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>Wait for</div>
-                        <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0f172a' }}>{step.delayValue || 2} {step.delayUnit || 'days'}</div>
-                      </div>
-                    </div>
-                    <span style={{ background: '#f1f5f9', color: '#475569', fontWeight: 600, fontSize: '0.78rem', padding: '4px 8px', borderRadius: '6px' }}>
-                      {step.delayValue || 2}d
-                    </span>
-                  </div>
-                </div>
-              );
-            }
-          })}
-
-          {/* Add Step Button at bottom */}
-          <div style={{ marginLeft: '48px', marginTop: '8px' }}>
-            <button
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button 
+              onClick={() => {
+                const newStatus = activeCamp.status === 'Running' ? 'Paused' : 'Running';
+                handleUpdateCamp({ status: newStatus });
+                showToast(`Sequence ${newStatus.toLowerCase()}`);
+              }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#ffffff', border: '1px solid #e2e8f0', color: '#0E61F3', fontWeight: 600, fontSize: '0.88rem', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.15s ease' }}
+            >
+              {activeCamp.status === 'Running' ? <><Pause size={15} /> Pause Sequence</> : <><Plus size={15} style={{transform: 'rotate(45deg)'}} /> Resume Sequence</>}
+            </button>
+            <button 
+              onClick={() => {
+                const newName = prompt('Enter new sequence name:', activeCamp.name);
+                if (newName && newName.trim()) {
+                  handleUpdateCamp({ name: newName.trim() });
+                  showToast('Sequence name updated');
+                }
+              }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#ffffff', border: '1px solid #e2e8f0', color: '#0E61F3', fontWeight: 600, fontSize: '0.88rem', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.15s ease' }}
+            >
+              <Edit2 size={15} /> Edit Sequence
+            </button>
+            <button 
+              onClick={() => {
+                document.getElementById('ai-analyzer-container')?.scrollIntoView({ behavior: 'smooth' });
+                const el = document.getElementById('ai-analyzer-input');
+                if (el) el.focus();
+              }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#eff6ff', border: '1px solid #bfdbfe', color: '#0E61F3', fontWeight: 600, fontSize: '0.88rem', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.15s ease' }}
+            >
+              <Sparkles size={15} /> AI Analyzer
+            </button>
+            <button 
               onClick={handleAddFollowUp}
-              style={{ width: '100%', padding: '12px', background: '#ffffff', border: '1px dashed #93c5fd', borderRadius: '10px', color: '#0E61F3', fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer', transition: 'all 0.15s ease' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#0E61F3', border: 'none', color: '#ffffff', fontWeight: 600, fontSize: '0.88rem', padding: '9px 18px', borderRadius: '8px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(14, 97, 243, 0.2)' }}
             >
               <Plus size={16} /> Add Step
             </button>
           </div>
         </div>
+      </div>
 
-        {/* COLUMN 2: Selected Step Editor Card */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 350px) minmax(440px, 1fr) 350px', gap: '24px', alignItems: 'start' }}>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#f1f5f9', color: '#0E61F3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Mail size={18} />
+            </div>
+            <div>
+              <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '0.9rem' }}>Sequence Overview</div>
+              <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '2px' }}>{activeCamp.steps.length} Steps • {emailSteps.length} Emails</div>
+            </div>
+          </div>
+
+          <div style={{ position: 'relative', paddingLeft: '16px', paddingTop: '10px' }}>
+            <div style={{ position: 'absolute', left: '28px', top: '10px', bottom: '0px', width: '2px', background: '#e2e8f0', zIndex: 0 }} />
+            {activeCamp.steps.map((step, idx) => {
+              if (step.type === 'email') {
+                emailCounter++;
+                const isSel = selectedStep?.id === step.id;
+                const curNum = emailCounter;
+                return (
+                  <div key={step.id} style={{ position: 'relative', marginBottom: '20px' }}>
+                    <div style={{ position: 'absolute', left: '0', top: '24px', width: '26px', height: '26px', borderRadius: '50%', background: '#0E61F3', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.8rem', zIndex: 2, border: '2px solid #ffffff' }}>
+                      {curNum}
+                    </div>
+                    <div
+                      onClick={() => setSelectedStepId(step.id)}
+                      style={{ marginLeft: '40px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', cursor: 'pointer', transition: 'all 0.15s ease', boxShadow: isSel ? '0 0 0 2px #0E61F3, 0 4px 12px rgba(14, 97, 243, 0.1)' : '0 1px 2px rgba(0,0,0,0.02)' }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#eff6ff', color: '#0E61F3', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <Mail size={16} />
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600, marginBottom: '2px' }}>Step {curNum}</div>
+                            <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0f172a' }}>{step.title || (curNum === 1 ? 'Reminder: Upcoming Meeting' : `Follow-up ${curNum - 1}`)}</div>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span style={{ background: '#eff6ff', color: '#0E61F3', fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: '4px' }}>Email</span>
+                          {idx > 0 && (
+                            <div
+                              onClick={(e) => { e.stopPropagation(); handleDeleteStep(idx); }}
+                              style={{ color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s ease' }}
+                              onMouseOver={(e) => e.currentTarget.style.color = '#dc2626'}
+                              onMouseOut={(e) => e.currentTarget.style.color = '#94a3b8'}
+                              title="Delete Step"
+                            >
+                              <Trash2 size={15} />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div style={{ marginLeft: '44px', marginTop: '12px', fontSize: '0.8rem', color: '#64748b' }}>{curNum === 1 ? '1 day before meeting at 09:00 AM' : '1 hour before meeting'}</div>
+                    </div>
+                  </div>
+                );
+              } else if (step.type === 'delay') {
+                return (
+                  <div key={step.id} style={{ position: 'relative', marginBottom: '20px' }}>
+                    <div style={{ position: 'absolute', left: '9px', top: '24px', width: '8px', height: '8px', borderRadius: '50%', background: '#94a3b8', zIndex: 2 }} />
+                    <div style={{ marginLeft: '40px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <Hourglass size={18} color="#0E61F3" />
+                        <div>
+                          <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>Wait for</div>
+                          <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                            <input 
+                              type="number" 
+                              min="1"
+                              value={step.delayValue || 2} 
+                              onChange={(e) => handleUpdateStep(idx, { ...step, delayValue: parseInt(e.target.value) || 1 })}
+                              style={{ 
+                                width: '44px', 
+                                border: '1px solid transparent', 
+                                background: '#f8fafc',
+                                borderRadius: '6px', 
+                                padding: '4px 6px', 
+                                fontWeight: 700, 
+                                fontSize: '0.9rem',
+                                outline: 'none', 
+                                color: '#0f172a',
+                                textAlign: 'center',
+                                transition: 'all 0.2s ease',
+                                cursor: 'text'
+                              }}
+                              onMouseOver={(e) => e.currentTarget.style.border = '1px solid #cbd5e1'}
+                              onMouseOut={(e) => e.currentTarget.style.border = '1px solid transparent'}
+                              onFocus={(e) => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.border = '1px solid #0E61F3'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(14,97,243,0.1)' }}
+                              onBlur={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.border = '1px solid transparent'; e.currentTarget.style.boxShadow = 'none' }}
+                            />
+                            <DelayUnitSelect
+                              value={step.delayUnit || 'days'}
+                              onChange={(val) => handleUpdateStep(idx, { ...step, delayUnit: val as any })}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        onClick={(e) => { e.stopPropagation(); handleDeleteStep(idx); }}
+                        style={{ color: '#cbd5e1', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s ease', padding: '4px' }}
+                        onMouseOver={(e) => e.currentTarget.style.color = '#dc2626'}
+                        onMouseOut={(e) => e.currentTarget.style.color = '#cbd5e1'}
+                        title="Delete Delay"
+                      >
+                        <Trash2 size={15} />
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            })}
+
+            <button onClick={handleAddFollowUp} style={{ marginLeft: '40px', display: 'flex', alignItems: 'center', gap: '12px', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0', marginTop: '10px' }}>
+              <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: '#ffffff', border: '1px dashed #cbd5e1', color: '#0E61F3', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', left: '-40px' }}><Plus size={14} /></div>
+              <div style={{ marginLeft: '-28px', textAlign: 'left' }}>
+                <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '0.88rem' }}>Add Step</div>
+                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Add Email or SMS step</div>
+              </div>
+            </button>
+          </div>
+
+          <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', marginTop: '16px' }}>
+            <div style={{ fontWeight: 600, color: '#334155', fontSize: '0.85rem', marginBottom: '16px' }}>Sequence Performance <span style={{ color: '#94a3b8', fontWeight: 400 }}>(Last 30 days)</span></div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}><span style={{ color: '#475569', display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle2 size={14} color="#0E61F3" /> Total enrolled</span><span style={{ fontWeight: 700, color: '#0f172a' }}>{totalEnrolled}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}><span style={{ color: '#475569', display: 'flex', alignItems: 'center', gap: '8px' }}><Mail size={14} color="#0E61F3" /> Emails sent</span><span style={{ fontWeight: 700, color: '#0f172a' }}>{emailsSent}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}><span style={{ color: '#475569', display: 'flex', alignItems: 'center', gap: '8px' }}><Eye size={14} color="#0E61F3" /> Open rate</span><span style={{ fontWeight: 700, color: '#0f172a' }}>{openRate}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}><span style={{ color: '#475569', display: 'flex', alignItems: 'center', gap: '8px' }}><Send size={14} color="#0E61F3" /> Reply rate</span><span style={{ fontWeight: 700, color: '#0f172a' }}>{replyRate}</span></div>
+            </div>
+          </div>
+        </div>
+
         {selectedStep && selectedStep.type === 'email' && selIdx !== -1 ? (
-          <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', overflow: 'hidden' }}>
-            {/* Editor Header */}
-            <div style={{ padding: '18px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#0E61F3', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Mail size={18} />
-                </div>
-                <span style={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a' }}>
-                  {selectedStep.title || 'Initial Email'}
-                </span>
-                <span style={{ background: '#f1f5f9', color: '#475569', padding: '4px 10px', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 600 }}>
-                  Step {emailSteps.findIndex(s => s.id === selectedStep.id) + 1} of 7
+                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#eff6ff', color: '#0E61F3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Mail size={16} /></div>
+                <span style={{ fontWeight: 700, fontSize: '1.05rem', color: '#0f172a' }}>Step {emailSteps.findIndex(s => s.id === selectedStep.id) + 1}: {selectedStep.title || 'Reminder - Upcoming Meeting'}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span 
+                  onClick={() => {
+                    const newStatus = selectedStep.status === 'Paused' ? 'Pending' : 'Paused';
+                    handleUpdateStep(selIdx, { ...selectedStep, status: newStatus });
+                  }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', background: selectedStep.status === 'Paused' ? '#f1f5f9' : '#dcfce7', color: selectedStep.status === 'Paused' ? '#64748b' : '#166534', padding: '4px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s ease' }}
+                  onMouseOver={(e) => e.currentTarget.style.opacity = '0.8'}
+                  onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
+                >
+                  {selectedStep.status === 'Paused' ? 'Paused' : 'Active'}
                 </span>
               </div>
+            </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#16a34a', fontWeight: 600, fontSize: '0.85rem' }}>
-                  <CheckCircle2 size={16} /> Ready
-                </span>
-                <ChevronUp size={16} color="#64748b" style={{ cursor: 'pointer' }} />
-                <button
-                  onClick={() => { if (selIdx > 0) handleDeleteStep(selIdx); }}
-                  style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: 0 }}
+            <div style={{ padding: '24px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '24px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #e2e8f0' }}>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <div style={{ fontSize: '0.85rem', color: '#64748b', width: '40px' }}>From</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '0.85rem', color: '#0f172a' }}>{userEmail || 'sohithkontham5@gmail.com'}</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#166534', fontSize: '0.75rem', fontWeight: 500, background: '#dcfce7', padding: '2px 6px', borderRadius: '4px' }}><CheckCircle2 size={12} /> Connected</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #e2e8f0' }}>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: 1, marginRight: '16px' }}>
+                    <div style={{ fontSize: '0.85rem', color: '#64748b', width: '40px' }}>To</div>
+                    <input 
+                      type="text" 
+                      value={activeCamp.recipientEmail !== undefined ? activeCamp.recipientEmail : 'client@company.com'} 
+                      onChange={(e) => {
+                        const updatedCamp = { ...activeCamp, recipientEmail: e.target.value };
+                        campaignEngine.saveCampaign(updatedCamp);
+                      }}
+                      style={{ flex: 1, fontSize: '0.85rem', color: '#0f172a', border: 'none', background: 'transparent', outline: 'none' }}
+                      placeholder="recipient@company.com"
+                    />
+                  </div>
+                  <button onClick={() => showToast('Add recipient dialog')} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', color: '#64748b', fontSize: '0.82rem', cursor: 'pointer', padding: 0, transition: 'color 0.15s ease', whiteSpace: 'nowrap' }} onMouseOver={e => e.currentTarget.style.color = '#0f172a'} onMouseOut={e => e.currentTarget.style.color = '#64748b'}>
+                    <Plus size={14} /> Add Recipient
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#0f172a', marginBottom: '8px' }}>Subject</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 14px' }}>
+                  <input type="text" value={selectedStep.subject || 'Reminder: Your meeting with {{host_name}} is tomorrow'} onChange={(e) => handleUpdateStep(selIdx, { ...selectedStep, subject: e.target.value })} style={{ border: 'none', background: 'transparent', width: '100%', fontSize: '0.9rem', color: '#0f172a', outline: 'none' }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', position: 'relative' }}>
+                    <div style={{ position: 'relative', display: 'flex' }}>
+                      <Smile size={18} color="#94a3b8" style={{ cursor: 'pointer' }} onClick={() => setShowEmojiPicker(!showEmojiPicker)} />
+                      {showEmojiPicker && (
+                        <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 50, padding: '12px', width: '220px' }}>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', marginBottom: '8px' }}>Emojis</div>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                            {commonEmojis.map(emoji => (
+                              <div 
+                                key={emoji}
+                                onClick={() => {
+                                  const newSub = (selectedStep.subject || '') + emoji;
+                                  handleUpdateStep(selIdx, { ...selectedStep, subject: newSub });
+                                  setShowEmojiPicker(false);
+                                }}
+                                style={{ fontSize: '1.2rem', cursor: 'pointer', padding: '4px', borderRadius: '4px', transition: 'background 0.15s ease' }}
+                                onMouseOver={e => e.currentTarget.style.background = '#f1f5f9'}
+                                onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+                                title={emoji}
+                              >
+                                {emoji}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <span 
+                      onClick={() => setShowSubjectTokens(!showSubjectTokens)}
+                      style={{ color: '#0E61F3', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}
+                    >
+                      Insert <ChevronDown size={14} />
+                    </span>
+                    {showSubjectTokens && (
+                      <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 50, padding: '8px', width: '200px' }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', marginBottom: '8px', padding: '0 4px' }}>Insert Token</div>
+                        {tokens.map(t => (
+                          <div 
+                            key={t}
+                            onClick={() => {
+                              const newSub = (selectedStep.subject || '') + ' ' + t;
+                              handleUpdateStep(selIdx, { ...selectedStep, subject: newSub });
+                              setShowSubjectTokens(false);
+                            }}
+                            style={{ padding: '6px 8px', fontSize: '0.8rem', color: '#0f172a', cursor: 'pointer', borderRadius: '4px', transition: 'background 0.15s ease' }}
+                            onMouseOver={e => e.currentTarget.style.background = '#f1f5f9'}
+                            onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+                          >
+                            {t}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#0f172a' }}>Email Content</div>
+                  <button onClick={() => showToast('Preview mode')} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', color: '#0E61F3', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', padding: 0 }}><Eye size={14} /> Preview Email</button>
+                </div>
+                <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
+                  <div style={{ background: '#ffffff', borderBottom: '1px solid #e2e8f0', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', color: '#64748b' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, color: '#334155' }}>Paragraph <ChevronDown size={14} /></span>
+                      <div style={{ width: '1px', height: '16px', background: '#e2e8f0' }} />
+                      <Bold size={15} onMouseDown={e => e.preventDefault()} onClick={() => document.execCommand('bold', false)} style={{ cursor: 'pointer', color: '#0f172a' }} title="Bold" />
+                      <Italic size={15} onMouseDown={e => e.preventDefault()} onClick={() => document.execCommand('italic', false)} style={{ cursor: 'pointer', color: '#0f172a' }} title="Italic" />
+                      <UnderlineIcon size={15} onMouseDown={e => e.preventDefault()} onClick={() => document.execCommand('underline', false)} style={{ cursor: 'pointer', color: '#0f172a' }} title="Underline" />
+                      <div style={{ width: '1px', height: '16px', background: '#e2e8f0' }} />
+                      <Link2 size={15} onMouseDown={e => { e.preventDefault(); saveSelectionAndPrompt('link'); }} style={{ cursor: 'pointer', color: '#0f172a' }} title="Insert Link" />
+                      <ImageIcon size={15} onMouseDown={e => { e.preventDefault(); saveSelectionAndPrompt('image'); }} style={{ cursor: 'pointer', color: '#0f172a' }} title="Insert Image" />
+                      <List size={15} onMouseDown={e => e.preventDefault()} onClick={() => document.execCommand('insertUnorderedList', false)} style={{ cursor: 'pointer', color: '#0f172a' }} title="Bullet List" />
+                      <LayoutGrid size={15} style={{ cursor: 'pointer', color: '#0f172a' }} />
+                    </div>
+                  </div>
+                  {promptState && (
+                    <div style={{ padding: '12px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <input 
+                        autoFocus
+                        type="text" 
+                        placeholder={promptState.type === 'link' ? "Enter link URL (e.g. https://...)" : "Enter image URL..."} 
+                        value={promptInput}
+                        onChange={e => setPromptInput(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') handlePromptSubmit(); else if (e.key === 'Escape') setPromptState(null); }}
+                        style={{ flex: 1, border: '1px solid #cbd5e1', borderRadius: '6px', padding: '6px 10px', fontSize: '0.85rem', outline: 'none' }}
+                      />
+                      <button onClick={handlePromptSubmit} style={{ background: '#0E61F3', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Apply</button>
+                      <button onClick={() => setPromptState(null)} style={{ background: '#ffffff', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '6px 12px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+                    </div>
+                  )}
+                  <div
+                    id="rich-text-editor"
+                    key={selectedStep.id}
+                    contentEditable
+                    suppressContentEditableWarning
+                    onBlur={(e) => {
+                      const newHtml = e.currentTarget.innerHTML;
+                      handleUpdateStep(selIdx, { ...selectedStep, body: newHtml });
+                    }}
+                    onFocus={(e) => { e.currentTarget.style.outline = 'none'; }}
+                    dangerouslySetInnerHTML={{ __html: selectedStep.body || '' }}
+                    style={{ width: '100%', minHeight: '340px', border: 'none', outline: 'none', fontSize: '0.95rem', lineHeight: '1.6', color: '#0f172a', padding: '20px', fontFamily: 'inherit', overflowY: 'auto' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginTop: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>Personalization Tokens</div>
+                  <span style={{ fontSize: '0.8rem', color: '#0E61F3', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>View all tokens <ChevronDown size={14} /></span>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {tokens.map(t => (
+                    <div 
+                      key={t} 
+                      onClick={() => {
+                        const ed = document.getElementById('rich-text-editor');
+                        if (ed) {
+                          ed.focus();
+                          document.execCommand('insertText', false, t);
+                          handleUpdateStep(selIdx, { ...selectedStep, body: ed.innerHTML });
+                          showToast(`Inserted ${t}`);
+                        }
+                      }}
+                      onMouseDown={(e) => e.preventDefault()}
+                      style={{ border: '1px solid #bfdbfe', background: '#ffffff', color: '#0E61F3', fontSize: '0.75rem', fontWeight: 600, padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.15s ease' }}
+                      onMouseOver={(e) => e.currentTarget.style.background = '#eff6ff'}
+                      onMouseOut={(e) => e.currentTarget.style.background = '#ffffff'}
+                      title={`Click to insert ${t} into email`}
+                    >
+                      {t}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ padding: '20px 24px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <button onClick={() => { if (selIdx > 0) handleDeleteStep(selIdx); }} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', color: '#dc2626', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}><Trash2 size={16} /> Delete Step</button>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button 
+                  onClick={() => {
+                    handleUpdateStep(selIdx, { ...selectedStep, status: 'Sending' });
+                    showToast('Sending email immediately...');
+                    setTimeout(() => {
+                      handleUpdateStep(selIdx, { ...selectedStep, status: 'Sent' });
+                      showToast('Email sent successfully!');
+                    }, 1500);
+                  }}
+                  style={{ background: '#ffffff', border: '1px solid #0E61F3', color: '#0E61F3', fontWeight: 600, fontSize: '0.88rem', padding: '10px 18px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  onMouseOver={(e) => { e.currentTarget.style.background = '#eff6ff' }}
+                  onMouseOut={(e) => { e.currentTarget.style.background = '#ffffff' }}
                 >
-                  <Trash2 size={16} />
+                  <Send size={15} /> Send Now
+                </button>
+                <button onClick={() => showToast('Changes saved')} style={{ background: '#ffffff', border: '1px solid #cbd5e1', color: '#334155', fontWeight: 600, fontSize: '0.88rem', padding: '10px 18px', borderRadius: '8px', cursor: 'pointer' }}>Save Changes</button>
+                <button 
+                  onClick={() => {
+                    const currentEmailIdx = emailSteps.findIndex(s => s.id === selectedStep.id);
+                    if (currentEmailIdx >= 0 && currentEmailIdx < emailSteps.length - 1) {
+                      setSelectedStepId(emailSteps[currentEmailIdx + 1].id);
+                      showToast('Saved & Next');
+                    } else {
+                      showToast('Saved (Last Step)');
+                    }
+                  }} 
+                  style={{ background: '#0E61F3', border: 'none', color: '#ffffff', fontWeight: 600, fontSize: '0.88rem', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(14, 97, 243, 0.2)' }}
+                >
+                  Save & Next
                 </button>
               </div>
             </div>
-
-            {/* Form Fields */}
-            <div style={{ padding: '20px 24px 0' }}>
-              <div style={{ marginBottom: '16px' }}>
-                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', marginBottom: '6px' }}>From</div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 14px' }}>
-                  <span style={{ fontSize: '0.88rem', fontWeight: 500, color: '#0f172a' }}>{userEmail || 'kushaljoshi2786@gmail.com'}</span>
-                  <span style={{ background: '#dcfce7', color: '#15803d', padding: '4px 10px', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    Connected ✓ <ChevronDown size={13} />
-                  </span>
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '16px' }}>
-                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', marginBottom: '6px' }}>To</div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 14px' }}>
-                  <input
-                    type="text"
-                    value={activeCamp.recipientEmail || 'client@company.com'}
-                    onChange={(e) => handleUpdateCamp({ recipientEmail: e.target.value })}
-                    style={{ border: 'none', background: 'transparent', width: '100%', fontSize: '0.88rem', color: '#0f172a', fontWeight: 500, outline: 'none' }}
-                  />
-                  <span style={{ color: '#0E61F3', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>+ Add Recipient</span>
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', marginBottom: '6px' }}>Subject</div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 14px' }}>
-                  <input
-                    type="text"
-                    value={selectedStep.subject || 'Helping {{company}} streamline their operations'}
-                    onChange={(e) => handleUpdateStep(selIdx, { ...selectedStep, subject: e.target.value })}
-                    style={{ border: 'none', background: 'transparent', width: '100%', fontSize: '0.88rem', color: '#0f172a', fontWeight: 500, outline: 'none' }}
-                  />
-                  <span style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '4px 10px', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-                    ✨ Personalize <ChevronDown size={13} />
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Rich Text Toolbar & Textarea Box */}
-            <div style={{ margin: '0 24px 20px', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
-              <div style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', color: '#475569' }}>
-                  <button type="button" onClick={() => handleUpdateStep(selIdx, { ...selectedStep, body: `<b>${selectedStep.body || ''}</b>` })} style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer' }}><Bold size={15} /></button>
-                  <button type="button" onClick={() => handleUpdateStep(selIdx, { ...selectedStep, body: `<i>${selectedStep.body || ''}</i>` })} style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer' }}><Italic size={15} /></button>
-                  <button type="button" onClick={() => handleUpdateStep(selIdx, { ...selectedStep, body: `<u>${selectedStep.body || ''}</u>` })} style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer' }}><UnderlineIcon size={15} /></button>
-                  <button type="button" style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer' }}><Link2 size={15} /></button>
-                  <button type="button" style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer' }}><List size={15} /></button>
-                  <button type="button" style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer' }}><ImageIcon size={15} /></button>
-                  <button type="button" style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer' }}><Smile size={15} /></button>
-                </div>
-
-                <select
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      handleUpdateStep(selIdx, { ...selectedStep, body: `${selectedStep.body || ''} ${e.target.value}` });
-                      e.target.value = '';
-                    }
-                  }}
-                  defaultValue=""
-                  style={{ background: 'none', border: 'none', fontSize: '0.82rem', fontWeight: 600, color: '#475569', cursor: 'pointer', outline: 'none' }}
-                >
-                  <option value="" disabled>{'{ } Variables'}</option>
-                  <option value="{{first_name}}">First Name ({'{{first_name}}'})</option>
-                  <option value="{{company}}">Company ({'{{company}}'})</option>
-                  <option value="{{industry}}">Industry ({'{{industry}}'})</option>
-                </select>
-              </div>
-
-              <textarea
-                value={(selectedStep.body || 'Hi {{first_name}},\n\nI came across {{company}} and loved what you\'re building in the {{industry}} space.\n\nMany {{industry}} teams we work with face similar challenges around automation and operational efficiency.\n\nWe help companies like {{company}} streamline workflows, reduce manual work, and scale faster.\n\nWould you be open to a quick 15-min chat next week?\n\nBest,\nKushal').replace(/<[^>]*>?/gm, '')}
-                onChange={(e) => {
-                  const raw = e.target.value;
-                  const formatted = raw.split('\n\n').map(p => `<p>${p}</p>`).join('');
-                  handleUpdateStep(selIdx, { ...selectedStep, body: formatted || raw });
-                }}
-                placeholder="Write your email content..."
-                style={{ width: '100%', minHeight: '340px', border: 'none', outline: 'none', resize: 'vertical', fontSize: '0.92rem', lineHeight: '1.6', color: '#0f172a', padding: '20px', fontFamily: 'inherit' }}
-              />
-            </div>
-
-            {/* Footer Action Bar */}
-            <div style={{ padding: '16px 24px', background: '#ffffff', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <button
-                onClick={() => showToast('Test email dispatched to ' + userEmail)}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#ffffff', border: '1px solid #cbd5e1', color: '#334155', fontWeight: 600, fontSize: '0.88rem', padding: '10px 18px', borderRadius: '8px', cursor: 'pointer' }}
-              >
-                <Send size={15} /> Send Test Email
-              </button>
-
-              <button
-                onClick={() => showToast('Preview generated for ' + selectedStep.title)}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#ffffff', border: '1px solid #cbd5e1', color: '#334155', fontWeight: 600, fontSize: '0.88rem', padding: '10px 18px', borderRadius: '8px', cursor: 'pointer' }}
-              >
-                <Eye size={15} /> Preview Email
-              </button>
-            </div>
           </div>
         ) : (
-          <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '48px', textAlign: 'center', color: '#64748b' }}>
-            Select an email step on the left timeline to edit its copy and variables.
-          </div>
+          <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '48px', textAlign: 'center', color: '#64748b' }}>Select an email step on the left timeline to edit its copy and variables.</div>
         )}
 
-        {/* COLUMN 3: AI Link & Description Analysis Section */}
-        <div>
+        <div id="ai-analyzer-container">
           <AICampaignStudio
             onApplySequence={(generatedSteps) => {
               handleUpdateCamp({ steps: generatedSteps });

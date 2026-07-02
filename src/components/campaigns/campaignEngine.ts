@@ -741,6 +741,7 @@ class CampaignEngine {
       return JSON.parse(cleaned);
     } catch (err) {
       console.warn("Groq scrape fallback used due to error:", err);
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate real-time delay
       const cleanUrl = url.replace(/https?:\/\//, '').replace(/\/.*$/, '').toLowerCase();
       if (cleanUrl.includes('stripe')) {
         return {
@@ -857,6 +858,7 @@ Do NOT include markdown formatting or backticks around the JSON.`;
       if (steps.length > 0) return steps;
     } catch (err) {
       console.warn("Groq sequence generation fallback used due to error:", err);
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate real-time generation delay
     }
 
     const industry = metadata.industry || 'your sector';
