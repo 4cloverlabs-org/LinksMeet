@@ -79,12 +79,16 @@ const oauth2Client = new google.auth.OAuth2(
 
 // Helper to encode emails for Gmail API
 const makeBody = (to, from, subject, message) => {
+  const cleanSubject = sanitizeHeader(subject);
+  // Encode subject correctly for email headers to support emojis/special chars
+  const encodedSubject = `=?utf-8?B?${Buffer.from(cleanSubject).toString('base64')}?=`;
+
   const str = ["Content-Type: text/html; charset=\"UTF-8\"\n",
     "MIME-Version: 1.0\n",
-    "Content-Transfer-Encoding: 7bit\n",
+    "Content-Transfer-Encoding: 8bit\n",
     "to: ", sanitizeHeader(to), "\n",
     "from: ", sanitizeHeader(from), "\n",
-    "subject: ", sanitizeHeader(subject), "\n\n",
+    "subject: ", encodedSubject, "\n\n",
     message
   ].join('');
 
