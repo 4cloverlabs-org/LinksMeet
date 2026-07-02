@@ -664,7 +664,8 @@ if (supabase) {
         if (!camp.steps || camp.steps.length === 0) continue;
         
         let steps = [...camp.steps];
-        let idx = camp.active_step_index || 0;
+        let idx = camp.active_step_index !== undefined && camp.active_step_index !== null ? camp.active_step_index : 0;
+        if (idx === -1) idx = 0;
         
         if (idx >= steps.length) {
           await supabase.from('campaigns').update({ status: 'Completed', steps }).eq('id', camp.id);
