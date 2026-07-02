@@ -261,10 +261,10 @@ export default function BookingPage() {
                   <span style={{ fontWeight: 500, color: '#0f172a' }}>{hostName}</span>
                   <span style={{ background: '#eff6ff', color: '#0E61F3', padding: '2px 8px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, marginLeft: '8px' }}>Host</span>
                 </div>
-                <div style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '2px' }}>kushaljoshi2786@gmail.com</div>
+                <div style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '2px' }}>lead@example.com</div>
 
                 <div style={{ marginTop: '14px', fontWeight: 500, color: '#0f172a' }}>{name || 'JR Piano'}</div>
-                <div style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '2px' }}>{email || 'kushaljoshi2786@gmail.com'}</div>
+                <div style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '2px' }}>{email || 'lead@example.com'}</div>
               </div>
 
               <div style={{ fontWeight: 700, color: '#0f172a' }}>Where</div>

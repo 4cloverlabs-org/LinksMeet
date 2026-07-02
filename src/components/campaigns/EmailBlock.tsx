@@ -46,7 +46,7 @@ export const EmailBlock: React.FC<EmailBlockProps> = ({
   };
 
   const handleSendTest = async () => {
-    const target = recipientEmail || 'kushaljoshi2786@gmail.com';
+    const target = recipientEmail || 'lead@example.com';
     const subj = step.subject || 'Test Email from LinksMeet';
     const html = renderPreview(step.body || '');
     setTestStatus({ active: true, error: false, text: 'Sending via Gmail API...' });
@@ -56,20 +56,20 @@ export const EmailBlock: React.FC<EmailBlockProps> = ({
   };
 
   const deriveName = (email: string) => {
-    const [local = ''] = (email || 'joshikushal148@gmail.com').split('@');
-    if (local.toLowerCase().includes('kushal')) return 'Kushal';
+    const [local = ''] = (email || 'lead@example.com').split('@');
+    if (local.toLowerCase().includes('Sales Professional')) return 'Sales Professional';
     let cleaned = local.replace(/[0-9_.-]+/g, ' ').trim();
     let words = cleaned.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
-    if (words.length === 1 && words[0].toLowerCase() === 'joshikushal') {
-      words = ['Joshi', 'Kushal'];
+    if (words.length === 1 && words[0].toLowerCase() === 'joshiSales Professional') {
+      words = ['Joshi', 'Sales Professional'];
     }
-    return words.join(' ') || 'Joshi Kushal';
+    return words.join(' ') || 'Sales Professional';
   };
 
   const renderPreview = (html: string) => {
-    const toEmail = recipientEmail || 'joshikushal148@gmail.com';
+    const toEmail = recipientEmail || 'lead@example.com';
     const toName = deriveName(toEmail);
-    const fromName = 'Kushal';
+    const fromName = 'Sales Professional';
     const domain = toEmail.includes('@') ? toEmail.split('@')[1] : '';
     const genericDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com'];
     const companyName = (!genericDomains.includes(domain.toLowerCase()) && domain.includes('.'))
@@ -144,7 +144,7 @@ export const EmailBlock: React.FC<EmailBlockProps> = ({
         <div className="camp-form-row">
           <span className="camp-form-label">From:</span>
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontWeight: 500, color: '#334155', fontSize: '0.9rem' }}>{userEmail || 'kushal@linksmeet.io'}</span>
+            <span style={{ fontWeight: 500, color: '#334155', fontSize: '0.9rem' }}>{userEmail || 'sender@example.com'}</span>
             <span style={{ fontSize: '0.75rem', background: '#dcfce7', color: '#166534', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>
               Connected Mailbox ✓
             </span>
@@ -202,8 +202,8 @@ export const EmailBlock: React.FC<EmailBlockProps> = ({
             defaultValue=""
           >
             <option value="" disabled>+ Insert Detail</option>
-            <option value={deriveName(recipientEmail || 'joshikushal148@gmail.com')}>Recipient Name ({deriveName(recipientEmail || 'joshikushal148@gmail.com')})</option>
-            <option value="Kushal">Sender Name (Kushal)</option>
+            <option value={deriveName(recipientEmail || 'lead@example.com')}>Recipient Name ({deriveName(recipientEmail || 'lead@example.com')})</option>
+            <option value="Sales Professional">Sender Name (Sales Professional)</option>
             <option value="your organization">Organization</option>
           </select>
 

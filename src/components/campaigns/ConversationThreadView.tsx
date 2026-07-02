@@ -39,7 +39,7 @@ export const ConversationThreadView: React.FC = () => {
     campaignEngine.simulateIncomingReply(
       'alex.rivas@cloudscale.io',
       'alex.rivas@cloudscale.io',
-      '<p>Hello Kushal,</p><p>We received your note regarding autonomous outbound sequence workflows. 🚀 We are actively scaling our sales operations and could benefit from AI automation. 💼</p><p>What does your onboarding schedule and enterprise infrastructure setup look like?</p><p>Best,<br>Joshi Kushal</p>',
+      '<p>Hello Sales Professional,</p><p>We received your note regarding autonomous outbound sequence workflows. 🚀 We are actively scaling our sales operations and could benefit from AI automation. 💼</p><p>What does your onboarding schedule and enterprise infrastructure setup look like?</p><p>Best,<br>Sales Professional</p>',
       'SaaS Founders Outbound Q3'
     );
   };

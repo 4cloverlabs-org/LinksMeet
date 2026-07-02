@@ -491,10 +491,25 @@ class CampaignEngine {
   public async sendReplyMessage(threadId: string, content: string) {
     const thread = this.threads.find(t => t.id === threadId);
     if (thread) {
+      let senderEmail = 'user@example.com';
+      let senderName = 'Sales Professional';
+      
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const uid = sessionData.session?.user?.id;
+        if (uid) {
+          const { data: profile } = await supabase.from('users').select('first_name, email').eq('id', uid).single();
+          if (profile) {
+            senderEmail = profile.email || senderEmail;
+            senderName = profile.first_name || senderName;
+          }
+        }
+      } catch (e) { console.warn(e); }
+
       thread.messages.push({
         id: 'msg_' + Math.random().toString(36).substring(2, 9),
-        sender: 'kushal@linksmeet.io',
-        senderName: 'Kushal',
+        sender: senderEmail,
+        senderName: senderName,
         content,
         timestamp: 'Just now',
         isLead: false,
@@ -566,20 +581,30 @@ class CampaignEngine {
   // AI Sequence Generator with Groq API
   // AI Sequence Generator with Groq API
   public async generateAISequence(metadata: any, description: string) {
-    const targetEmail = metadata.recipientEmail || 'joshikushal148@gmail.com';
+    const targetEmail = metadata.recipientEmail || 'lead@example.com';
     const [localPart = '', domainPart = ''] = targetEmail.split('@');
     let cleanName = localPart.replace(/[0-9_.-]+/g, ' ').trim();
     let nameWords = cleanName.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
-    if (nameWords.length === 1 && nameWords[0].toLowerCase() === 'joshikushal') {
-      nameWords = ['Joshi', 'Kushal'];
-    }
-    const derivedName = nameWords.join(' ') || 'Joshi Kushal';
+    const derivedName = nameWords.join(' ') || 'Valued Connection';
     
     const genericDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com'];
     const derivedCompany = (!genericDomains.includes(domainPart.toLowerCase()) && domainPart.includes('.'))
       ? domainPart.split('.')[0].charAt(0).toUpperCase() + domainPart.split('.')[0].slice(1)
       : (metadata.companyName || 'your organization');
-    const derivedSender = 'Kushal';
+    
+    let derivedSender = 'Sales Professional';
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const uid = sessionData.session?.user?.id;
+      if (uid) {
+        const { data: profile } = await supabase.from('users').select('first_name').eq('id', uid).single();
+        if (profile && profile.first_name) {
+          derivedSender = profile.first_name;
+        }
+      }
+    } catch (e) {
+      console.warn("Could not fetch user name for AI prompt", e);
+    }
 
     const cleanText = (str: string) => {
       if (!str) return '';
@@ -737,17 +762,17 @@ Return ONLY the plain email reply body text (with appropriate line breaks/paragr
     } catch (err) {
       console.warn("Groq reply generation fallback used due to error:", err);
       if (action === 'suggest') {
-        return `Hello ${thread.leadEmail},\n\nThank you for reaching out! Regarding your strategic inquiry — yes, all our enterprise tiers include rigorous SOC-2 Type II and HIPAA compliant encryption out of the box. 🔒\n\nFor enterprise volume plans, let us know if you have 10 minutes available tomorrow for a quick executive walkthrough! 📅\n\nBest regards,\nKushal`;
+        return `Hello ${thread.leadEmail},\n\nThank you for reaching out! Regarding your strategic inquiry — yes, all our enterprise tiers include rigorous SOC-2 Type II and HIPAA compliant encryption out of the box. 🔒\n\nFor enterprise volume plans, let us know if you have 10 minutes available tomorrow for a quick executive walkthrough! 📅\n\nBest regards,\nSales Professional`;
       } else if (action === 'professional') {
-        return `Dear ${thread.leadEmail},\n\nThank you for your prompt correspondence. We are pleased to confirm complete adherence to enterprise data security and compliance frameworks. 💼\n\nPlease inform us of your availability to schedule a formal technical briefing this week. 🤝\n\nSincerely,\nKushal`;
+        return `Dear ${thread.leadEmail},\n\nThank you for your prompt correspondence. We are pleased to confirm complete adherence to enterprise data security and compliance frameworks. 💼\n\nPlease inform us of your availability to schedule a formal technical briefing this week. 🤝\n\nSincerely,\nSales Professional`;
       } else if (action === 'friendly') {
-        return `Hello ${thread.leadEmail}! 👋\n\nIt is wonderful to hear from you! You bet — we have full compliance and enterprise encryption covered so your data remains 100% secure. ⚡\n\nWould you like to jump on a brief 10-minute Zoom session to see the live platform in action? 🚀\n\nWarmly,\nKushal`;
+        return `Hello ${thread.leadEmail}! 👋\n\nIt is wonderful to hear from you! You bet — we have full compliance and enterprise encryption covered so your data remains 100% secure. ⚡\n\nWould you like to jump on a brief 10-minute Zoom session to see the live platform in action? 🚀\n\nWarmly,\nSales Professional`;
       } else if (action === 'shorter') {
-        return `Hello ${thread.leadEmail},\n\nYes, we fully support enterprise encryption and custom sending limits! ⚡ Free for a 10-minute briefing tomorrow? 📅\n\nBest,\nKushal`;
+        return `Hello ${thread.leadEmail},\n\nYes, we fully support enterprise encryption and custom sending limits! ⚡ Free for a 10-minute briefing tomorrow? 📅\n\nBest,\nSales Professional`;
       } else if (action === 'longer') {
-        return `Hello ${thread.leadEmail},\n\nThank you for getting back to us so promptly. It is excellent to hear that your organization is actively evaluating scalable email infrastructure this quarter. 📊\n\nTo address your requirements directly:\n1. Security & Compliance: We maintain rigorous SOC-2 Type II certification and provide end-to-end data encryption both at rest and in transit. 🔒\n2. Dedicated Infrastructure: Our enterprise tiers include dedicated IP pools and custom SPF/DKIM alignment to guarantee 99.9% deliverability. 🚀\n\nWould you have 15 minutes available on your calendar this Thursday or Friday for a tailored walkthrough? 🤝\n\nSincerely,\nKushal`;
+        return `Hello ${thread.leadEmail},\n\nThank you for getting back to us so promptly. It is excellent to hear that your organization is actively evaluating scalable email infrastructure this quarter. 📊\n\nTo address your requirements directly:\n1. Security & Compliance: We maintain rigorous SOC-2 Type II certification and provide end-to-end data encryption both at rest and in transit. 🔒\n2. Dedicated Infrastructure: Our enterprise tiers include dedicated IP pools and custom SPF/DKIM alignment to guarantee 99.9% deliverability. 🚀\n\nWould you have 15 minutes available on your calendar this Thursday or Friday for a tailored walkthrough? 🤝\n\nSincerely,\nSales Professional`;
       } else if (action === 'translate') {
-        return `Hola ${thread.leadEmail},\n\n¡Gracias por contactarnos! Con respecto a su consulta estratégica, sí, todos nuestros planes empresariales incluyen cifrado de alta seguridad. 🔒\n\n¿Tendría 10 minutos disponibles mañana para una breve sesión ejecutiva? 📅\n\nAtentamente,\nKushal`;
+        return `Hola ${thread.leadEmail},\n\n¡Gracias por contactarnos! Con respecto a su consulta estratégica, sí, todos nuestros planes empresariales incluyen cifrado de alta seguridad. 🔒\n\n¿Tendría 10 minutos disponibles mañana para una breve sesión ejecutiva? 📅\n\nAtentamente,\nSales Professional`;
       }
       return currentText || '';
     }

@@ -730,7 +730,7 @@ if (supabase) {
     } catch (err) {
       console.error("Campaign Engine Error:", err);
     }
-  }, 10000); // Check every 10 seconds
+  }, 2000); // Check every 2 seconds for near-instant email sending
   console.log("Background Campaign Engine started...");
 }
 

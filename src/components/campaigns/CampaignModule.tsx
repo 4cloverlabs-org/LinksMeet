@@ -111,7 +111,7 @@ export const CampaignModule: React.FC = () => {
                   {user?.email?.[0]?.toUpperCase() || 'K'}
                 </div>
                 <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#0f172a' }}>
-                  {user?.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : 'Kushal Joshi'}
+                  {user?.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : 'Sales Professional'}
                 </span>
                 <ChevronDown size={14} color="#64748b" />
               </div>
@@ -194,7 +194,7 @@ export const CampaignModule: React.FC = () => {
 
       {/* Scrollable Main Content */}
       <div style={{ flex: 1, overflow: 'auto', padding: tab === 'builder' ? '0' : '32px' }}>
-        {tab === 'builder' && <CampaignBuilder userEmail={user?.email || 'kushaljoshi2786@gmail.com'} campaignId={activeCampaignId} onBack={() => setActiveCampaignId(null)} />}
+        {tab === 'builder' && <CampaignBuilder userEmail={user?.email || 'lead@example.com'} campaignId={activeCampaignId} onBack={() => setActiveCampaignId(null)} />}
         {tab === 'sent' && <SentActivityFeed />}
         {tab === 'conversations' && <ConversationThreadView />}
         {tab === 'analytics' && <CampaignAnalytics />}
