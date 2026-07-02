@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, PlayCircle, Send, CheckCircle2, Clock, CornerUpLeft, GripVertical, Edit2, Copy, MoreVertical, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, PlayCircle, Send, CheckCircle2, Clock, CornerUpLeft, GripVertical, Edit2, Copy, Trash2, ChevronLeft, ChevronRight, MoreVertical, Pause, Sparkles } from 'lucide-react';
 import { type Campaign } from './campaignEngine';
 
 interface CampaignListProps {
@@ -13,6 +13,9 @@ type FilterType = 'All' | 'Active' | 'Paused' | 'Completed' | 'Drafts';
 
 export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, onCreateNew, onSelect, onDelete }) => {
   const [filter, setFilter] = useState<FilterType>('All');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const ITEMS_PER_PAGE = 7;
 
   // KPI Calculations
   const totalSequences = campaigns.length;
@@ -24,17 +27,18 @@ export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, onCreateN
   
   campaigns.forEach(c => {
     c.steps.forEach(s => {
-      // Assuming a simplistic way to get sent count: if status is not Pending/Queued, it might be sent.
-      // But we can just use opens/clicks/replies to infer activity if needed. Let's just mock sent based on opens + 20%
-      const sent = s.opens > 0 ? Math.floor(s.opens * 1.2) : 0; 
-      totalSent += sent;
+      if (s.type === 'email' && ['Sent', 'Opened', 'Clicked', 'Replied'].includes(s.status)) {
+        totalSent += 1;
+      }
       totalReplies += s.replies || 0;
     });
   });
   
-  // If there are no real metrics in the mocked data, provide realistic defaults for the empty state
-  const displayTotalSent = totalSent > 0 ? totalSent : 256;
-  const displayReplyRate = totalSent > 0 ? ((totalReplies / totalSent) * 100).toFixed(1) : '32.8';
+  const displayTotalSent = totalSent;
+  const displayReplyRate = totalSent > 0 ? ((totalReplies / totalSent) * 100).toFixed(1) : '0.0';
+
+  const earliestCampaign = campaigns.reduce((earliest, c) => Math.min(earliest, c.createdAt), Date.now());
+  const periodText = campaigns.length > 0 ? `Since ${new Date(earliestCampaign).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : 'No data yet';
 
   const filterOptions: { label: FilterType; key: string }[] = [
     { label: 'All', key: 'All Sequences' },
@@ -54,137 +58,143 @@ export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, onCreateN
   });
 
   return (
-    <div style={{ width: '100%', padding: '32px 40px', fontFamily: "'Geist', 'Geist Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
+    <div style={{ width: '100%', fontFamily: "'Geist', 'Geist Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
       
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 700, color: '#0f172a' }}>Follow-up Mails</h1>
-          <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: '0.95rem' }}>
-            Automatically send follow-up emails to stay connected and increase response rates.
-          </p>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <button style={{ background: 'none', border: 'none', color: '#0E61F3', fontSize: '0.88rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-            <PlayCircle size={16} /> How it works
-          </button>
-          <button
-            onClick={onCreateNew}
-            style={{
-              background: '#0E61F3',
-              color: '#fff',
-              padding: '10px 18px',
-              borderRadius: '8px',
-              fontWeight: 600,
-              fontSize: '0.9rem',
-              border: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              cursor: 'pointer',
-              boxShadow: '0 2px 4px rgba(14, 97, 243, 0.2)'
-            }}
-          >
-            <Plus size={16} /> Create Follow-up Sequence
-          </button>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: '24px', borderBottom: '1px solid #e2e8f0', marginBottom: '24px' }}>
-        {filterOptions.map(opt => {
-          const isActive = filter === opt.label;
-          return (
+      {/* Top Banner (Header and Tabs) */}
+      <div style={{ background: '#fff', padding: '16px 40px 0 40px', borderBottom: '1px solid #e2e8f0' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+          <div>
+            <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 700, color: '#0f172a' }}>Follow-up Mails</h1>
+            <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: '0.95rem' }}>
+              Automatically send follow-up emails to stay connected and increase response rates.
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <button style={{ background: 'none', border: 'none', color: '#0E61F3', fontSize: '0.88rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+              <PlayCircle size={16} /> How it works
+            </button>
             <button
-              key={opt.label}
-              onClick={() => setFilter(opt.label)}
+              onClick={onCreateNew}
               style={{
-                background: 'none',
+                background: '#0E61F3',
+                color: '#fff',
+                padding: '10px 18px',
+                borderRadius: '8px',
+                fontWeight: 600,
+                fontSize: '0.9rem',
                 border: 'none',
-                padding: '0 0 12px 0',
-                fontSize: '0.92rem',
-                fontWeight: isActive ? 600 : 500,
-                color: isActive ? '#0E61F3' : '#64748b',
-                borderBottom: isActive ? '2px solid #0E61F3' : '2px solid transparent',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
                 cursor: 'pointer',
-                marginBottom: '-1px'
+                boxShadow: '0 2px 4px rgba(14, 97, 243, 0.2)'
               }}
             >
-              {opt.key}
+              <Plus size={16} /> Create Follow-up Sequence
             </button>
-          );
-        })}
-      </div>
-
-      {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '24px' }}>
-        {/* Card 1 */}
-        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#EFF6FF', color: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Send size={20} />
-          </div>
-          <div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a' }}>{totalSequences || 12}</div>
-            <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>Total Sequences<br/>Across all campaigns</div>
-          </div>
-        </div>
-        
-        {/* Card 2 */}
-        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#F0FDF4', color: '#22C55E', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <CheckCircle2 size={20} />
-          </div>
-          <div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a' }}>{activeSequences || 8}</div>
-            <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>Active Sequences<br/>Running smoothly</div>
           </div>
         </div>
 
-        {/* Card 3 */}
-        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#FEF9C3', color: '#EAB308', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Clock size={20} />
+        {/* Row 2: Tabs and Stats */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          
+          {/* Tabs */}
+          <div style={{ display: 'flex', gap: '24px' }}>
+            {filterOptions.map(opt => {
+              const isActive = filter === opt.label;
+              return (
+                <button
+                  key={opt.label}
+                  onClick={() => {
+                  setFilter(opt.label);
+                  setCurrentPage(1);
+                }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: '0 0 16px 0',
+                    fontSize: '0.92rem',
+                    fontWeight: isActive ? 600 : 500,
+                    color: isActive ? '#0E61F3' : '#64748b',
+                    borderBottom: isActive ? '2px solid #0E61F3' : '2px solid transparent',
+                    cursor: 'pointer',
+                    marginBottom: '-1px'
+                  }}
+                >
+                  {opt.key}
+                </button>
+              );
+            })}
           </div>
-          <div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a' }}>{displayTotalSent}</div>
-            <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>Emails Sent<br/>In last 30 days</div>
-          </div>
-        </div>
 
-        {/* Card 4 */}
-        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#EFF6FF', color: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <CornerUpLeft size={20} />
+          {/* Small KPI Stats */}
+          <div style={{ display: 'flex', gap: '24px', paddingBottom: '16px', alignItems: 'center' }}>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Send size={14} color="#3B82F6" />
+              <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                <span style={{ fontWeight: 700, color: '#0f172a' }}>{totalSequences || 12}</span> Sequences
+              </div>
+            </div>
+
+            <div style={{ width: '1px', height: '16px', background: '#e2e8f0' }}></div>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <CheckCircle2 size={14} color="#22C55E" />
+              <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                <span style={{ fontWeight: 700, color: '#0f172a' }}>{activeSequences || 8}</span> Active
+              </div>
+            </div>
+
+            <div style={{ width: '1px', height: '16px', background: '#e2e8f0' }}></div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Clock size={14} color="#EAB308" />
+              <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                <span style={{ fontWeight: 700, color: '#0f172a' }}>{displayTotalSent}</span> Sent <span style={{ fontSize: '0.75rem', opacity: 0.8, marginLeft: '4px' }}>({periodText})</span>
+              </div>
+            </div>
+
+            <div style={{ width: '1px', height: '16px', background: '#e2e8f0' }}></div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <CornerUpLeft size={14} color="#3B82F6" />
+              <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                <span style={{ fontWeight: 700, color: '#0f172a' }}>{displayReplyRate}%</span> Replies <span style={{ fontSize: '0.75rem', opacity: 0.8, marginLeft: '4px' }}>({periodText})</span>
+              </div>
+            </div>
+
           </div>
-          <div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a' }}>{displayReplyRate}%</div>
-            <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>Avg. Reply Rate<br/>In last 30 days</div>
+
           </div>
         </div>
-      </div>
+      {/* Main Content Area */}
+      <div style={{ padding: '20px 40px' }}>
 
       {/* Table */}
-      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
+      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
-            <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-              <th style={{ padding: '16px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', width: '35%' }}>SEQUENCE NAME</th>
-              <th style={{ padding: '16px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>STATUS</th>
-              <th style={{ padding: '16px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>STEPS</th>
-              <th style={{ padding: '16px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>SENT</th>
-              <th style={{ padding: '16px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>REPLY RATE</th>
-              <th style={{ padding: '16px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>ACTIONS</th>
+            <tr>
+              <th style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', borderTopLeftRadius: '12px', padding: '12px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', width: '30%' }}>SEQUENCE NAME</th>
+              <th style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '12px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>CREATED</th>
+              <th style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '12px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>STATUS</th>
+              <th style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '12px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>STEPS</th>
+              <th style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '12px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>SENT</th>
+              <th style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '12px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>REPLY RATE</th>
+              <th style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', borderTopRightRadius: '12px', padding: '12px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>ACTIONS</th>
             </tr>
           </thead>
           <tbody>
             {filteredCampaigns.length === 0 ? (
               <tr>
-                <td colSpan={6} style={{ padding: '48px', textAlign: 'center', color: '#64748b', fontSize: '0.9rem' }}>
+                <td colSpan={7} style={{ padding: '48px', textAlign: 'center', color: '#64748b', fontSize: '0.9rem' }}>
                   No sequences found in this category.
                 </td>
               </tr>
             ) : (
-              filteredCampaigns.map((camp) => {
+              filteredCampaigns.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((camp) => {
                 
                 // Determine styling for pills based on status
                 let pillBg = '#f1f5f9';
@@ -211,9 +221,9 @@ export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, onCreateN
                 let rowSentCount = 0;
                 let rowReplyCount = 0;
                 camp.steps.forEach(s => {
-                  // If 's.opens' exists, we estimate sent count as ~opens * 1.2.
-                  // If it's a real sent count from backend, we would use s.sent.
-                  rowSentCount += s.opens ? Math.floor(s.opens * 1.2) : 0;
+                  if (s.type === 'email' && ['Sent', 'Opened', 'Clicked', 'Replied'].includes(s.status)) {
+                    rowSentCount += 1;
+                  }
                   rowReplyCount += s.replies || 0;
                 });
                 
@@ -225,6 +235,11 @@ export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, onCreateN
                 
                 const rowReplyRate = rowSentCount > 0 ? ((rowReplyCount / rowSentCount) * 100).toFixed(1) : '0.0';
 
+                // Format creation date and time
+                const createdDate = new Date(camp.createdAt);
+                const formattedDate = createdDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const formattedTime = createdDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
                 return (
                   <tr 
                     key={camp.id} 
@@ -233,36 +248,40 @@ export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, onCreateN
                     onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                     onClick={() => onSelect(camp.id)}
                   >
-                    <td style={{ padding: '16px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <td style={{ padding: '12px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <GripVertical size={16} color="#cbd5e1" style={{ cursor: 'grab' }} />
                       <div>
                         <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '0.95rem' }}>{camp.name}</div>
                         <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '2px' }}>For {camp.recipientEmail || 'outreach'}</div>
                       </div>
                     </td>
-                    <td style={{ padding: '16px 24px' }}>
+                    <td style={{ padding: '12px 24px' }}>
+                      <div style={{ fontWeight: 500, color: '#0f172a', fontSize: '0.85rem' }}>{formattedDate}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '2px' }}>{formattedTime}</div>
+                    </td>
+                    <td style={{ padding: '12px 24px' }}>
                       <span style={{ 
                         background: pillBg, 
                         color: pillColor, 
                         padding: '4px 10px', 
-                        borderRadius: '100px', 
+                        borderRadius: '24px', 
                         fontSize: '0.75rem', 
                         fontWeight: 600 
                       }}>
                         {displayStatus}
                       </span>
                     </td>
-                    <td style={{ padding: '16px 24px' }}>
+                    <td style={{ padding: '12px 24px' }}>
                       <div style={{ display: 'flex', gap: '4px' }}>
                         {camp.steps.map((_s, i) => (
                           <div key={i} style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3B82F6' }} />
                         ))}
                       </div>
                     </td>
-                    <td style={{ padding: '16px 24px', fontSize: '0.9rem', color: '#0f172a', fontWeight: 500 }}>
+                    <td style={{ padding: '12px 24px', fontSize: '0.9rem', color: '#0f172a', fontWeight: 500 }}>
                       {camp.status === 'Draft' ? '0' : rowSentCount}
                     </td>
-                    <td style={{ padding: '16px 24px' }}>
+                    <td style={{ padding: '12px 24px' }}>
                       <div style={{ fontSize: '0.9rem', color: '#0f172a', fontWeight: 600, marginBottom: '6px' }}>
                         {camp.status === 'Draft' ? '-' : `${rowReplyRate}%`}
                       </div>
@@ -272,25 +291,16 @@ export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, onCreateN
                         </div>
                       )}
                     </td>
-                    <td style={{ padding: '16px 24px', textAlign: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); onSelect(camp.id); }}
-                          style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}
-                        >
-                          <Edit2 size={14} />
-                        </button>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); }}
-                          style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}
-                        >
-                          <Copy size={14} />
-                        </button>
+                    <td style={{ padding: '12px 24px', textAlign: 'center', position: 'relative' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <button 
                           onClick={(e) => { e.stopPropagation(); onDelete(camp.id); }}
-                          style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}
+                          style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#dc2626', padding: '6px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = '#fee2e2'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                          title="Delete Sequence"
                         >
-                          <MoreVertical size={14} />
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     </td>
@@ -303,24 +313,37 @@ export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, onCreateN
       </div>
 
       {/* Pagination */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', padding: '0 8px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', padding: '0 8px', flexShrink: 0 }}>
         <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>
-          Showing 1 to {filteredCampaigns.length} of {campaigns.length} sequences
+          Showing {filteredCampaigns.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredCampaigns.length)} of {filteredCampaigns.length} sequences
         </div>
         <div style={{ display: 'flex', gap: '4px' }}>
-          <button style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}>
+          <button 
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            style={{ opacity: currentPage === 1 ? 0.5 : 1, cursor: currentPage === 1 ? 'not-allowed' : 'pointer', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}
+          >
             <ChevronLeft size={16} />
           </button>
-          <button style={{ background: '#0E61F3', color: '#fff', border: 'none', borderRadius: '6px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
-            1
+          <button 
+            style={{ 
+              background: '#0E61F3', 
+              color: '#fff', 
+              border: 'none', 
+              borderRadius: '6px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'default', fontWeight: 600, fontSize: '0.85rem' 
+            }}
+          >
+            {currentPage}
           </button>
-          <button style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b', fontWeight: 600, fontSize: '0.85rem' }}>
-            2
-          </button>
-          <button style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}>
+          <button 
+            onClick={() => setCurrentPage(p => Math.min(Math.ceil(filteredCampaigns.length / ITEMS_PER_PAGE) || 1, p + 1))}
+            disabled={currentPage === (Math.ceil(filteredCampaigns.length / ITEMS_PER_PAGE) || 1)}
+            style={{ opacity: currentPage === (Math.ceil(filteredCampaigns.length / ITEMS_PER_PAGE) || 1) ? 0.5 : 1, cursor: currentPage === (Math.ceil(filteredCampaigns.length / ITEMS_PER_PAGE) || 1) ? 'not-allowed' : 'pointer', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}
+          >
             <ChevronRight size={16} />
           </button>
         </div>
+      </div>
       </div>
     </div>
   );

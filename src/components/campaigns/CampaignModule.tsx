@@ -37,7 +37,6 @@ export const CampaignModule: React.FC = () => {
       recipientEmail: '',
       recipientName: '',
       createdAt: Date.now(),
-      activeStepIndex: 0,
       steps: [
         {
           id: 's_' + Date.now() + '_1',
@@ -60,7 +59,7 @@ export const CampaignModule: React.FC = () => {
 
   if (!activeCampaignId) {
     return (
-      <div className="camp-module-wrap">
+      <div className="camp-module-wrap" style={{ padding: 0, flex: 1, overflow: 'hidden' }}>
         <CampaignList 
           campaigns={campaigns} 
           onCreateNew={handleCreateNew}
@@ -130,21 +129,27 @@ export const CampaignModule: React.FC = () => {
                   </button>
                 </h1>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px', fontSize: '0.82rem', color: '#64748b', fontWeight: 500 }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#dcfce7', color: '#15803d', padding: '2px 10px', borderRadius: '100px', fontWeight: 700, fontSize: '0.75rem' }}>
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#16a34a' }} /> Running
+                  <span style={{ 
+                    display: 'inline-flex', alignItems: 'center', gap: '6px', 
+                    background: activeCamp?.status === 'Running' ? '#dcfce7' : '#f1f5f9', 
+                    color: activeCamp?.status === 'Running' ? '#15803d' : '#64748b', 
+                    padding: '2px 10px', borderRadius: '100px', fontWeight: 700, fontSize: '0.75rem' 
+                  }}>
+                    <span style={{ 
+                      width: 6, height: 6, borderRadius: '50%', 
+                      background: activeCamp?.status === 'Running' ? '#16a34a' : '#94a3b8' 
+                    }} /> 
+                    {activeCamp?.status || 'Draft'}
                   </span>
                   <span>Created on May 24, 2025</span>
                   <span>•</span>
-                  <span>Target: 250 leads</span>
+                  <span>Target: {((activeCamp?.recipientEmail || '').split(',').map(e => e.trim()).filter(Boolean)).length || 0} leads</span>
                 </div>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <button style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#ffffff', border: '1px solid #cbd5e1', color: '#0f172a', fontWeight: 600, fontSize: '0.88rem', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>
                   <Save size={15} /> Save Draft
-                </button>
-                <button style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#0E61F3', border: 'none', color: '#ffffff', fontWeight: 600, fontSize: '0.88rem', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(14, 97, 243, 0.2)' }}>
-                  <Play size={15} fill="currentColor" /> Start Campaign
                 </button>
               </div>
             </div>

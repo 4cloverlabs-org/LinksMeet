@@ -160,9 +160,9 @@ const INITIAL_CAMPAIGNS: Campaign[] = [
         subject: 'Helping {{company}} streamline their operations',
         body: '<p>Hi {{first_name}},</p><p>I came across {{company}} and loved what you\'re building in the {{industry}} space.</p><p>Many {{industry}} teams we work with face similar challenges around automation and operational efficiency.</p><p>We help companies like {{company}} streamline workflows, reduce manual work, and scale faster.</p><p>Would you be open to a quick 15-min chat next week?</p><p>Best,<br>Kushal</p>',
         status: 'Sent',
-        opens: 124,
-        replies: 23,
-        clicks: 8,
+        opens: 0,
+        replies: 0,
+        clicks: 0,
       },
       {
         id: 's_2',
@@ -181,9 +181,9 @@ const INITIAL_CAMPAIGNS: Campaign[] = [
         subject: 'Quick follow-up regarding automation at {{company}}',
         body: '<p>Hi {{first_name}},</p><p>Wanted to float this back to the top of your inbox. We recently helped a similar {{industry}} platform cut their manual operations time by over 40% using custom AI workflows.</p><p>Happy to send over a 2-min demo overview if that would be helpful before jumping on a call.</p><p>Best,<br>Kushal</p>',
         status: 'Pending',
-        opens: 98,
-        replies: 17,
-        clicks: 5,
+        opens: 0,
+        replies: 0,
+        clicks: 0,
       },
       {
         id: 's_4',
@@ -202,9 +202,9 @@ const INITIAL_CAMPAIGNS: Campaign[] = [
         subject: 'Automation architecture for {{company}}',
         body: '<p>Hi {{first_name}},</p><p>I know Q3 roadmap execution is fast-paced right now. If scaling workflow automation is on your radar for the coming weeks, our team can set up an autonomous pilot in under 48 hours.</p><p>Let me know if next Tuesday or Wednesday works for a quick intro.</p><p>Best,<br>Kushal</p>',
         status: 'Pending',
-        opens: 63,
-        replies: 11,
-        clicks: 4,
+        opens: 0,
+        replies: 0,
+        clicks: 0,
       },
       {
         id: 's_6',
@@ -223,9 +223,9 @@ const INITIAL_CAMPAIGNS: Campaign[] = [
         subject: 'Closing the loop on {{company}} automation',
         body: '<p>Hi {{first_name}},</p><p>Since I haven\'t heard back, I assume improving workflow automation isn\'t a top priority right now, so I won\'t reach out again for now.</p><p>If things change down the line, feel free to reply anytime. Wishing you and the {{company}} team a successful quarter ahead!</p><p>Best,<br>Kushal</p>',
         status: 'Pending',
-        opens: 37,
-        replies: 7,
-        clicks: 2,
+        opens: 0,
+        replies: 0,
+        clicks: 0,
       },
     ],
   },
@@ -326,10 +326,6 @@ class CampaignEngine {
     if (savedCamps) {
       try { 
         this.campaigns = JSON.parse(savedCamps); 
-        if (this.campaigns[0] && (this.campaigns[0].name?.includes('SaaS Founders') || !this.campaigns[0].steps[0]?.opens)) {
-          this.campaigns[0] = { ...INITIAL_CAMPAIGNS[0], id: this.campaigns[0].id };
-          localStorage.setItem('sm_campaigns', JSON.stringify(this.campaigns));
-        }
       } catch { this.campaigns = INITIAL_CAMPAIGNS; }
     } else {
       this.campaigns = INITIAL_CAMPAIGNS;
@@ -363,77 +359,41 @@ class CampaignEngine {
 
   public async sendRealEmail(recipient: string, subject: string, htmlBody: string): Promise<{ success: boolean; message: string }> {
     if (!recipient) return { success: false, message: 'No recipient specified.' };
-    const s = this.getSettings();
+    
     try {
-      let gmailToken = s.gmailAccessToken || getGmailToken();
-      let senderEmail = s.gmailUserEmail || getGmailEmail() || 'me';
-
-      try {
-        const { data: sessionData } = await supabase.auth.getSession();
-        const uid = sessionData.session?.user?.id;
-        const accessToken = sessionData.session?.access_token;
-        if (uid && accessToken) {
-          const res = await fetch(`${API_BASE_URL}/api/gmail-token/${uid}`, {
-            headers: { "Authorization": `Bearer ${accessToken}` }
-          });
-          if (res.ok) {
-            const data = await res.json();
-            if (data.access_token) {
-              gmailToken = data.access_token;
-              if (data.email) senderEmail = data.email;
-
-              // Cache the fresh token in memory only (not localStorage).
-              setGmailToken(gmailToken);
-              markGmailConnected(senderEmail);
-            }
-          }
-        }
-      } catch(e) {
-        // In-memory/settings token will be used as a fallback.
-      }
-
-      if (!gmailToken) {
-        const msg = "⚠️ Gmail Mailbox not connected! Go to Settings -> click '🔗 1-Click Connect Gmail'.";
-        console.warn(msg);
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      
+      if (!accessToken) {
+        console.warn("User not authenticated.");
+        const msg = "⚠️ You must be signed in to send emails.";
         alert(msg);
         return { success: false, message: msg };
       }
 
-      const utf8Subject = `=?utf-8?B?${btoa(unescape(encodeURIComponent(subject || 'LinksMeet Outreach')))}?=`;
-      const rfc2822Message = [
-        `To: ${recipient}`,
-        `From: LinksMeet Campaign <${senderEmail !== 'me' ? senderEmail : ''}>`,
-        `Subject: ${utf8Subject}`,
-        `MIME-Version: 1.0`,
-        `Content-Type: text/html; charset=utf-8`,
-        ``,
-        htmlBody
-      ].join('\r\n');
-
-      const base64UrlEmail = btoa(unescape(encodeURIComponent(rfc2822Message)))
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=+$/, '');
-
-      const gmailRes = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
+      const res = await fetch(`${API_BASE_URL}/api/send-email`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${gmailToken}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`
         },
-        body: JSON.stringify({ raw: base64UrlEmail })
+        body: JSON.stringify({
+          to: recipient,
+          subject: subject || 'LinksMeet Outreach',
+          htmlBody: htmlBody
+        })
       });
-      const gmailData = await gmailRes.json();
+
+      const data = await res.json();
       
-      if (gmailRes.ok) {
-        console.log(`[LinksMeet Gmail API] Sent directly via user mailbox! Message ID:`, gmailData.id);
-        return { success: true, message: `Dispatched live via Gmail API to ${recipient}!` };
+      if (res.ok && data.success) {
+        console.log(`[LinksMeet Backend API] Sent email to ${recipient}`);
+        return { success: true, message: `Dispatched via backend to ${recipient}!` };
       } else {
-        const errMsg = gmailData?.error?.message || 'Unknown Gmail API error.';
-        const fullMsg = `❌ Gmail API Error: ${errMsg}. Check Google Cloud Console to ensure 'Gmail API' is enabled and scope 'gmail.send' is authorized.`;
-        console.warn(fullMsg, gmailData);
-        alert(fullMsg);
-        return { success: false, message: fullMsg };
+        const errMsg = data?.error || 'Unknown Backend API error.';
+        console.warn(`❌ Backend API Error: ${errMsg}`, data);
+        alert(`❌ Email Error: ${errMsg}`);
+        return { success: false, message: errMsg };
       }
     } catch (err: any) {
       console.warn("Real email dispatch warning:", err);
@@ -498,37 +458,55 @@ class CampaignEngine {
       if (nextStep.type === 'email') {
         nextStep.status = 'Sending';
         this.notify('update');
-        setTimeout(() => {
+        (async () => {
           nextStep.status = 'Sent';
-          this.sendRealEmail(camp.recipientEmail, nextStep.subject || 'Follow-up', nextStep.body || '');
-          const log: SentEmailLog = {
-            id: 'log_' + Math.random().toString(36).substring(2, 9),
-            campaignId: camp.id,
-            campaignName: camp.name,
-            recipient: camp.recipientEmail,
-            subject: nextStep.subject || 'Follow-up',
-            sentAt: 'Just now',
-            status: 'Sent',
-            opens: 0,
-            clicks: 0,
-            replied: false,
-            deliveryStatus: 'Delivered',
-            spamStatus: 'Passed',
-            stage: nextStep.title,
-          };
-          this.logs.unshift(log);
+          const recipients = (camp.recipientEmail || '').split(',').map(e => e.trim()).filter(Boolean);
+          if (recipients.length === 0) {
+             alert('Sequence started but no recipients were found!');
+             camp.status = 'Draft';
+             this.saveState();
+             this.notify('update');
+             return;
+          }
+
+          for (const rec of recipients) {
+            const res = await this.sendRealEmail(rec, nextStep.subject || 'Follow-up', nextStep.body || '');
+            const log: SentEmailLog = {
+              id: 'log_' + Math.random().toString(36).substring(2, 9),
+              campaignId: camp.id,
+              campaignName: camp.name,
+              recipient: rec,
+              subject: nextStep.subject || 'Follow-up',
+              sentAt: 'Just now',
+              status: res.success ? 'Sent' : 'Failed',
+              opens: 0,
+              clicks: 0,
+              replied: false,
+              deliveryStatus: res.success ? 'Delivered' : 'Bounced',
+              spamStatus: 'Passed',
+              stage: nextStep.title,
+            };
+            this.logs.unshift(log);
+            this.notify('email_sent', log);
+          }
           this.saveState();
-          this.notify('email_sent', log);
+
+          // Move to next step (e.g. delay) if it exists, otherwise mark completed
+          if (nextIndex < camp.steps.length - 1) {
+            this.advanceCampaign(camp);
+          } else {
+            camp.status = 'Completed';
+            this.saveState();
+            this.notify('update');
+          }
 
           // Simulate prospect opening after 4 seconds
           setTimeout(() => {
             nextStep.status = 'Opened';
-            log.status = 'Opened';
-            log.opens = 1;
             this.saveState();
             this.notify('update');
           }, 4000);
-        }, 2000);
+        })();
       } else if (nextStep.type === 'delay') {
         nextStep.status = 'Queued';
         let secs = nextStep.delayValue || 1;
@@ -636,44 +614,15 @@ class CampaignEngine {
     camp.status = 'Running';
     
     // If it's a fresh campaign, initialize first step
-    if (camp.activeStepIndex === undefined) {
-      camp.activeStepIndex = 0;
-      const firstStep = camp.steps[0];
-      if (firstStep && firstStep.type === 'email') {
-        firstStep.status = 'Sending';
-        this.notify('update');
-        setTimeout(() => {
-          firstStep.status = 'Sent';
-          const log: SentEmailLog = {
-            id: 'log_' + Math.random().toString(36).substring(2, 9),
-            campaignId: camp.id,
-            campaignName: camp.name,
-            recipient: camp.recipientEmail || 'client@company.com',
-            subject: firstStep.subject || 'Intro',
-            sentAt: 'Just now',
-            status: 'Sent',
-            opens: 0,
-            clicks: 0,
-            replied: false,
-            deliveryStatus: 'Delivered',
-            spamStatus: 'Passed',
-            stage: firstStep.title,
-          };
-          this.logs.unshift(log);
-          this.saveState();
-          this.notify('email_sent', log);
-          
-          // Move to step 2 if delay
-          if (camp.steps.length > 1) {
-            setTimeout(() => {
-              this.advanceCampaign(camp);
-            }, 1500);
-          }
-        }, 1800);
-      }
+    if (
+      camp.activeStepIndex === undefined || 
+      camp.activeStepIndex === -1 || 
+      (camp.activeStepIndex === 0 && camp.steps[0]?.status === 'Pending')
+    ) {
+      camp.activeStepIndex = -1;
+      this.advanceCampaign(camp);
     } else {
-      // If resuming a delay step, we might want to ensure the absolute timer isn't completely expired.
-      // But startTicker handles expiry (if remaining <= 0, it advances automatically next tick).
+      // Resuming logic (startTicker handles delays)
     }
     
     this.saveState();

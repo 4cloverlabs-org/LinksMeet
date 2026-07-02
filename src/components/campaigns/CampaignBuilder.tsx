@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Mail, Send, CheckCircle2, ChevronDown, Trash2, Bold, Italic, Underline as UnderlineIcon, Link2, List, Image as ImageIcon, Smile, Eye, ArrowLeft, Pause, Edit2, Sparkles, LayoutGrid, Hourglass } from 'lucide-react';
+import { Plus, Mail, Send, CheckCircle2, ChevronDown, Trash2, Bold, Italic, Underline as UnderlineIcon, Link2, List, Image as ImageIcon, Smile, Eye, ArrowLeft, Pause, Edit2, Sparkles, LayoutGrid, Hourglass, Play } from 'lucide-react';
 import { campaignEngine, type Campaign, type CampaignStep } from './campaignEngine';
 import { useAuth } from '../../lib/AuthContext';
 import { AICampaignStudio } from './AICampaignStudio';
@@ -7,49 +7,30 @@ import { supabase } from '../../lib/supabase';
 import { API_BASE_URL } from '../../lib/config';
 
 const DelayUnitSelect = ({ value, onChange }: { value: string, onChange: (val: string) => void }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const options = ['minutes', 'hours', 'days', 'weeks'];
-  
   return (
-    <div style={{ position: 'relative' }} onMouseLeave={() => setIsOpen(false)}>
-      <div
-        onClick={() => setIsOpen(!isOpen)}
-        style={{ 
-          border: '1px solid transparent', 
-          background: '#f8fafc',
-          borderRadius: '6px', 
-          padding: '4px 8px', 
-          fontWeight: 700, 
-          fontSize: '0.9rem',
-          color: '#0f172a', 
-          cursor: 'pointer',
-          transition: 'all 0.2s ease',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px'
-        }}
-        onMouseOver={(e) => e.currentTarget.style.border = '1px solid #cbd5e1'}
-        onMouseOut={(e) => e.currentTarget.style.border = '1px solid transparent'}
-      >
-        {value} <ChevronDown size={14} color="#64748b" />
-      </div>
-      
-      {isOpen && (
-        <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '4px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', overflow: 'hidden', zIndex: 50, minWidth: '100px' }}>
-          {options.map(opt => (
-            <div
-              key={opt}
-              onClick={() => { onChange(opt); setIsOpen(false); }}
-              style={{ padding: '8px 12px', fontSize: '0.85rem', fontWeight: 600, color: opt === value ? '#0E61F3' : '#334155', background: opt === value ? '#eff6ff' : '#ffffff', cursor: 'pointer', transition: 'background 0.15s ease' }}
-              onMouseOver={(e) => e.currentTarget.style.background = opt === value ? '#eff6ff' : '#f1f5f9'}
-              onMouseOut={(e) => e.currentTarget.style.background = opt === value ? '#eff6ff' : '#ffffff'}
-            >
-              {opt}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      style={{
+        border: '1px solid transparent', 
+        background: '#f8fafc',
+        borderRadius: '6px', 
+        padding: '4px 8px', 
+        fontWeight: 700, 
+        fontSize: '0.9rem',
+        color: '#0f172a', 
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        outline: 'none',
+      }}
+      onMouseOver={(e) => e.currentTarget.style.border = '1px solid #cbd5e1'}
+      onMouseOut={(e) => e.currentTarget.style.border = '1px solid transparent'}
+    >
+      <option value="minutes">minutes</option>
+      <option value="hours">hours</option>
+      <option value="days">days</option>
+      <option value="weeks">weeks</option>
+    </select>
   );
 };
 
@@ -195,44 +176,55 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
   const tokens = ['{{invitee_name}}', '{{host_name}}', '{{meeting_date}}', '{{meeting_time}}', '{{meeting_link}}'];
 
   return (
-    <div style={{ padding: '32px 40px', fontFamily: "'Geist', 'Geist Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
+    <div style={{ padding: 0, fontFamily: "'Geist', 'Geist Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
       {toastMsg && (
         <div style={{ position: 'fixed', bottom: '40px', right: '32px', zIndex: 100, background: '#0E61F3', color: '#fff', padding: '10px 18px', borderRadius: '10px', fontWeight: 700, fontSize: '0.88rem', boxShadow: '0 8px 20px rgba(14, 97, 243, 0.35)', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <CheckCircle2 size={16} /> {toastMsg}
         </div>
       )}
 
-      <div style={{ marginBottom: '32px' }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 50, background: '#ffffff', borderBottom: '1px solid #e2e8f0', borderRadius: 0, padding: '16px 40px 16px 40px', marginBottom: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
         <button
           onClick={onBack}
-          style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: '#0E61F3', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', padding: 0, marginBottom: '16px' }}
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: '#0E61F3', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', padding: 0, marginBottom: '8px' }}
         >
           <ArrowLeft size={16} /> Back to all sequences
         </button>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-              <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
                 {activeCamp.name}
               </h1>
-              <span style={{ background: '#dcfce7', color: '#166534', padding: '4px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700 }}>
+              <span style={{ background: '#dcfce7', color: '#166534', padding: '4px 8px', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 700 }}>
                 {activeCamp.status === 'Running' ? 'Active' : activeCamp.status}
               </span>
             </div>
-            <div style={{ color: '#64748b', fontSize: '0.95rem' }}>For upcoming scheduled meetings</div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button 
               onClick={() => {
-                const newStatus = activeCamp.status === 'Running' ? 'Paused' : 'Running';
-                handleUpdateCamp({ status: newStatus });
-                showToast(`Sequence ${newStatus.toLowerCase()}`);
+                if (activeCamp.status !== 'Running') {
+                   campaignEngine.startCampaign(activeCamp.id);
+                   showToast('Sequence started');
+                }
               }}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#ffffff', border: '1px solid #e2e8f0', color: '#0E61F3', fontWeight: 600, fontSize: '0.88rem', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.15s ease' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', background: activeCamp.status === 'Running' ? '#e2e8f0' : '#0E61F3', border: 'none', color: activeCamp.status === 'Running' ? '#94a3b8' : '#ffffff', fontWeight: 600, fontSize: '0.85rem', padding: '9px 16px', borderRadius: '6px', cursor: activeCamp.status === 'Running' ? 'not-allowed' : 'pointer', transition: 'all 0.15s ease', boxShadow: activeCamp.status === 'Running' ? 'none' : '0 2px 4px rgba(14, 97, 243, 0.15)' }}
             >
-              {activeCamp.status === 'Running' ? <><Pause size={15} /> Pause Sequence</> : <><Plus size={15} style={{transform: 'rotate(45deg)'}} /> Resume Sequence</>}
+              <Play size={14} fill="currentColor" /> Start Sequence
+            </button>
+            <button 
+              onClick={() => {
+                if (activeCamp.status === 'Running') {
+                   handleUpdateCamp({ status: 'Paused' });
+                   showToast('Sequence paused');
+                }
+              }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#ffffff', border: '1px solid #e2e8f0', color: activeCamp.status === 'Running' ? '#0f172a' : '#cbd5e1', fontWeight: 600, fontSize: '0.85rem', padding: '8px 14px', borderRadius: '6px', cursor: activeCamp.status === 'Running' ? 'pointer' : 'not-allowed', transition: 'all 0.15s ease' }}
+            >
+              <Pause size={14} strokeWidth={2.5} /> Pause Sequence
             </button>
             <button 
               onClick={() => {
@@ -242,33 +234,29 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
                   showToast('Sequence name updated');
                 }
               }}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#ffffff', border: '1px solid #e2e8f0', color: '#0E61F3', fontWeight: 600, fontSize: '0.88rem', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.15s ease' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#ffffff', border: '1px solid #e2e8f0', color: '#0E61F3', fontWeight: 600, fontSize: '0.85rem', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.15s ease' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
+              onMouseLeave={(e) => e.currentTarget.style.background = '#ffffff'}
             >
-              <Edit2 size={15} /> Edit Sequence
+              <Edit2 size={14} strokeWidth={2.5} /> Edit Sequence
             </button>
-            <button 
-              onClick={() => {
-                document.getElementById('ai-analyzer-container')?.scrollIntoView({ behavior: 'smooth' });
-                const el = document.getElementById('ai-analyzer-input');
-                if (el) el.focus();
-              }}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#eff6ff', border: '1px solid #bfdbfe', color: '#0E61F3', fontWeight: 600, fontSize: '0.88rem', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.15s ease' }}
-            >
-              <Sparkles size={15} /> AI Analyzer
-            </button>
+
             <button 
               onClick={handleAddFollowUp}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#0E61F3', border: 'none', color: '#ffffff', fontWeight: 600, fontSize: '0.88rem', padding: '9px 18px', borderRadius: '8px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(14, 97, 243, 0.2)' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#0E61F3', border: 'none', color: '#ffffff', fontWeight: 600, fontSize: '0.85rem', padding: '9px 16px', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.15s ease', boxShadow: '0 2px 4px rgba(14, 97, 243, 0.15)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#0c52ce'; e.currentTarget.style.boxShadow = '0 4px 6px rgba(14, 97, 243, 0.25)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = '#0E61F3'; e.currentTarget.style.boxShadow = '0 2px 4px rgba(14, 97, 243, 0.15)'; }}
             >
-              <Plus size={16} /> Add Step
+              <Plus size={16} strokeWidth={2.5} /> Add Step
             </button>
           </div>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 350px) minmax(440px, 1fr) 350px', gap: '24px', alignItems: 'start' }}>
-        
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={{ padding: '0 40px 40px 40px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 350px) minmax(440px, 1fr) 350px', gap: '24px', alignItems: 'start' }}>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#f1f5f9', color: '#0E61F3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Mail size={18} />
@@ -436,20 +424,59 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
                 </div>
                 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #e2e8f0' }}>
-                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: 1, marginRight: '16px' }}>
-                    <div style={{ fontSize: '0.85rem', color: '#64748b', width: '40px' }}>To</div>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flex: 1, marginRight: '16px', flexWrap: 'wrap' }}>
+                    <div style={{ fontSize: '0.85rem', color: '#64748b', width: '40px', flexShrink: 0 }}>To</div>
+                    {((activeCamp.recipientEmail || '').split(',').map(e => e.trim()).filter(Boolean)).map((email, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#eff6ff', border: '1px solid #bfdbfe', color: '#0E61F3', fontSize: '0.8rem', fontWeight: 500, padding: '2px 8px', borderRadius: '6px' }}>
+                        {email}
+                        <button 
+                          onClick={() => {
+                            const current = (activeCamp.recipientEmail || '').split(',').map(e => e.trim()).filter(Boolean);
+                            const updated = current.filter((_, idx) => idx !== i);
+                            campaignEngine.saveCampaign({ ...activeCamp, recipientEmail: updated.join(', ') });
+                          }}
+                          style={{ background: 'none', border: 'none', color: '#60a5fa', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        >
+                          <Plus size={12} style={{ transform: 'rotate(45deg)' }} />
+                        </button>
+                      </div>
+                    ))}
                     <input 
                       type="text" 
-                      value={activeCamp.recipientEmail !== undefined ? activeCamp.recipientEmail : 'client@company.com'} 
-                      onChange={(e) => {
-                        const updatedCamp = { ...activeCamp, recipientEmail: e.target.value };
-                        campaignEngine.saveCampaign(updatedCamp);
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ',') {
+                          e.preventDefault();
+                          const val = e.currentTarget.value.trim();
+                          if (val) {
+                            const current = (activeCamp.recipientEmail || '').split(',').map(e => e.trim()).filter(Boolean);
+                            if (!current.includes(val)) {
+                              const updated = [...current, val];
+                              campaignEngine.saveCampaign({ ...activeCamp, recipientEmail: updated.join(', ') });
+                            }
+                            e.currentTarget.value = '';
+                          }
+                        } else if (e.key === 'Backspace' && !e.currentTarget.value) {
+                          const current = (activeCamp.recipientEmail || '').split(',').map(e => e.trim()).filter(Boolean);
+                          if (current.length > 0) {
+                            const updated = current.slice(0, -1);
+                            campaignEngine.saveCampaign({ ...activeCamp, recipientEmail: updated.join(', ') });
+                          }
+                        }
                       }}
-                      style={{ flex: 1, fontSize: '0.85rem', color: '#0f172a', border: 'none', background: 'transparent', outline: 'none' }}
-                      placeholder="recipient@company.com"
+                      style={{ flex: 1, minWidth: '150px', fontSize: '0.85rem', color: '#0f172a', border: 'none', background: 'transparent', outline: 'none' }}
+                      placeholder={((activeCamp.recipientEmail || '').split(',').map(e => e.trim()).filter(Boolean)).length === 0 ? "recipient@company.com (press Enter)" : "Add another..."}
                     />
                   </div>
-                  <button onClick={() => showToast('Add recipient dialog')} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', color: '#64748b', fontSize: '0.82rem', cursor: 'pointer', padding: 0, transition: 'color 0.15s ease', whiteSpace: 'nowrap' }} onMouseOver={e => e.currentTarget.style.color = '#0f172a'} onMouseOut={e => e.currentTarget.style.color = '#64748b'}>
+                  <button onClick={() => {
+                     const email = prompt("Enter recipient email:");
+                     if (email && email.trim()) {
+                       const current = (activeCamp.recipientEmail || '').split(',').map(e => e.trim()).filter(Boolean);
+                       if (!current.includes(email.trim())) {
+                         const updated = [...current, email.trim()];
+                         campaignEngine.saveCampaign({ ...activeCamp, recipientEmail: updated.join(', ') });
+                       }
+                     }
+                  }} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', color: '#64748b', fontSize: '0.82rem', cursor: 'pointer', padding: 0, transition: 'color 0.15s ease', whiteSpace: 'nowrap' }} onMouseOver={e => e.currentTarget.style.color = '#0f172a'} onMouseOut={e => e.currentTarget.style.color = '#64748b'}>
                     <Plus size={14} /> Add Recipient
                   </button>
                 </div>
@@ -601,56 +628,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
             <div style={{ padding: '20px 24px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <button onClick={() => { if (selIdx > 0) handleDeleteStep(selIdx); }} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', color: '#dc2626', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}><Trash2 size={16} /> Delete Step</button>
               <div style={{ display: 'flex', gap: '12px' }}>
-                <button 
-                  onClick={async () => {
-                    handleUpdateStep(selIdx, { ...selectedStep, status: 'Sending' });
-                    showToast('Sending email immediately...');
-                    
-                    try {
-                      const { data: sessionData } = await supabase.auth.getSession();
-                      const accessToken = sessionData?.session?.access_token;
-                      
-                      const res = await fetch(`${API_BASE_URL}/api/send-email`, {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                          'Authorization': `Bearer ${accessToken || ''}`
-                        },
-                        body: JSON.stringify({
-                          to: activeCamp.recipientEmail || 'client@company.com',
-                          subject: selectedStep.subject || 'No Subject',
-                          htmlBody: selectedStep.body || 'No content provided.'
-                        })
-                      });
-                      
-                      if (!res.ok) {
-                        const err = await res.json();
-                        throw new Error(err.error || 'Failed to send email');
-                      }
-                      
-                      handleUpdateStep(selIdx, { ...selectedStep, status: 'Sent' });
-                      showToast('Email sent successfully!');
-                      
-                      // Log it in the engine so it shows up in Sequence Performance
-                      campaignEngine.logEvent({
-                        campaignId: activeCamp.id,
-                        stepId: selectedStep.id,
-                        recipientEmail: activeCamp.recipientEmail || 'client@company.com',
-                        status: 'Sent',
-                        timestamp: Date.now()
-                      });
-                      
-                    } catch (error: any) {
-                      handleUpdateStep(selIdx, { ...selectedStep, status: 'Failed' });
-                      showToast(error.message);
-                    }
-                  }}
-                  style={{ background: '#ffffff', border: '1px solid #0E61F3', color: '#0E61F3', fontWeight: 600, fontSize: '0.88rem', padding: '10px 18px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '6px' }}
-                  onMouseOver={(e) => { e.currentTarget.style.background = '#eff6ff' }}
-                  onMouseOut={(e) => { e.currentTarget.style.background = '#ffffff' }}
-                >
-                  <Send size={15} /> Send Now
-                </button>
+
                 <button onClick={() => showToast('Changes saved')} style={{ background: '#ffffff', border: '1px solid #cbd5e1', color: '#334155', fontWeight: 600, fontSize: '0.88rem', padding: '10px 18px', borderRadius: '8px', cursor: 'pointer' }}>Save Changes</button>
                 <button 
                   onClick={() => {
@@ -683,6 +661,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
             }}
             recipientEmail={activeCamp.recipientEmail}
           />
+        </div>
         </div>
       </div>
     </div>

@@ -150,6 +150,10 @@ app.get('/auth/google/callback', async (req, res) => {
     res.redirect(`${frontendUrl}/dashboard?google_connected=true`);
   } catch (error) {
     console.error("Auth Error in callback:", error);
+    if (error.message && error.message.includes('invalid_grant')) {
+      const frontendUrl = process.env.FRONTEND_URL || (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',')[0] : 'http://localhost:5173');
+      return res.redirect(`${frontendUrl}/dashboard?google_error=invalid_grant`);
+    }
     res.status(500).send("Authentication failed: " + error.message);
   }
 });
@@ -176,13 +180,20 @@ app.get('/api/gmail-token/:uid', requireAuth, async (req, res) => {
     if (!ownerData || !ownerData.google_tokens) return res.status(404).json({ error: "Not found" });
     const tokens = ownerData.google_tokens;
     
-    // Check if expired (or within 1 min of expiring)
     if (tokens.expiry_date && Date.now() > (tokens.expiry_date - 60000) && tokens.refresh_token) {
       oauth2Client.setCredentials({ refresh_token: tokens.refresh_token });
-      const { credentials } = await oauth2Client.refreshAccessToken();
-      tokens.access_token = credentials.access_token;
-      tokens.expiry_date = credentials.expiry_date;
-      await supabase.from('users').update({ google_tokens: tokens }).eq('id', req.params.uid);
+      try {
+        const { credentials } = await oauth2Client.refreshAccessToken();
+        tokens.access_token = credentials.access_token;
+        tokens.expiry_date = credentials.expiry_date;
+        await supabase.from('users').update({ google_tokens: tokens }).eq('id', req.params.uid);
+      } catch (err) {
+        if (err.message && err.message.includes('invalid_grant')) {
+          await supabase.from('users').update({ google_tokens: null }).eq('id', req.params.uid);
+          return res.status(401).json({ error: "Gmail session expired. Please reconnect." });
+        }
+        throw err;
+      }
     }
     res.json({ access_token: tokens.access_token, email: ownerData.email });
   } catch (err) {
@@ -435,10 +446,18 @@ app.post('/api/send-email', requireAuth, async (req, res) => {
 
     // Check expiry
     if (tokens.expiry_date && Date.now() > (tokens.expiry_date - 60000) && tokens.refresh_token) {
-      const { credentials } = await oauth2Client.refreshAccessToken();
-      tokens.access_token = credentials.access_token;
-      tokens.expiry_date = credentials.expiry_date;
-      await supabase.from('users').update({ google_tokens: tokens }).eq('id', req.userId);
+      try {
+        const { credentials } = await oauth2Client.refreshAccessToken();
+        tokens.access_token = credentials.access_token;
+        tokens.expiry_date = credentials.expiry_date;
+        await supabase.from('users').update({ google_tokens: tokens }).eq('id', req.userId);
+      } catch (err) {
+        if (err.message && err.message.includes('invalid_grant')) {
+          await supabase.from('users').update({ google_tokens: null }).eq('id', req.userId);
+          return res.status(401).json({ error: "Gmail session expired. Please reconnect." });
+        }
+        throw err;
+      }
     }
 
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
