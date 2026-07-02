@@ -592,7 +592,7 @@ class CampaignEngine {
     };
 
     try {
-      const prompt = `Write an enterprise cold email sequence (4 emails: Initial Email + 3 follow-ups) pitching our SaaS to ${derivedCompany} (${metadata.industry || 'SaaS'}).
+      const prompt = `Write a highly-tailored enterprise cold email sequence pitching our SaaS to ${derivedCompany} (${metadata.industry || 'SaaS'}).
 Target Audience: ${metadata.targetAudience || 'Decision Makers'}
 Pain Points: ${metadata.painPoints || 'Inefficiencies'}
 Value Props: ${metadata.usps || 'Automation'}
@@ -600,18 +600,20 @@ Tone: ${metadata.tone || 'Professional'}
 Additional Context: ${description || 'Outbound sales automation'}
 
 Instructions:
-1. NEVER output placeholder variables or curly braces like {{FirstName}}, {{Company}}, {{RecipientID}}, or {{SenderID}}.
-2. Address the recipient directly by their real name: "${derivedName}".
-3. Refer to their company directly as "${derivedCompany}".
-4. Sign off directly with "${derivedSender}".
-5. Make the text highly readable, structured into concise paragraphs, and professional.
-6. Use professional emojis strategically (e.g. ⚡, 📊, 💼, 🤝, 📅, 🚀) without clutter.
+1. Intelligently determine the optimal number of emails in this sequence (between 3 to 6 total emails) based on the industry, target audience, and complexity of the value proposition.
+2. Intelligently determine the best strategic delay (in days) between each email (e.g., waiting 2 days for the first follow-up, then 4 days for the next, etc.).
+3. NEVER output placeholder variables or curly braces like {{FirstName}}, {{Company}}, {{RecipientID}}, or {{SenderID}}.
+4. Address the recipient directly by their real name: "${derivedName}".
+5. Refer to their company directly as "${derivedCompany}".
+6. Sign off directly with "${derivedSender}".
+7. Make the text highly readable, structured into concise paragraphs, and professional.
+8. Use professional emojis strategically without clutter.
 
 Return ONLY a valid JSON array of objects representing the email steps. Each object must have keys:
-- title (string, e.g. "Initial Email", "Follow-up 1", "Follow-up 2", "Final Follow-up")
+- title (string, e.g. "Initial Email", "Strategic Follow-up", "Value-add Follow-up", "Final Breakup")
 - subject (string, compelling email subject line without brackets)
 - body (string, HTML formatted paragraphs <p>...</p> without brackets)
-- delayAfterDays (number, delay in days before next step, e.g. 2, 3, 4. Put 0 for the last step)
+- delayAfterDays (number, the optimal delay in days before the next step. Put 0 for the final email step in the sequence)
 Do NOT include markdown formatting or backticks around the JSON.`;
 
       const rawJson = await callGroqAI(
