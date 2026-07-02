@@ -72,16 +72,16 @@ const SectionGridLine = () => (
 
 const faqData = [
   {
-    q: "What is SaleMail and how does it work as a scheduling app?",
-    a: "SaleMail is a scheduling app and meeting scheduling software used to eliminate booking back-and-forth. You share a link, and SaleMail handles calendar syncing, timezone detection, reminders, and video calls through Zoom, Google Meet, Microsoft Teams, and SaleMail Video. It works as a simple meeting scheduler for 1-on-1s or a fully automated scheduling system with routing and workflows."
+    q: "What is LinksMeet and how does it work as a scheduling app?",
+    a: "LinksMeet is a scheduling app and meeting scheduling software used to eliminate booking back-and-forth. You share a link, and LinksMeet handles calendar syncing, timezone detection, reminders, and video calls through Zoom, Google Meet, Microsoft Teams, and LinksMeet Video. It works as a simple meeting scheduler for 1-on-1s or a fully automated scheduling system with routing and workflows."
   },
   {
-    q: "What makes SaleMail different from other scheduling apps?",
-    a: "As a scheduler, SaleMail offers exceptional value by integrating seamlessly with common workflow tools like Google Calendar, Zoom, and Stripe. It also works as a lead routing, distribution, and management tool for inbound-focused teams. Overall, SaleMail is built for flexibility and customization."
+    q: "What makes LinksMeet different from other scheduling apps?",
+    a: "As a scheduler, LinksMeet offers exceptional value by integrating seamlessly with common workflow tools like Google Calendar, Zoom, and Stripe. It also works as a lead routing, distribution, and management tool for inbound-focused teams. Overall, LinksMeet is built for flexibility and customization."
   },
   {
-    q: "Can SaleMail be used as scheduling software for Healthcare, Sales, Support, and B2B teams?",
-    a: "Yes. SaleMail adapts as scheduling software across industries and team structures. For B2B sales teams, SaleMail works as booking software with attribute-based routing, round-robin lead distribution, and CRM updates in Salesforce or HubSpot on every booking. It's a complete automated scheduling system."
+    q: "Can LinksMeet be used as scheduling software for Healthcare, Sales, Support, and B2B teams?",
+    a: "Yes. LinksMeet adapts as scheduling software across industries and team structures. For B2B sales teams, LinksMeet works as booking software with attribute-based routing, round-robin lead distribution, and CRM updates in Salesforce or HubSpot on every booking. It's a complete automated scheduling system."
   }
 ];
 
@@ -156,8 +156,8 @@ export default function Landing() {
       <nav className="lexaro-nav" style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(12px)' }}>
         <div className="lexaro-container">
           <div className="lexaro-logo">
-            <img src="/logo.png" alt="SaleMail" style={{ width: '26px', height: '26px', objectFit: 'contain', borderRadius: '5px', marginRight: '6px' }} />
-            SaleMail
+            <img src="/logo.png" alt="LinksMeet" style={{ width: '26px', height: '26px', objectFit: 'contain', borderRadius: '5px', marginRight: '6px' }} />
+            LinksMeet
           </div>
           <div className="lexaro-nav-links">
             <a href="#about">About</a>
@@ -193,7 +193,7 @@ export default function Landing() {
               </div>
               <h1 className="lexaro-hero-title">More qualified meetings with<br />intelligent automation</h1>
               <p className="lexaro-hero-sub">
-                SaleMail combines lead discovery, personalized cold outreach, email deliverability,<br />
+                LinksMeet combines lead discovery, personalized cold outreach, email deliverability,<br />
                 and meeting scheduling into one seamless workspace.
               </p>
               <div className="lexaro-hero-cta">
@@ -327,7 +327,7 @@ export default function Landing() {
               {/* Right Card: Unified */}
               <div className="lexaro-legacy-card">
                 <h3>The All-In-One Revenue Engine</h3>
-                <p>SaleMail unifies your lead discovery, automated sequences, and meeting scheduling into a single, intelligent workspace.</p>
+                <p>LinksMeet unifies your lead discovery, automated sequences, and meeting scheduling into a single, intelligent workspace.</p>
                 <div className="lexaro-legacy-visual">
                   <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
                     <path d="M 120 180 C 150 180, 150 100, 190 100" fill="none" stroke="#ccc" strokeWidth="1.5" strokeDasharray="4 4" />
@@ -335,14 +335,14 @@ export default function Landing() {
                     <path d="M 120 180 C 150 180, 150 250, 190 250" fill="none" stroke="#ccc" strokeWidth="1.5" strokeDasharray="4 4" />
                   </svg>
                   
-                  {/* SaleMail Node */}
+                  {/* LinksMeet Node */}
                   <div className="lexaro-node-lexaro" style={{ top: '140px', left: '30px', zIndex: 3 }}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M12 4L4 12L12 20L20 12L12 4Z" fill="#555" />
                       <path d="M6 10L14 18L18 14L10 6L6 10Z" fill="#111" />
                       <path d="M18 10L10 18L6 14L14 6L18 10Z" fill="#333" />
                     </svg>
-                    SaleMail
+                    LinksMeet
                   </div>
 
                   {/* Pills */}
@@ -469,7 +469,7 @@ export default function Landing() {
                     <div className="lexaro-doc-card-check"><Check size={10} strokeWidth={3} /></div>
                   </div>
 
-                  {/* SaleMail Center Node */}
+                  {/* LinksMeet Center Node */}
                   <div className="lexaro-center-ring">
                     {/* Ring edge markers */}
                     <div style={{ position: 'absolute', top: -3, left: '50%', width: 6, height: 6, border: '1px solid #aaa', borderRadius: '50%', background: '#fff' }} />
@@ -685,7 +685,7 @@ export default function Landing() {
           <FadeUp>
             <div className="lexaro-steps-header">
               <h2>How your outreach becomes<br />a revenue machine</h2>
-              <p>Connect your data once. SaleMail automates your pipeline generation automatically.</p>
+              <p>Connect your data once. LinksMeet automates your pipeline generation automatically.</p>
             </div>
           </FadeUp>
 
@@ -695,7 +695,7 @@ export default function Landing() {
               <div className="lexaro-step-card" style={{ height: '100%' }}>
                 <div className="lexaro-step-label">01</div>
                 <h3>Discover high-quality prospects</h3>
-                <p style={{ marginBottom: '32px' }}>Define your ICP. SaleMail finds and verifies decision-makers automatically.</p>
+                <p style={{ marginBottom: '32px' }}>Define your ICP. LinksMeet finds and verifies decision-makers automatically.</p>
                 
                 <div className="lexaro-step-visual">
                   {/* SVG Lines Removed for cleaner look */}
@@ -749,7 +749,7 @@ export default function Landing() {
               <div className="lexaro-step-card" style={{ height: '100%' }}>
                 <div className="lexaro-step-label">02</div>
                 <h3>Personalize at scale</h3>
-                <p style={{ marginBottom: '32px' }}>SaleMail uses lead data to generate highly relevant cold outreach campaigns.</p>
+                <p style={{ marginBottom: '32px' }}>LinksMeet uses lead data to generate highly relevant cold outreach campaigns.</p>
                 
                 <div className="lexaro-step-visual">
                   {/* SVG Lines Removed for cleaner look */}
@@ -850,7 +850,7 @@ export default function Landing() {
           <FadeUp>
             <div className="lexaro-integrations-header" style={{ textAlign: 'center', marginBottom: '80px' }}>
               <h2 className="lexaro-title" style={{ marginBottom: '16px' }}>Works with your existing stack</h2>
-              <p className="lexaro-subtitle" style={{ fontSize: '1.15rem', color: '#777' }}>SaleMail integrates with your CRM, data providers, and sending domains seamlessly.</p>
+              <p className="lexaro-subtitle" style={{ fontSize: '1.15rem', color: '#777' }}>LinksMeet integrates with your CRM, data providers, and sending domains seamlessly.</p>
             </div>
           </FadeUp>
 
@@ -858,7 +858,7 @@ export default function Landing() {
             <div className="lexaro-orbit-wrapper">
               {/* Central Logo */}
               <div className="lexaro-orbit-center">
-                <img src="/logo.png" alt="SaleMail" style={{ width: '56px', height: '56px', objectFit: 'contain' }} />
+                <img src="/logo.png" alt="LinksMeet" style={{ width: '56px', height: '56px', objectFit: 'contain' }} />
               </div>
 
               {/* Ring 1 (Inner): CRM + sending domains */}
@@ -1065,8 +1065,8 @@ export default function Landing() {
           <div className="lexaro-footer-grid">
             <div className="lexaro-footer-col">
               <div className="lexaro-footer-logo">
-                <img src="/logo.png" alt="SaleMail" style={{ width: '26px', height: '26px', objectFit: 'contain', borderRadius: '5px', marginRight: '6px' }} />
-                SaleMail
+                <img src="/logo.png" alt="LinksMeet" style={{ width: '26px', height: '26px', objectFit: 'contain', borderRadius: '5px', marginRight: '6px' }} />
+                LinksMeet
               </div>
               <p style={{ color: '#888', fontSize: '0.95rem', lineHeight: 1.6, maxWidth: '240px' }}>
                 The AI-powered outbound platform for modern teams to scale their revenue.
@@ -1101,7 +1101,7 @@ export default function Landing() {
           </div>
           
           <div className="lexaro-footer-bottom">
-            <div>© 2026 SaleMail Inc. All rights reserved.</div>
+            <div>© 2026 LinksMeet Inc. All rights reserved.</div>
             <div style={{ display: 'flex', gap: '20px' }}>
               <Twitter size={20} color="#888" style={{ cursor: 'pointer' }} />
               <Github size={20} color="#888" style={{ cursor: 'pointer' }} />

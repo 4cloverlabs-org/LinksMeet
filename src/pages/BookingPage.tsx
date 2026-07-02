@@ -91,14 +91,14 @@ export default function BookingPage() {
     }
     async function loadEvent() {
       const targetSlug = slug || '15min';
-      let fetchedHostName = 'SaleMail Host';
+      let fetchedHostName = 'LinksMeet Host';
 
       if (uid) {
         try {
           const res = await fetch(`${API_BASE_URL}/api/public-profile/${uid}`);
           if (res.ok) {
             const uData = await res.json();
-            fetchedHostName = uData.firstName || uData.name || 'SaleMail Host';
+            fetchedHostName = uData.firstName || uData.name || 'LinksMeet Host';
           }
         } catch (e) {
           console.warn("Public profile lookup failed, using fallback host name.");
@@ -148,7 +148,7 @@ export default function BookingPage() {
       // Send the actual widget page height to allow shrinking as well
       const widgetPage = document.querySelector('.bk-widget-page');
       const height = widgetPage ? widgetPage.scrollHeight : document.body.scrollHeight;
-      window.parent.postMessage({ type: 'salemail-resize', height }, '*');
+      window.parent.postMessage({ type: 'linksmeet-resize', height }, '*');
     };
 
     // Delay initially to ensure rendering is complete
@@ -269,7 +269,7 @@ export default function BookingPage() {
 
               <div style={{ fontWeight: 700, color: '#0f172a' }}>Where</div>
               <div style={{ display: 'flex', alignItems: 'center' }}>
-                <span style={{ color: '#0f172a', fontWeight: 500 }}>SaleMail Video</span>
+                <span style={{ color: '#0f172a', fontWeight: 500 }}>LinksMeet Video</span>
                 <ExternalLink
                   size={16}
                   color="#0E61F3"
@@ -381,7 +381,7 @@ export default function BookingPage() {
                 <Clock size={18} color="#64748b" /> {eventType?.dur || '15m'}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 600 }}>
-                <Video size={18} color="#64748b" /> SaleMail Video
+                <Video size={18} color="#64748b" /> LinksMeet Video
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 600, cursor: 'pointer' }}>
                 <Globe size={18} color="#64748b" /> Asia/Kolkata
@@ -601,7 +601,7 @@ export default function BookingPage() {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 500 }}>
-                <Video size={20} color="#0E61F3" style={{ flexShrink: 0 }} /> SaleMail Video
+                <Video size={20} color="#0E61F3" style={{ flexShrink: 0 }} /> LinksMeet Video
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 500 }}>
@@ -658,7 +658,7 @@ export default function BookingPage() {
               </div>
 
               <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '8px 0 0', lineHeight: 1.5 }}>
-                By proceeding, you agree to SaleMail's <span style={{ color: '#0E61F3', cursor: 'pointer' }}>Terms</span> and <span style={{ color: '#0E61F3', cursor: 'pointer' }}>Privacy Policy</span>.
+                By proceeding, you agree to LinksMeet's <span style={{ color: '#0E61F3', cursor: 'pointer' }}>Terms</span> and <span style={{ color: '#0E61F3', cursor: 'pointer' }}>Privacy Policy</span>.
               </p>
               
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '20px', marginTop: '16px' }}>

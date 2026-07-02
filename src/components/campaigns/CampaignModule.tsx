@@ -153,7 +153,7 @@ export const CampaignModule: React.FC = () => {
             <div style={{ display: 'flex', gap: '32px', borderTop: 'none' }}>
               <button
                 onClick={() => setTab('builder')}
-                style={{ padding: '12px 0', background: 'none', border: 'none', borderBottom: tab === 'builder' ? '2px solid #0E61F3' : '2px solid transparent', color: tab === 'builder' ? '#0E61F3' : '#64748b', fontWeight: 700, fontSize: '0.92rem', cursor: 'pointer' }}
+                style={{ padding: '12px 0', background: 'none', border: 'none', borderBottom: (tab as string) === 'builder' ? '2px solid #0E61F3' : '2px solid transparent', color: (tab as string) === 'builder' ? '#0E61F3' : '#64748b', fontWeight: 700, fontSize: '0.92rem', cursor: 'pointer' }}
               >
                 Builder
               </button>

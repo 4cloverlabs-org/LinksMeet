@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Globe, FileText, Check, Loader2 } from 'lucide-react';
+import { Sparkles, Globe, Check, Loader2 } from 'lucide-react';
 import { campaignEngine, type CampaignStep } from './campaignEngine';
 
 interface AICampaignStudioProps {

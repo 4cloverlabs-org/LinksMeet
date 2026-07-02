@@ -1,5 +1,5 @@
 -- =============================================================================
--- SaleMail — Row Level Security (RLS) policies
+-- LinksMeet — Row Level Security (RLS) policies
 -- =============================================================================
 -- WHY THIS FILE EXISTS
 -- Without RLS, the Supabase *anon* key (which ships inside the browser bundle and

@@ -189,7 +189,7 @@ export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, onCreateN
                 // Determine styling for pills based on status
                 let pillBg = '#f1f5f9';
                 let pillColor = '#475569';
-                let displayStatus = camp.status;
+                let displayStatus: string = camp.status;
                 
                 if (camp.status === 'Running') {
                   pillBg = '#dcfce7';
@@ -254,7 +254,7 @@ export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, onCreateN
                     </td>
                     <td style={{ padding: '16px 24px' }}>
                       <div style={{ display: 'flex', gap: '4px' }}>
-                        {camp.steps.map((s, i) => (
+                        {camp.steps.map((_s, i) => (
                           <div key={i} style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3B82F6' }} />
                         ))}
                       </div>

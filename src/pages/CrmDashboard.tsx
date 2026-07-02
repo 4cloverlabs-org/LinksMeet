@@ -62,7 +62,7 @@ const OPEN_STATUSES: ContactStatus[] = ['New', 'Follow-up', 'Contacted'];
 const DEFAULT_EVENT_TYPES = [
   { title: '15 Min Meeting', dur: '15m', slug: '15min', desc: 'A quick intro or sync call.' },
   { title: '30 Min Meeting', dur: '30m', slug: '30min', desc: 'Standard discovery conversation.' },
-  { title: 'Product Demo', dur: '45m', slug: 'demo', desc: 'Guided walkthrough of SaleMail.' },
+  { title: 'Product Demo', dur: '45m', slug: 'demo', desc: 'Guided walkthrough of LinksMeet.' },
   { title: 'Strategy Session', dur: '60m', slug: 'strategy', desc: 'Deep-dive planning with the team.' },
   { title: 'Group Webinar', dur: '90m', slug: 'webinar', desc: 'Multi-attendee live session.' },
 ];
@@ -441,7 +441,7 @@ export default function CrmDashboard() {
     const csv = [head.join(','), ...rows].join('\n');
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
     const a = document.createElement('a');
-    a.href = url; a.download = 'salemail-leads.csv'; a.click();
+    a.href = url; a.download = 'linksmeet-leads.csv'; a.click();
     URL.revokeObjectURL(url);
   };
 
@@ -504,8 +504,8 @@ export default function CrmDashboard() {
         {!editingEvent && (
         <aside className={`crm-side${sideOpen ? ' open' : ''}`}>
           <div className="crm-brand" style={{ color: '#111' }}>
-            <img src="/logo.png" alt="SaleMail" style={{ width: '24px', height: '24px', objectFit: 'contain', borderRadius: '4px' }} />
-            <span>SaleMail</span>
+            <img src="/logo.png" alt="LinksMeet" style={{ width: '24px', height: '24px', objectFit: 'contain', borderRadius: '4px' }} />
+            <span>LinksMeet</span>
           </div>
 
           <div className="crm-nav-scroll">
@@ -904,7 +904,7 @@ export default function CrmDashboard() {
                                 </button>
                                 <button className="et-dd-btn" onClick={() => { 
                                   setEtDropdown(null); 
-                                  const code = `<!-- SaleMail inline widget begin -->\n<div class="salemail-inline-widget" data-url="${window.location.origin}/book/${uid}/${e.slug}" style="min-width:320px;height:700px;"></div>\n<script type="text/javascript" src="${window.location.origin}/widget.js" async></script>\n<!-- SaleMail inline widget end -->`;
+                                  const code = `<!-- LinksMeet inline widget begin -->\n<div class="linksmeet-inline-widget" data-url="${window.location.origin}/book/${uid}/${e.slug}" style="min-width:320px;height:700px;"></div>\n<script type="text/javascript" src="${window.location.origin}/widget.js" async></script>\n<!-- LinksMeet inline widget end -->`;
                                   navigator.clipboard?.writeText(code).catch(() => {});
                                   setToast('Embed code copied'); window.setTimeout(() => setToast(null), 1800);
                                 }}>
@@ -1415,7 +1415,7 @@ export default function CrmDashboard() {
               <div className="crm-fade crm-help-grid">
                 {[
                   { icon: BookOpen, h: 'Getting started', p: 'Set up your account and book your first meeting.' },
-                  { icon: FileText, h: 'Documentation', p: 'Browse guides for every SaleMail feature.' },
+                  { icon: FileText, h: 'Documentation', p: 'Browse guides for every LinksMeet feature.' },
                   { icon: MessageCircle, h: 'Contact support', p: 'Reach our team — we reply within a few hours.' },
                   { icon: Keyboard, h: 'Keyboard shortcuts', p: 'Move faster with handy shortcuts.' },
                 ].map(c => {

@@ -55,7 +55,7 @@ function App() {
           <Route path="/book/:slug" element={<BookingPage />} />
           <Route path="/booking/:slug" element={<BookingPage />} />
 
-          {/* ---- Legacy SaleMail app ---- */}
+          {/* ---- Legacy LinksMeet app ---- */}
           <Route path="/schedule" element={<Layout><VisitorHome /></Layout>} />
           <Route path="/book-legacy/:eventTypeId" element={<Layout><BookingFlow /></Layout>} />
           <Route path="/success" element={<Layout><SuccessPage /></Layout>} />

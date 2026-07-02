@@ -41,7 +41,8 @@ export type EmailStatus =
   | 'Replied'
   | 'Failed'
   | 'Skipped'
-  | 'Unsubscribed';
+  | 'Unsubscribed'
+  | 'Paused';
 
 export type StepType = 'email' | 'delay';
 
@@ -136,7 +137,7 @@ let settings: CampaignSettingsData = {
   pixelTracking: true,
   linkTracking: true,
   autoUnsubscribe: true,
-  signature: '<p>Best regards,<br><strong>SaleMail Team</strong></p>',
+  signature: '<p>Best regards,<br><strong>LinksMeet Team</strong></p>',
   directMailEngine: 'gmail',
   gmailAccessToken: '',
   gmailUserEmail: '',
@@ -290,7 +291,7 @@ const INITIAL_THREADS: ConversationThread[] = [
     messages: [
       {
         id: 'm_1',
-        sender: 'kushal@salemail.io',
+        sender: 'kushal@linksmeet.io',
         senderName: 'Kushal',
         content: '<p>Hello sarah.j@medtech.org,</p><p>We noticed MedTech is scaling its clinic scheduling infrastructure. 🚀 We help healthcare platforms automate patient confirmation workflows with 99.8% delivery rates. 📊</p><p>Would you be open to exploring a brief 10-minute partnership sync next Tuesday? 📅</p><p>Best regards,<br><strong>Kushal</strong></p>',
         timestamp: 'Yesterday, 10:14 AM',
@@ -398,10 +399,10 @@ class CampaignEngine {
         return { success: false, message: msg };
       }
 
-      const utf8Subject = `=?utf-8?B?${btoa(unescape(encodeURIComponent(subject || 'SaleMail Outreach')))}?=`;
+      const utf8Subject = `=?utf-8?B?${btoa(unescape(encodeURIComponent(subject || 'LinksMeet Outreach')))}?=`;
       const rfc2822Message = [
         `To: ${recipient}`,
-        `From: SaleMail Campaign <${senderEmail !== 'me' ? senderEmail : ''}>`,
+        `From: LinksMeet Campaign <${senderEmail !== 'me' ? senderEmail : ''}>`,
         `Subject: ${utf8Subject}`,
         `MIME-Version: 1.0`,
         `Content-Type: text/html; charset=utf-8`,
@@ -425,7 +426,7 @@ class CampaignEngine {
       const gmailData = await gmailRes.json();
       
       if (gmailRes.ok) {
-        console.log(`[SaleMail Gmail API] Sent directly via user mailbox! Message ID:`, gmailData.id);
+        console.log(`[LinksMeet Gmail API] Sent directly via user mailbox! Message ID:`, gmailData.id);
         return { success: true, message: `Dispatched live via Gmail API to ${recipient}!` };
       } else {
         const errMsg = gmailData?.error?.message || 'Unknown Gmail API error.';
@@ -550,6 +551,30 @@ class CampaignEngine {
   }
 
   // API Methods
+  public logEvent(data: any) {
+    const camp = this.campaigns.find(c => c.id === data.campaignId);
+    const step = camp?.steps.find(s => s.id === data.stepId);
+    const log: SentEmailLog = {
+      id: 'log_' + Math.random().toString(36).substring(2, 9),
+      campaignId: data.campaignId,
+      campaignName: camp?.name || 'Manual Campaign',
+      recipient: data.recipientEmail || 'Unknown',
+      subject: step?.subject || 'Manual Send',
+      sentAt: 'Just now',
+      status: data.status || 'Sent',
+      opens: 0,
+      clicks: 0,
+      replied: false,
+      deliveryStatus: 'Delivered',
+      spamStatus: 'Passed',
+      stage: step?.title || 'Manual Dispatched',
+    };
+    this.logs.unshift(log);
+    this.saveState();
+    this.notify('email_sent', log);
+    this.notify('update');
+  }
+
   public getCampaigns(): Campaign[] { return JSON.parse(JSON.stringify(this.campaigns)); }
   public getLogs(): SentEmailLog[] { return [...this.logs]; }
   public getThreads(): ConversationThread[] { return [...this.threads]; }
@@ -718,7 +743,7 @@ class CampaignEngine {
     if (thread) {
       thread.messages.push({
         id: 'msg_' + Math.random().toString(36).substring(2, 9),
-        sender: 'kushal@salemail.io',
+        sender: 'kushal@linksmeet.io',
         senderName: 'Kushal',
         content,
         timestamp: 'Just now',

@@ -24,7 +24,7 @@ app.use(express.json({ limit: '100kb' }));
 
 // Health check endpoint
 app.get('/', (req, res) => {
-  res.send('SaleMail API Server is running');
+  res.send('LinksMeet API Server is running');
 });
 
 // Strip CR/LF to prevent email header injection; collapse to a single line.
@@ -96,7 +96,7 @@ const makeBody = (to, from, subject, message) => {
 // ----------------------------------------------------
 app.get('/auth/google', (req, res) => {
   console.log("GET /auth/google hit with query:", req.query);
-  const { uid } = req.query; // SaleMail user ID
+  const { uid } = req.query; // LinksMeet user ID
   if (!uid) return res.status(400).send("User ID required");
 
   const url = oauth2Client.generateAuthUrl({
@@ -271,8 +271,8 @@ app.post('/api/bookings', async (req, res) => {
         const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
         const event = {
-          summary: `Meeting: ${bookerName} & ${ownerData.first_name || 'SaleMail'}`,
-          description: `Scheduled via SaleMail for event: ${eventTitle}`,
+          summary: `Meeting: ${bookerName} & ${ownerData.first_name || 'LinksMeet'}`,
+          description: `Scheduled via LinksMeet for event: ${eventTitle}`,
           start: { dateTime: startTime },
           end: { dateTime: endTime },
           attendees: [{ email: bookerEmail }, { email: ownerData.email }],
@@ -295,7 +295,7 @@ app.post('/api/bookings', async (req, res) => {
 
         // Send Beautiful Custom Emails via Gmail API
         const ownerEmail = ownerData.email;
-        const ownerName = ownerData.first_name || 'SaleMail';
+        const ownerName = ownerData.first_name || 'LinksMeet';
         const formattedTime = new Date(startTime).toLocaleString('en-US', { weekday: 'short', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
         // HTML-escaped copies for safe interpolation into the email bodies.
@@ -328,7 +328,7 @@ app.post('/api/bookings', async (req, res) => {
               ` : ''}
             </div>
             <div style="background: #f1f5f9; padding: 16px; text-align: center; border-top: 1px solid #e2e8f0;">
-              <p style="margin: 0; color: #64748b; font-size: 12px;">Powered by <strong>SaleMail</strong></p>
+              <p style="margin: 0; color: #64748b; font-size: 12px;">Powered by <strong>LinksMeet</strong></p>
             </div>
           </div>
         `;
@@ -359,7 +359,7 @@ app.post('/api/bookings', async (req, res) => {
               ` : ''}
             </div>
             <div style="background: #f1f5f9; padding: 16px; text-align: center; border-top: 1px solid #e2e8f0;">
-              <p style="margin: 0; color: #64748b; font-size: 12px;">SaleMail CRM Automations</p>
+              <p style="margin: 0; color: #64748b; font-size: 12px;">LinksMeet CRM Automations</p>
             </div>
           </div>
         `;
@@ -405,6 +405,53 @@ app.post('/api/bookings', async (req, res) => {
   } catch (error) {
     console.error("Booking Error:", error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// ----------------------------------------------------
+// 4. Send Email Endpoint (Send Now)
+// ----------------------------------------------------
+app.post('/api/send-email', requireAuth, async (req, res) => {
+  try {
+    const { to, subject, htmlBody } = req.body;
+    if (!to || !subject || !htmlBody) {
+      return res.status(400).json({ error: "Missing required fields (to, subject, htmlBody)" });
+    }
+
+    const { data: ownerData, error: userError } = await supabase.from('users').select('email, google_tokens').eq('id', req.userId).single();
+    if (userError || !ownerData || !ownerData.google_tokens) {
+      return res.status(400).json({ error: "Gmail not connected for this account. Please connect your Gmail in settings." });
+    }
+
+    const tokens = ownerData.google_tokens;
+    if (!tokens.access_token && !tokens.refresh_token) {
+      return res.status(400).json({ error: "Invalid Gmail tokens." });
+    }
+
+    oauth2Client.setCredentials({
+      refresh_token: tokens.refresh_token,
+      access_token: tokens.access_token,
+    });
+
+    // Check expiry
+    if (tokens.expiry_date && Date.now() > (tokens.expiry_date - 60000) && tokens.refresh_token) {
+      const { credentials } = await oauth2Client.refreshAccessToken();
+      tokens.access_token = credentials.access_token;
+      tokens.expiry_date = credentials.expiry_date;
+      await supabase.from('users').update({ google_tokens: tokens }).eq('id', req.userId);
+    }
+
+    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+    
+    // Use the existing makeBody helper which correctly handles unicode and base64url encoding
+    const rawEmail = makeBody(to, ownerData.email, subject, htmlBody);
+
+    await gmail.users.messages.send({ userId: 'me', requestBody: { raw: rawEmail } });
+    
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Send Email API Error:", err);
+    res.status(500).json({ error: err.message || "Failed to send email" });
   }
 });
 

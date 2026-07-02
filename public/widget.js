@@ -1,7 +1,7 @@
 (function() {
-  window.SaleMail = window.SaleMail || {};
+  window.LinksMeet = window.LinksMeet || {};
   
-  window.SaleMail.init = function() {
+  window.LinksMeet.init = function() {
     // Find the script tag to get the domain (only needed for legacy support)
     const scripts = document.getElementsByTagName('script');
     let currentScript = null;
@@ -13,7 +13,7 @@
     }
 
     // Initialize all widgets on the page
-    const widgets = document.querySelectorAll('.salemail-inline-widget, .salemail-booking');
+    const widgets = document.querySelectorAll('.linksmeet-inline-widget, .linksmeet-booking');
     widgets.forEach(widget => {
       // Don't double initialize
       if (widget.hasAttribute('data-initialized')) return;
@@ -21,8 +21,8 @@
 
       let iframeUrl = widget.getAttribute('data-url');
       
-      // Fallback for older .salemail-booking widgets (backwards compatibility)
-      if (!iframeUrl && widget.classList.contains('salemail-booking')) {
+      // Fallback for older .linksmeet-booking widgets (backwards compatibility)
+      if (!iframeUrl && widget.classList.contains('linksmeet-booking')) {
          const uid = currentScript ? currentScript.getAttribute('data-uid') : null;
          const slug = widget.getAttribute('data-event');
          if (uid && slug && currentScript) {
@@ -63,7 +63,7 @@
             }
           }
         } catch (e) {
-          console.warn('SaleMail Widget: Could not auto-detect styles.', e);
+          console.warn('LinksMeet Widget: Could not auto-detect styles.', e);
         }
       }
 
@@ -101,21 +101,21 @@
   };
 
   // Run init on load
-  window.SaleMail.init();
+  window.LinksMeet.init();
 
   // Listen for resize messages from the iframes
   window.addEventListener('message', function(e) {
-    if (e.data && e.data.type === 'salemail-resize') {
-      const iframes = document.querySelectorAll('.salemail-inline-widget iframe, .salemail-booking iframe');
+    if (e.data && e.data.type === 'linksmeet-resize') {
+      const iframes = document.querySelectorAll('.linksmeet-inline-widget iframe, .linksmeet-booking iframe');
       for (let i = 0; i < iframes.length; i++) {
         if (iframes[i].contentWindow === e.source) {
           const parent = iframes[i].parentElement;
           
-          if (parent && parent.classList.contains('salemail-inline-widget')) {
+          if (parent && parent.classList.contains('linksmeet-inline-widget')) {
             // NEVER override the user's explicit dimensions on the inline widget!
             iframes[i].style.height = '100%';
           } else {
-            // For legacy .salemail-booking widgets without explicit containers, dynamic resize is kept
+            // For legacy .linksmeet-booking widgets without explicit containers, dynamic resize is kept
             iframes[i].style.height = e.data.height + 'px';
           }
           break;

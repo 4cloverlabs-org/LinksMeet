@@ -15,7 +15,7 @@ interface Props {
 }
 
 const LOCATION_OPTIONS = [
-  { id: 'salemail', label: 'SaleMail Video (Default)', icon: Video },
+  { id: 'linksmeet', label: 'LinksMeet Video (Default)', icon: Video },
   { id: 'gmeet', label: 'Google Meet', icon: Video },
   { id: 'zoom', label: 'Zoom Video', icon: Video },
   { id: 'phone', label: 'Phone Call', icon: Phone },
@@ -34,7 +34,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
     dur: '15 Minutes',
     desc: 'A quick video meeting.',
     active: true,
-    location: 'SaleMail Video (Default)',
+    location: 'LinksMeet Video (Default)',
     ...(initialData || {})
   });
 
@@ -180,7 +180,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
   // 3. Embed Code Generator & Copy
   const embedCodeSnippet = embedTab === 'inline'
     ? `<iframe src="${window.location.origin}/book/${uid || 'demo'}/${form.slug || '15min'}" width="100%" height="700" frameborder="0" style="border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.06);"></iframe>`
-    : `<script src="https://salemail.ai/embed.js"></script>\n<button onclick="SaleMail.openBooking('${form.slug || '15min'}')" style="background:#0E61F3;color:#fff;padding:12px 24px;border-radius:8px;border:none;font-weight:600;">Book a Meeting</button>`;
+    : `<script src="https://linksmeet.ai/embed.js"></script>\n<button onclick="LinksMeet.openBooking('${form.slug || '15min'}')" style="background:#0E61F3;color:#fff;padding:12px 24px;border-radius:8px;border:none;font-weight:600;">Book a Meeting</button>`;
 
   const handleCopyEmbed = () => {
     navigator.clipboard.writeText(embedCodeSnippet);
@@ -190,7 +190,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
   // 4. Download .ics Handler
   const handleDownloadIcs = () => {
-    const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//SaleMail//Booking//EN\nBEGIN:VEVENT\nSUMMARY:${form.title || 'Meeting'}\nDESCRIPTION:${form.desc || 'Video conference meeting'}\nDURATION:PT${durMinutes}M\nEND:VEVENT\nEND:VCALENDAR`;
+    const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//LinksMeet//Booking//EN\nBEGIN:VEVENT\nSUMMARY:${form.title || 'Meeting'}\nDESCRIPTION:${form.desc || 'Video conference meeting'}\nDURATION:PT${durMinutes}M\nEND:VEVENT\nEND:VCALENDAR`;
     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -363,7 +363,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
               <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700, color: '#0f172a' }}>Delete event type?</h3>
             </div>
             <p style={{ fontSize: '0.88rem', color: '#64748b', margin: '0 0 24px', lineHeight: 1.5 }}>
-              Are you sure you want to delete <strong>{form.title}</strong>? Any active links sharing this meeting URL (`salemail.ai/booking/{form.slug}`) will cease to accept bookings.
+              Are you sure you want to delete <strong>{form.title}</strong>? Any active links sharing this meeting URL (`linksmeet.ai/booking/{form.slug}`) will cease to accept bookings.
             </p>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
@@ -523,7 +523,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   <label style={{ display: 'block', fontSize: '0.88rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>URL</label>
                   <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '8px', overflow: 'hidden', background: '#ffffff' }}>
                     <div style={{ padding: '10px 14px', background: '#f8fafc', color: '#64748b', fontSize: '0.88rem', borderRight: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>
-                      salemail.ai/booking/
+                      linksmeet.ai/booking/
                     </div>
                     <input
                       value={form.slug || ''}
@@ -579,11 +579,11 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px', cursor: 'pointer' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem', fontWeight: 600, color: '#0f172a' }}>
-                      <LocIcon size={16} color="#0E61F3" /> {form.location || 'SaleMail Video (Default)'}
+                      <LocIcon size={16} color="#0E61F3" /> {form.location || 'LinksMeet Video (Default)'}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#64748b' }}>
                       <ChevronDown size={16} />
-                      <X size={16} onClick={(e) => { e.stopPropagation(); setForm({ ...form, location: 'SaleMail Video (Default)' }); }} />
+                      <X size={16} onClick={(e) => { e.stopPropagation(); setForm({ ...form, location: 'LinksMeet Video (Default)' }); }} />
                     </div>
                   </div>
 
@@ -654,7 +654,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                         <Clock size={16} color="#64748b" /> {durMinutes}m
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <LocIcon size={16} color="#64748b" /> {form.location?.replace(' (Default)', '') || 'SaleMail Video'}
+                        <LocIcon size={16} color="#64748b" /> {form.location?.replace(' (Default)', '') || 'LinksMeet Video'}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                         <Globe size={16} color="#64748b" /> Asia/Kolkata <ChevronDown size={14} />

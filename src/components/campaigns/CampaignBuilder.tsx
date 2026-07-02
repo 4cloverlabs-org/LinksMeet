@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Mail, Send, MoreVertical, CheckCircle2, ChevronDown, ChevronUp, Trash2, Bold, Italic, Underline as UnderlineIcon, Link2, List, Image as ImageIcon, Smile, Eye, ArrowLeft, Pause, Edit2, Sparkles, Clock, LayoutGrid, Hourglass } from 'lucide-react';
+import { Plus, Mail, Send, CheckCircle2, ChevronDown, Trash2, Bold, Italic, Underline as UnderlineIcon, Link2, List, Image as ImageIcon, Smile, Eye, ArrowLeft, Pause, Edit2, Sparkles, LayoutGrid, Hourglass } from 'lucide-react';
 import { campaignEngine, type Campaign, type CampaignStep } from './campaignEngine';
 import { useAuth } from '../../lib/AuthContext';
 import { AICampaignStudio } from './AICampaignStudio';
+import { supabase } from '../../lib/supabase';
+import { API_BASE_URL } from '../../lib/config';
 
 const DelayUnitSelect = ({ value, onChange }: { value: string, onChange: (val: string) => void }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -524,13 +526,13 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px', color: '#64748b' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, color: '#334155' }}>Paragraph <ChevronDown size={14} /></span>
                       <div style={{ width: '1px', height: '16px', background: '#e2e8f0' }} />
-                      <Bold size={15} onMouseDown={e => e.preventDefault()} onClick={() => document.execCommand('bold', false)} style={{ cursor: 'pointer', color: '#0f172a' }} title="Bold" />
-                      <Italic size={15} onMouseDown={e => e.preventDefault()} onClick={() => document.execCommand('italic', false)} style={{ cursor: 'pointer', color: '#0f172a' }} title="Italic" />
-                      <UnderlineIcon size={15} onMouseDown={e => e.preventDefault()} onClick={() => document.execCommand('underline', false)} style={{ cursor: 'pointer', color: '#0f172a' }} title="Underline" />
+                      <span title="Bold"><Bold size={15} onMouseDown={e => e.preventDefault()} onClick={() => document.execCommand('bold', false)} style={{ cursor: 'pointer', color: '#0f172a' }} /></span>
+                      <span title="Italic"><Italic size={15} onMouseDown={e => e.preventDefault()} onClick={() => document.execCommand('italic', false)} style={{ cursor: 'pointer', color: '#0f172a' }} /></span>
+                      <span title="Underline"><UnderlineIcon size={15} onMouseDown={e => e.preventDefault()} onClick={() => document.execCommand('underline', false)} style={{ cursor: 'pointer', color: '#0f172a' }} /></span>
                       <div style={{ width: '1px', height: '16px', background: '#e2e8f0' }} />
-                      <Link2 size={15} onMouseDown={e => { e.preventDefault(); saveSelectionAndPrompt('link'); }} style={{ cursor: 'pointer', color: '#0f172a' }} title="Insert Link" />
-                      <ImageIcon size={15} onMouseDown={e => { e.preventDefault(); saveSelectionAndPrompt('image'); }} style={{ cursor: 'pointer', color: '#0f172a' }} title="Insert Image" />
-                      <List size={15} onMouseDown={e => e.preventDefault()} onClick={() => document.execCommand('insertUnorderedList', false)} style={{ cursor: 'pointer', color: '#0f172a' }} title="Bullet List" />
+                      <span title="Insert Link"><Link2 size={15} onMouseDown={e => { e.preventDefault(); saveSelectionAndPrompt('link'); }} style={{ cursor: 'pointer', color: '#0f172a' }} /></span>
+                      <span title="Insert Image"><ImageIcon size={15} onMouseDown={e => { e.preventDefault(); saveSelectionAndPrompt('image'); }} style={{ cursor: 'pointer', color: '#0f172a' }} /></span>
+                      <span title="Bullet List"><List size={15} onMouseDown={e => e.preventDefault()} onClick={() => document.execCommand('insertUnorderedList', false)} style={{ cursor: 'pointer', color: '#0f172a' }} /></span>
                       <LayoutGrid size={15} style={{ cursor: 'pointer', color: '#0f172a' }} />
                     </div>
                   </div>
@@ -600,13 +602,48 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
               <button onClick={() => { if (selIdx > 0) handleDeleteStep(selIdx); }} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', color: '#dc2626', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}><Trash2 size={16} /> Delete Step</button>
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button 
-                  onClick={() => {
+                  onClick={async () => {
                     handleUpdateStep(selIdx, { ...selectedStep, status: 'Sending' });
                     showToast('Sending email immediately...');
-                    setTimeout(() => {
+                    
+                    try {
+                      const { data: sessionData } = await supabase.auth.getSession();
+                      const accessToken = sessionData?.session?.access_token;
+                      
+                      const res = await fetch(`${API_BASE_URL}/api/send-email`, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${accessToken || ''}`
+                        },
+                        body: JSON.stringify({
+                          to: activeCamp.recipientEmail || 'client@company.com',
+                          subject: selectedStep.subject || 'No Subject',
+                          htmlBody: selectedStep.body || 'No content provided.'
+                        })
+                      });
+                      
+                      if (!res.ok) {
+                        const err = await res.json();
+                        throw new Error(err.error || 'Failed to send email');
+                      }
+                      
                       handleUpdateStep(selIdx, { ...selectedStep, status: 'Sent' });
                       showToast('Email sent successfully!');
-                    }, 1500);
+                      
+                      // Log it in the engine so it shows up in Sequence Performance
+                      campaignEngine.logEvent({
+                        campaignId: activeCamp.id,
+                        stepId: selectedStep.id,
+                        recipientEmail: activeCamp.recipientEmail || 'client@company.com',
+                        status: 'Sent',
+                        timestamp: Date.now()
+                      });
+                      
+                    } catch (error: any) {
+                      handleUpdateStep(selIdx, { ...selectedStep, status: 'Failed' });
+                      showToast(error.message);
+                    }
                   }}
                   style={{ background: '#ffffff', border: '1px solid #0E61F3', color: '#0E61F3', fontWeight: 600, fontSize: '0.88rem', padding: '10px 18px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '6px' }}
                   onMouseOver={(e) => { e.currentTarget.style.background = '#eff6ff' }}

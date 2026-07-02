@@ -361,7 +361,7 @@ export default function Dashboard() {
       <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: 'hsl(var(--bg-primary))' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
           <div style={{ width: '48px', height: '48px', border: '3.5px solid hsl(var(--border-color))', borderTopColor: 'hsl(var(--accent-primary))', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-          <span style={{ fontSize: '0.9rem', color: 'hsl(var(--text-secondary))', fontWeight: 500 }}>Initializing SaleMail Admin Console...</span>
+          <span style={{ fontSize: '0.9rem', color: 'hsl(var(--text-secondary))', fontWeight: 500 }}>Initializing LinksMeet Admin Console...</span>
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       </div>
@@ -544,7 +544,7 @@ export default function Dashboard() {
               Welcome back, Host
             </h2>
             <p style={{ color: 'hsl(var(--text-secondary))', fontSize: '0.85rem' }}>
-              Overview and configuration panel for SaleMail.
+              Overview and configuration panel for LinksMeet.
             </p>
           </div>
           
@@ -1373,7 +1373,7 @@ export default function Dashboard() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid hsl(var(--border-color))', paddingBottom: '12px' }}>
                 <div>
                   <h3 style={{ fontSize: '1.15rem', fontWeight: 650 }}>Availability Schedule</h3>
-                  <p style={{ fontSize: '0.75rem', color: 'hsl(var(--text-secondary))' }}>Configure standard active weekday hours inside SaleMail.</p>
+                  <p style={{ fontSize: '0.75rem', color: 'hsl(var(--text-secondary))' }}>Configure standard active weekday hours inside LinksMeet.</p>
                 </div>
                 
                 <button
@@ -1663,7 +1663,7 @@ export default function Dashboard() {
                   <input
                     id="fb-proj"
                     type="text"
-                    placeholder="salemail-app-id"
+                    placeholder="linksmeet-app-id"
                     value={settings.firebaseConfig.projectId}
                     onChange={(e) => setSettings({ ...settings, firebaseConfig: { ...settings.firebaseConfig, projectId: e.target.value } })}
                     style={{ padding: '8px 10px', border: '1px solid hsl(var(--border-color))', borderRadius: '4px', fontSize: '0.8rem', outline: 'none', backgroundColor: 'hsl(var(--bg-primary))' }}
@@ -1675,7 +1675,7 @@ export default function Dashboard() {
                   <input
                     id="fb-domain"
                     type="text"
-                    placeholder="salemail-app.firebaseapp.com"
+                    placeholder="linksmeet-app.firebaseapp.com"
                     value={settings.firebaseConfig.authDomain}
                     onChange={(e) => setSettings({ ...settings, firebaseConfig: { ...settings.firebaseConfig, authDomain: e.target.value } })}
                     style={{ padding: '8px 10px', border: '1px solid hsl(var(--border-color))', borderRadius: '4px', fontSize: '0.8rem', outline: 'none', backgroundColor: 'hsl(var(--bg-primary))' }}

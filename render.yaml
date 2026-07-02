@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: salemail-backend
+    name: linksmeet-backend
     env: node
     rootDir: server
     buildCommand: npm install

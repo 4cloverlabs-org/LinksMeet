@@ -25,6 +25,7 @@ const statusMeta: Record<EmailStatus, { label: string; className: string }> = {
   Failed: { label: 'Delivery Failed', className: 'pending' },
   Skipped: { label: 'Skipped', className: 'pending' },
   Unsubscribed: { label: 'Unsubscribed', className: 'pending' },
+  Paused: { label: 'Paused', className: 'pending' },
 };
 
 export const EmailBlock: React.FC<EmailBlockProps> = ({
@@ -46,7 +47,7 @@ export const EmailBlock: React.FC<EmailBlockProps> = ({
 
   const handleSendTest = async () => {
     const target = recipientEmail || 'kushaljoshi2786@gmail.com';
-    const subj = step.subject || 'Test Email from SaleMail';
+    const subj = step.subject || 'Test Email from LinksMeet';
     const html = renderPreview(step.body || '');
     setTestStatus({ active: true, error: false, text: 'Sending via Gmail API...' });
     const res = await campaignEngine.sendRealEmail(target, subj, html);
@@ -143,7 +144,7 @@ export const EmailBlock: React.FC<EmailBlockProps> = ({
         <div className="camp-form-row">
           <span className="camp-form-label">From:</span>
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontWeight: 500, color: '#334155', fontSize: '0.9rem' }}>{userEmail || 'kushal@salemail.io'}</span>
+            <span style={{ fontWeight: 500, color: '#334155', fontSize: '0.9rem' }}>{userEmail || 'kushal@linksmeet.io'}</span>
             <span style={{ fontSize: '0.75rem', background: '#dcfce7', color: '#166534', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>
               Connected Mailbox ✓
             </span>

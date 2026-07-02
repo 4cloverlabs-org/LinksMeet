@@ -136,7 +136,7 @@ export function resetFirebaseDbCache() {
 // ----------------------------------------------------
 export function fetchIntegrationSettings(): IntegrationSettings {
   try {
-    const raw = localStorage.getItem('salemail_settings');
+    const raw = localStorage.getItem('linksmeet_settings');
     if (!raw) {
       // Check environment variables as fallback
       const envSettings: IntegrationSettings = {
@@ -170,7 +170,7 @@ export function fetchIntegrationSettings(): IntegrationSettings {
 }
 
 export function saveIntegrationSettings(settings: IntegrationSettings): void {
-  localStorage.setItem('salemail_settings', JSON.stringify(settings));
+  localStorage.setItem('linksmeet_settings', JSON.stringify(settings));
   resetFirebaseDbCache();
 }
 
@@ -228,9 +228,9 @@ export async function fetchEventTypes(): Promise<EventType[]> {
   }
 
   // Local Storage Fallback
-  const raw = localStorage.getItem('salemail_event_types');
+  const raw = localStorage.getItem('linksmeet_event_types');
   if (!raw) {
-    localStorage.setItem('salemail_event_types', JSON.stringify(DEFAULT_EVENT_TYPES));
+    localStorage.setItem('linksmeet_event_types', JSON.stringify(DEFAULT_EVENT_TYPES));
     return DEFAULT_EVENT_TYPES;
   }
   return JSON.parse(raw);
@@ -264,7 +264,7 @@ export async function saveEventType(event: EventType): Promise<void> {
   } else {
     events.push(event);
   }
-  localStorage.setItem('salemail_event_types', JSON.stringify(events));
+  localStorage.setItem('linksmeet_event_types', JSON.stringify(events));
 }
 
 export async function deleteEventType(id: string): Promise<void> {
@@ -284,7 +284,7 @@ export async function deleteEventType(id: string): Promise<void> {
   // Local Storage
   const events = await fetchEventTypes();
   const filtered = events.filter(e => e.id !== id);
-  localStorage.setItem('salemail_event_types', JSON.stringify(filtered));
+  localStorage.setItem('linksmeet_event_types', JSON.stringify(filtered));
 }
 
 // ----------------------------------------------------
@@ -314,9 +314,9 @@ export async function fetchAvailability(): Promise<Availability> {
   }
 
   // Local Storage
-  const raw = localStorage.getItem('salemail_availability');
+  const raw = localStorage.getItem('linksmeet_availability');
   if (!raw) {
-    localStorage.setItem('salemail_availability', JSON.stringify(DEFAULT_AVAILABILITY));
+    localStorage.setItem('linksmeet_availability', JSON.stringify(DEFAULT_AVAILABILITY));
     return DEFAULT_AVAILABILITY;
   }
   return JSON.parse(raw);
@@ -337,7 +337,7 @@ export async function saveAvailability(availability: Availability): Promise<void
   }
 
   // Local Storage
-  localStorage.setItem('salemail_availability', JSON.stringify(availability));
+  localStorage.setItem('linksmeet_availability', JSON.stringify(availability));
 }
 
 // ----------------------------------------------------
@@ -367,7 +367,7 @@ export async function fetchBookings(): Promise<Booking[]> {
   }
 
   // Local Storage
-  const raw = localStorage.getItem('salemail_bookings');
+  const raw = localStorage.getItem('linksmeet_bookings');
   const bookings: Booking[] = raw ? JSON.parse(raw) : [];
   return bookings.sort((a, b) => {
     const dateCompare = a.date.localeCompare(b.date);
@@ -412,10 +412,10 @@ export async function saveBooking(booking: Omit<Booking, 'id' | 'createdAt' | 's
   }
 
   // Local Storage
-  const raw = localStorage.getItem('salemail_bookings');
+  const raw = localStorage.getItem('linksmeet_bookings');
   const bookings: Booking[] = raw ? JSON.parse(raw) : [];
   bookings.push(newBooking);
-  localStorage.setItem('salemail_bookings', JSON.stringify(bookings));
+  localStorage.setItem('linksmeet_bookings', JSON.stringify(bookings));
   return newBooking;
 }
 
@@ -434,11 +434,11 @@ export async function cancelBooking(id: string): Promise<void> {
   }
 
   // Local Storage
-  const raw = localStorage.getItem('salemail_bookings');
+  const raw = localStorage.getItem('linksmeet_bookings');
   const bookings: Booking[] = raw ? JSON.parse(raw) : [];
   const existing = bookings.find(b => b.id === id);
   if (existing) {
     existing.status = 'cancelled';
-    localStorage.setItem('salemail_bookings', JSON.stringify(bookings));
+    localStorage.setItem('linksmeet_bookings', JSON.stringify(bookings));
   }
 }

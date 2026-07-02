@@ -35,7 +35,7 @@ export default function Signup() {
     <div className="cc-auth">
       <div className="cc-auth-card">
         <Link to="/" className="cc-auth-brand" style={{ color: '#111', textDecoration: 'none' }}>
-          <img src="/logo.png" alt="SaleMail" style={{ width: '26px', height: '26px', objectFit: 'contain', borderRadius: '5px', marginRight: '6px' }} /> SaleMail
+          <img src="/logo.png" alt="LinksMeet" style={{ width: '26px', height: '26px', objectFit: 'contain', borderRadius: '5px', marginRight: '6px' }} /> LinksMeet
         </Link>
         <h1>Create your account</h1>
         <p className="cc-auth-sub">Start organizing your pipeline in minutes. No credit card required.</p>

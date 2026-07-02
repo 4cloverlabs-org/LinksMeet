@@ -29,9 +29,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     let mounted = true;
 
+    const checkAndClearData = (currentUser: User | null) => {
+      if (!currentUser) return;
+      const lastUid = localStorage.getItem('sm_last_uid');
+      if (lastUid && lastUid !== currentUser.id) {
+        const keysToClear = [
+          'sm_campaigns', 'sm_sent_logs', 'sm_threads', 'sm_campaign_settings',
+          'linksmeet_settings', 'linksmeet_event_types', 'linksmeet_availability', 'linksmeet_bookings',
+          'sm_gmail_email', 'sm_last_uid'
+        ];
+        keysToClear.forEach(key => localStorage.removeItem(key));
+        localStorage.setItem('sm_last_uid', currentUser.id);
+        window.location.reload();
+      } else if (!lastUid) {
+        localStorage.setItem('sm_last_uid', currentUser.id);
+      }
+    };
+
     // Get initial session which parses the URL hash if returning from Google
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (mounted) {
+        checkAndClearData(session?.user ?? null);
         setUser(session?.user ?? null);
         if (session?.provider_token) {
           // Keep the live token in memory only (never localStorage).
@@ -45,6 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Listen for auth changes, but don't stop loading if we haven't finished the initial getSession
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (mounted) {
+        checkAndClearData(session?.user ?? null);
         setUser(session?.user ?? null);
         if (session?.provider_token) {
           // Keep the live token in memory only (never localStorage).
@@ -102,8 +121,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
+    
     // Drop the in-memory token and clear connection flags on sign out.
     clearGmail();
+    
+    // Wipe all local storage on explicit logout
+    const keysToClear = [
+      'sm_campaigns', 'sm_sent_logs', 'sm_threads', 'sm_campaign_settings',
+      'linksmeet_settings', 'linksmeet_event_types', 'linksmeet_availability', 'linksmeet_bookings',
+      'sm_gmail_email', 'sm_last_uid'
+    ];
+    keysToClear.forEach(key => localStorage.removeItem(key));
+    
+    window.location.href = '/';
   };
 
   return (

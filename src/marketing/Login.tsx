@@ -40,7 +40,7 @@ export default function Login() {
     <div className="cc-auth">
       <div className="cc-auth-card">
         <Link to="/" className="cc-auth-brand" style={{ color: '#111', textDecoration: 'none' }}>
-          <img src="/logo.png" alt="SaleMail" style={{ width: '26px', height: '26px', objectFit: 'contain', borderRadius: '5px', marginRight: '6px' }} /> SaleMail
+          <img src="/logo.png" alt="LinksMeet" style={{ width: '26px', height: '26px', objectFit: 'contain', borderRadius: '5px', marginRight: '6px' }} /> LinksMeet
         </Link>
         <h1>Welcome back</h1>
         <p className="cc-auth-sub">Log in to your workspace.</p>
@@ -88,7 +88,7 @@ export default function Login() {
           />
         </div>
 
-        <p className="cc-auth-alt">New to SaleMail? <Link to="/signup">Create an account</Link></p>
+        <p className="cc-auth-alt">New to LinksMeet? <Link to="/signup">Create an account</Link></p>
       </div>
     </div>
   );
