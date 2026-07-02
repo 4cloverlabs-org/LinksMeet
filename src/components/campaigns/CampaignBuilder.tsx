@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Mail, Send, CheckCircle2, ChevronDown, Trash2, Bold, Italic, Underline as UnderlineIcon, Link2, List, Image as ImageIcon, Smile, Eye, ArrowLeft, Pause, Edit2, Sparkles, LayoutGrid, Hourglass, Play } from 'lucide-react';
+import { Plus, Mail, Send, CheckCircle2, ChevronDown, Trash2, Bold, Italic, Underline as UnderlineIcon, Link2, List, Image as ImageIcon, Smile, Eye, ArrowLeft, Pause, Edit2, LayoutGrid, Hourglass, Play } from 'lucide-react';
 import { campaignEngine, type Campaign, type CampaignStep } from './campaignEngine';
 import { useAuth } from '../../lib/AuthContext';
 import { AICampaignStudio } from './AICampaignStudio';
-import { supabase } from '../../lib/supabase';
-import { API_BASE_URL } from '../../lib/config';
 
 const DelayUnitSelect = ({ value, onChange }: { value: string, onChange: (val: string) => void }) => {
   return (

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, PlayCircle, Send, CheckCircle2, Clock, CornerUpLeft, GripVertical, Edit2, Copy, Trash2, ChevronLeft, ChevronRight, MoreVertical, Pause, Sparkles } from 'lucide-react';
+import { Plus, PlayCircle, Send, CheckCircle2, Clock, CornerUpLeft, GripVertical, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { type Campaign } from './campaignEngine';
 
 interface CampaignListProps {
@@ -14,7 +14,7 @@ type FilterType = 'All' | 'Active' | 'Paused' | 'Completed' | 'Drafts';
 export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, onCreateNew, onSelect, onDelete }) => {
   const [filter, setFilter] = useState<FilterType>('All');
   const [currentPage, setCurrentPage] = useState(1);
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
   const ITEMS_PER_PAGE = 7;
 
   // KPI Calculations

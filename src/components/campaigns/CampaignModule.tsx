@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Bell, ChevronDown, Edit2, CheckCircle2, Save, Play } from 'lucide-react';
+import { ArrowLeft, Bell, ChevronDown, Edit2, CheckCircle2, Save } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
 import { campaignEngine, type Campaign } from './campaignEngine';
 import { CampaignList } from './CampaignList';

@@ -1,6 +1,6 @@
 import { supabase } from '../../lib/supabase';
 import { API_BASE_URL } from '../../lib/config';
-import { getGmailToken, setGmailToken, markGmailConnected, getGmailEmail } from '../../lib/gmailToken';
+
 
 async function callGroqAI(systemPrompt: string, userPrompt: string): Promise<string> {
   try {
