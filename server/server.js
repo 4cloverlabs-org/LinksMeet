@@ -422,6 +422,39 @@ app.post('/api/bookings', async (req, res) => {
 // ----------------------------------------------------
 // 4. Send Email Endpoint (Send Now)
 // ----------------------------------------------------
+async function sendEmailForUser(userId, to, subject, htmlBody) {
+  const { data: ownerData, error: userError } = await supabase.from('users').select('email, google_tokens').eq('id', userId).single();
+  if (userError || !ownerData || !ownerData.google_tokens) throw new Error("Gmail not connected for this account.");
+  
+  const tokens = ownerData.google_tokens;
+  if (!tokens.access_token && !tokens.refresh_token) throw new Error("Invalid Gmail tokens.");
+
+  oauth2Client.setCredentials({
+    refresh_token: tokens.refresh_token,
+    access_token: tokens.access_token,
+  });
+
+  if (tokens.expiry_date && Date.now() > (tokens.expiry_date - 60000) && tokens.refresh_token) {
+    try {
+      const { credentials } = await oauth2Client.refreshAccessToken();
+      tokens.access_token = credentials.access_token;
+      tokens.expiry_date = credentials.expiry_date;
+      await supabase.from('users').update({ google_tokens: tokens }).eq('id', userId);
+    } catch (err) {
+      if (err.message && err.message.includes('invalid_grant')) {
+        await supabase.from('users').update({ google_tokens: null }).eq('id', userId);
+        throw new Error("Gmail session expired. Please reconnect.");
+      }
+      throw err;
+    }
+  }
+
+  const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+  const rawEmail = makeBody(to, ownerData.email, subject, htmlBody);
+  const res = await gmail.users.messages.send({ userId: 'me', requestBody: { raw: rawEmail } });
+  return res.data;
+}
+
 app.post('/api/send-email', requireAuth, async (req, res) => {
   try {
     const { to, subject, htmlBody } = req.body;
@@ -429,50 +462,138 @@ app.post('/api/send-email', requireAuth, async (req, res) => {
       return res.status(400).json({ error: "Missing required fields (to, subject, htmlBody)" });
     }
 
-    const { data: ownerData, error: userError } = await supabase.from('users').select('email, google_tokens').eq('id', req.userId).single();
-    if (userError || !ownerData || !ownerData.google_tokens) {
-      return res.status(400).json({ error: "Gmail not connected for this account. Please connect your Gmail in settings." });
-    }
-
-    const tokens = ownerData.google_tokens;
-    if (!tokens.access_token && !tokens.refresh_token) {
-      return res.status(400).json({ error: "Invalid Gmail tokens." });
-    }
-
-    oauth2Client.setCredentials({
-      refresh_token: tokens.refresh_token,
-      access_token: tokens.access_token,
-    });
-
-    // Check expiry
-    if (tokens.expiry_date && Date.now() > (tokens.expiry_date - 60000) && tokens.refresh_token) {
-      try {
-        const { credentials } = await oauth2Client.refreshAccessToken();
-        tokens.access_token = credentials.access_token;
-        tokens.expiry_date = credentials.expiry_date;
-        await supabase.from('users').update({ google_tokens: tokens }).eq('id', req.userId);
-      } catch (err) {
-        if (err.message && err.message.includes('invalid_grant')) {
-          await supabase.from('users').update({ google_tokens: null }).eq('id', req.userId);
-          return res.status(401).json({ error: "Gmail session expired. Please reconnect." });
-        }
-        throw err;
-      }
-    }
-
-    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
-    
-    // Use the existing makeBody helper which correctly handles unicode and base64url encoding
-    const rawEmail = makeBody(to, ownerData.email, subject, htmlBody);
-
-    await gmail.users.messages.send({ userId: 'me', requestBody: { raw: rawEmail } });
-    
+    await sendEmailForUser(req.userId, to, subject, htmlBody);
     res.json({ success: true });
   } catch (err) {
     console.error("Send Email API Error:", err);
     res.status(500).json({ error: err.message || "Failed to send email" });
   }
 });
+
+// ----------------------------------------------------
+// 5. Campaigns API
+// ----------------------------------------------------
+app.get('/api/campaigns', requireAuth, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('campaigns').select('*').eq('user_id', req.userId).order('created_at', { ascending: false });
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/campaigns', requireAuth, async (req, res) => {
+  try {
+    const campaign = req.body;
+    const { data, error } = await supabase.from('campaigns').insert({
+      user_id: req.userId,
+      name: campaign.name,
+      status: campaign.status || 'Draft',
+      recipient_email: campaign.recipientEmail,
+      recipient_name: campaign.recipientName || '',
+      steps: campaign.steps || [],
+      active_step_index: campaign.activeStepIndex || 0
+    }).select().single();
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/campaigns/:id', requireAuth, async (req, res) => {
+  try {
+    const updates = req.body;
+    const { data, error } = await supabase.from('campaigns').update({
+      name: updates.name,
+      status: updates.status,
+      recipient_email: updates.recipientEmail,
+      recipient_name: updates.recipientName,
+      steps: updates.steps,
+      active_step_index: updates.activeStepIndex
+    }).eq('id', req.params.id).eq('user_id', req.userId).select().single();
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/campaigns/:id', requireAuth, async (req, res) => {
+  try {
+    const { error } = await supabase.from('campaigns').delete().eq('id', req.params.id).eq('user_id', req.userId);
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ----------------------------------------------------
+// 6. Background Campaign Engine
+// ----------------------------------------------------
+if (supabase) {
+  setInterval(async () => {
+    try {
+      const { data: campaigns, error } = await supabase.from('campaigns').select('*').eq('status', 'Running');
+      if (error || !campaigns) return;
+
+      for (let camp of campaigns) {
+        if (!camp.steps || camp.steps.length === 0) continue;
+        
+        let steps = [...camp.steps];
+        let idx = camp.active_step_index || 0;
+        
+        if (idx >= steps.length) {
+          await supabase.from('campaigns').update({ status: 'Completed', steps }).eq('id', camp.id);
+          continue;
+        }
+
+        const step = steps[idx];
+        const now = Date.now();
+
+        if (step.type === 'delay') {
+          if (step.status !== 'Sent') {
+            if (!step.waitUntil) {
+              const u = step.delayUnit || 'minutes';
+              const val = step.delayValue || 1;
+              let multiplier = 60;
+              if (u === 'hours') multiplier = 3600;
+              else if (u === 'days') multiplier = 86400;
+              else if (u === 'weeks') multiplier = 604800;
+              
+              step.waitUntil = now + (val * multiplier * 1000);
+              step.status = 'Pending';
+              await supabase.from('campaigns').update({ steps }).eq('id', camp.id);
+            } else if (now >= step.waitUntil) {
+              step.status = 'Sent';
+              await supabase.from('campaigns').update({ active_step_index: idx + 1, steps }).eq('id', camp.id);
+            }
+          }
+        } else if (step.type === 'email') {
+          if (step.status === 'Pending' || step.status === 'Draft' || !step.status) {
+            step.status = 'Sending';
+            await supabase.from('campaigns').update({ steps }).eq('id', camp.id);
+
+            try {
+              await sendEmailForUser(camp.user_id, camp.recipient_email, step.subject || 'LinksMeet Outreach', step.body || '');
+              step.status = 'Sent';
+              await supabase.from('campaigns').update({ active_step_index: idx + 1, steps }).eq('id', camp.id);
+            } catch (err) {
+              console.error(`Failed to send email for campaign ${camp.id}:`, err);
+              step.status = 'Failed';
+              await supabase.from('campaigns').update({ status: 'Paused', steps }).eq('id', camp.id);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Campaign Engine Error:", err);
+    }
+  }, 10000); // Check every 10 seconds
+  console.log("Background Campaign Engine started...");
+}
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

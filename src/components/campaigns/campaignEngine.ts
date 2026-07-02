@@ -314,23 +314,13 @@ class CampaignEngine {
   private logs: SentEmailLog[] = [];
   private threads: ConversationThread[] = [];
   private listeners: ((event: string, data?: any) => void)[] = [];
-  private tickerInterval: any = null;
 
   constructor() {
-    this.loadState();
-    this.startTicker();
+    this.loadLocalState();
+    this.startPolling();
   }
 
-  private loadState() {
-    const savedCamps = localStorage.getItem('sm_campaigns');
-    if (savedCamps) {
-      try { 
-        this.campaigns = JSON.parse(savedCamps); 
-      } catch { this.campaigns = INITIAL_CAMPAIGNS; }
-    } else {
-      this.campaigns = INITIAL_CAMPAIGNS;
-    }
-
+  private loadLocalState() {
     const savedLogs = localStorage.getItem('sm_sent_logs');
     if (savedLogs) {
       try { this.logs = JSON.parse(savedLogs); } catch { this.logs = INITIAL_LOGS; }
@@ -351,10 +341,44 @@ class CampaignEngine {
     }
   }
 
-  private saveState() {
-    localStorage.setItem('sm_campaigns', JSON.stringify(this.campaigns));
+  private saveLocalState() {
     localStorage.setItem('sm_sent_logs', JSON.stringify(this.logs));
     localStorage.setItem('sm_threads', JSON.stringify(this.threads));
+  }
+
+  private async fetchCampaigns() {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) return;
+
+      const res = await fetch(`${API_BASE_URL}/api/campaigns`, {
+        headers: { "Authorization": `Bearer ${accessToken}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        this.campaigns = data.map((d: any) => ({
+          id: d.id,
+          name: d.name,
+          status: d.status,
+          recipientEmail: d.recipient_email,
+          recipientName: d.recipient_name,
+          steps: d.steps,
+          activeStepIndex: d.active_step_index,
+          createdAt: new Date(d.created_at).getTime()
+        }));
+        this.notify('update');
+      }
+    } catch (err) {
+      console.warn("Failed to fetch campaigns", err);
+    }
+  }
+
+  private startPolling() {
+    this.fetchCampaigns();
+    setInterval(() => {
+      this.fetchCampaigns();
+    }, 5000); // UI poll every 5 seconds
   }
 
   public async sendRealEmail(recipient: string, subject: string, htmlBody: string): Promise<{ success: boolean; message: string }> {
@@ -414,121 +438,6 @@ class CampaignEngine {
     this.listeners.forEach(fn => fn(event, data));
   }
 
-  private startTicker() {
-    if (this.tickerInterval) clearInterval(this.tickerInterval);
-    this.tickerInterval = setInterval(() => {
-      let changed = false;
-      this.campaigns.forEach(camp => {
-        if (camp.status === 'Running' && camp.activeStepIndex !== undefined) {
-          const step = camp.steps[camp.activeStepIndex];
-          if (step && step.type === 'delay' && step.status === 'Queued') {
-            if (!step.waitUntil || isNaN(Number(step.waitUntil))) {
-              step.waitUntil = Date.now() + (step.remainingSeconds || 0) * 1000;
-            }
-            
-            const now = Date.now();
-            const newRemaining = Math.max(0, Math.floor((Number(step.waitUntil) - now) / 1000));
-            
-            if (step.remainingSeconds !== newRemaining) {
-              step.remainingSeconds = newRemaining;
-              changed = true;
-            }
-            
-            if (step.remainingSeconds <= 0) {
-              step.status = 'Sent';
-              this.advanceCampaign(camp);
-              changed = true;
-            }
-          }
-        }
-      });
-      if (changed) {
-        this.saveState();
-        this.notify('tick', { campaigns: this.campaigns });
-      }
-    }, 1000);
-  }
-
-  private advanceCampaign(camp: Campaign) {
-    if (camp.activeStepIndex === undefined) return;
-    const nextIndex = camp.activeStepIndex + 1;
-    if (nextIndex < camp.steps.length) {
-      camp.activeStepIndex = nextIndex;
-      const nextStep = camp.steps[nextIndex];
-      if (nextStep.type === 'email') {
-        nextStep.status = 'Sending';
-        this.notify('update');
-        (async () => {
-          nextStep.status = 'Sent';
-          const recipients = (camp.recipientEmail || '').split(',').map(e => e.trim()).filter(Boolean);
-          if (recipients.length === 0) {
-             alert('Sequence started but no recipients were found!');
-             camp.status = 'Draft';
-             this.saveState();
-             this.notify('update');
-             return;
-          }
-
-          for (const rec of recipients) {
-            const res = await this.sendRealEmail(rec, nextStep.subject || 'Follow-up', nextStep.body || '');
-            const log: SentEmailLog = {
-              id: 'log_' + Math.random().toString(36).substring(2, 9),
-              campaignId: camp.id,
-              campaignName: camp.name,
-              recipient: rec,
-              subject: nextStep.subject || 'Follow-up',
-              sentAt: 'Just now',
-              status: res.success ? 'Sent' : 'Failed',
-              opens: 0,
-              clicks: 0,
-              replied: false,
-              deliveryStatus: res.success ? 'Delivered' : 'Bounced',
-              spamStatus: 'Passed',
-              stage: nextStep.title,
-            };
-            this.logs.unshift(log);
-            this.notify('email_sent', log);
-          }
-          this.saveState();
-
-          // Move to next step (e.g. delay) if it exists, otherwise mark completed
-          if (nextIndex < camp.steps.length - 1) {
-            this.advanceCampaign(camp);
-          } else {
-            camp.status = 'Completed';
-            this.saveState();
-            this.notify('update');
-          }
-
-          // Simulate prospect opening after 4 seconds
-          setTimeout(() => {
-            nextStep.status = 'Opened';
-            this.saveState();
-            this.notify('update');
-          }, 4000);
-        })();
-      } else if (nextStep.type === 'delay') {
-        nextStep.status = 'Queued';
-        let secs = nextStep.delayValue || 1;
-        if (nextStep.delayUnit === 'minutes') secs *= 60;
-        else if (nextStep.delayUnit === 'hours') secs *= 3600;
-        else if (nextStep.delayUnit === 'days') secs *= 86400;
-        else if (nextStep.delayUnit === 'weeks') secs *= 604800;
-        else if (nextStep.delayUnit === 'months') secs *= 2592000;
-        nextStep.totalSeconds = secs;
-        nextStep.waitUntil = Date.now() + secs * 1000;
-        nextStep.remainingSeconds = secs;
-        this.saveState();
-        this.notify('update');
-      }
-    } else {
-      camp.status = 'Completed';
-      this.saveState();
-      this.notify('campaign_completed', camp);
-    }
-  }
-
-  // API Methods
   public logEvent(data: any) {
     const camp = this.campaigns.find(c => c.id === data.campaignId);
     const step = camp?.steps.find(s => s.id === data.stepId);
@@ -548,7 +457,7 @@ class CampaignEngine {
       stage: step?.title || 'Manual Dispatched',
     };
     this.logs.unshift(log);
-    this.saveState();
+    this.saveLocalState();
     this.notify('email_sent', log);
     this.notify('update');
   }
@@ -564,78 +473,88 @@ class CampaignEngine {
     this.notify('settings_updated', settings);
   }
 
-  public saveCampaign(campaign: Campaign) {
-    const idx = this.campaigns.findIndex(c => c.id === campaign.id);
-    if (idx >= 0) {
-      const oldCamp = this.campaigns[idx];
+  public async saveCampaign(campaign: Campaign) {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) return;
+
+      const payload = {
+        name: campaign.name,
+        status: campaign.status,
+        recipientEmail: campaign.recipientEmail,
+        recipientName: campaign.recipientName,
+        steps: campaign.steps,
+        activeStepIndex: campaign.activeStepIndex
+      };
+
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(campaign.id);
+      const method = isUUID ? "PUT" : "POST";
+      const url = isUUID ? `${API_BASE_URL}/api/campaigns/${campaign.id}` : `${API_BASE_URL}/api/campaigns`;
+
+      const res = await fetch(url, {
+        method,
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}` 
+        },
+        body: JSON.stringify(payload)
+      });
       
-      if (oldCamp.status === 'Running' && oldCamp.activeStepIndex !== undefined) {
-        const oldStep = oldCamp.steps[oldCamp.activeStepIndex];
-        const newStep = campaign.steps[oldCamp.activeStepIndex];
-        
-        if (oldStep && newStep && oldStep.type === 'delay' && newStep.type === 'delay' && oldStep.status === 'Queued') {
-          if (oldStep.delayValue !== newStep.delayValue || oldStep.delayUnit !== newStep.delayUnit) {
-            let secs = newStep.delayValue || 1;
-            if (newStep.delayUnit === 'minutes') secs *= 60;
-            else if (newStep.delayUnit === 'hours') secs *= 3600;
-            else if (newStep.delayUnit === 'days') secs *= 86400;
-            else if (newStep.delayUnit === 'weeks') secs *= 604800;
-            else if (newStep.delayUnit === 'months') secs *= 2592000;
-            
-            newStep.totalSeconds = secs;
-            newStep.waitUntil = Date.now() + secs * 1000;
-            newStep.remainingSeconds = secs;
-          }
-        }
+      if (res.ok) {
+        await this.fetchCampaigns();
       }
-      
-      this.campaigns[idx] = campaign;
+    } catch (err) {
+      console.error(err);
     }
-    else {
-      this.campaigns.unshift(campaign);
-    }
-    this.saveState();
-    this.notify('update');
   }
 
-  public deleteCampaign(id: string) {
-    this.campaigns = this.campaigns.filter(c => c.id !== id);
-    this.saveState();
-    this.notify('update');
+  public async deleteCampaign(id: string) {
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (!isUUID) {
+      // It was a local dummy campaign that never hit backend
+      this.campaigns = this.campaigns.filter(c => c.id !== id);
+      this.notify('update');
+      return;
+    }
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) return;
+
+      const res = await fetch(`${API_BASE_URL}/api/campaigns/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${accessToken}` }
+      });
+      if (res.ok) await this.fetchCampaigns();
+    } catch (err) {
+      console.error(err);
+    }
   }
 
-  public startCampaign(id: string) {
+  public async startCampaign(id: string) {
     const camp = this.campaigns.find(c => c.id === id);
-    if (!camp) return;
-    
-    // If it's already completed, don't restart
-    if (camp.status === 'Completed') return;
+    if (!camp || camp.status === 'Completed') return;
     
     camp.status = 'Running';
-    
-    // If it's a fresh campaign, initialize first step
     if (
       camp.activeStepIndex === undefined || 
       camp.activeStepIndex === -1 || 
       (camp.activeStepIndex === 0 && camp.steps[0]?.status === 'Pending')
     ) {
-      camp.activeStepIndex = -1;
-      this.advanceCampaign(camp);
-    } else {
-      // Resuming logic (startTicker handles delays)
+      camp.activeStepIndex = -1; // Ready for backend to pick up
     }
     
-    this.saveState();
-    this.notify('update');
+    await this.saveCampaign(camp);
   }
 
-  public pauseCampaign(id: string) {
+  public async pauseCampaign(id: string) {
     const camp = this.campaigns.find(c => c.id === id);
-    if (camp) {
-      camp.status = 'Paused';
-      this.saveState();
-      this.notify('update');
-    }
+    if (!camp) return;
+    
+    camp.status = 'Paused';
+    await this.saveCampaign(camp);
   }
 
   public simulateIncomingReply(senderEmail: string, senderName: string, replyBody: string, campaignName: string) {
@@ -683,7 +602,7 @@ class CampaignEngine {
       this.threads.unshift(thread);
     }
 
-    this.saveState();
+    this.saveLocalState();
     this.notify('new_reply', { thread, message: newMsg });
   }
 
@@ -699,7 +618,7 @@ class CampaignEngine {
         isLead: false,
       });
       thread.unread = false;
-      this.saveState();
+      this.saveLocalState();
       this.notify('update');
     }
   }
