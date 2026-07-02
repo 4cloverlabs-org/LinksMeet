@@ -145,84 +145,6 @@ let settings: CampaignSettingsData = {
 
 
 
-const INITIAL_LOGS: SentEmailLog[] = [
-  {
-    id: 'log_1',
-    campaignId: 'camp_1',
-    campaignName: 'SaaS Founders Outbound Q3',
-    recipient: 'joshikushal148@gmail.com',
-    subject: '⚡ Pipeline velocity optimization — quick query',
-    sentAt: '2 hours ago',
-    status: 'Opened',
-    opens: 3,
-    clicks: 1,
-    replied: false,
-    deliveryStatus: 'Delivered',
-    spamStatus: 'Passed',
-    stage: 'Initial Email',
-  },
-  {
-    id: 'log_2',
-    campaignId: 'camp_old',
-    campaignName: 'Healthcare Agency Outreach',
-    recipient: 'sarah.j@medtech.org',
-    subject: 'AI workflow integration for MedTech',
-    sentAt: 'Yesterday',
-    status: 'Replied',
-    opens: 5,
-    clicks: 2,
-    replied: true,
-    deliveryStatus: 'Delivered',
-    spamStatus: 'Passed',
-    stage: 'Follow-up 1',
-  },
-  {
-    id: 'log_3',
-    campaignId: 'camp_old',
-    campaignName: 'Healthcare Agency Outreach',
-    recipient: 'm.kane@healthpulse.co',
-    subject: 'AI workflow integration for MedTech',
-    sentAt: '2 days ago',
-    status: 'Sent',
-    opens: 0,
-    clicks: 0,
-    replied: false,
-    deliveryStatus: 'Delivered',
-    spamStatus: 'Passed',
-    stage: 'Initial Email',
-  },
-];
-
-const INITIAL_THREADS: ConversationThread[] = [
-  {
-    id: 'th_1',
-    leadName: 'sarah.j@medtech.org',
-    leadEmail: 'sarah.j@medtech.org',
-    subject: 'Re: ⚡ AI workflow integration for MedTech',
-    campaignName: 'Healthcare Agency Outreach',
-    summary: 'Prospect expressed strong interest in our API capabilities for patient data scheduling and requested enterprise volume pricing details.',
-    unread: true,
-    messages: [
-      {
-        id: 'm_1',
-        sender: 'kushal@linksmeet.io',
-        senderName: 'Kushal',
-        content: '<p>Hello sarah.j@medtech.org,</p><p>We noticed MedTech is scaling its clinic scheduling infrastructure. 🚀 We help healthcare platforms automate patient confirmation workflows with 99.8% delivery rates. 📊</p><p>Would you be open to exploring a brief 10-minute partnership sync next Tuesday? 📅</p><p>Best regards,<br><strong>Kushal</strong></p>',
-        timestamp: 'Yesterday, 10:14 AM',
-        isLead: false,
-      },
-      {
-        id: 'm_2',
-        sender: 'sarah.j@medtech.org',
-        senderName: 'sarah.j@medtech.org',
-        content: '<p>Hello!</p><p>Actually, timing is perfect. We are actively evaluating new email infrastructure providers this quarter. 💼</p><p>Do you support full HIPAA compliant data encryption, and what does your enterprise schedule look like for 50,000 authenticated emails per month?</p><p>Best,<br>Sarah</p>',
-        timestamp: 'Yesterday, 3:45 PM',
-        isLead: true,
-      },
-    ],
-  },
-];
-
 class CampaignEngine {
   private campaigns: Campaign[] = [];
   private logs: SentEmailLog[] = [];
@@ -230,47 +152,27 @@ class CampaignEngine {
   private listeners: ((event: string, data?: any) => void)[] = [];
 
   constructor() {
-    this.loadLocalState();
     this.startPolling();
   }
 
-  private loadLocalState() {
-    const savedLogs = localStorage.getItem('sm_sent_logs');
-    if (savedLogs) {
-      try { this.logs = JSON.parse(savedLogs); } catch { this.logs = INITIAL_LOGS; }
-    } else {
-      this.logs = INITIAL_LOGS;
-    }
-
-    const savedThreads = localStorage.getItem('sm_threads');
-    if (savedThreads) {
-      try { this.threads = JSON.parse(savedThreads); } catch { this.threads = INITIAL_THREADS; }
-    } else {
-      this.threads = INITIAL_THREADS;
-    }
-
-    const savedSettings = localStorage.getItem('sm_campaign_settings');
-    if (savedSettings) {
-      try { settings = JSON.parse(savedSettings); } catch { /* ignore */ }
-    }
-  }
-
-  private saveLocalState() {
-    localStorage.setItem('sm_sent_logs', JSON.stringify(this.logs));
-    localStorage.setItem('sm_threads', JSON.stringify(this.threads));
-  }
-
-  private async fetchCampaigns() {
+  private async fetchData() {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData.session?.access_token;
       if (!accessToken) return;
 
-      const res = await fetch(`${API_BASE_URL}/api/campaigns`, {
-        headers: { "Authorization": `Bearer ${accessToken}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
+      const headers = { "Authorization": `Bearer ${accessToken}` };
+      const [campRes, logRes, threadRes, setRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/campaigns`, { headers }),
+        fetch(`${API_BASE_URL}/api/logs`, { headers }),
+        fetch(`${API_BASE_URL}/api/threads`, { headers }),
+        fetch(`${API_BASE_URL}/api/settings`, { headers })
+      ]);
+
+      let changed = false;
+
+      if (campRes.ok) {
+        const data = await campRes.json();
         this.campaigns = data.map((d: any) => ({
           id: d.id,
           name: d.name,
@@ -281,19 +183,41 @@ class CampaignEngine {
           activeStepIndex: d.active_step_index,
           createdAt: new Date(d.created_at).getTime()
         }));
-        this.notify('update');
+        changed = true;
       }
+
+      if (logRes.ok) {
+        this.logs = await logRes.json();
+        changed = true;
+      }
+
+      if (threadRes.ok) {
+        this.threads = await threadRes.json();
+        changed = true;
+      }
+
+      if (setRes.ok) {
+        const fetchedSettings = await setRes.json();
+        if (fetchedSettings && Object.keys(fetchedSettings).length > 0) {
+          settings = { ...settings, ...fetchedSettings };
+          changed = true;
+        }
+      }
+
+      if (changed) this.notify('update');
     } catch (err) {
-      console.warn("Failed to fetch campaigns", err);
+      console.warn("Failed to fetch backend data", err);
     }
   }
 
   private startPolling() {
-    this.fetchCampaigns();
+    this.fetchData();
     setInterval(() => {
-      this.fetchCampaigns();
+      this.fetchData();
     }, 5000); // UI poll every 5 seconds
   }
+
+
 
   public async sendRealEmail(recipient: string, subject: string, htmlBody: string): Promise<{ success: boolean; message: string }> {
     if (!recipient) return { success: false, message: 'No recipient specified.' };
@@ -352,11 +276,10 @@ class CampaignEngine {
     this.listeners.forEach(fn => fn(event, data));
   }
 
-  public logEvent(data: any) {
+  public async logEvent(data: any) {
     const camp = this.campaigns.find(c => c.id === data.campaignId);
     const step = camp?.steps.find(s => s.id === data.stepId);
-    const log: SentEmailLog = {
-      id: 'log_' + Math.random().toString(36).substring(2, 9),
+    const log = {
       campaignId: data.campaignId,
       campaignName: camp?.name || 'Manual Campaign',
       recipient: data.recipientEmail || 'Unknown',
@@ -370,10 +293,22 @@ class CampaignEngine {
       spamStatus: 'Passed',
       stage: step?.title || 'Manual Dispatched',
     };
-    this.logs.unshift(log);
-    this.saveLocalState();
-    this.notify('email_sent', log);
-    this.notify('update');
+    
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (accessToken) {
+        await fetch(`${API_BASE_URL}/api/logs`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${accessToken}` },
+          body: JSON.stringify(log)
+        });
+        await this.fetchData();
+        this.notify('email_sent', log);
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   public getCampaigns(): Campaign[] { return JSON.parse(JSON.stringify(this.campaigns)); }
@@ -381,10 +316,22 @@ class CampaignEngine {
   public getThreads(): ConversationThread[] { return [...this.threads]; }
   public getSettings(): CampaignSettingsData { return { ...settings }; }
 
-  public updateSettings(newSettings: Partial<CampaignSettingsData>) {
+  public async updateSettings(newSettings: Partial<CampaignSettingsData>) {
     settings = { ...settings, ...newSettings };
-    localStorage.setItem('sm_campaign_settings', JSON.stringify(settings));
-    this.notify('settings_updated', settings);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (accessToken) {
+        await fetch(`${API_BASE_URL}/api/settings`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${accessToken}` },
+          body: JSON.stringify(settings)
+        });
+        this.notify('settings_updated', settings);
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   public async saveCampaign(campaign: Campaign) {
@@ -416,7 +363,7 @@ class CampaignEngine {
       });
       
       if (res.ok) {
-        await this.fetchCampaigns();
+        await this.fetchData();
       }
     } catch (err) {
       console.error(err);
@@ -441,7 +388,7 @@ class CampaignEngine {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${accessToken}` }
       });
-      if (res.ok) await this.fetchCampaigns();
+      if (res.ok) await this.fetchData();
     } catch (err) {
       console.error(err);
     }
@@ -486,9 +433,19 @@ class CampaignEngine {
     if (log) {
       log.status = 'Replied';
       log.replied = true;
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData.session?.access_token;
+        if (accessToken) {
+          await fetch(`${API_BASE_URL}/api/logs`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${accessToken}` },
+            body: JSON.stringify(log)
+          });
+        }
+      } catch (e) { console.error(e); }
     }
 
-    // Check existing thread
     let thread = this.threads.find(t => t.leadEmail.toLowerCase() === senderEmail.toLowerCase());
     const newMsg: ConversationMessage = {
       id: 'msg_' + Math.random().toString(36).substring(2, 9),
@@ -516,11 +473,22 @@ class CampaignEngine {
       this.threads.unshift(thread);
     }
 
-    this.saveLocalState();
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (accessToken) {
+        await fetch(`${API_BASE_URL}/api/threads`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${accessToken}` },
+          body: JSON.stringify(thread)
+        });
+      }
+    } catch (e) { console.error(e); }
+
     this.notify('new_reply', { thread, message: newMsg });
   }
 
-  public sendReplyMessage(threadId: string, content: string) {
+  public async sendReplyMessage(threadId: string, content: string) {
     const thread = this.threads.find(t => t.id === threadId);
     if (thread) {
       thread.messages.push({
@@ -532,7 +500,19 @@ class CampaignEngine {
         isLead: false,
       });
       thread.unread = false;
-      this.saveLocalState();
+      
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData.session?.access_token;
+        if (accessToken) {
+          await fetch(`${API_BASE_URL}/api/threads`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${accessToken}` },
+            body: JSON.stringify(thread)
+          });
+        }
+      } catch (e) { console.error(e); }
+
       this.notify('update');
     }
   }

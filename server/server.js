@@ -531,7 +531,128 @@ app.delete('/api/campaigns/:id', requireAuth, async (req, res) => {
 });
 
 // ----------------------------------------------------
-// 6. Background Campaign Engine
+// 6. Campaign Logs, Threads, and Settings API
+// ----------------------------------------------------
+
+app.get('/api/logs', requireAuth, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('campaign_logs').select('*').eq('user_id', req.userId).order('created_at', { ascending: false });
+    if (error) throw error;
+    // Map to frontend format
+    const mapped = data.map(d => ({
+      id: d.id,
+      campaignId: d.campaign_id,
+      campaignName: d.campaign_name,
+      recipient: d.recipient,
+      subject: d.subject,
+      sentAt: d.sent_at,
+      status: d.status,
+      opens: d.opens,
+      clicks: d.clicks,
+      replied: d.replied,
+      deliveryStatus: d.delivery_status,
+      spamStatus: d.spam_status,
+      stage: d.stage
+    }));
+    res.json(mapped);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/logs', requireAuth, async (req, res) => {
+  try {
+    const log = req.body;
+    const { data, error } = await supabase.from('campaign_logs').insert({
+      user_id: req.userId,
+      campaign_id: log.campaignId,
+      campaign_name: log.campaignName,
+      recipient: log.recipient,
+      subject: log.subject,
+      sent_at: log.sentAt,
+      status: log.status,
+      opens: log.opens || 0,
+      clicks: log.clicks || 0,
+      replied: log.replied || false,
+      delivery_status: log.deliveryStatus,
+      spam_status: log.spamStatus,
+      stage: log.stage
+    }).select().single();
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/threads', requireAuth, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('campaign_threads').select('*').eq('user_id', req.userId).order('updated_at', { ascending: false });
+    if (error) throw error;
+    const mapped = data.map(d => ({
+      id: d.id,
+      leadName: d.lead_name,
+      leadEmail: d.lead_email,
+      subject: d.subject,
+      campaignName: d.campaign_name,
+      summary: d.summary,
+      messages: d.messages || [],
+      unread: d.unread
+    }));
+    res.json(mapped);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/threads', requireAuth, async (req, res) => {
+  try {
+    const thread = req.body;
+    const { data, error } = await supabase.from('campaign_threads').upsert({
+      id: thread.id,
+      user_id: req.userId,
+      lead_name: thread.leadName,
+      lead_email: thread.leadEmail,
+      subject: thread.subject,
+      campaign_name: thread.campaignName,
+      summary: thread.summary,
+      messages: thread.messages,
+      unread: thread.unread,
+      updated_at: new Date().toISOString()
+    }).select().single();
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/settings', requireAuth, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('campaign_settings').select('*').eq('user_id', req.userId).single();
+    if (error && error.code !== 'PGRST116') throw error; 
+    res.json(data ? data.settings : null);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/settings', requireAuth, async (req, res) => {
+  try {
+    const settings = req.body;
+    const { data, error } = await supabase.from('campaign_settings').upsert({
+      user_id: req.userId,
+      settings: settings
+    }).select().single();
+    if (error) throw error;
+    res.json(data.settings);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ----------------------------------------------------
+// 7. Background Campaign Engine
 // ----------------------------------------------------
 if (supabase) {
   setInterval(async () => {
@@ -580,6 +701,19 @@ if (supabase) {
               await sendEmailForUser(camp.user_id, camp.recipient_email, step.subject || 'LinksMeet Outreach', step.body || '');
               step.status = 'Sent';
               await supabase.from('campaigns').update({ active_step_index: idx + 1, steps }).eq('id', camp.id);
+
+              await supabase.from('campaign_logs').insert({
+                user_id: camp.user_id,
+                campaign_id: camp.id,
+                campaign_name: camp.name,
+                recipient: camp.recipient_email,
+                subject: step.subject || 'LinksMeet Outreach',
+                sent_at: 'Just now',
+                status: 'Sent',
+                delivery_status: 'Delivered',
+                spam_status: 'Passed',
+                stage: step.title || 'Email'
+              });
             } catch (err) {
               console.error(`Failed to send email for campaign ${camp.id}:`, err);
               step.status = 'Failed';
