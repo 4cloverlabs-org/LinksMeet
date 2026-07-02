@@ -418,7 +418,7 @@ class CampaignEngine {
     await this.saveCampaign(camp);
   }
 
-  public simulateIncomingReply(senderEmail: string, senderName: string, replyBody: string, campaignName: string) {
+  public async simulateIncomingReply(senderEmail: string, senderName: string, replyBody: string, campaignName: string) {
     // If there is a running campaign for this email, pause it automatically
     const runningCamp = this.campaigns.find(c => c.recipientEmail.toLowerCase() === senderEmail.toLowerCase() && c.status === 'Running');
     if (runningCamp && settings.stopOnReply) {
