@@ -664,8 +664,8 @@ if (supabase) {
       const { data: campaigns, error } = await supabase.from('campaigns').select('*').eq('status', 'Running');
       if (error || !campaigns) return;
 
-      for (let camp of campaigns) {
-        if (!camp.steps || camp.steps.length === 0) continue;
+      const promises = campaigns.map(async (camp) => {
+        if (!camp.steps || camp.steps.length === 0) return;
         
         let steps = [...camp.steps];
         let idx = camp.active_step_index !== undefined && camp.active_step_index !== null ? camp.active_step_index : 0;
@@ -673,7 +673,7 @@ if (supabase) {
         
         if (idx >= steps.length) {
           await supabase.from('campaigns').update({ status: 'Completed', steps }).eq('id', camp.id);
-          continue;
+          return;
         }
 
         const step = steps[idx];
@@ -705,20 +705,23 @@ if (supabase) {
             try {
               await sendEmailForUser(camp.user_id, camp.recipient_email, step.subject || 'LinksMeet Outreach', step.body || '');
               step.status = 'Sent';
-              await supabase.from('campaigns').update({ active_step_index: idx + 1, steps }).eq('id', camp.id);
-
-              await supabase.from('campaign_logs').insert({
-                user_id: camp.user_id,
-                campaign_id: camp.id,
-                campaign_name: camp.name,
-                recipient: camp.recipient_email,
-                subject: step.subject || 'LinksMeet Outreach',
-                sent_at: 'Just now',
-                status: 'Sent',
-                delivery_status: 'Delivered',
-                spam_status: 'Passed',
-                stage: step.title || 'Email'
-              });
+              
+              // Run these concurrently to speed up the loop
+              await Promise.all([
+                supabase.from('campaigns').update({ active_step_index: idx + 1, steps }).eq('id', camp.id),
+                supabase.from('campaign_logs').insert({
+                  user_id: camp.user_id,
+                  campaign_id: camp.id,
+                  campaign_name: camp.name,
+                  recipient: camp.recipient_email,
+                  subject: step.subject || 'LinksMeet Outreach',
+                  sent_at: 'Just now',
+                  status: 'Sent',
+                  delivery_status: 'Delivered',
+                  spam_status: 'Passed',
+                  stage: step.title || 'Email'
+                })
+              ]);
             } catch (err) {
               console.error(`Failed to send email for campaign ${camp.id}:`, err);
               step.status = 'Failed';
@@ -726,7 +729,10 @@ if (supabase) {
             }
           }
         }
-      }
+      });
+      
+      // Execute all campaign promises concurrently
+      await Promise.allSettled(promises);
     } catch (err) {
       console.error("Campaign Engine Error:", err);
     }

@@ -155,6 +155,8 @@ class CampaignEngine {
     this.startPolling();
   }
 
+  private lastFetchHash: string = '';
+
   private async fetchData() {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -169,42 +171,35 @@ class CampaignEngine {
         fetch(`${API_BASE_URL}/api/settings`, { headers })
       ]);
 
-      let changed = false;
+      if (!campRes.ok || !logRes.ok || !threadRes.ok || !setRes.ok) return;
 
-      if (campRes.ok) {
-        const data = await campRes.json();
-        this.campaigns = data.map((d: any) => ({
-          id: d.id,
-          name: d.name,
-          status: d.status,
-          recipientEmail: d.recipient_email,
-          recipientName: d.recipient_name,
-          steps: d.steps,
-          activeStepIndex: d.active_step_index,
-          createdAt: new Date(d.created_at).getTime()
-        }));
-        changed = true;
+      const campData = await campRes.json();
+      const logData = await logRes.json();
+      const threadData = await threadRes.json();
+      const setData = await setRes.json();
+
+      const currentHash = JSON.stringify({ campData, logData, threadData, setData });
+      if (this.lastFetchHash === currentHash) return; // Skip if no data changed
+      this.lastFetchHash = currentHash;
+
+      this.campaigns = campData.map((d: any) => ({
+        id: d.id,
+        name: d.name,
+        status: d.status,
+        recipientEmail: d.recipient_email,
+        recipientName: d.recipient_name,
+        steps: d.steps,
+        activeStepIndex: d.active_step_index,
+        createdAt: new Date(d.created_at).getTime()
+      }));
+      this.logs = logData;
+      this.threads = threadData;
+      
+      if (setData && Object.keys(setData).length > 0) {
+        settings = { ...settings, ...setData };
       }
 
-      if (logRes.ok) {
-        this.logs = await logRes.json();
-        changed = true;
-      }
-
-      if (threadRes.ok) {
-        this.threads = await threadRes.json();
-        changed = true;
-      }
-
-      if (setRes.ok) {
-        const fetchedSettings = await setRes.json();
-        if (fetchedSettings && Object.keys(fetchedSettings).length > 0) {
-          settings = { ...settings, ...fetchedSettings };
-          changed = true;
-        }
-      }
-
-      if (changed) this.notify('update');
+      this.notify('update');
     } catch (err) {
       console.warn("Failed to fetch backend data", err);
     }
