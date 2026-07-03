@@ -497,7 +497,8 @@ app.post('/api/campaigns', requireAuth, async (req, res) => {
       recipient_email: campaign.recipientEmail,
       recipient_name: campaign.recipientName || '',
       steps: campaign.steps || [],
-      active_step_index: campaign.activeStepIndex || 0
+      active_step_index: campaign.activeStepIndex || 0,
+      next_run_at: campaign.nextRunAt !== undefined ? campaign.nextRunAt : null
     }).select().single();
     if (error) throw error;
     res.json(data);
@@ -515,7 +516,8 @@ app.put('/api/campaigns/:id', requireAuth, async (req, res) => {
       recipient_email: updates.recipientEmail,
       recipient_name: updates.recipientName,
       steps: updates.steps,
-      active_step_index: updates.activeStepIndex
+      active_step_index: updates.activeStepIndex,
+      next_run_at: updates.nextRunAt !== undefined ? updates.nextRunAt : undefined
     }).eq('id', req.params.id).eq('user_id', req.userId).select().single();
     if (error) throw error;
     res.json(data);
@@ -661,7 +663,15 @@ app.put('/api/settings', requireAuth, async (req, res) => {
 if (supabase) {
   setInterval(async () => {
     try {
-      const { data: campaigns, error } = await supabase.from('campaigns').select('*').eq('status', 'Running');
+      const nowIso = new Date().toISOString();
+      // Only fetch 50 campaigns that are running and actually due for processing
+      const { data: campaigns, error } = await supabase
+        .from('campaigns')
+        .select('*')
+        .eq('status', 'Running')
+        .or(`next_run_at.is.null,next_run_at.lte.${nowIso}`)
+        .limit(50);
+        
       if (error || !campaigns) return;
 
       const promises = campaigns.map(async (camp) => {
@@ -672,7 +682,7 @@ if (supabase) {
         if (idx === -1) idx = 0;
         
         if (idx >= steps.length) {
-          await supabase.from('campaigns').update({ status: 'Completed', steps }).eq('id', camp.id);
+          await supabase.from('campaigns').update({ status: 'Completed', steps, next_run_at: null }).eq('id', camp.id);
           return;
         }
 
@@ -691,10 +701,14 @@ if (supabase) {
               
               step.waitUntil = now + (val * multiplier * 1000);
               step.status = 'Pending';
-              await supabase.from('campaigns').update({ steps }).eq('id', camp.id);
+              
+              // Set next_run_at in database so the server completely ignores this campaign until that exact future date
+              const targetDate = new Date(step.waitUntil).toISOString();
+              await supabase.from('campaigns').update({ steps, next_run_at: targetDate }).eq('id', camp.id);
             } else if (now >= step.waitUntil) {
               step.status = 'Sent';
-              await supabase.from('campaigns').update({ active_step_index: idx + 1, steps }).eq('id', camp.id);
+              // Delay is over, reset next_run_at to null so the next step processes immediately
+              await supabase.from('campaigns').update({ active_step_index: idx + 1, steps, next_run_at: null }).eq('id', camp.id);
             }
           }
         } else if (step.type === 'email') {
@@ -706,9 +720,8 @@ if (supabase) {
               await sendEmailForUser(camp.user_id, camp.recipient_email, step.subject || 'LinksMeet Outreach', step.body || '');
               step.status = 'Sent';
               
-              // Run these concurrently to speed up the loop
               await Promise.all([
-                supabase.from('campaigns').update({ active_step_index: idx + 1, steps }).eq('id', camp.id),
+                supabase.from('campaigns').update({ active_step_index: idx + 1, steps, next_run_at: null }).eq('id', camp.id),
                 supabase.from('campaign_logs').insert({
                   user_id: camp.user_id,
                   campaign_id: camp.id,
@@ -725,13 +738,12 @@ if (supabase) {
             } catch (err) {
               console.error(`Failed to send email for campaign ${camp.id}:`, err);
               step.status = 'Failed';
-              await supabase.from('campaigns').update({ status: 'Paused', steps }).eq('id', camp.id);
+              await supabase.from('campaigns').update({ status: 'Paused', steps, next_run_at: null }).eq('id', camp.id);
             }
           }
         }
       });
       
-      // Execute all campaign promises concurrently
       await Promise.allSettled(promises);
     } catch (err) {
       console.error("Campaign Engine Error:", err);

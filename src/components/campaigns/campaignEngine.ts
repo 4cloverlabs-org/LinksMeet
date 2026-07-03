@@ -329,7 +329,7 @@ class CampaignEngine {
     }
   }
 
-  public async saveCampaign(campaign: Campaign) {
+  public async saveCampaign(campaign: Campaign & { nextRunAt?: string | null }) {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData.session?.access_token;
@@ -341,7 +341,8 @@ class CampaignEngine {
         recipientEmail: campaign.recipientEmail,
         recipientName: campaign.recipientName,
         steps: campaign.steps,
-        activeStepIndex: campaign.activeStepIndex
+        activeStepIndex: campaign.activeStepIndex,
+        nextRunAt: campaign.nextRunAt
       };
 
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(campaign.id);
@@ -402,7 +403,8 @@ class CampaignEngine {
       camp.activeStepIndex = -1; // Ready for backend to pick up
     }
     
-    await this.saveCampaign(camp);
+    // Pass nextRunAt: null to instantly push it to the active queue
+    await this.saveCampaign({ ...camp, nextRunAt: null });
   }
 
   public async pauseCampaign(id: string) {
