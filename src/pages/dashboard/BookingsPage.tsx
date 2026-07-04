@@ -29,7 +29,7 @@ export default function BookingsPage() {
     appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp,
     teamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember,
     editingWorkflow, setEditingWorkflow
-  } = ctx || {};
+  , filteredBookings, avColor, initials } = ctx || {};
 
   return (
     <>

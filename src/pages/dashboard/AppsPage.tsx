@@ -29,7 +29,7 @@ export default function AppsPage() {
     appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp,
     teamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember,
     editingWorkflow, setEditingWorkflow
-  } = ctx || {};
+  , appCats, filteredApps, connectingApps } = ctx || {};
 
   return (
     <>

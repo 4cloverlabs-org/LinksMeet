@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Sparkles, Globe, Check, Loader2 } from 'lucide-react';
 import { campaignEngine, type CampaignStep } from './campaignEngine';

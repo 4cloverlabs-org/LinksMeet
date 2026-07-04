@@ -29,7 +29,7 @@ export default function RoutingPage() {
     appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp,
     teamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember,
     editingWorkflow, setEditingWorkflow
-  } = ctx || {};
+  , EmptyState } = ctx || {};
 
   return (
     <>

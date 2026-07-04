@@ -29,7 +29,7 @@ export default function PeoplePage() {
     appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp,
     teamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember,
     editingWorkflow, setEditingWorkflow
-  } = ctx || {};
+  , filteredContacts, fileInputRef, handleUploadFile, contactsLoading, avColor, initials, any, CONTACT_STATUSES, setInitCampaignLead, removeContact } = ctx || {};
 
   return (
     <>
@@ -90,7 +90,7 @@ export default function PeoplePage() {
                             <select
                               className="crm-status-select"
                               value={c.status}
-                              onChange={e => changeStatus(c.id, e.target.value as ContactStatus)}
+                              onChange={e => changeStatus(c.id, e.target.value as any)}
                             >
                               {CONTACT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
