@@ -4,9 +4,9 @@
    ================================================================= */
 
 .lexaro-landing {
-  --lx-bg: #ffffff;
-  --lx-surface: #ffffff;
-  --lx-surface-dark: #ffffff;
+  --lx-bg: #FFFFFF;
+  --lx-surface: #FFFFFF;
+  --lx-surface-dark: #FFFFFF;
   --lx-border: rgba(0, 0, 0, 0.08);
   --lx-border-light: rgba(0, 0, 0, 0.04);
   --lx-text: #525252;
@@ -325,7 +325,7 @@
   margin: 0 auto;
 }
 .lexaro-dashboard {
-  background: #ffffff;
+  background: #FFFFFF;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   box-shadow: -20px 40px 60px rgba(0,0,0,0.08); /* Adjusted shadow for tilt */
@@ -364,7 +364,7 @@
    Legacy Problem Section (Exact Image Match)
    ================================================================= */
 .lexaro-legacy-section {
-  background: #ffffff;
+  background: #FFFFFF;
   padding: 120px 0;
   text-align: left;
 }
@@ -515,7 +515,7 @@
 }
 
 .lexaro-system-box {
-  background: #ffffff;
+  background: #FFFFFF;
   display: grid;
   grid-template-columns: 1fr 1fr;
   align-items: center;
@@ -634,7 +634,7 @@
    ================================================================= */
 .lexaro-operations-section {
   padding: 120px 0;
-  background: var(--lx-bg, #ffffff);
+  background: var(--lx-bg, #FFFFFF);
   color: #111;
 }
 .lexaro-operations-header {
@@ -899,7 +899,7 @@
 .lexaro-step-card {
   display: flex;
   flex-direction: column;
-  background: #ffffff;
+  background: #FFFFFF;
   border-radius: 20px;
   border: 1px solid rgba(0, 0, 0, 0.06);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03), 0 24px 60px -12px rgba(0, 0, 0, 0.03);

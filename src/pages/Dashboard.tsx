@@ -1768,7 +1768,7 @@ export default function Dashboard() {
             bottom: '24px',
             right: '24px',
             backgroundColor: toast.type === 'success' ? '#10B981' : '#EF4444',
-            color: '#FFFFFF',
+            color: '#ffffff',
             padding: '12px 24px',
             borderRadius: '8px',
             boxShadow: '0 4px 16px rgba(0,0,0,0.15)',

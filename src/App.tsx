@@ -21,6 +21,7 @@ import BookingFlow from './pages/BookingFlow';
 import SuccessPage from './pages/SuccessPage';
 import Dashboard from './pages/Dashboard';
 import BookingPage from './pages/BookingPage';
+import Onboarding from './pages/Onboarding';
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function App() {
           <Route path="/signup" element={<Signup />} />
 
           {/* ---- App (requires a logged-in user) ---- */}
+          <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
           <Route path="/dashboard" element={<RequireAuth><CrmDashboard /></RequireAuth>} />
 
           {/* ---- Public Booking Page & Aliases ---- */}

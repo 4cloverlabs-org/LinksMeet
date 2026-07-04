@@ -1,0 +1,173 @@
+.wf-editor {
+  background: #F9FAFB;
+  min-height: 100vh;
+  margin: -32px; /* Negate the dashboard padding if needed */
+  padding: 32px;
+}
+
+.wf-editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.wf-btn-icon {
+  background: none;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6B7280;
+  cursor: pointer;
+  background: #fff;
+}
+.wf-btn-icon:hover { background: #F3F4F6; }
+
+.wf-btn-outline {
+  background: none;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  padding: 0 16px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  background: #fff;
+}
+.wf-btn-outline:hover { background: #F3F4F6; }
+
+.wf-btn-primary {
+  background: #111827;
+  border: none;
+  border-radius: 6px;
+  padding: 0 16px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.wf-btn-primary:hover { background: #1F2937; }
+
+.wf-editor-body {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.wf-block {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.wf-block-header {
+  padding: 16px 24px;
+  background: #F9FAFB;
+  border-bottom: 1px solid #E5E7EB;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wf-block-content {
+  padding: 24px;
+}
+
+.wf-form-group {
+  margin-bottom: 24px;
+}
+.wf-form-group:last-child {
+  margin-bottom: 0;
+}
+
+.wf-form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.wf-input {
+  width: 100%;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #111827;
+  background: #fff;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+.wf-input:focus {
+  border-color: #2563EB;
+}
+
+.wf-select-wrapper {
+  position: relative;
+}
+.wf-select-wrapper select {
+  appearance: none;
+  padding-right: 32px;
+}
+.wf-select-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6B7280;
+  pointer-events: none;
+}
+
+.wf-email-editor {
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.wf-email-section {
+  padding: 16px;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.wf-email-section label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #6B7280;
+}
+
+.wf-input-transparent {
+  border: none;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+.wf-input-transparent:focus {
+  border: none;
+  box-shadow: none;
+}
+
+.wf-textarea {
+  resize: vertical;
+  min-height: 200px;
+  font-family: inherit;
+  line-height: 1.5;
+}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Mail, Send, CheckCircle2, ChevronDown, Trash2, Bold, Italic, Underline as UnderlineIcon, Link2, List, Image as ImageIcon, Smile, Eye, ArrowLeft, Pause, Edit2, LayoutGrid, Hourglass, Play } from 'lucide-react';
+import { Plus, Mail, Send, CheckCircle2, ChevronDown, Trash2, Bold, Italic, Underline as UnderlineIcon, Link2, List, Image as ImageIcon, Smile, Eye, ArrowLeft, Pause, Edit2, LayoutGrid, Hourglass, Play, Sparkles } from 'lucide-react';
 import { campaignEngine, type Campaign, type CampaignStep } from './campaignEngine';
 import { useAuth } from '../../lib/AuthContext';
 import { AICampaignStudio } from './AICampaignStudio';
@@ -36,12 +36,21 @@ interface CampaignBuilderProps {
   userEmail: string;
   campaignId: string;
   onBack?: () => void;
+  autoStartAIPrompt?: string;
 }
 
-export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, campaignId, onBack }) => {
+export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, campaignId, onBack, autoStartAIPrompt }) => {
   const { } = useAuth();
   const [campaigns, setCampaigns] = useState<Campaign[]>(campaignEngine.getCampaigns());
   const [selectedStepId, setSelectedStepId] = useState<string>('');
+  const [showAIModal, setShowAIModal] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (autoStartAIPrompt === '') {
+      setShowAIModal(true);
+    }
+  }, [autoStartAIPrompt]);
+
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [promptState, setPromptState] = useState<{ type: 'link' | 'image', selection: Range | null } | null>(null);
   const [promptInput, setPromptInput] = useState('');
@@ -79,7 +88,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
 
   useEffect(() => {
     const unsub = campaignEngine.subscribe((event) => {
-      if (['update', 'tick', 'campaign_completed', 'email_sent'].includes(event)) {
+      if (['update', 'tick', 'campaign_completed', 'email_sent', 'new_reply'].includes(event)) {
         setCampaigns(campaignEngine.getCampaigns());
         setLogs(campaignEngine.getLogs());
       }
@@ -175,6 +184,31 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
 
   return (
     <div style={{ padding: 0, fontFamily: "'Geist', 'Geist Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
+      {/* AI Modal for missing notes */}
+      {showAIModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', borderRadius: '16px', padding: '32px', width: '500px', maxWidth: '90vw', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+            <h2 style={{ margin: '0 0 16px', fontSize: '18px', fontWeight: 600, color: '#111827', display: 'flex', alignItems: 'center', gap: '8px' }}><Sparkles size={18} color="#0E61F3" /> Analyze Website or Brand</h2>
+            
+            <AICampaignStudio
+              compact={true}
+              onApplySequence={(generatedSteps) => {
+                handleUpdateCamp({ steps: generatedSteps });
+                const firstEmail = generatedSteps.find(s => s.type === 'email');
+                if (firstEmail) setSelectedStepId(firstEmail.id);
+                showToast('Sequence analyzed and generated successfully!');
+                setShowAIModal(false);
+              }}
+              recipientEmail={activeCamp.recipientEmail}
+            />
+            
+            <div style={{ marginTop: '24px', textAlign: 'right' }}>
+              <button onClick={() => setShowAIModal(false)} style={{ background: 'none', border: 'none', color: '#64748b', fontWeight: 600, cursor: 'pointer', padding: '8px 16px' }}>Skip and build manually</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {toastMsg && (
         <div style={{ position: 'fixed', bottom: '40px', right: '32px', zIndex: 100, background: '#0E61F3', color: '#fff', padding: '10px 18px', borderRadius: '10px', fontWeight: 700, fontSize: '0.88rem', boxShadow: '0 8px 20px rgba(14, 97, 243, 0.35)', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <CheckCircle2 size={16} /> {toastMsg}
@@ -658,6 +692,8 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
               showToast('Sequence analyzed and generated successfully!');
             }}
             recipientEmail={activeCamp.recipientEmail}
+            initPrompt={autoStartAIPrompt}
+            autoStart={!!autoStartAIPrompt}
           />
         </div>
         </div>

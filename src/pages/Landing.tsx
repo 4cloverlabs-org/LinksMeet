@@ -138,10 +138,9 @@ export default function Landing() {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user) {
-      navigate('/dashboard', { replace: true });
-    }
-  }, [user, navigate]);
+    // We intentionally removed the auto-redirect so logged-in users can still view the landing page.
+    // If they want to go to their dashboard, they can click the CTA buttons.
+  }, []);
 
   return (
     <div className="lexaro-landing" style={{ minHeight: '100vh', position: 'relative' }}>
@@ -167,6 +166,7 @@ export default function Landing() {
               <a href="#contact">Contact</a>
             </div>
             <div className="lexaro-nav-actions">
+              <button className="lexaro-btn" style={{ background: 'transparent', color: '#0f172a' }} onClick={() => navigate('/login')}>Log in</button>
               <button className="lexaro-btn lexaro-btn-dark" onClick={goSignup}>Get Started</button>
             </div>
           </div>
@@ -198,10 +198,10 @@ export default function Landing() {
               </p>
               <div className="lexaro-hero-cta">
                 <button className="lexaro-btn lexaro-btn-dark" onClick={goSignup} style={{ borderRadius: '100px', padding: '14px 28px', fontSize: '1rem', fontWeight: 600 }}>
-                  Start prospecting
+                  Start your free trial
                 </button>
-                <button className="lexaro-btn lexaro-btn-ghost" onClick={goSignup} style={{ borderRadius: '100px', padding: '14px 28px', fontSize: '1rem', fontWeight: 600, border: '1px solid #e5e5e5', background: '#fff', color: '#000' }}>
-                  See examples ↗
+                <button className="lexaro-btn" onClick={() => navigate('/login')} style={{ background: 'rgba(0,0,0,0.05)', color: '#0f172a', borderRadius: '100px', padding: '14px 28px', fontSize: '1rem', fontWeight: 600 }}>
+                  Log in
                 </button>
               </div>
             </motion.div>

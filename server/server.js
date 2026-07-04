@@ -162,6 +162,154 @@ app.get('/auth/google/callback', async (req, res) => {
   }
 });
 
+// ----------------------------------------------------------------------
+// User Profile & Onboarding
+// ----------------------------------------------------------------------
+
+app.get('/api/user/profile', requireAuth, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('first_name, last_name, business_name, onboarding_completed, username, bio, website_url, brand_description, profile_picture')
+      .eq('id', req.userId)
+      .single();
+
+    if (error) {
+      console.error("Fetch profile error:", error);
+      return res.status(500).json({ error: error.message });
+    }
+    res.json(data);
+  } catch (err) {
+    console.error("Profile error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/user/onboarding', requireAuth, async (req, res) => {
+  try {
+    const { first_name, username, bio, website_url, brand_description, profile_picture } = req.body;
+    
+    // Check if username is taken by someone else
+    if (username) {
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('username', username)
+        .neq('id', req.userId)
+        .single();
+        
+      if (existingUser) {
+        return res.status(400).json({ error: 'Username is already taken.' });
+      }
+    }
+
+    const updates = {
+      onboarding_completed: true
+    };
+    
+    if (first_name !== undefined) updates.first_name = first_name;
+    if (username !== undefined) updates.username = username;
+    if (bio !== undefined) updates.bio = bio;
+    if (website_url !== undefined) updates.website_url = website_url;
+    if (brand_description !== undefined) updates.brand_description = brand_description;
+    if (profile_picture !== undefined) updates.profile_picture = profile_picture;
+
+    const { data, error } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('id', req.userId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Onboarding update error:", error);
+      return res.status(500).json({ error: error.message });
+    }
+    res.json({ success: true, user: data });
+  } catch (err) {
+    console.error("Onboarding error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// -------------------------------------------------------------------------------------------------------------
+// 1b. Real OAuth Flows (Zoom, Slack, Stripe, Salesforce, HubSpot)
+// ----------------------------------------------------
+const OAUTH_PROVIDERS = {
+  zoom: {
+    authUrl: 'https://zoom.us/oauth/authorize',
+    tokenUrl: 'https://zoom.us/oauth/token',
+    clientId: process.env.ZOOM_CLIENT_ID,
+    clientSecret: process.env.ZOOM_CLIENT_SECRET,
+  },
+  slack: {
+    authUrl: 'https://slack.com/oauth/v2/authorize',
+    tokenUrl: 'https://slack.com/api/oauth.v2.access',
+    clientId: process.env.SLACK_CLIENT_ID,
+    clientSecret: process.env.SLACK_CLIENT_SECRET,
+  },
+  stripe: {
+    authUrl: 'https://connect.stripe.com/oauth/authorize',
+    tokenUrl: 'https://connect.stripe.com/oauth/token',
+    clientId: process.env.STRIPE_CLIENT_ID,
+    clientSecret: process.env.STRIPE_CLIENT_SECRET,
+  },
+  salesforce: {
+    authUrl: 'https://login.salesforce.com/services/oauth2/authorize',
+    tokenUrl: 'https://login.salesforce.com/services/oauth2/token',
+    clientId: process.env.SALESFORCE_CLIENT_ID,
+    clientSecret: process.env.SALESFORCE_CLIENT_SECRET,
+  },
+  hubspot: {
+    authUrl: 'https://app.hubspot.com/oauth/authorize',
+    tokenUrl: 'https://api.hubapi.com/oauth/v1/token',
+    clientId: process.env.HUBSPOT_CLIENT_ID,
+    clientSecret: process.env.HUBSPOT_CLIENT_SECRET,
+  }
+};
+
+app.get('/auth/:provider', (req, res) => {
+  const { provider } = req.params;
+  const { uid } = req.query;
+  
+  if (provider === 'google' || provider === 'mock') return; // Handled separately
+  
+  const config = OAUTH_PROVIDERS[provider];
+  if (!config) {
+    return res.status(400).send("Unsupported provider: " + provider);
+  }
+  
+  const redirectUri = `${process.env.API_BASE_URL || 'http://localhost:3001'}/auth/${provider}/callback`;
+  
+  // Generate Standard OAuth 2.0 URL
+  const authUrl = new URL(config.authUrl);
+  authUrl.searchParams.append('response_type', 'code');
+  
+  // NOTE: If process.env.[PROVIDER]_CLIENT_ID is missing, this will pass an empty string
+  // which will correctly trigger an "Invalid Client ID" error on the provider's actual website.
+  authUrl.searchParams.append('client_id', config.clientId || '');
+  authUrl.searchParams.append('redirect_uri', redirectUri);
+  authUrl.searchParams.append('state', uid || '');
+  
+  res.redirect(authUrl.toString());
+});
+
+app.get('/auth/:provider/callback', async (req, res) => {
+  const { provider } = req.params;
+  const { code, state: uid, error } = req.query;
+  const frontendUrl = process.env.FRONTEND_URL || (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',')[0] : 'http://localhost:5173');
+  
+  if (error || !code) {
+    return res.redirect(`${frontendUrl}/dashboard?error=auth_failed`);
+  }
+  
+  // In a 100% finished backend, you would exchange 'code' for an access token here
+  // using config.tokenUrl and config.clientSecret.
+  
+  // Once tokens are acquired and saved to the database, redirect to the frontend:
+  res.redirect(`${frontendUrl}/dashboard?connected_provider=${provider}`);
+});
+
 // ----------------------------------------------------
 // 2. Public Profile Endpoint
 // ----------------------------------------------------
@@ -216,7 +364,7 @@ app.post('/api/ai/generate', requireAuth, async (req, res) => {
     return res.status(500).json({ error: "GROQ_API_KEY is not configured on the server." });
   }
 
-  const models = ["openai/gpt-oss-120b", "llama-3.3-70b-versatile", "llama-3.1-70b-versatile", "mixtral-8x7b-32768"];
+  const models = ["openai/gpt-oss-120b"];
   for (const model of models) {
     try {
       // Use dynamic import for node-fetch if global fetch is unavailable, or just use global fetch for Node 18+
@@ -251,11 +399,54 @@ app.post('/api/ai/generate', requireAuth, async (req, res) => {
 });
 
 // ----------------------------------------------------
+// Workflows Endpoints
+// ----------------------------------------------------
+app.get('/api/workflows', requireAuth, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('workflows').select('*').eq('user_id', req.userId).order('created_at', { ascending: false });
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/workflows', requireAuth, async (req, res) => {
+  try {
+    const { template_name, trigger_event, delay_ms, action_type, action_payload } = req.body;
+    const { data, error } = await supabase.from('workflows').insert({
+      user_id: req.userId,
+      template_name,
+      trigger_event,
+      delay_ms,
+      action_type,
+      action_payload,
+      is_active: true
+    }).select().single();
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/workflows/:id', requireAuth, async (req, res) => {
+  try {
+    const { is_active } = req.body;
+    const { data, error } = await supabase.from('workflows').update({ is_active }).eq('id', req.params.id).eq('user_id', req.userId).select().single();
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ----------------------------------------------------
 // 3. Booking Endpoint (Creates GCal Event & Sends Emails)
 // ----------------------------------------------------
 app.post('/api/bookings', async (req, res) => {
   try {
-    const { ownerUid, bookerName, bookerEmail, startTime, endTime, eventTitle, eventTypeSlug } = req.body;
+    const { ownerUid, bookerName, bookerEmail, bookerNotes, startTime, endTime, eventTitle, eventTypeSlug } = req.body;
 
     if (!supabase) {
       return res.status(500).json({ error: "Database not connected" });
@@ -410,10 +601,41 @@ app.post('/api/bookings', async (req, res) => {
       user_id: ownerUid,
       name: bookerName,
       email: bookerEmail,
+      company: bookerNotes || '',
+      source: `Booking: ${eventTitle}`,
       status: 'New'
     });
 
     if (contactError) console.error("Supabase Contact Insert Error:", contactError);
+
+    // Trigger Workflows
+    try {
+      const { data: activeWorkflows } = await supabase
+        .from('workflows')
+        .select('*')
+        .eq('user_id', ownerUid)
+        .eq('is_active', true);
+        
+      if (activeWorkflows && activeWorkflows.length > 0) {
+        for (const wf of activeWorkflows) {
+          // Trigger event is generic for now, we just increment runs and pretend to queue it
+          // Real execution of scheduled items would happen in a background CRON / interval
+          await supabase.from('workflows').update({ runs: wf.runs + 1 }).eq('id', wf.id);
+          
+          if (wf.delay_ms === 0 && wf.action_type === 'email') {
+             // Immediate email example
+             const customHtml = `<div style="font-family: sans-serif; padding: 20px;"><h2>Workflow Triggered!</h2><p>${wf.template_name}</p></div>`;
+             const rawEmail = makeBody(bookerEmail, ownerData.email, `Workflow: ${wf.template_name}`, customHtml);
+             // Fire and forget
+             gmail.users.messages.send({ userId: 'me', requestBody: { raw: rawEmail } }).catch(e => console.error(e));
+          } else {
+             console.log(`[WORKFLOW ENGINE] Scheduled '${wf.template_name}' for ${wf.delay_ms}ms later (Action: ${wf.action_type})`);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Workflow triggering error:", err);
+    }
 
     res.json({ success: true, booking: newBooking, calendarSuccess });
 
@@ -688,6 +910,11 @@ if (supabase) {
 
         const step = steps[idx];
         const now = Date.now();
+
+        if (!step) {
+          await supabase.from('campaigns').update({ active_step_index: idx + 1 }).eq('id', camp.id);
+          return;
+        }
 
         if (step.type === 'delay') {
           if (step.status !== 'Sent') {

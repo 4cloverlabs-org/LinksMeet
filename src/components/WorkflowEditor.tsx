@@ -1,0 +1,218 @@
+import React, { useState } from 'react';
+import { ArrowLeft, Zap, ArrowRight, Trash2, ChevronDown } from 'lucide-react';
+import './WorkflowEditor.css';
+
+export interface WorkflowDraft {
+  template_name: string;
+  trigger_event: string;
+  delay_ms: number;
+  action_type: string;
+  action_payload: any;
+}
+
+interface WorkflowEditorProps {
+  initialDraft: WorkflowDraft;
+  onSave: (draft: WorkflowDraft) => void;
+  onCancel: () => void;
+  eventTypes: any[];
+}
+
+export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTypes }: WorkflowEditorProps) {
+  const [draft, setDraft] = useState<WorkflowDraft>(initialDraft);
+  
+  // Parse delay_ms into unit and value
+  const [delayValue, setDelayValue] = useState(draft.delay_ms === 0 ? 24 : draft.delay_ms / (1000 * 60 * 60));
+  const [delayUnit, setDelayUnit] = useState('hours');
+  
+  const [when, setWhen] = useState('Before event starts');
+  
+  // Payload states
+  const [senderName, setSenderName] = useState('LinksMeet');
+  
+  const defaultBody = draft.action_type === 'sms' 
+    ? 'Reminder: {EVENT_NAME} is at {EVENT_DATE_ddd, h:mma}.'
+    : draft.action_type === 'voice'
+    ? 'Hi {ATTENDEE}. This is an AI calling to remind you about {EVENT_NAME}.'
+    : 'Hi {ATTENDEE},\n\nThis is a reminder about your upcoming event.\n\nEvent: {EVENT_NAME}\n\nDate & time: {EVENT_DATE_ddd, MMM D, YYYY h:mma}\n\nAttendees: You & {ORGANIZER}';
+
+  const [subject, setSubject] = useState(draft.action_payload?.subject || (draft.action_type === 'email' ? 'Reminder: {EVENT_NAME} - {EVENT_DATE_ddd, MMM D, YYYY h:mma}' : ''));
+  const [body, setBody] = useState(draft.action_payload?.body || defaultBody);
+
+  const handleSave = () => {
+    // Calculate new delay_ms
+    let ms = 0;
+    if (when.includes('Before event starts')) {
+      const multiplier = delayUnit === 'hours' ? 60 * 60 * 1000 : (delayUnit === 'minutes' ? 60 * 1000 : 24 * 60 * 60 * 1000);
+      ms = delayValue * multiplier;
+    }
+    
+    onSave({
+      ...draft,
+      delay_ms: ms,
+      action_payload: {
+        senderName,
+        subject,
+        body
+      }
+    });
+  };
+
+  return (
+    <div className="wf-editor">
+      <div className="wf-editor-header">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button className="wf-btn-icon" onClick={onCancel}><ArrowLeft size={16} /></button>
+          <span style={{ color: '#6B7280', fontSize: '14px' }}>Workflows /</span>
+          <span style={{ color: '#111827', fontSize: '14px', fontWeight: 500 }}>{draft.template_name || 'Untitled'}</span>
+        </div>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button className="wf-btn-outline"><Trash2 size={15} color="#EF4444" /></button>
+          <button className="wf-btn-primary" onClick={handleSave}>Save</button>
+        </div>
+      </div>
+
+      <div className="wf-editor-body">
+        
+        {/* Trigger Block */}
+        <div className="wf-block">
+          <div className="wf-block-header">
+            <Zap size={16} color="#6B7280" /> <span style={{ fontWeight: 600, color: '#111827', fontSize: '14px' }}>Trigger</span>
+          </div>
+          <div className="wf-block-content">
+            <div className="wf-form-group">
+              <label>When</label>
+              <div className="wf-select-wrapper">
+                <select value={when} onChange={e => setWhen(e.target.value)} className="wf-input">
+                  <option>Before event starts</option>
+                  <option>After event ends</option>
+                  <option>When event is scheduled</option>
+                  <option>When event is cancelled</option>
+                </select>
+                <ChevronDown size={14} className="wf-select-icon" />
+              </div>
+            </div>
+
+            {when.includes('Before') || when.includes('After') ? (
+              <div className="wf-form-group">
+                <label>How long {when.toLowerCase()}?</label>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <input type="number" className="wf-input" value={delayValue} onChange={e => setDelayValue(Number(e.target.value))} style={{ flex: 1 }} />
+                  <div className="wf-select-wrapper" style={{ width: '120px' }}>
+                    <select className="wf-input" value={delayUnit} onChange={e => setDelayUnit(e.target.value)}>
+                      <option value="minutes">minutes</option>
+                      <option value="hours">hours</option>
+                      <option value="days">days</option>
+                    </select>
+                    <ChevronDown size={14} className="wf-select-icon" />
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            <div className="wf-form-group">
+              <label>Which event type will this apply to?</label>
+              <div className="wf-select-wrapper">
+                <select className="wf-input">
+                  <option>Select...</option>
+                  {eventTypes?.map(et => (
+                    <option key={et.id || et.slug}>{et.title}</option>
+                  ))}
+                </select>
+                <ChevronDown size={14} className="wf-select-icon" />
+              </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px', fontSize: '13px', color: '#374151', cursor: 'pointer' }}>
+                <input type="checkbox" defaultChecked /> Apply to all, including future event types
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* Arrow connector */}
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0' }}>
+          <div style={{ width: '2px', height: '16px', background: '#E5E7EB' }} />
+        </div>
+
+        {/* Action Block */}
+        <div className="wf-block">
+          <div className="wf-block-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ArrowRight size={16} color="#6B7280" /> <span style={{ fontWeight: 600, color: '#111827', fontSize: '14px' }}>Action</span>
+            </div>
+            <Trash2 size={14} color="#EF4444" style={{ cursor: 'pointer' }} />
+          </div>
+          <div className="wf-block-content">
+            <div className="wf-form-group">
+              <label>Do this</label>
+              <div className="wf-select-wrapper">
+                <select className="wf-input" value={draft.action_type} onChange={e => {
+                  setDraft({...draft, action_type: e.target.value});
+                  // update defaults when type changes
+                  if (e.target.value === 'sms') { setBody('Reminder: {EVENT_NAME} is at {EVENT_DATE_ddd, h:mma}.'); }
+                  if (e.target.value === 'voice') { setBody('Hi {ATTENDEE}. This is an AI calling to remind you about {EVENT_NAME}.'); }
+                  if (e.target.value === 'email') { setBody('Hi {ATTENDEE},\n\nThis is a reminder about your upcoming event.'); setSubject('Reminder: {EVENT_NAME}'); }
+                }}>
+                  <option value="email">Send email to attendees</option>
+                  <option value="sms">Send SMS to attendees</option>
+                  <option value="voice">AI Voice Call to attendees</option>
+                </select>
+                <ChevronDown size={14} className="wf-select-icon" />
+              </div>
+            </div>
+
+            {draft.action_type === 'email' && (
+              <div className="wf-form-group">
+                <label>Sender name</label>
+                <input type="text" className="wf-input" value={senderName} onChange={e => setSenderName(e.target.value)} />
+              </div>
+            )}
+
+            <div className="wf-form-group">
+              <label>Message template</label>
+              <div className="wf-select-wrapper">
+                <select className="wf-input">
+                  <option>Reminder</option>
+                  <option>Custom</option>
+                </select>
+                <ChevronDown size={14} className="wf-select-icon" />
+              </div>
+            </div>
+
+            <div className="wf-email-editor">
+              {draft.action_type === 'email' && (
+                <div className="wf-email-section">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <label style={{ margin: 0 }}>Email subject</label>
+                    <span style={{ fontSize: '12px', color: '#6B7280', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>Add variable <ChevronDown size={12}/></span>
+                  </div>
+                  <input type="text" className="wf-input wf-input-transparent" value={subject} onChange={e => setSubject(e.target.value)} />
+                </div>
+              )}
+              <div className="wf-email-section" style={{ borderBottom: 'none' }}>
+                <label style={{ margin: 0, marginBottom: '8px', display: 'block' }}>
+                  {draft.action_type === 'email' ? 'Email body' : (draft.action_type === 'sms' ? 'SMS body' : 'Voice Agent Prompt')}
+                </label>
+                <textarea 
+                  className="wf-input wf-input-transparent wf-textarea" 
+                  value={body} 
+                  onChange={e => setBody(e.target.value)} 
+                />
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0 0', marginTop: '16px', borderTop: '1px solid #E5E7EB' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#374151', cursor: 'pointer' }}>
+                <input type="checkbox" /> Include calendar event
+              </label>
+            </div>
+            
+          </div>
+        </div>
+        
+        <div style={{ padding: '24px 0', display: 'flex', justifyContent: 'center' }}>
+          <button className="wf-btn-outline" style={{ background: '#fff' }}>Add action</button>
+        </div>
+
+      </div>
+    </div>
+  );
+}

@@ -9,14 +9,30 @@ import { ConversationThreadView } from './ConversationThreadView';
 import { CampaignAnalytics } from './CampaignAnalytics';
 import { CampaignSettings } from './CampaignSettings';
 import { ReplyPopupNotification } from './ReplyPopupNotification';
+import { API_BASE_URL } from '../../lib/config';
 import './CampaignModule.css';
 
-export const CampaignModule: React.FC = () => {
+export interface CampaignModuleProps {
+  initLead?: any;
+  onInitConsumed?: () => void;
+  userProfile?: any;
+}
+
+export const CampaignModule: React.FC<CampaignModuleProps> = ({ initLead, onInitConsumed, userProfile }) => {
   const { user } = useAuth();
   const [activeCampaignId, setActiveCampaignId] = useState<string | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>(campaignEngine.getCampaigns());
   const [tab, setTab] = useState<'builder' | 'sent' | 'conversations' | 'analytics' | 'settings'>('builder');
   const [, setUnreadReplies] = useState(0);
+  const [brandInfo, setBrandInfo] = useState<{ url: string; desc: string } | null>(
+    userProfile ? { url: userProfile.website_url || '', desc: userProfile.brand_description || '' } : null
+  );
+
+  useEffect(() => {
+    if (userProfile) {
+      setBrandInfo({ url: userProfile.website_url || '', desc: userProfile.brand_description || '' });
+    }
+  }, [userProfile]);
 
   useEffect(() => {
     const checkUnread = () => {
@@ -26,8 +42,47 @@ export const CampaignModule: React.FC = () => {
     };
     checkUnread();
     const unsub = campaignEngine.subscribe(() => checkUnread());
+
     return () => unsub();
   }, []);
+
+  const [autoStartPrompt, setAutoStartPrompt] = useState<string | undefined>();
+
+  useEffect(() => {
+    if (initLead) {
+      const newCamp: Campaign = {
+        id: 'camp_' + Date.now(),
+        name: `Campaign for ${initLead.name}`,
+        status: 'Draft',
+        recipientEmail: initLead.email || '',
+        recipientName: initLead.name || '',
+        createdAt: Date.now(),
+        steps: []
+      };
+      campaignEngine.saveCampaign(newCamp);
+      setCampaigns(campaignEngine.getCampaigns());
+      setActiveCampaignId(newCamp.id);
+      
+      let prompt = '';
+      if (brandInfo && (brandInfo.url || brandInfo.desc)) {
+        prompt += `You are writing on behalf of our company. Here is our company profile: ${brandInfo.desc} (Website: ${brandInfo.url}).\n`;
+      }
+
+      if (initLead.company) {
+        prompt += `This is a lead named ${initLead.name || 'Unknown'} (Email: ${initLead.email}). They submitted these notes: "${initLead.company}". Write a highly personalized 3-step sequence reminding them about our company and services based on their notes.`;
+      } else if (initLead.source && initLead.source.startsWith('Booking: ')) {
+        const eventTitle = initLead.source.replace('Booking: ', '');
+        prompt += `This is a lead named ${initLead.name || 'Unknown'} (Email: ${initLead.email}). They just booked a service inquiry for: "${eventTitle}". Write a highly personalized 3-step follow-up sequence reminding them about our company and services in relation to this inquiry.`;
+      } else {
+        prompt += `This is a lead named ${initLead.name || 'Unknown'} (Email: ${initLead.email}). Write a highly personalized 3-step follow-up sequence to remind them about our company and introduce our services.`;
+      }
+      setAutoStartPrompt(prompt);
+      
+      setTab('builder');
+      
+      if (onInitConsumed) onInitConsumed();
+    }
+  }, [initLead]);
 
   const handleCreateNew = () => {
     const newCamp: Campaign = {
@@ -53,6 +108,7 @@ export const CampaignModule: React.FC = () => {
     };
     campaignEngine.saveCampaign(newCamp);
     setCampaigns(campaignEngine.getCampaigns());
+    setAutoStartPrompt(undefined);
     setActiveCampaignId(newCamp.id);
     setTab('builder');
   };
@@ -64,6 +120,7 @@ export const CampaignModule: React.FC = () => {
           campaigns={campaigns} 
           onCreateNew={handleCreateNew}
           onSelect={(id) => {
+            setAutoStartPrompt(undefined);
             setActiveCampaignId(id);
             setTab('builder');
           }}
@@ -87,7 +144,10 @@ export const CampaignModule: React.FC = () => {
           <div style={{ height: '56px', background: '#ffffff', borderBottom: '1px solid #e2e8f0', padding: '0 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem' }}>
               <button
-                onClick={() => setActiveCampaignId(null)}
+                onClick={() => {
+                  setAutoStartPrompt(undefined);
+                  setActiveCampaignId(null);
+                }}
                 style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: '#334155', fontWeight: 600, cursor: 'pointer', padding: 0 }}
               >
                 <ArrowLeft size={16} /> Back to Campaigns
@@ -194,7 +254,10 @@ export const CampaignModule: React.FC = () => {
 
       {/* Scrollable Main Content */}
       <div style={{ flex: 1, overflow: 'auto', padding: tab === 'builder' ? '0' : '32px' }}>
-        {tab === 'builder' && <CampaignBuilder userEmail={user?.email || 'lead@example.com'} campaignId={activeCampaignId} onBack={() => setActiveCampaignId(null)} />}
+        {tab === 'builder' && <CampaignBuilder userEmail={user?.email || 'lead@example.com'} campaignId={activeCampaignId} onBack={() => {
+          setAutoStartPrompt(undefined);
+          setActiveCampaignId(null);
+        }} autoStartAIPrompt={autoStartPrompt} />}
         {tab === 'sent' && <SentActivityFeed />}
         {tab === 'conversations' && <ConversationThreadView />}
         {tab === 'analytics' && <CampaignAnalytics />}

@@ -8,7 +8,7 @@
   --ink: #111827;
   --text: #6B7280;
   --muted: #9CA3AF;
-  --bg: #FAFAFB;
+  --bg: #F9FAFB;
   --surface: #FFFFFF;
   --border: #E5E7EB;
   --border-2: #F3F4F6;
@@ -259,7 +259,7 @@
 .cal-select:focus { border-color: #0E61F3; }
 
 .cal-trouble-card {
-  border: 1px solid #E2E8F0; border-radius: 8px; padding: 20px; background: #FAFAFB;
+  border: 1px solid #E2E8F0; border-radius: 8px; padding: 20px; background: #FAF8F5;
 }
 .cal-trouble-card h4 {
   margin: 0 0 12px; font-size: 0.85rem; font-weight: 600; color: #0F172A;
@@ -314,7 +314,7 @@
 .crm-userbox {
   display: flex; align-items: center; gap: 10px;
   padding: 10px; border-radius: 11px; border: 1px solid var(--border);
-  background: #fafafb;
+  background: #FAF8F5;
 }
 .crm-userbox .av {
   width: 34px; height: 34px; border-radius: 50%;
@@ -500,7 +500,7 @@
 
 /* ---------- Pipeline kanban ---------- */
 .crm-pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
-.crm-pipe-col { background: #fafafb; border: 1px solid var(--border); border-radius: 14px; padding: 13px; min-height: 200px; }
+.crm-pipe-col { background: #FAF8F5; border: 1px solid var(--border); border-radius: 14px; padding: 13px; min-height: 200px; }
 .crm-pipe-col-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .crm-pipe-col-head .nm { font-size: 0.8rem; font-weight: 500; display: flex; align-items: center; gap: 7px; }
 .crm-pipe-col-head .nm .dt { width: 8px; height: 8px; border-radius: 50%; }
@@ -526,7 +526,7 @@
 .crm-tr.contacts { grid-template-columns: 1.6fr 1.2fr 1.8fr 1.2fr 0.9fr 40px; }
 .crm-tr.head { color: var(--muted); font-size: 0.7rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
 .crm-tr:last-child { border-bottom: none; }
-.crm-tr:not(.head):hover { background: #fafafb; }
+.crm-tr:not(.head):hover { background: #FAF8F5; }
 .crm-nm { display: flex; align-items: center; gap: 10px; font-weight: 500; color: var(--ink); }
 .crm-av {
   width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; color: #fff;
@@ -744,7 +744,7 @@
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: #fafafb;
+  background: #FAF8F5;
   min-height: 100vh;
 }
 .bk-widget-page.is-embedded {
@@ -769,11 +769,11 @@
   height: auto;
   border-radius: 8px;
   border: 1px solid var(--border-color, #e5e7eb);
-  background: var(--w-card-bg, #ffffff);
+  background: var(--w-card-bg, #F2F0EC);
   box-shadow: 0 4px 20px rgba(0,0,0,0.05);
 }
 .bk-widget-page.is-embedded .bk-widget-left {
-  background: var(--w-card-bg, #ffffff);
+  background: var(--w-card-bg, #F2F0EC);
 }
 .bk-widget-left {
   flex: 0 0 320px;

@@ -1,14 +1,47 @@
-import { Navigate, useLocation } from 'react-router-dom';
-import type { ReactNode } from 'react';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { type ReactNode, useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
+import { supabase } from './supabase';
 
 export default function RequireAuth({ children }: { children: ReactNode }) {
   const { user, loading, configured } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) {
+      setProfileLoading(false);
+      return;
+    }
+
+    let mounted = true;
+    supabase
+      .from('users')
+      .select('onboarding_completed')
+      .eq('id', user.id)
+      .single()
+      .then(({ data, error }) => {
+        if (!mounted) return;
+        if (!error && data) {
+          if (!data.onboarding_completed && location.pathname !== '/onboarding') {
+            navigate('/onboarding', { replace: true });
+          } else if (data.onboarding_completed && location.pathname === '/onboarding') {
+            navigate('/dashboard', { replace: true });
+          }
+        }
+        setProfileLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [user, location.pathname, navigate]);
 
   if (!configured) return <Navigate to="/login" replace state={{ from: location }} />;
   
-  if (loading) {
+  if (loading || (user && profileLoading)) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
         <div style={{ width: 34, height: 34, border: '3px solid #ececf0', borderTopColor: '#0E61F3', borderRadius: '50%', animation: 'crmSpin 0.7s linear infinite' }} />

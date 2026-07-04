@@ -1,7 +1,26 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { TrendingUp, Mail, MousePointerClick, MessageSquare, AlertTriangle, Clock, Target, Globe, Smartphone, Monitor } from 'lucide-react';
+import { campaignEngine } from './campaignEngine';
 
 export const CampaignAnalytics: React.FC = () => {
+  const [logs, setLogs] = useState(campaignEngine.getLogs());
+
+  useEffect(() => {
+    const unsub = campaignEngine.subscribe((event) => {
+      if (['update', 'tick', 'campaign_completed', 'email_sent', 'new_reply'].includes(event)) {
+        setLogs(campaignEngine.getLogs());
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  const emailsSent = logs.filter(l => ['Sent', 'Opened', 'Clicked', 'Replied'].includes(l.status)).length;
+  const emailsOpened = logs.filter(l => ['Opened', 'Clicked', 'Replied'].includes(l.status)).length;
+  const emailsReplied = logs.filter(l => l.replied || l.status === 'Replied').length;
+
+  const openRate = emailsSent > 0 ? ((emailsOpened / emailsSent) * 100).toFixed(1) + '%' : '0%';
+  const replyRate = emailsSent > 0 ? ((emailsReplied / emailsSent) * 100).toFixed(1) + '%' : '0%';
+
   return (
     <div>
       <div style={{ marginBottom: '24px' }}>
@@ -18,7 +37,7 @@ export const CampaignAnalytics: React.FC = () => {
             <span>Open Rate</span>
             <Mail size={16} style={{ color: '#0E61F3' }} />
           </div>
-          <div className="camp-stat-val">58.4%</div>
+          <div className="camp-stat-val">{openRate}</div>
           <div style={{ fontSize: '0.78rem', color: '#16a34a', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
             <TrendingUp size={13} /> +14.2% vs industry average
           </div>
@@ -29,7 +48,7 @@ export const CampaignAnalytics: React.FC = () => {
             <span>Reply Rate</span>
             <MessageSquare size={16} style={{ color: '#8b5cf6' }} />
           </div>
-          <div className="camp-stat-val">18.9%</div>
+          <div className="camp-stat-val">{replyRate}</div>
           <div style={{ fontSize: '0.78rem', color: '#16a34a', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
             <TrendingUp size={13} /> +6.5% this week
           </div>

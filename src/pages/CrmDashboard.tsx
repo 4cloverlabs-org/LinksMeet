@@ -1,12 +1,13 @@
-import { useState, useEffect, useMemo, type FormEvent } from 'react';
+import { useState, useEffect, useMemo, type FormEvent, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import * as XLSX from 'xlsx';
 import {
   LayoutGrid, Users, Search, Bell, Plus, ArrowUpRight, ArrowDownRight,
   DollarSign, Trophy, UserPlus, MoreHorizontal, FileText,
   CheckCircle2, Menu, CalendarRange, CalendarCheck,
   Clock, Workflow, Spline, Store, CreditCard, Shield, HelpCircle,
   Sparkles, Link2, Video, Zap, BookOpen, MessageCircle, Keyboard, Check, X,
-  Copy, Rocket, Calendar, Trash2, LogOut, Loader2, EyeOff, ExternalLink, Edit2, Code, Info, ArrowLeft, Globe
+  Copy, Rocket, Calendar, Trash2, LogOut, Loader2, EyeOff, ExternalLink, Edit2, Code, Info, ArrowLeft, Globe, Settings, Mail, Phone, ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -18,11 +19,13 @@ import {
 } from '../lib/crm';
 import './CrmDashboard.css';
 import CampaignModule from '../components/campaigns/CampaignModule';
+import WorkflowEditor, { type WorkflowDraft } from '../components/WorkflowEditor';
 import EventTypeEditor from '../components/EventTypeEditor';
 
 type View =
-  | 'dashboard' | 'eventTypes' | 'bookings' | 'availability' | 'people'
-  | 'workflows' | 'campaigns' | 'routing' | 'apps' | 'payments'
+  | 'dashboard' | 'eventTypes' | 'bookings' | 'people' | 'teams'
+  | 'workflows' | 'campaigns' | 'routing'
+  | 'apps' | 'payments'
   | 'admin' | 'help';
 
 /* ---------------- mock data ---------------- */
@@ -71,13 +74,13 @@ const DEFAULT_BOOKINGS = [
 ];
 
 const DEFAULT_WEEK = [
-  { day: 'Monday', on: true, start: '09:00', end: '17:00' },
-  { day: 'Tuesday', on: true, start: '09:00', end: '17:00' },
-  { day: 'Wednesday', on: true, start: '09:00', end: '17:00' },
-  { day: 'Thursday', on: true, start: '09:00', end: '17:00' },
-  { day: 'Friday', on: true, start: '09:00', end: '17:00' },
-  { day: 'Saturday', on: false, start: '09:00', end: '17:00' },
-  { day: 'Sunday', on: false, start: '09:00', end: '17:00' },
+  { day: 'Monday', on: true, slots: [{start: '09:00', end: '17:00'}] },
+  { day: 'Tuesday', on: true, slots: [{start: '09:00', end: '17:00'}] },
+  { day: 'Wednesday', on: true, slots: [{start: '09:00', end: '17:00'}] },
+  { day: 'Thursday', on: true, slots: [{start: '09:00', end: '17:00'}] },
+  { day: 'Friday', on: true, slots: [{start: '09:00', end: '17:00'}] },
+  { day: 'Saturday', on: false, slots: [{start: '09:00', end: '17:00'}] },
+  { day: 'Sunday', on: false, slots: [{start: '09:00', end: '17:00'}] },
 ];
 
 const CURATED_TIMEZONES = [
@@ -126,8 +129,6 @@ const APPS = [
 const INSTALLED = [
   { nm: 'Google Calendar', cat: 'Calendar', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg' },
   { nm: 'Google Meet', cat: 'Conferencing', logo: 'https://upload.wikimedia.org/wikipedia/commons/9/9b/Google_Meet_icon_%282020%29.svg' },
-  { nm: 'Stripe', cat: 'Payments', logo: 'https://cdn.worldvectorlogo.com/logos/stripe-4.svg' },
-  { nm: 'Slack', cat: 'Messaging', logo: 'https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg' },
 ];
 
 const TRANSACTIONS = [
@@ -201,6 +202,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     { id: 'eventTypes', label: 'Event Types', icon: CalendarRange },
     { id: 'bookings', label: 'Bookings', icon: CalendarCheck },
     { id: 'people', label: 'Leads', icon: Users },
+    { id: 'teams', label: 'Teams', icon: Users },
   ]},
   { label: 'Automate', items: [
     { id: 'workflows', label: 'Workflows', icon: Workflow },
@@ -210,7 +212,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   ]},
   { label: 'Apps', items: [
     { id: 'apps', label: 'Apps', icon: Store },
-    { id: 'payments', label: 'Payments', icon: CreditCard, badge: 'New', badgeNew: true },
+    { id: 'payments', label: 'Payments', icon: CreditCard },
   ]},
 ];
 
@@ -220,7 +222,8 @@ const PAGE_META: Record<View, { title: string; sub: string }> = {
   bookings: { title: 'Bookings', sub: 'Your upcoming and past meetings.' },
   availability: { title: 'Availability', sub: 'Set the hours you’re open for bookings.' },
   people: { title: 'Leads', sub: 'Manage your leads and follow-ups.' },
-  workflows: { title: 'Workflows', sub: 'Automate reminders and follow-ups.' },
+  teams: { title: 'Team', sub: 'Manage your organization and team members.' },
+  workflows: { title: 'Workflows', sub: 'Create workflows to automate notifications and reminders' },
   campaigns: { title: 'Campaigns', sub: 'Create and orchestrate outbound email sequences.' },
   routing: { title: 'Routing', sub: 'Send bookers to the right person with forms.' },
 
@@ -246,19 +249,195 @@ export default function CrmDashboard() {
   const [bookingTab, setBookingTab] = useState<'upcoming' | 'past' | 'cancelled'>('upcoming');
   const [appCat, setAppCat] = useState('All');
   const [appsTab, setAppsTab] = useState<'store' | 'installed'>('store');
-  const [peopleTab, setPeopleTab] = useState<'contacts' | 'teams'>('contacts');
   const [etTab, setEtTab] = useState<'eventTypes' | 'availability'>('eventTypes');
+  const [leadsTab, setLeadsTab] = useState<'inbound' | 'uploaded'>('inbound');
   const [etDropdown, setEtDropdown] = useState<string | null>(null);
+  
+  const [userProfile, setUserProfile] = useState<any>(null);
+  
+  const [initCampaignLead, setInitCampaignLead] = useState<any>(null);
+
+  const [myWorkflows, setMyWorkflows] = useState<any[]>([]);
+  const [editingWorkflow, setEditingWorkflow] = useState<WorkflowDraft | null>(null);
+  const [showWorkflowTypeModal, setShowWorkflowTypeModal] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Apps State
+  const [installedApps, setInstalledApps] = useState(INSTALLED);
+  const [connectingApps, setConnectingApps] = useState<string[]>([]);
+
+  const handleCreateWorkflow = (template: any) => {
+    if (!template) {
+      setShowWorkflowTypeModal(true);
+      return;
+    }
+    
+    const isVoice = template?.title?.includes('Call');
+    const isSms = template?.title?.includes('SMS');
+    const actionType = isVoice ? 'voice' : (isSms ? 'sms' : 'email');
+    
+    setEditingWorkflow({
+      template_name: template?.title || 'Untitled',
+      trigger_event: 'booking_created',
+      delay_ms: 0,
+      action_type: actionType,
+      action_payload: {}
+    });
+  };
+
+  const handleSelectType = (actionType: 'email' | 'sms' | 'voice') => {
+    setShowWorkflowTypeModal(false);
+    setEditingWorkflow({
+      template_name: `New ${actionType.toUpperCase()} Workflow`,
+      trigger_event: 'booking_created',
+      delay_ms: 0,
+      action_type: actionType,
+      action_payload: {}
+    });
+  };
+
+  const handleSaveWorkflow = (draft: WorkflowDraft) => {
+    fetch(`${API_BASE_URL}/api/workflows`, {
+      method: 'POST',
+      headers: { 
+        'Authorization': `Bearer ${user?.access_token || ''}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(draft)
+    })
+    .then(res => res.json())
+    .then(data => {
+      setMyWorkflows(prev => [data, ...prev]);
+      setEditingWorkflow(null);
+    })
+    .catch(console.error);
+  };
+
+  const [manageApp, setManageApp] = useState<typeof APPS[0] | null>(null);
+
+  const handleConnectApp = (app: typeof APPS[0]) => {
+    if (installedApps.some(a => a.nm === app.nm) || connectingApps.includes(app.nm)) return;
+    
+    // Connect in real-time via backend OAuth routes
+    if (app.nm.includes('Google')) {
+      handleConnectGoogle();
+      return;
+    }
+    
+    // Use the backend real OAuth endpoint for all other integrations
+    const providerId = app.nm.toLowerCase().replace(/\s+/g, '');
+    window.location.href = `${API_BASE_URL}/auth/${providerId}?uid=${uid}`;
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const connectedProvider = params.get('connected_provider');
+    if (connectedProvider) {
+      // Find the app by matching normalized name
+      const app = APPS.find(a => a.nm.toLowerCase().replace(/\s+/g, '') === connectedProvider);
+      if (app && !installedApps.some(a => a.nm === app.nm)) {
+        setInstalledApps(prev => {
+          const exists = prev.some(a => a.nm === app.nm);
+          return exists ? prev : [...prev, { nm: app.nm, cat: app.cat, logo: app.logo }];
+        });
+        setToast(`${app.nm} connected successfully`);
+        setTimeout(() => setToast(null), 3000);
+        setView('apps');
+        setAppsTab('installed');
+      }
+      
+      // Clean up URL
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('connected_provider');
+      window.history.replaceState({}, '', newUrl.toString());
+    }
+  }, []);
+
+  // Teams State
+  const [teamMembers, setTeamMembers] = useState([
+    { id: '1', name: displayName + ' (You)', email: user?.email || 'admin@linksmeet.com', role: 'Owner', status: 'Active' },
+    { id: '2', name: 'Jane Smith', email: 'jane.smith@example.com', role: 'Member', status: 'Pending' }
+  ]);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState('Member');
+
+  const handleInviteSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!inviteEmail) return;
+    const newId = Math.random().toString(36).substring(7);
+    const newMember = {
+      id: newId,
+      name: inviteEmail.split('@')[0], // placeholder name
+      email: inviteEmail,
+      role: inviteRole,
+      status: 'Pending'
+    };
+    setTeamMembers(prev => [...prev, newMember]);
+    setShowInviteModal(false);
+    setInviteEmail('');
+    setInviteRole('Member');
+    setToast('Invite sent!');
+    setTimeout(() => setToast(null), 2000);
+  };
+
+  const removeMember = (id: string) => {
+    setTeamMembers(prev => prev.filter(m => m.id !== id));
+    setToast('Member removed');
+    setTimeout(() => setToast(null), 2000);
+  };
 
   // Availability State
-  const [availSchedule, setAvailSchedule] = useState(DEFAULT_WEEK);
+  const [availSchedule, setAvailSchedule] = useState(() => {
+    const saved = localStorage.getItem('sm_avail_schedule');
+    return saved ? JSON.parse(saved) : DEFAULT_WEEK;
+  });
+  const [availIsDefault, setAvailIsDefault] = useState(() => {
+    return localStorage.getItem('sm_avail_default') === 'true' || true;
+  });
   const [availPrefs, setAvailPrefs] = useState({ tz: 'America/New_York', notice: '4 hours', buffer: '15 minutes' });
   const [tzOpen, setTzOpen] = useState(false);
   const [tzSearch, setTzSearch] = useState('');
   const saveAvailability = () => {
+    localStorage.setItem('sm_avail_schedule', JSON.stringify(availSchedule));
+    localStorage.setItem('sm_avail_default', availIsDefault.toString());
     setToast('Availability saved!');
     window.setTimeout(() => setToast(null), 2000);
   };
+
+  // -------------------------
+  // Fetch Workflows & Profile
+  // -------------------------
+  useEffect(() => {
+    if (!user) return;
+    
+    // Fetch user profile
+    const fetchProfile = async () => {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData?.session?.access_token || '';
+        const res = await fetch(`${API_BASE_URL}/api/user/profile`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setUserProfile(data.user);
+        }
+      } catch (err) {
+        console.error("Failed to fetch profile", err);
+      }
+    };
+    fetchProfile();
+
+    fetch(`${API_BASE_URL}/api/workflows`, {
+      headers: { 'Authorization': `Bearer ${user?.access_token || ''}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (Array.isArray(data)) setMyWorkflows(data);
+    })
+    .catch(console.error);
+  }, [uid, user]);
   
   // Google Integration State
   const [googleConnected, setGoogleConnected] = useState(false);
@@ -302,10 +481,30 @@ export default function CrmDashboard() {
         await supabase.from('users').update({ google_tokens: null }).eq('id', user.id);
       } catch (e) {}
     }
-    setToast('Google disconnected.');
-    setTimeout(() => setToast(null), 2000);
   };
 
+  const handleManageApp = (app: typeof APPS[0]) => {
+    setManageApp(app);
+  };
+  
+  const confirmDisconnectApp = () => {
+    if (!manageApp) return;
+    
+    setInstalledApps(prev => {
+      const nextApps = prev.filter(a => a.nm !== manageApp.nm);
+      
+      // If we just disconnected a Google app, and no Google apps are left, wipe tokens
+      if (manageApp.nm.includes('Google') && !nextApps.some(a => a.nm.includes('Google'))) {
+        handleDisconnectGoogle();
+      }
+      
+      return nextApps;
+    });
+
+    setToast(`${manageApp.nm} disconnected.`);
+    setTimeout(() => setToast(null), 2000);
+    setManageApp(null);
+  };
   // ----- Live Data (Firestore) -----
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [eventTypes, setEventTypes] = useState<EventType[]>([]);
@@ -390,6 +589,78 @@ export default function CrmDashboard() {
       setContactErr((e as Error)?.message || 'Could not save contact.');
     } finally {
       setSavingContact(false);
+    }
+  };
+
+  const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 }) as any[][];
+      
+      if (rows.length <= 1) {
+        setToast('File is empty or invalid.');
+        window.setTimeout(() => setToast(null), 2400);
+        return;
+      }
+      
+      const headers = rows[0].map(h => String(h || '').trim().toLowerCase());
+      
+      const matchHeader = (aliases: string[]) => headers.findIndex(h => aliases.some(alias => h.includes(alias)));
+      
+      const nameIdx = matchHeader(['name', 'first', 'last', 'contact']);
+      const emailIdx = matchHeader(['email', 'mail']);
+      const phoneIdx = matchHeader(['phone', 'mobile', 'cell', 'number']);
+      const companyIdx = matchHeader(['company', 'business', 'org', 'organization']);
+      
+      if (nameIdx === -1 && emailIdx === -1) {
+        setToast('File must contain at least a Name or Email column.');
+        window.setTimeout(() => setToast(null), 2400);
+        return;
+      }
+
+      setSavingContact(true);
+      let added = 0;
+
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row || row.length === 0) continue;
+        
+        const name = nameIdx !== -1 ? String(row[nameIdx] || '').trim() : '';
+        const email = emailIdx !== -1 ? String(row[emailIdx] || '').trim() : '';
+        const phone = phoneIdx !== -1 ? String(row[phoneIdx] || '').trim() : '';
+        const company = companyIdx !== -1 ? String(row[companyIdx] || '').trim() : '';
+        
+        if (!name && !email) continue;
+        
+        try {
+          await addContact(uid, {
+            name: name || 'Unknown',
+            email: email || '',
+            phone: phone || '',
+            company: company || '',
+            status: 'New',
+            source: 'uploaded'
+          });
+          added++;
+        } catch (err) {
+          console.error('Failed to add contact row', i, err);
+        }
+      }
+      
+      await loadData();
+      setSavingContact(false);
+      setToast(`Successfully uploaded ${added} leads.`);
+      window.setTimeout(() => setToast(null), 2400);
+      
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    } catch (e) {
+      setToast('Error reading file. Ensure it is a valid Excel or CSV.');
+      window.setTimeout(() => setToast(null), 2400);
     }
   };
 
@@ -653,7 +924,7 @@ export default function CrmDashboard() {
                     <button className="crm-btn crm-btn-primary" onClick={() => setEditingEvent('new')}><Plus size={15} /> New event type</button>
                   </div>
                 )}
-                {view === 'workflows' && <button className="crm-btn crm-btn-primary"><Plus size={15} /> New workflow</button>}
+                {view === 'workflows' && !editingWorkflow && <button className="crm-btn" style={{ background: '#2563EB', color: '#fff', border: 'none', borderRadius: '6px', padding: '0 16px', height: '36px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => handleCreateWorkflow(null)}><Plus size={16} /> New</button>}
               </div>
             )}
 
@@ -942,9 +1213,9 @@ export default function CrmDashboard() {
                         </div>
                       </div>
                       <div className="cal-header-right">
-                        <label className="cal-default-toggle">
+                        <label className="cal-default-toggle" style={{ cursor: 'pointer' }} onClick={() => setAvailIsDefault(!availIsDefault)}>
                           Set as default
-                          <button className="cal-switch on" aria-label="Default toggle" />
+                          <button className={`cal-switch ${availIsDefault ? 'on' : ''}`} aria-label="Default toggle" />
                         </label>
                         <button className="cal-btn-icon" aria-label="Delete schedule">
                           <Trash2 size={16} />
@@ -976,37 +1247,65 @@ export default function CrmDashboard() {
                                 <span className="cal-row-day">{d.day}</span>
                               </div>
                               
-                              <div className="cal-row-times">
-                                {d.on && (
-                                  <>
-                                    <input 
-                                      type="time" 
-                                      className="cal-time-input"
-                                      value={d.start} 
-                                      onChange={(e) => {
-                                        const newSched = [...availSchedule];
-                                        newSched[index].start = e.target.value;
-                                        setAvailSchedule(newSched);
-                                      }}
-                                    />
-                                    <span style={{ color: '#94A3B8', fontWeight: 500 }}>-</span>
-                                    <input 
-                                      type="time" 
-                                      className="cal-time-input"
-                                      value={d.end} 
-                                      onChange={(e) => {
-                                        const newSched = [...availSchedule];
-                                        newSched[index].end = e.target.value;
-                                        setAvailSchedule(newSched);
-                                      }}
-                                    />
-                                  </>
+                              <div className="cal-row-times" style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+                                {d.on ? (
+                                  d.slots && d.slots.length > 0 ? d.slots.map((slot: any, sIndex: number) => (
+                                    <div key={sIndex} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                      <input 
+                                        type="time" 
+                                        className="cal-time-input"
+                                        value={slot.start} 
+                                        onChange={(e) => {
+                                          const newSched = [...availSchedule];
+                                          newSched[index].slots[sIndex].start = e.target.value;
+                                          setAvailSchedule(newSched);
+                                        }}
+                                      />
+                                      <span style={{ color: '#94A3B8', fontWeight: 500 }}>-</span>
+                                      <input 
+                                        type="time" 
+                                        className="cal-time-input"
+                                        value={slot.end} 
+                                        onChange={(e) => {
+                                          const newSched = [...availSchedule];
+                                          newSched[index].slots[sIndex].end = e.target.value;
+                                          setAvailSchedule(newSched);
+                                        }}
+                                      />
+                                      <div className="cal-row-actions" style={{ marginLeft: 0 }}>
+                                        <Trash2 size={16} onClick={() => {
+                                          const newSched = [...availSchedule];
+                                          newSched[index].slots.splice(sIndex, 1);
+                                          if (newSched[index].slots.length === 0) newSched[index].on = false;
+                                          setAvailSchedule(newSched);
+                                        }} />
+                                      </div>
+                                    </div>
+                                  )) : <div style={{ color: '#94A3B8', fontSize: '0.9rem' }}>Unavailable</div>
+                                ) : (
+                                  <div style={{ color: '#94A3B8', fontSize: '0.9rem', opacity: 0 }}>Unavailable</div>
                                 )}
                               </div>
                               
-                              <div className="cal-row-actions">
-                                {d.on && <Plus size={16} />}
-                                <Copy size={16} />
+                              <div className="cal-row-actions" style={{ marginLeft: 'auto', alignSelf: 'flex-start', marginTop: '6px' }}>
+                                {d.on && <Plus size={16} onClick={() => {
+                                  const newSched = [...availSchedule];
+                                  newSched[index].slots.push({start: '09:00', end: '17:00'});
+                                  setAvailSchedule(newSched);
+                                }} />}
+                                <Copy size={16} onClick={() => {
+                                  const newSched = [...availSchedule];
+                                  const slotsToCopy = JSON.parse(JSON.stringify(d.slots));
+                                  newSched.forEach(day => {
+                                    if (day.day !== 'Saturday' && day.day !== 'Sunday') {
+                                      day.on = d.on;
+                                      day.slots = JSON.parse(JSON.stringify(slotsToCopy));
+                                    }
+                                  });
+                                  setAvailSchedule(newSched);
+                                  setToast('Copied to all weekdays');
+                                  setTimeout(() => setToast(null), 2000);
+                                }} />
                               </div>
                             </div>
                           ))}
@@ -1104,44 +1403,61 @@ export default function CrmDashboard() {
               </div>
             )}
 
-            {/* ---------- PEOPLE (Leads + Team) ---------- */}
+            {/* ---------- PEOPLE (Leads) ---------- */}
             {view === 'people' && (
               <div className="crm-fade">
                 <div className="crm-seg" style={{ width: 'fit-content', marginBottom: 22 }}>
-                  <button className={peopleTab === 'contacts' ? 'on' : ''} onClick={() => setPeopleTab('contacts')}>
-                    Leads ({contacts.length})
+                  <button className={leadsTab === 'inbound' ? 'on' : ''} onClick={() => setLeadsTab('inbound')}>Inbound Enquiries</button>
+                  <button className={leadsTab === 'uploaded' ? 'on' : ''} onClick={() => setLeadsTab('uploaded')}>
+                    Uploaded Leads
                   </button>
-                  <button className={peopleTab === 'teams' ? 'on' : ''} onClick={() => setPeopleTab('teams')}>Team</button>
                 </div>
-
-                {peopleTab === 'contacts' ? (
-                  <div className="crm-card">
-                    <div className="crm-card-head">
-                      <h3>Leads <span style={{ color: '#9b9bab', fontWeight: 500 }}>({filteredContacts.length})</span></h3>
-                      <div style={{ display: 'flex', gap: 10 }}>
-                        <button className="crm-btn crm-btn-ghost" onClick={exportContactsCSV} disabled={contacts.length === 0}><FileText size={15} /> Export</button>
+                
+                <div className="crm-card">
+                  <div className="crm-card-head">
+                    <h3>{leadsTab === 'inbound' ? 'Inbound Leads' : 'Uploaded Leads'} <span style={{ color: '#9b9bab', fontWeight: 500 }}>({(leadsTab === 'inbound' ? filteredContacts.filter(c => c.source !== 'uploaded') : filteredContacts.filter(c => c.source === 'uploaded')).length})</span></h3>
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      <button className="crm-btn crm-btn-ghost" onClick={exportContactsCSV} disabled={contacts.length === 0}><FileText size={15} /> Export</button>
+                      {leadsTab === 'uploaded' ? (
+                        <>
+                          <input type="file" accept=".csv, .xlsx, .xls" ref={fileInputRef} style={{ display: 'none' }} onChange={handleUploadFile} />
+                          <button className="crm-btn crm-btn-primary" onClick={() => fileInputRef.current?.click()} disabled={savingContact}>
+                            {savingContact ? <Loader2 size={15} className="crm-spin-ic" /> : <Plus size={15} />} Upload CSV/Excel
+                          </button>
+                        </>
+                      ) : (
                         <button className="crm-btn crm-btn-primary" onClick={() => { setCForm(blankContact); setContactErr(''); setShowContactForm(true); }}><Plus size={15} /> Add lead</button>
-                      </div>
+                      )}
                     </div>
+                  </div>
 
-                    {contactErr && <div style={{ background: '#fdecec', border: '1px solid #f6c9c9', color: '#b42318', fontSize: '0.82rem', padding: '10px 12px', borderRadius: 9, marginBottom: 12 }}>{contactErr}</div>}
+                  {contactErr && <div style={{ background: '#fdecec', border: '1px solid #f6c9c9', color: '#b42318', fontSize: '0.82rem', padding: '10px 12px', borderRadius: 9, marginBottom: 12 }}>{contactErr}</div>}
 
-                    {contactsLoading ? (
-                      <div style={{ padding: 50, textAlign: 'center', color: 'var(--muted)' }}><Loader2 size={22} className="crm-spin-ic" /></div>
-                    ) : filteredContacts.length === 0 ? (
-                      <div className="crm-empty">
-                        <span className="ic"><Users size={24} /></span>
-                        <h3>{contacts.length === 0 ? 'No leads yet' : `No leads match “${search}”`}</h3>
-                        <p>{contacts.length === 0 ? 'Add a lead manually, or connect your booking widget so every booking creates one automatically.' : 'Try a different search.'}</p>
-                        {contacts.length === 0 && <button className="crm-btn crm-btn-primary" style={{ margin: '0 auto' }} onClick={() => { setCForm(blankContact); setShowContactForm(true); }}><Plus size={15} /> Add lead</button>}
-                      </div>
-                    ) : (
-                      <div className="crm-table">
-                        <div className="crm-tr lead head"><span>Name</span><span className="crm-hide">Source</span><span>Email</span><span>Status</span><span /></div>
-                        {filteredContacts.map((c, i) => (
-                          <div className="crm-tr lead" key={c.id}>
+                  {contactsLoading ? (
+                    <div style={{ padding: 50, textAlign: 'center', color: 'var(--muted)' }}><Loader2 size={22} className="crm-spin-ic" /></div>
+                  ) : (leadsTab === 'inbound' ? filteredContacts.filter(c => c.source !== 'uploaded') : filteredContacts.filter(c => c.source === 'uploaded')).length === 0 ? (
+                    <div className="crm-empty">
+                      <span className="ic"><Users size={24} /></span>
+                      <h3>{contacts.length === 0 ? `No ${leadsTab} leads yet` : `No leads match “${search}”`}</h3>
+                      <p>{leadsTab === 'inbound' ? 'Connect your booking widget so every enquiry creates one automatically.' : 'Upload your leads via Excel or CSV.'}</p>
+                    </div>
+                  ) : (
+                    <div className="crm-table">
+                      <div className="crm-tr lead head" style={{ gridTemplateColumns: '2fr 1fr 2fr 1fr 120px' }}><span>Name</span><span className="crm-hide">Source</span><span>Email</span><span>Status</span><span /></div>
+                      {(leadsTab === 'inbound' ? filteredContacts.filter(c => c.source !== 'uploaded') : filteredContacts.filter(c => c.source === 'uploaded')).map((c, i) => (
+                          <div className="crm-tr lead" key={c.id} style={{ gridTemplateColumns: '2fr 1fr 2fr 1fr 120px' }}>
                             <span className="crm-nm"><span className="crm-av" style={{ background: avColor(i) }}>{initials(c.name)}</span>{c.name}</span>
-                            <span className="crm-muted crm-hide">{c.source || 'Manual'}</span>
+                            <span className="crm-hide">
+                              {c.source?.startsWith('Booking') ? (
+                                <span style={{ padding: '4px 10px', background: '#eff6ff', color: '#2563eb', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                  Booking
+                                </span>
+                              ) : (
+                                <span style={{ padding: '4px 10px', background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 500 }}>
+                                  {c.source || 'Manual'}
+                                </span>
+                              )}
+                            </span>
                             <span className="crm-muted">{c.email}</span>
                             <select
                               className="crm-status-select"
@@ -1150,51 +1466,262 @@ export default function CrmDashboard() {
                             >
                               {CONTACT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
-                            <button className="crm-row-act" title="Delete lead" onClick={() => removeContact(c.id, c.name)}><Trash2 size={15} /></button>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'flex-end' }}>
+                              <button 
+                                style={{ background: '#eff6ff', border: 'none', color: '#0E61F3', padding: '6px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                title="Start AI Campaign" 
+                                onClick={() => {
+                                  setInitCampaignLead(c);
+                                  setView('campaigns');
+                                }}
+                              >
+                                <Sparkles size={16} />
+                              </button>
+                              <button className="crm-row-act" title="Delete lead" onClick={() => removeContact(c.id, c.name)}><Trash2 size={16} /></button>
+                            </div>
                           </div>
                         ))}
                       </div>
                     )}
                   </div>
-                ) : (
-                  <div className="crm-card">
-                    <div className="crm-card-head">
-                      <h3>Team</h3>
-                      <button className="crm-btn crm-btn-primary" onClick={() => { setToast('Team invites are coming soon'); window.setTimeout(() => setToast(null), 2400); }}><UserPlus size={15} /> Invite member</button>
-                    </div>
-                    <div className="crm-table">
-                      <div className="crm-tr contacts head"><span>Name</span><span className="crm-hide">Role</span><span>Email</span><span className="crm-hide">Status</span><span>Access</span><span /></div>
-                      <div className="crm-tr contacts">
-                        <span className="crm-nm"><span className="crm-av" style={{ background: ACCENT }}>{userInitials}</span>{displayName}</span>
-                        <span className="crm-muted crm-hide">Owner</span>
-                        <span className="crm-muted">{user?.email}</span>
-                        <span className="crm-muted crm-hide"><span className="crm-tag green">Active</span></span>
-                        <span className="crm-tag violet">Owner</span>
-                        <span />
+              </div>
+            )}
+
+            {/* ---------- TEAMS ---------- */}
+            {view === 'teams' && (
+              <div className="crm-fade">
+                  <div className="crm-card" style={{ borderRadius: '8px', border: '1px solid #E5E7EB', overflow: 'hidden', background: '#FFFFFF', boxShadow: 'none' }}>
+                    <div style={{ padding: '24px 32px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <h3 style={{ margin: '0 0 4px', fontSize: '18px', fontWeight: 700, color: '#111827' }}>Team Members</h3>
+                          <p style={{ margin: 0, fontSize: '14px', color: '#6B7280' }}>Manage your organization's members, roles, and access.</p>
+                        </div>
+                        <button className="crm-btn" style={{ background: '#2563EB', color: '#FFFFFF', border: 'none', borderRadius: '6px', padding: '0 16px', height: '36px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => setShowInviteModal(true)}>
+                          <UserPlus size={16} /> Invite member
+                        </button>
                       </div>
                     </div>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      {/* Table Header */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(250px, 2fr) 1fr 1fr 100px', padding: '12px 32px', background: '#F9FAFB', borderTop: '1px solid #E5E7EB', borderBottom: '1px solid #E5E7EB', fontSize: '12px', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>
+                        <span>User</span>
+                        <span>Status</span>
+                        <span>Role</span>
+                        <span style={{ textAlign: 'right' }}>Actions</span>
+                      </div>
+                      
+                      {/* Table Rows */}
+                      {teamMembers.map((member, i) => {
+                        const memberInitials = member.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+                        const isPending = member.status === 'Pending';
+                        
+                        return (
+                          <div key={member.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(250px, 2fr) 1fr 1fr 100px', padding: '16px 32px', borderBottom: '1px solid #E5E7EB', alignItems: 'center' }}>
+                            {/* User Column */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                              <div style={{ width: 40, height: 40, borderRadius: '50%', background: isPending ? '#F3F4F6' : '#2563EB', color: isPending ? '#4B5563' : '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 500, flexShrink: 0 }}>
+                                {isPending ? 'JS' : '21'}
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                <span style={{ fontWeight: 600, color: '#111827', fontSize: '14px' }}>{isPending ? 'Jane Smith' : '2431fa05fbf6 (You)'}</span>
+                                <span style={{ color: '#6B7280', fontSize: '14px' }}>{isPending ? 'jane.smith@acmecorp.com' : '2431fa05fbf6@linksmeet.com'}</span>
+                              </div>
+                            </div>
+                            
+                            {/* Status Column */}
+                            <div>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '2px 10px', borderRadius: '9999px', fontSize: '12px', fontWeight: 500, background: isPending ? '#FFFBEB' : '#ECFDF5', color: isPending ? '#D97706' : '#059669' }}>
+                                <span style={{ width: 6, height: 6, borderRadius: '50%', background: isPending ? '#F59E0B' : '#10B981' }} />
+                                {member.status}
+                              </span>
+                            </div>
+                            
+                            {/* Role Column */}
+                            <div>
+                              <span style={{ padding: '2px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 500, background: '#F3F4F6', color: '#4B5563' }}>
+                                {member.role}
+                              </span>
+                            </div>
+                            
+                            {/* Actions Column */}
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', color: '#9CA3AF' }}>
+                               {isPending ? (
+                                 <>
+                                   <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#9CA3AF' }} title="Resend Invite" onClick={() => { setToast('Invite resent to ' + member.email); setTimeout(() => setToast(null), 2000); }}><Mail size={18} strokeWidth={1.5} /></button>
+                                   <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#9CA3AF' }} title="Cancel Invite" onClick={() => removeMember(member.id)}><Trash2 size={18} strokeWidth={1.5} /></button>
+                                 </>
+                               ) : (
+                                 member.role !== 'Owner' ? (
+                                   <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#9CA3AF' }} title="Remove Member" onClick={() => removeMember(member.id)}><Trash2 size={18} strokeWidth={1.5} /></button>
+                                 ) : (
+                                   <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#9CA3AF' }} title="Settings"><Settings size={18} strokeWidth={1.5} /></button>
+                                 )
+                               )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                )}
               </div>
             )}
 
             {/* ---------- WORKFLOWS ---------- */}
             {view === 'workflows' && (
-              <div className="crm-fade">
-                {WORKFLOWS.map((w, i) => (
-                  <div className="crm-wf" key={w.nm}>
-                    <span className="crm-wf-ic"><Zap size={18} /></span>
-                    <div><div className="nm">{w.nm}</div><div className="fl">{w.fl}</div></div>
-                    <span className="runs">{w.runs}</span>
-                    <button className={`crm-switch${wf[i] ? ' on' : ''}`} onClick={() => setWf(prev => prev.map((v, idx) => idx === i ? !v : v))} aria-label={w.nm} />
+              editingWorkflow ? (
+                <WorkflowEditor 
+                  initialDraft={editingWorkflow} 
+                  onSave={handleSaveWorkflow} 
+                  onCancel={() => setEditingWorkflow(null)} 
+                  eventTypes={eventTypes}
+                />
+              ) : (
+                <div className="crm-fade">
+                  {myWorkflows.length === 0 ? (
+                    <div className="crm-card" style={{ padding: '64px 32px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', background: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '12px', boxShadow: 'none', marginBottom: '32px' }}>
+                      <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24 }}>
+                        <Zap size={28} />
+                      </div>
+                      <h2 style={{ fontSize: '20px', fontWeight: 600, color: '#111827', margin: '0 0 12px' }}>Create your first workflow</h2>
+                      <p style={{ color: '#6B7280', fontSize: '14px', maxWidth: 400, margin: '0 0 24px', lineHeight: 1.5 }}>
+                        Workflows automate notifications and reminders, helping you build processes around your events.
+                      </p>
+                      <button className="crm-btn" style={{ background: '#2563EB', color: '#fff', border: 'none', borderRadius: '6px', padding: '0 20px', height: '40px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => handleCreateWorkflow(null)}>
+                        <Plus size={16} /> Create
+                      </button>
+                    </div>
+                  ) : (
+                  <div style={{ marginBottom: 32 }}>
+                    <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#111827', marginBottom: 16 }}>Your Active Workflows</h3>
+                    <div className="crm-fade" style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '0 20px' }}>
+                      {myWorkflows.map((w: any) => (
+                        <div className="crm-wf" key={w.id} style={{ display: 'flex', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid #e2e8f0' }}>
+                          <span className="crm-wf-ic" style={{ background: '#EFF6FF', color: '#2563EB', padding: 8, borderRadius: 8, marginRight: 16, display: 'flex', alignItems: 'center' }}>
+                            {w.action_type === 'email' ? <Mail size={18} /> : <Phone size={18} />}
+                          </span>
+                          <div style={{ flex: 1 }}>
+                            <div className="nm" style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{w.template_name}</div>
+                            <div className="fl" style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>Triggers on {w.trigger_event}</div>
+                          </div>
+                          <span className="runs" style={{ fontSize: 13, color: '#64748b', marginRight: 24 }}>{w.runs} runs</span>
+                          <button 
+                            className={`crm-switch${w.is_active ? ' on' : ''}`} 
+                            onClick={() => {
+                              const newActive = !w.is_active;
+                              setMyWorkflows(prev => prev.map(old => old.id === w.id ? { ...old, is_active: newActive } : old));
+                              fetch(`${API_BASE_URL}/api/workflows/${w.id}`, {
+                                method: 'PUT',
+                                headers: { 'Authorization': `Bearer ${user?.access_token || ''}`, 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ is_active: newActive })
+                              }).catch(console.error);
+                            }}
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
+                )}
+
+                <div style={{ marginBottom: 32 }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#111827', marginBottom: 16 }}>LinksMeet AI templates</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+                    {[
+                      { icon: <Phone size={18} />, title: 'Call to confirm booking', sub: '2 hrs before event starts' },
+                      { icon: <Phone size={18} />, title: 'Follow up with no shows', sub: '30m after event ends' },
+                      { icon: <Phone size={18} />, title: 'Remind attendees to bring ID', sub: '1 day before event starts' },
+                    ].map(t => (
+                      <div key={t.title} onClick={() => handleCreateWorkflow(t)} style={{ display: 'flex', alignItems: 'center', padding: '20px', border: '1px solid #E5E7EB', borderRadius: '12px', background: '#FFFFFF', cursor: 'pointer', transition: 'border-color 0.2s', gap: 16 }} className="crm-wf-card">
+                        <div style={{ width: 40, height: 40, borderRadius: '10px', background: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          {t.icon}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.title}</div>
+                          <div style={{ fontSize: '12px', color: '#6B7280', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.sub}</div>
+                        </div>
+                        <ChevronRight size={18} color="#9CA3AF" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#111827', marginBottom: 16 }}>Standard templates</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+                    {[
+                      { icon: <Phone size={18} />, title: 'Send SMS reminder', sub: '24 hours before event starts' },
+                      { icon: <Phone size={18} />, title: 'Follow up with no shows', sub: '30m after event ends' },
+                      { icon: <Mail size={18} />, title: 'Remind attendees to bring ID', sub: '1 day before event starts' },
+                      { icon: <Mail size={18} />, title: 'Email reminder', sub: '1 hour before event starts' },
+                      { icon: <Mail size={18} />, title: 'Custom email reminder', sub: 'Event is rescheduled to host' },
+                      { icon: <Phone size={18} />, title: 'Custom SMS reminder', sub: 'When event is scheduled' },
+                    ].map((t, i) => (
+                      <div key={i} onClick={() => handleCreateWorkflow(t)} style={{ display: 'flex', alignItems: 'center', padding: '20px', border: '1px solid #E5E7EB', borderRadius: '12px', background: '#FFFFFF', cursor: 'pointer', transition: 'border-color 0.2s', gap: 16 }} className="crm-wf-card">
+                        <div style={{ width: 40, height: 40, borderRadius: '10px', background: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          {t.icon}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.title}</div>
+                          <div style={{ fontSize: '12px', color: '#6B7280', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.sub}</div>
+                        </div>
+                        <ChevronRight size={18} color="#9CA3AF" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
+              )
             )}
+
+            {showWorkflowTypeModal && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+                  <div style={{ background: '#fff', borderRadius: '12px', padding: '32px', width: '400px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
+                    <h2 style={{ margin: '0 0 8px', fontSize: '20px', fontWeight: 600, color: '#111827' }}>Create a workflow</h2>
+                    <p style={{ margin: '0 0 24px', fontSize: '14px', color: '#6B7280' }}>Choose the type of automated action you want to trigger.</p>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <button onClick={() => handleSelectType('email')} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', border: '1px solid #E5E7EB', borderRadius: '8px', background: '#fff', cursor: 'pointer', textAlign: 'left' }}>
+                        <div style={{ width: 40, height: 40, borderRadius: '8px', background: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Mail size={20} />
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 600, color: '#111827', fontSize: '14px' }}>Email Workflow</div>
+                          <div style={{ fontSize: '12px', color: '#6B7280' }}>Send an automated email</div>
+                        </div>
+                      </button>
+
+                      <button onClick={() => handleSelectType('sms')} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', border: '1px solid #E5E7EB', borderRadius: '8px', background: '#fff', cursor: 'pointer', textAlign: 'left' }}>
+                        <div style={{ width: 40, height: 40, borderRadius: '8px', background: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Phone size={20} />
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 600, color: '#111827', fontSize: '14px' }}>SMS Workflow</div>
+                          <div style={{ fontSize: '12px', color: '#6B7280' }}>Send a text message</div>
+                        </div>
+                      </button>
+
+                      <button onClick={() => handleSelectType('voice')} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', border: '1px solid #E5E7EB', borderRadius: '8px', background: '#fff', cursor: 'pointer', textAlign: 'left' }}>
+                        <div style={{ width: 40, height: 40, borderRadius: '8px', background: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Zap size={20} />
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 600, color: '#111827', fontSize: '14px' }}>AI Voice Workflow</div>
+                          <div style={{ fontSize: '12px', color: '#6B7280' }}>Have an AI call the attendee</div>
+                        </div>
+                      </button>
+                    </div>
+
+                    <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
+                      <button onClick={() => setShowWorkflowTypeModal(false)} style={{ background: 'none', border: 'none', padding: '8px 16px', fontSize: '14px', fontWeight: 500, color: '#6B7280', cursor: 'pointer' }}>Cancel</button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
             {/* ---------- CAMPAIGNS ---------- */}
             {view === 'campaigns' && (
-              <CampaignModule />
+              <CampaignModule initLead={initCampaignLead} onInitConsumed={() => setInitCampaignLead(null)} userProfile={userProfile} />
             )}
 
             {/* ---------- ROUTING ---------- */}
@@ -1210,7 +1737,7 @@ export default function CrmDashboard() {
                 <div className="crm-seg" style={{ width: 'fit-content', marginBottom: 22 }}>
                   <button className={appsTab === 'store' ? 'on' : ''} onClick={() => setAppsTab('store')}>App Store</button>
                   <button className={appsTab === 'installed' ? 'on' : ''} onClick={() => setAppsTab('installed')}>
-                    Installed Apps ({INSTALLED.length})
+                    Installed Apps ({installedApps.length})
                   </button>
                 </div>
 
@@ -1222,26 +1749,46 @@ export default function CrmDashboard() {
                       ))}
                     </div>
                     <div className="crm-app-grid">
-                      {filteredApps.map(a => (
-                        <div className="crm-app-card" key={a.nm}>
-                          <img src={a.logo} alt={a.nm} className="crm-app-ic" style={{ background: 'transparent', objectFit: 'contain' }} />
-                          <div><h4>{a.nm}</h4><span className="cat">{a.cat}</span></div>
-                          <p className="ds">{a.ds}</p>
-                          <button className="crm-btn crm-btn-ghost" style={{ width: '100%' }}><Plus size={14} /> Install</button>
-                        </div>
-                      ))}
+                      {filteredApps.map(a => {
+                        const isConnected = installedApps.some(installed => installed.nm === a.nm);
+                        const isConnecting = connectingApps.includes(a.nm);
+                        return (
+                          <div className="crm-app-card" key={a.nm}>
+                            <img src={a.logo} alt={a.nm} className="crm-app-ic" style={{ background: 'transparent', objectFit: 'contain' }} />
+                            <div><h4>{a.nm}</h4><span className="cat">{a.cat}</span></div>
+                            <p className="ds">{a.ds}</p>
+                            {isConnected ? (
+                              <button className="crm-btn crm-btn-ghost" style={{ width: '100%', color: '#059669', background: '#ecfdf5', cursor: 'default' }} disabled>
+                                <Check size={14} /> Connected
+                              </button>
+                            ) : isConnecting ? (
+                              <button className="crm-btn crm-btn-ghost" style={{ width: '100%' }} disabled>
+                                <Loader2 size={14} className="crm-spin-ic" /> Connecting...
+                              </button>
+                            ) : !a.nm.includes('Google') ? (
+                              <button className="crm-btn crm-btn-ghost" style={{ width: '100%', color: '#6B7280', background: '#F3F4F6', cursor: 'not-allowed' }} disabled>
+                                Coming soon
+                              </button>
+                            ) : (
+                              <button className="crm-btn crm-btn-ghost" style={{ width: '100%' }} onClick={() => handleConnectApp(a)}>
+                                <Plus size={14} /> Connect
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </>
                 ) : (
                   <div className="crm-card">
-                    <div className="crm-card-head"><h3>Connected <span style={{ color: '#9b9bab', fontWeight: 500 }}>({INSTALLED.length})</span></h3></div>
-                    {INSTALLED.map(a => (
+                    <div className="crm-card-head"><h3>Connected <span style={{ color: '#9b9bab', fontWeight: 500 }}>({installedApps.length})</span></h3></div>
+                    {installedApps.map(a => (
                       <div className="crm-task" key={a.nm} style={{ padding: '14px 0' }}>
                         <img src={a.logo} alt={a.nm} className="crm-app-ic" style={{ width: 34, height: 34, background: 'transparent', objectFit: 'contain' }} />
                         <div><div style={{ fontSize: '0.88rem', fontWeight: 500 }}>{a.nm}</div><div style={{ fontSize: '0.76rem', color: '#9b9bab' }}>{a.cat}</div></div>
                         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
                           <span className="crm-tag green">Connected</span>
-                          <button className="crm-btn crm-btn-ghost">Manage</button>
+                          <button className="crm-btn crm-btn-ghost" onClick={() => handleManageApp(a)}>Manage</button>
                         </div>
                       </div>
                     ))}
@@ -1253,38 +1800,17 @@ export default function CrmDashboard() {
             {/* ---------- PAYMENTS ---------- */}
             {view === 'payments' && (
               <div className="crm-fade">
-                <div className="crm-kpis">
-                  {[
-                    { icon: DollarSign, ic: ACCENT, bg: ACCENT_SOFT, val: '$42.8k', lab: 'Collected' },
-                    { icon: Clock, ic: ACCENT, bg: ACCENT_SOFT, val: '$6.2k', lab: 'Pending' },
-                    { icon: ArrowDownRight, ic: ACCENT, bg: ACCENT_SOFT, val: '$1.1k', lab: 'Refunded' },
-                    { icon: CreditCard, ic: ACCENT, bg: ACCENT_SOFT, val: '318', lab: 'Transactions' },
-                  ].map(k => {
-                    const Icon = k.icon;
-                    return (
-                      <div className="crm-kpi" key={k.lab}>
-                        <div className="crm-kpi-top"><span className="crm-kpi-ic" style={{ background: k.bg, color: k.ic }}><Icon size={19} /></span></div>
-                        <div className="crm-kpi-val">{k.val}</div><div className="crm-kpi-lab">{k.lab}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="crm-card">
-                  <div className="crm-card-head"><h3>Recent transactions</h3><span className="crm-tag green">Stripe connected</span></div>
-                  <div className="crm-table">
-                    <div className="crm-tr contacts head" style={{ gridTemplateColumns: '1.6fr 1.6fr 1fr 1fr 40px' }}>
-                      <span>Customer</span><span>Event</span><span>Amount</span><span>Status</span><span />
-                    </div>
-                    {TRANSACTIONS.map((t, i) => (
-                      <div className="crm-tr contacts" key={i} style={{ gridTemplateColumns: '1.6fr 1.6fr 1fr 1fr 40px' }}>
-                        <span className="crm-nm"><span className="crm-av" style={{ background: avColor(i) }}>{initials(t.name)}</span>{t.name}</span>
-                        <span className="crm-muted">{t.event}</span>
-                        <span style={{ fontWeight: 500 }}>{t.amt}</span>
-                        <span className={`crm-tag ${t.tag}`}>{t.tagLabel}</span>
-                        <button className="crm-row-act"><MoreHorizontal size={16} /></button>
-                      </div>
-                    ))}
+                <div className="crm-card" style={{ textAlign: 'center', padding: '60px 20px' }}>
+                  <div style={{ width: 64, height: 64, borderRadius: 16, background: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+                    <CreditCard size={32} />
                   </div>
+                  <h2 style={{ fontSize: '24px', fontWeight: 600, color: '#111827', marginBottom: 12 }}>Payments are coming soon</h2>
+                  <p style={{ fontSize: '15px', color: '#6B7280', maxWidth: 400, margin: '0 auto 32px' }}>
+                    We're building a powerful new way to collect and track payments directly from your bookings. Stay tuned!
+                  </p>
+                  <button className="crm-btn crm-btn-primary" style={{ margin: '0 auto' }} onClick={() => setView('dashboard')}>
+                    Back to Dashboard
+                  </button>
                 </div>
               </div>
             )}
@@ -1300,6 +1826,14 @@ export default function CrmDashboard() {
                   </div>
                   <div className="crm-field"><label>Full name</label><input defaultValue={displayName} /></div>
                   <div className="crm-field"><label>Email</label><input defaultValue={user?.email || ''} disabled /></div>
+                  
+                  {userProfile && (
+                    <>
+                      <div className="crm-field"><label>Website URL</label><input defaultValue={userProfile.website_url || ''} disabled /></div>
+                      <div className="crm-field"><label>Company Details</label><textarea defaultValue={userProfile.brand_description || ''} style={{ minHeight: 120, resize: 'vertical' }} disabled /></div>
+                    </>
+                  )}
+                  
                   <div style={{ display: 'flex', gap: 10 }}>
                     <button className="crm-btn crm-btn-primary" style={{ flex: 1 }}>Save changes</button>
                     <button className="crm-btn crm-btn-ghost" onClick={logoutAndGo}><LogOut size={15} /> Log out</button>
@@ -1319,27 +1853,7 @@ export default function CrmDashboard() {
                   ))}
                 </div>
 
-                <div className="crm-card" style={{ alignSelf: 'start', gridColumn: '1 / -1' }}>
-                  <div className="crm-card-head"><h3>Integrations</h3></div>
-                  <div className="crm-toggle-row" style={{ borderBottom: 'none' }}>
-                    <div>
-                      <div className="tt" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Calendar size={16} color="var(--w-primary)" /> Google Calendar
-                      </div>
-                      <div className="ds">Auto-generate Google Meet links when users schedule a meeting.</div>
-                    </div>
-                    {googleConnected ? (
-                      <button className="crm-btn crm-btn-ghost" onClick={handleDisconnectGoogle} style={{ padding: '6px 12px', fontSize: '0.75rem', height: 'auto', minHeight: 0, color: 'var(--rose)' }}>Disconnect</button>
-                    ) : (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '0.85rem', color: '#991b1b', background: '#fee2e2', padding: '6px 12px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
-                          <X size={14}/> Not connected
-                        </span>
-                        <button className="crm-btn crm-btn-primary" onClick={handleConnectGoogle} style={{ padding: '6px 12px', fontSize: '0.75rem', height: 'auto', minHeight: 0 }}>Click to connect</button>
-                      </div>
-                    )}
-                  </div>
-                </div>
+
               </div>
             )}
 
@@ -1424,6 +1938,72 @@ export default function CrmDashboard() {
             </div>
             <button type="submit" className="crm-btn crm-btn-primary" style={{ width: '100%' }} disabled={savingContact}>
               {savingContact ? 'Saving…' : 'Add lead'}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* Manage App Modal */}
+      {manageApp && (
+        <div className="crm-modal-overlay" onClick={() => setManageApp(null)}>
+          <div className="crm-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 400, textAlign: 'center', position: 'relative' }}>
+            <button 
+              onClick={() => setManageApp(null)}
+              style={{ position: 'absolute', top: 16, right: 16, background: 'transparent', border: 'none', cursor: 'pointer', color: '#9CA3AF' }}
+            >
+              <X size={20} />
+            </button>
+            <img src={manageApp.logo} alt={manageApp.nm} style={{ width: 64, height: 64, margin: '0 auto 16px', objectFit: 'contain' }} />
+            <h2 style={{ marginBottom: 8 }}>{manageApp.nm}</h2>
+            <p style={{ color: '#6B7280', marginBottom: 24, fontSize: '0.9rem' }}>
+              {manageApp.nm} is currently connected and syncing data.
+            </p>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+              <button className="crm-btn crm-btn-ghost" onClick={() => setManageApp(null)}>Cancel</button>
+              <button className="crm-btn" style={{ background: '#ef4444' }} onClick={confirmDisconnectApp}>
+                Disconnect
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ---------- INVITE MODAL ---------- */}
+      {showInviteModal && (
+        <div className="crm-modal-overlay" onClick={() => setShowInviteModal(false)}>
+          <form className="crm-modal" style={{ maxWidth: 400 }} onClick={e => e.stopPropagation()} onSubmit={handleInviteSubmit}>
+            <div className="crm-modal-head">
+              <div>
+                <h3>Invite Team Member</h3>
+                <p>They will receive an email invitation to join your workspace.</p>
+              </div>
+              <button type="button" className="crm-modal-x" onClick={() => setShowInviteModal(false)} aria-label="Close"><X size={18} /></button>
+            </div>
+            
+            <div className="crm-field">
+              <label>Email Address *</label>
+              <input 
+                type="email" 
+                placeholder="colleague@example.com" 
+                value={inviteEmail}
+                onChange={e => setInviteEmail(e.target.value)}
+                required
+              />
+            </div>
+            
+            <div className="crm-field">
+              <label>Role</label>
+              <select 
+                value={inviteRole}
+                onChange={e => setInviteRole(e.target.value)}
+              >
+                <option value="Member">Member</option>
+                <option value="Admin">Admin</option>
+              </select>
+            </div>
+            
+            <button type="submit" className="crm-btn crm-btn-primary" style={{ width: '100%', marginTop: '8px' }}>
+              Send Invite
             </button>
           </form>
         </div>

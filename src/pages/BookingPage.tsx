@@ -204,6 +204,7 @@ export default function BookingPage() {
           ownerUid: uid,
           bookerName: name,
           bookerEmail: email,
+          bookerNotes: notes,
           startTime,
           endTime,
           eventTitle: eventType.title,

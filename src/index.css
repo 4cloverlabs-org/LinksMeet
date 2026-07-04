@@ -2,9 +2,9 @@
 
 :root {
   /* HSL Color Palette (Light Theme Default) */
-  --bg-primary: 0deg 0% 100%;      /* Pure White: #FFFFFF */
-  --bg-secondary: 0deg 0% 100%;     /* Pure White: #FFFFFF */
-  --bg-tertiary: 0deg 0% 100%;     /* Pure White: #FFFFFF */
+  --bg-primary: 0deg 0% 100%;      /* Pure White: #ffffff */
+  --bg-secondary: 0deg 0% 100%;     /* Pure White: #ffffff */
+  --bg-tertiary: 0deg 0% 100%;     /* Pure White: #ffffff */
 
   --text-primary: 0deg 0% 6.7%;     /* Dark Charcoal: rgb(17, 17, 17) */
   --text-secondary: 240deg 5% 45%;   /* Slate Gray: #6B6B75 */

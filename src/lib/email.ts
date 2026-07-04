@@ -67,14 +67,14 @@ export async function sendBookingEmails(data: BookingEmailData): Promise<EmailRe
     const meetingSectionStr = `Meeting Details:\n- Event: ${data.eventTitle}\n- Date: ${data.scheduledDate}\n- Time Slot: ${data.scheduledTime}\n- Client Timezone: ${data.timezone}\n- Meet Link: ${meetLink} (Google Meet)`;
     
     const meetingSectionHtml = `
-      <div style="background-color: #FAFAF9; border: 1px solid rgba(0, 0, 0, 0.06); border-radius: 16px; padding: 24px; margin-bottom: 24px; font-family: sans-serif;">
+      <div style="background-color: #F9F9F9; border: 1px solid rgba(0, 0, 0, 0.06); border-radius: 16px; padding: 24px; margin-bottom: 24px; font-family: sans-serif;">
         <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #8A867B; margin-bottom: 12px;">Meeting Details</div>
         <div style="font-size: 15px; margin-bottom: 8px; color: #333333;">Event: <strong style="color: #111111;">${data.eventTitle} (${data.eventDuration} mins)</strong></div>
         <div style="font-size: 15px; margin-bottom: 8px; color: #333333;">Date: <strong style="color: #111111;">${data.scheduledDate}</strong></div>
         <div style="font-size: 15px; margin-bottom: 8px; color: #333333;">Time Slot: <strong style="color: #111111;">${data.scheduledTime}</strong></div>
         <div style="font-size: 15px; margin-bottom: 8px; color: #333333;">Timezone: <strong style="color: #111111;">${data.timezone}</strong></div>
         <div style="margin-top: 18px;">
-          <a href="${meetLink}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #2F6CF2; color: #FFFFFF; text-decoration: none; font-size: 14px; font-weight: 600; padding: 12px 24px; border-radius: 12px;">Join Google Meet</a>
+          <a href="${meetLink}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #2F6CF2; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 600; padding: 12px 24px; border-radius: 12px;">Join Google Meet</a>
         </div>
       </div>
     `;

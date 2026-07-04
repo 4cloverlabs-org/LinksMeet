@@ -418,12 +418,18 @@ class CampaignEngine {
   public async simulateIncomingReply(senderEmail: string, senderName: string, replyBody: string, campaignName: string) {
     // If there is a running campaign for this email, pause it automatically
     const runningCamp = this.campaigns.find(c => c.recipientEmail.toLowerCase() === senderEmail.toLowerCase() && c.status === 'Running');
-    if (runningCamp && settings.stopOnReply) {
-      runningCamp.status = 'Paused';
+    if (runningCamp) {
+      if (settings.stopOnReply) {
+        runningCamp.status = 'Paused';
+      }
       if (runningCamp.activeStepIndex !== undefined) {
         const activeStep = runningCamp.steps[runningCamp.activeStepIndex];
-        if (activeStep) activeStep.status = 'Replied';
+        if (activeStep) {
+          activeStep.status = 'Replied';
+          activeStep.replies = (activeStep.replies || 0) + 1;
+        }
       }
+      await this.saveCampaign(runningCamp);
     }
 
     const log = this.logs.find(l => l.recipient.toLowerCase() === senderEmail.toLowerCase());
@@ -533,7 +539,7 @@ class CampaignEngine {
   public async scrapeUrlMetadata(url: string) {
     try {
       const rawJson = await callGroqAI(
-        "You are an AI web intelligence analyzer. Extract and infer realistic B2B sales intelligence for the provided target URL/company. Return ONLY valid JSON with keys: companyName, industry, targetAudience, painPoints, usps, tone. Do NOT wrap in markdown backticks or extra text.",
+        "You are an AI web intelligence analyzer. Extract and infer realistic B2B sales intelligence for the provided target URL/company. Return ONLY valid JSON with keys: companyOverview, industry, productsAndServices, targetAudience, valueProposition, brandVoice, uniqueSellingPoints, idealCustomerProfile, messagingStyle, businessGoals. Do NOT wrap in markdown backticks or extra text.",
         `Analyze this URL or company name for cold outreach: ${url}`
       );
       const cleaned = rawJson.replace(/```json|```/g, '').trim();
@@ -544,32 +550,44 @@ class CampaignEngine {
       const cleanUrl = url.replace(/https?:\/\//, '').replace(/\/.*$/, '').toLowerCase();
       if (cleanUrl.includes('stripe')) {
         return {
-          companyName: 'Stripe',
+          companyOverview: 'Stripe is a global technology company building economic infrastructure for the internet.',
           industry: 'Fintech & Payment Infrastructure',
+          productsAndServices: 'Payment processing, billing, invoicing, fraud prevention, corporate cards.',
           targetAudience: 'Startups, E-commerce platforms, Enterprise developers',
-          painPoints: 'Complex global payment compliance, fraud mitigation, checkout conversion drop-offs',
-          usps: 'Developer-first APIs, unified financial infrastructure, 99.999% uptime',
-          tone: 'Professional, highly technical, direct, authoritative',
+          valueProposition: 'Simplifying internet commerce with developer-first financial infrastructure.',
+          brandVoice: 'Professional, highly technical, direct, authoritative',
+          uniqueSellingPoints: 'Developer-first APIs, unified financial infrastructure, 99.999% uptime',
+          idealCustomerProfile: 'Fast-growing tech companies needing global payment solutions.',
+          messagingStyle: 'Concise, reliable, and focused on growth and engineering.',
+          businessGoals: 'Increase global GDP of the internet.'
         };
       } else if (cleanUrl.includes('linear')) {
         return {
-          companyName: 'Linear',
+          companyOverview: 'Linear is a purpose-built tool for software development and product management.',
           industry: 'Productivity & Issue Tracking SaaS',
+          productsAndServices: 'Issue tracking, sprint planning, project management software.',
           targetAudience: 'High-velocity product teams, engineers, designers',
-          painPoints: 'Sluggish Jira boards, cluttered sprint planning, slow UI responsiveness',
-          usps: 'Keyboard-first workflow, sub-50ms sync speed, pristine minimalist UX',
-          tone: 'Concise, design-forward, modern, efficient',
+          valueProposition: 'Streamline software projects, sprints, tasks, and bug tracking seamlessly.',
+          brandVoice: 'Concise, design-forward, modern, efficient',
+          uniqueSellingPoints: 'Keyboard-first workflow, sub-50ms sync speed, pristine minimalist UX',
+          idealCustomerProfile: 'Product-led tech companies that value craft and speed.',
+          messagingStyle: 'Minimalist, fast-paced, and highly opinionated on productivity.',
+          businessGoals: 'Help teams build magical software faster.'
         };
       } else {
         const parts = cleanUrl.split('.');
         const name = parts[0] ? parts[0].charAt(0).toUpperCase() + parts[0].slice(1) : 'Target Company';
         return {
-          companyName: name,
+          companyOverview: `${name} is a rapidly growing B2B service provider.`,
           industry: 'B2B Software & Digital Services',
+          productsAndServices: 'Digital automation, strategic consulting, cloud services.',
           targetAudience: 'Operations leaders, growth executives, decision makers',
-          painPoints: 'Manual repetitive tasks, siloed data systems, scaling bottlenecks',
-          usps: 'AI-driven automation, seamless API integration, rapid ROI',
-          tone: 'Conversational, consultative, value-focused',
+          valueProposition: 'We automate manual processes to unlock your team\'s potential.',
+          brandVoice: 'Conversational, consultative, value-focused',
+          uniqueSellingPoints: 'AI-driven automation, seamless API integration, rapid ROI',
+          idealCustomerProfile: 'Mid-market businesses looking to modernize their operations.',
+          messagingStyle: 'Educational, empathetic, and ROI-driven.',
+          businessGoals: 'Drive efficiency and revenue growth for clients.'
         };
       }
     }
@@ -642,7 +660,9 @@ Do NOT include markdown formatting or backticks around the JSON.`;
         "You are an elite B2B sales copywriter trained on top-performing outbound sequences. Return ONLY a pure JSON array.",
         prompt
       );
-      const cleaned = rawJson.replace(/```json|```/g, '').trim();
+      // Remove <think>...</think> tags which are generated by reasoning models
+      const withoutThink = rawJson.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+      const cleaned = withoutThink.replace(/```json|```/gi, '').trim();
       const items = JSON.parse(cleaned);
       
       const steps: CampaignStep[] = [];
