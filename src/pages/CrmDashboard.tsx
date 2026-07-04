@@ -6,7 +6,7 @@ import {
   CheckCircle2, Menu, TrendingUp, CalendarRange, CalendarCheck,
   Clock, Workflow, Spline, Store, CreditCard, Shield, HelpCircle,
   Sparkles, Link2, Video, Zap, BookOpen, MessageCircle, Keyboard, Check, X,
-  Copy, Rocket, Calendar, Trash2, LogOut, Loader2, EyeOff, ExternalLink, Edit2, Code, Info, ArrowLeft, Globe
+  Copy, Rocket, Calendar, Trash2, LogOut, Loader2, EyeOff, ExternalLink, Edit2, Code, Info, ArrowLeft, Globe, Activity
 } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -22,7 +22,7 @@ import EventTypeEditor from '../components/EventTypeEditor';
 
 type View =
   | 'dashboard' | 'eventTypes' | 'bookings' | 'availability' | 'people'
-  | 'workflows' | 'campaigns' | 'routing' | 'insights' | 'apps' | 'payments'
+  | 'workflows' | 'campaigns' | 'routing' | 'apps' | 'payments'
   | 'admin' | 'help';
 
 /* ---------------- mock data ---------------- */
@@ -152,7 +152,7 @@ const PLANS_UP = [
 
 type Notif = { id: number; icon: typeof Users; title: string; desc: string; time: string; read: boolean; target: View };
 const NOTIFS_INIT: Notif[] = [
-  { id: 1, icon: CheckCircle2, title: 'Deal won', desc: 'Ramp closed for $40,000', time: '12m', read: false, target: 'insights' },
+  { id: 1, icon: CheckCircle2, title: 'Deal won', desc: 'Ramp closed for $40,000', time: '12m', read: false, target: 'dashboard' },
   { id: 2, icon: CalendarCheck, title: 'New booking', desc: 'Product Demo with Logan Mitchell', time: '1h', read: false, target: 'bookings' },
   { id: 3, icon: UserPlus, title: 'New contact added', desc: 'Sienna Brooks joined your list', time: '3h', read: false, target: 'people' },
   { id: 4, icon: CreditCard, title: 'Payment received', desc: '$250.00 from Maya Coleman', time: '5h', read: true, target: 'payments' },
@@ -213,7 +213,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     { id: 'workflows', label: 'Workflows', icon: Workflow },
     { id: 'campaigns', label: 'Campaigns', icon: MessageCircle, badge: 'New', badgeNew: true },
     { id: 'routing', label: 'Routing', icon: Spline },
-    { id: 'insights', label: 'Insights', icon: BarChart3 },
+
   ]},
   { label: 'Apps', items: [
     { id: 'apps', label: 'Apps', icon: Store },
@@ -230,7 +230,7 @@ const PAGE_META: Record<View, { title: string; sub: string }> = {
   workflows: { title: 'Workflows', sub: 'Automate reminders and follow-ups.' },
   campaigns: { title: 'Campaigns', sub: 'Create and orchestrate outbound email sequences.' },
   routing: { title: 'Routing', sub: 'Send bookers to the right person with forms.' },
-  insights: { title: 'Insights', sub: 'Performance trends and sales analytics.' },
+
   apps: { title: 'Apps', sub: 'Browse the App Store and manage your installed apps.' },
   payments: { title: 'Payments', sub: 'Collect and track payments for bookings.' },
   admin: { title: 'Admin Center', sub: 'Manage your account and preferences.' },
@@ -1209,67 +1209,7 @@ export default function CrmDashboard() {
               <EmptyState icon={Spline} title="Build your first routing form" body="Ask qualifying questions, then automatically send bookers to the right person or event type." cta="Create routing form" />
             )}
 
-            {/* ---------- INSIGHTS ---------- */}
-            {view === 'insights' && (
-              <div className="crm-fade">
-                <div className="crm-grid-2b">
-                  <div className="crm-card">
-                    <div className="crm-card-head"><h3>Monthly revenue</h3><span className="sub">in $1,000s</span></div>
-                    <div className="crm-chart" style={{ height: 200 }}>
-                      <svg viewBox="0 0 640 200" preserveAspectRatio="none">
-                        {[0, 1, 2, 3].map(i => <line key={i} x1="8" x2="632" y1={20 + i * 44} y2={20 + i * 44} stroke="#eeeef3" />)}
-                        {REVENUE.map((d, i) => {
-                          const max = Math.max(...REVENUE.map(r => r.v)) * 1.1;
-                          const bw = 632 / REVENUE.length;
-                          const h = (d.v / max) * 156;
-                          return (
-                            <g key={d.m}>
-                              <rect x={8 + i * bw + bw * 0.2} y={176 - h} width={bw * 0.6} height={h} rx="4" fill={i === REVENUE.length - 1 ? '#0E61F3' : '#dcd9fb'} />
-                              <text x={8 + i * bw + bw / 2} y="194" fontSize="9" fill="#9b9bab" textAnchor="middle">{d.m}</text>
-                            </g>
-                          );
-                        })}
-                      </svg>
-                    </div>
-                  </div>
-                  <div className="crm-card">
-                    <div className="crm-card-head"><h3>Conversion funnel</h3></div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 6 }}>
-                      {[
-                        { l: 'Leads', n: 1240, w: 100, c: RAMP[0] },
-                        { l: 'Qualified', n: 720, w: 72, c: RAMP[1] },
-                        { l: 'Proposal', n: 410, w: 52, c: RAMP[2] },
-                        { l: 'Negotiation', n: 210, w: 34, c: RAMP[3] },
-                        { l: 'Won', n: 124, w: 18, c: RAMP[4] },
-                      ].map(f => (
-                        <div key={f.l}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: 5 }}>
-                            <span style={{ color: '#6a6a78' }}>{f.l}</span><span style={{ fontWeight: 500 }}>{f.n.toLocaleString()}</span>
-                          </div>
-                          <div className="crm-prog"><span style={{ width: `${f.w}%`, background: f.c }} /></div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <div className="crm-kpis" style={{ marginBottom: 0 }}>
-                  {[
-                    { icon: TrendingUp, ic: ACCENT, bg: ACCENT_SOFT, val: '$2,140', lab: 'Avg. deal size' },
-                    { icon: Target, ic: ACCENT, bg: ACCENT_SOFT, val: '21 days', lab: 'Avg. sales cycle' },
-                    { icon: Trophy, ic: ACCENT, bg: ACCENT_SOFT, val: '38%', lab: 'Win rate' },
-                    { icon: Users, ic: ACCENT, bg: ACCENT_SOFT, val: '92%', lab: 'Retention' },
-                  ].map(k => {
-                    const Icon = k.icon;
-                    return (
-                      <div className="crm-kpi" key={k.lab}>
-                        <div className="crm-kpi-top"><span className="crm-kpi-ic" style={{ background: k.bg, color: k.ic }}><Icon size={19} /></span></div>
-                        <div className="crm-kpi-val">{k.val}</div><div className="crm-kpi-lab">{k.lab}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+
 
             {/* ---------- APPS (App Store + Installed) ---------- */}
             {view === 'apps' && (

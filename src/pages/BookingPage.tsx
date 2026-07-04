@@ -140,6 +140,14 @@ export default function BookingPage() {
         desc: 'Schedule a direct video conference session with our team.',
         active: true
       } as any);
+
+      // Try to get logged in user to pre-fill guest details
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setName(session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || '');
+        setEmail(session.user.email || '');
+      }
+
       setLoading(false);
     }
     loadEvent();
@@ -263,8 +271,8 @@ export default function BookingPage() {
                 </div>
                 <div style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '2px' }}>lead@example.com</div>
 
-                <div style={{ marginTop: '14px', fontWeight: 500, color: '#0f172a' }}>{name || 'JR Piano'}</div>
-                <div style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '2px' }}>{email || 'lead@example.com'}</div>
+                <div style={{ marginTop: '14px', fontWeight: 500, color: '#0f172a' }}>{name || 'Guest'}</div>
+                <div style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '2px' }}>{email || 'guest@example.com'}</div>
               </div>
 
               <div style={{ fontWeight: 700, color: '#0f172a' }}>Where</div>
@@ -617,7 +625,7 @@ export default function BookingPage() {
                 <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Your name *</label>
                 <input
                   required
-                  placeholder="JR Piano"
+                  placeholder="John Doe"
                   value={name}
                   onChange={e => setName(e.target.value)}
                   style={{ width: '100%', padding: '12px 16px', border: '1px solid #e2e8f0', background: '#ffffff', color: '#0f172a', borderRadius: '10px', outline: 'none', fontSize: '0.95rem', boxSizing: 'border-box' }}

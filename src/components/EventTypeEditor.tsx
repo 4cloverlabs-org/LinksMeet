@@ -6,6 +6,7 @@ import {
   Phone, MapPin, Copy, Download, AlertTriangle
 } from 'lucide-react';
 import { addEventType, updateEventType, type EventType } from '../lib/crm';
+import { useAuth } from '../lib/AuthContext';
 
 interface Props {
   uid: string;
@@ -28,6 +29,10 @@ const MONTHS = ['May 2026', 'June 2026', 'July 2026'];
 const DAYS_IN_MONTH = [31, 30, 31];
 
 export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: Props) {
+  const { user } = useAuth();
+  const hostName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Host';
+  const hostInitials = hostName.substring(0, 2).toUpperCase();
+
   const [form, setForm] = useState<Partial<EventType> & { location?: string }>({
     title: '15 min meeting',
     slug: '15min',
@@ -57,6 +62,19 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
   const [monthIdx, setMonthIdx] = useState(1); // 1 = June 2026
   const [selectedDate, setSelectedDate] = useState(30);
   const [timeFormat, setTimeFormat] = useState<'12h' | '24h'>('12h');
+
+  // Real-time Settings States for UI previews
+  const [requirePhone, setRequirePhone] = useState(false);
+  const [confRedirect, setConfRedirect] = useState(false);
+  const [appLayout, setAppLayout] = useState<'Month' | 'Weekly' | 'Column'>('Month');
+  const [showOnlyFirstSlot, setShowOnlyFirstSlot] = useState(false);
+  const [disableCancelling, setDisableCancelling] = useState(false);
+  const [disableRescheduling, setDisableRescheduling] = useState(false);
+
+  const [eventColor, setEventColor] = useState('#0E61F3');
+  const [autoTranslate, setAutoTranslate] = useState(false);
+  const [interfaceLang, setInterfaceLang] = useState('English');
+  const [lockTimezone, setLockTimezone] = useState(false);
 
   const [schedule, setSchedule] = useState([
     { day: 'Sunday', active: false, start: '09:00 AM', end: '05:00 PM' },
@@ -463,12 +481,10 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
           <NavItem icon={Check} label="Confirmation" id="conf" />
           <NavItem icon={Eye} label="Appearance" id="app" />
           <NavItem icon={CreditCard} label="Payments & Seats" id="pay" />
-          <NavItem icon={RefreshCw} label="Recurring" id="recurring" />
 
           <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '12px 0 4px 10px' }}>POLICIES</div>
           <NavItem icon={Clock} label="Limits & buffers" id="limits" />
           <NavItem icon={Clock} label="Reschedule & cancel" id="reschedule" />
-          <NavItem icon={ShieldCheck} label="Privacy & security" id="privacy" />
 
           <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '12px 0 4px 10px' }}>AI & AUTOMATION</div>
           <NavItem icon={LayoutTemplate} label="Apps" id="apps" />
@@ -640,9 +656,9 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
                       <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#eff6ff', color: '#0E61F3', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        JR
+                        {hostInitials}
                       </div>
-                      <span style={{ fontSize: '0.88rem', fontWeight: 500, color: '#475569' }}>JR Piano</span>
+                      <span style={{ fontSize: '0.88rem', fontWeight: 500, color: '#475569' }}>{hostName}</span>
                     </div>
 
                     <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', margin: '0 0 16px', wordBreak: 'break-word' }}>
@@ -981,11 +997,976 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
               </div>
 
             </div>
+          ) : activeTab === 'form' ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(420px, 1fr) auto', gap: '48px', height: '100%' }}>
+              
+              {/* LEFT COLUMN: SETUP */}
+              <div onClick={e => e.stopPropagation()} style={{ overflowY: 'auto', height: '100%', padding: '32px 16px 32px 0' }}>
+                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
+                  
+                  {/* Confirmation Section */}
+                  <div style={{ padding: '24px' }}>
+                    <h3 style={{ margin: '0 0 4px', fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>Confirmation</h3>
+                    <p style={{ margin: '0 0 16px', fontSize: '0.88rem', color: '#64748b' }}>What your booker should provide to receive confirmations</p>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button style={{ padding: '6px 16px', borderRadius: '8px', background: '#ffffff', border: '1px solid #0E61F3', color: '#0E61F3', fontSize: '0.88rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{width:16,height:16,border:'2px solid #0E61F3',borderRadius:'4px',display:'flex',alignItems:'center',justifyContent:'center'}}><div style={{width:8,height:8,background:'#0E61F3',borderRadius:'2px'}}></div></div> Email</button>
+                      <button style={{ padding: '6px 16px', borderRadius: '8px', background: 'transparent', border: '1px solid #cbd5e1', color: '#64748b', fontSize: '0.88rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}><Phone size={16} /> Phone</button>
+                    </div>
+                  </div>
+
+                  <div style={{ height: '1px', background: '#e2e8f0' }} />
+
+                  {/* Booking Questions Header */}
+                  <div style={{ padding: '24px 24px 16px' }}>
+                    <h3 style={{ margin: '0 0 4px', fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>Booking questions</h3>
+                    <p style={{ margin: '0', fontSize: '0.88rem', color: '#64748b' }}>Customize the questions asked on the booking page. <a href="#" style={{color:'#0E61F3', textDecoration:'none'}}>Learn more</a></p>
+                  </div>
+
+                  {/* Questions List */}
+                  <div>
+                    {/* Your name */}
+                    <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>Your name</span>
+                          <span style={{ fontSize: '0.7rem', fontWeight: 600, background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: '4px' }}>Required</span>
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Name</div>
+                      </div>
+                      <button style={{ padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#334155', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
+                    </div>
+
+                    {/* Email address */}
+                    <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>Email address</span>
+                          <span style={{ fontSize: '0.7rem', fontWeight: 600, background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: '4px' }}>Required</span>
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Email</div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <ToggleSwitch checked={true} />
+                        <button style={{ padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#334155', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
+                      </div>
+                    </div>
+
+                    {/* Phone number */}
+                    <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>Phone number</span>
+                          <span style={{ fontSize: '0.7rem', fontWeight: 600, background: requirePhone ? '#f0fdf4' : '#f1f5f9', color: requirePhone ? '#16a34a' : '#475569', padding: '2px 6px', borderRadius: '4px' }}>{requirePhone ? 'Required' : 'Hidden'}</span>
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Phone</div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <ToggleSwitch checked={requirePhone} onChange={() => setRequirePhone(!requirePhone)} />
+                        <button style={{ padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#334155', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
+                      </div>
+                    </div>
+
+                    {/* What is this meeting about? */}
+                    <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>What is this meeting about?</span>
+                          <span style={{ fontSize: '0.7rem', fontWeight: 600, background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: '4px' }}>Hidden</span>
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Short text</div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <ToggleSwitch checked={false} />
+                        <button style={{ padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#334155', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
+                      </div>
+                    </div>
+
+                    {/* Additional notes */}
+                    <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>Additional notes</span>
+                          <span style={{ fontSize: '0.7rem', fontWeight: 600, background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: '4px' }}>Optional</span>
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Long text</div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <ToggleSwitch checked={true} />
+                        <button style={{ padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#334155', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
+                      </div>
+                    </div>
+
+                    {/* Add guests */}
+                    <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>Add guests</span>
+                          <span style={{ fontSize: '0.7rem', fontWeight: 600, background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: '4px' }}>Optional</span>
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Multiple Emails</div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <ToggleSwitch checked={true} />
+                        <button style={{ padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#334155', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
+                      </div>
+                    </div>
+
+                    {/* Reason for reschedule */}
+                    <div style={{ padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>Reason for reschedule</span>
+                          <span style={{ fontSize: '0.7rem', fontWeight: 600, background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: '4px' }}>Optional</span>
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Long text</div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <ToggleSwitch checked={true} />
+                        <button style={{ padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#334155', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '16px 24px 24px' }}>
+                    <button style={{ padding: '8px 16px', borderRadius: '8px', background: 'transparent', border: '1px dashed #cbd5e1', color: '#0E61F3', fontSize: '0.88rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                      <Plus size={16} /> Add question
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* RIGHT COLUMN: PREVIEW */}
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', padding: '32px 0' }}>
+                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', display: 'flex', width: '100%', maxWidth: '820px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
+                  
+                  {/* Preview Left: Details */}
+                  <div style={{ width: '320px', borderRight: '1px solid #e2e8f0', padding: '32px 24px', background: '#ffffff' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#a855f7', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 700, marginBottom: '20px' }}>
+                      K
+                    </div>
+                    <div style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600, marginBottom: '4px' }}>Kontham sohith</div>
+                    <h2 style={{ margin: '0 0 24px', fontSize: '1.4rem', fontWeight: 700, color: '#0f172a' }}>{form.title || '15 min meeting'}</h2>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
+                        <Calendar size={18} style={{ marginTop: '2px' }} />
+                        <div>
+                          <div>Saturday, July 4, 2026</div>
+                          <div style={{ color: '#0f172a', fontWeight: 600 }}>10:00 - 10:15 am</div>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
+                        <Clock size={18} />
+                        {durMinutes}m
+                      </div>
+                      <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
+                        <Video size={18} />
+                        On Video
+                      </div>
+                      <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
+                        <Globe size={18} />
+                        Asia/Calcutta
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Preview Right: Form */}
+                  <div style={{ flex: 1, padding: '32px 40px', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ marginBottom: '20px' }}>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Your name *</label>
+                      <input type="text" readOnly value="Kontham sohith" style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
+                    </div>
+                    <div style={{ marginBottom: '20px' }}>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Email address *</label>
+                      <input type="text" readOnly value="sohithkontham5@gmail.com" style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
+                    </div>
+                    {requirePhone && (
+                      <div style={{ marginBottom: '20px' }}>
+                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Phone number *</label>
+                        <input type="text" readOnly value="+91 98765 43210" style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
+                      </div>
+                    )}
+                    <div style={{ marginBottom: '20px' }}>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Additional notes</label>
+                      <textarea readOnly value="Please share anything that will help prepare for our meeting." style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', minHeight: '80px', resize: 'none', outline: 'none' }} />
+                    </div>
+
+                    <button style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.85rem', fontWeight: 600, padding: 0, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginBottom: '40px' }}>
+                      <Plus size={15} color="#64748b" /> Add guests
+                    </button>
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '16px', marginTop: 'auto' }}>
+                      <button style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>Back</button>
+                      <button style={{ background: '#0E61F3', border: 'none', borderRadius: '8px', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, padding: '10px 24px', cursor: 'pointer' }}>Confirm</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '32px' }}>
+                  <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', color: '#0E61F3', padding: '10px 24px', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                    <Info size={16} /> Save changes to preview all updates
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : activeTab === 'conf' ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(420px, 1fr) auto', gap: '48px', height: '100%' }}>
+              
+              {/* LEFT COLUMN: SETUP */}
+              <div onClick={e => e.stopPropagation()} style={{ overflowY: 'auto', height: '100%', padding: '32px 16px 32px 0' }}>
+                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
+                  
+                  {/* Calendar event name */}
+                  <div style={{ padding: '24px' }}>
+                    <h3 style={{ margin: '0 0 16px', fontSize: '0.95rem', fontWeight: 600, color: '#0f172a' }}>Calendar event name</h3>
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <input 
+                        type="text" 
+                        readOnly 
+                        value="15 min meeting between Kontham sohith and {Scheduler}"
+                        style={{ flex: 1, padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#f8fafc', color: '#334155', fontSize: '0.9rem', outline: 'none' }}
+                      />
+                      <button style={{ padding: '0 16px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
+                    </div>
+                  </div>
+
+                  <div style={{ height: '1px', background: '#e2e8f0' }} />
+
+                  {/* Redirect on booking */}
+                  <div style={{ padding: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                        <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 600, color: '#0f172a' }}>Redirect on booking</h3>
+                      </div>
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>Redirect to a custom URL after a successful booking</p>
+                    </div>
+                    <ToggleSwitch checked={confRedirect} onChange={() => setConfRedirect(!confRedirect)} />
+                  </div>
+
+                  <div style={{ height: '1px', background: '#e2e8f0' }} />
+
+                  {/* Custom 'Reply-To' email */}
+                  <div style={{ padding: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                    <div style={{ paddingRight: '24px' }}>
+                      <h3 style={{ margin: '0 0 8px', fontSize: '0.95rem', fontWeight: 600, color: '#0f172a' }}>Custom 'Reply-To' email</h3>
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Use a different email address as the replyTo for confirmation emails instead of the organizer's email</p>
+                    </div>
+                    <ToggleSwitch checked={false} />
+                  </div>
+
+                  <div style={{ height: '1px', background: '#e2e8f0' }} />
+
+                  {/* Send LinksMeet Video transcription emails */}
+                  <div style={{ padding: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', opacity: 0.6 }}>
+                    <div style={{ paddingRight: '24px' }}>
+                      <h3 style={{ margin: '0 0 8px', fontSize: '0.95rem', fontWeight: 600, color: '#0f172a' }}>Send LinksMeet Video transcription emails</h3>
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Send emails with the transcription of the LinksMeet Video after the meeting ends. (Requires a paid plan)</p>
+                    </div>
+                    <ToggleSwitch checked={true} />
+                  </div>
+
+                </div>
+              </div>
+
+
+              {/* RIGHT COLUMN: PREVIEW */}
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', padding: '32px 0' }}>
+                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '560px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
+                  
+                  {/* Top Confirmation Section */}
+                  <div style={{ padding: '40px 32px 32px', textAlign: 'center' }}>
+                    <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#eff6ff', color: '#0E61F3', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                      {confRedirect ? <Link2 size={24} strokeWidth={3} /> : <Check size={24} strokeWidth={3} />}
+                    </div>
+                    <h2 style={{ margin: '0 0 12px', fontSize: '1.4rem', fontWeight: 700, color: '#0f172a' }}>{confRedirect ? 'Redirecting...' : 'This meeting is scheduled'}</h2>
+                    <p style={{ margin: 0, fontSize: '0.95rem', color: '#64748b', lineHeight: 1.5 }}>
+                      {confRedirect ? "You are being redirected to the host's external website." : "We sent an email with a calendar invitation with the details to everyone."}
+                    </p>
+                  </div>
+
+                  <div style={{ height: '1px', background: '#e2e8f0' }} />
+
+                  {/* Meeting Details Table */}
+                  <div style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    
+                    {/* What */}
+                    <div style={{ display: 'flex' }}>
+                      <div style={{ width: '100px', fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>What</div>
+                      <div style={{ flex: 1, fontSize: '0.9rem', color: '#334155' }}>15 min meeting between {hostName} and {'{Guest Name}'}</div>
+                    </div>
+
+                    {/* When */}
+                    <div style={{ display: 'flex' }}>
+                      <div style={{ width: '100px', fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>When</div>
+                      <div style={{ flex: 1, fontSize: '0.9rem', color: '#334155' }}>
+                        <div style={{ marginBottom: '4px' }}>Sunday, July 5, 2026</div>
+                        <div style={{ color: '#64748b' }}>10:00 AM - 10:15 AM (India Standard Time)</div>
+                      </div>
+                    </div>
+
+                    {/* Who */}
+                    <div style={{ display: 'flex' }}>
+                      <div style={{ width: '100px', fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>Who</div>
+                      <div style={{ flex: 1, fontSize: '0.9rem', color: '#334155', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {hostName}
+                          <span style={{ fontSize: '0.7rem', fontWeight: 600, background: '#dbeafe', color: '#1e40af', padding: '2px 6px', borderRadius: '4px' }}>Host</span>
+                        </div>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+                            {'{Guest Name}'}
+                            <span style={{ fontSize: '0.7rem', fontWeight: 600, background: '#ffedd5', color: '#c2410c', padding: '2px 6px', borderRadius: '4px' }}>Guest</span>
+                          </div>
+                          <div style={{ color: '#64748b', fontSize: '0.85rem' }}>guest@example.com</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Where */}
+                    <div style={{ display: 'flex' }}>
+                      <div style={{ width: '100px', fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>Where</div>
+                      <div style={{ flex: 1, fontSize: '0.9rem', color: '#334155' }}>LinksMeet Video</div>
+                    </div>
+                  </div>
+
+                  <div style={{ height: '1px', background: '#e2e8f0', margin: '0 32px' }} />
+
+                  {/* Add to calendar */}
+                  <div style={{ padding: '24px 32px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>Add to calendar</span>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '6px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                         <span style={{ fontWeight: 700, color: '#ea4335' }}>G</span>
+                      </div>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '6px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                         <span style={{ fontWeight: 700, color: '#0078d4' }}>M</span>
+                      </div>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '6px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                         <span style={{ fontWeight: 700, color: '#0078d4' }}>O</span>
+                      </div>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '6px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                         <span style={{ fontWeight: 700, color: '#6001d2' }}>Y!</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ height: '1px', background: '#e2e8f0' }} />
+
+                  {/* Reschedule/Cancel */}
+                  <div style={{ padding: '24px 32px', textAlign: 'center', fontSize: '0.9rem', color: '#64748b' }}>
+                    Need to make a change? <a href="#" style={{ color: '#0E61F3', textDecoration: 'none', fontWeight: 600 }}>Reschedule</a> or <a href="#" style={{ color: '#0E61F3', textDecoration: 'none', fontWeight: 600 }}>Cancel</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : activeTab === 'app' ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(420px, 1fr) auto', gap: '48px', height: '100%' }}>
+              
+              {/* LEFT COLUMN: SETUP */}
+              <div onClick={e => e.stopPropagation()} style={{ overflowY: 'auto', height: '100%', padding: '32px 16px 32px 0' }}>
+                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
+                  
+                  {/* Layout */}
+                  <div style={{ padding: '24px' }}>
+                    <h3 style={{ margin: '0 0 4px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Layout</h3>
+                    <p style={{ margin: '0 0 16px', fontSize: '0.85rem', color: '#64748b' }}>You can select multiple and your guests can switch views.</p>
+                    
+                    <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+                      {/* Month */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ width: '110px', height: '70px', border: '2px solid #bfdbfe', borderRadius: '8px', background: '#f8fafc', padding: '8px', position: 'relative' }}>
+                          <div style={{ width: '20px', height: '4px', background: '#3b82f6', borderRadius: '2px', marginBottom: '8px' }}></div>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
+                             <div style={{ height: '4px', background: '#cbd5e1', borderRadius: '2px' }}></div>
+                             <div style={{ height: '4px', background: '#cbd5e1', borderRadius: '2px' }}></div>
+                             <div style={{ height: '4px', background: '#cbd5e1', borderRadius: '2px' }}></div>
+                             <div style={{ height: '4px', background: '#cbd5e1', borderRadius: '2px' }}></div>
+                             <div style={{ height: '4px', background: '#cbd5e1', borderRadius: '2px' }}></div>
+                             <div style={{ height: '4px', background: '#cbd5e1', borderRadius: '2px' }}></div>
+                             <div style={{ height: '4px', background: '#bfdbfe', borderRadius: '2px' }}></div>
+                             <div style={{ height: '4px', background: '#cbd5e1', borderRadius: '2px' }}></div>
+                          </div>
+                        </div>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}>
+                          <input type="checkbox" checked readOnly style={{ accentColor: '#0E61F3', cursor: 'pointer' }} /> Month <span style={{ color: '#64748b', fontWeight: 400 }}>(Default)</span>
+                        </label>
+                      </div>
+
+                      {/* Weekly */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ width: '110px', height: '70px', border: '1px solid #e2e8f0', borderRadius: '8px', background: '#ffffff', padding: '8px', display: 'flex', gap: '6px' }}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: '2px solid #bfdbfe', marginBottom: '8px' }}></div>
+                            <div style={{ width: '80%', height: '2px', background: '#cbd5e1', borderRadius: '2px', marginBottom: '2px' }}></div>
+                            <div style={{ width: '60%', height: '2px', background: '#cbd5e1', borderRadius: '2px' }}></div>
+                          </div>
+                          <div style={{ flex: 2, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2px' }}>
+                             <div style={{ background: '#f1f5f9', borderRadius: '2px' }}></div>
+                             <div style={{ background: '#f1f5f9', borderRadius: '2px' }}></div>
+                             <div style={{ background: '#bfdbfe', borderRadius: '2px' }}></div>
+                          </div>
+                        </div>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}>
+                          <input type="checkbox" checked readOnly style={{ accentColor: '#0E61F3', cursor: 'pointer' }} /> Weekly
+                        </label>
+                      </div>
+
+                      {/* Column */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ width: '110px', height: '70px', border: '1px solid #e2e8f0', borderRadius: '8px', background: '#ffffff', padding: '8px', display: 'flex', gap: '8px' }}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: '2px solid #bfdbfe', marginBottom: '8px' }}></div>
+                            <div style={{ width: '80%', height: '2px', background: '#cbd5e1', borderRadius: '2px', marginBottom: '2px' }}></div>
+                            <div style={{ width: '60%', height: '2px', background: '#cbd5e1', borderRadius: '2px' }}></div>
+                          </div>
+                          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                            <div style={{ height: '4px', background: '#bfdbfe', borderRadius: '2px' }}></div>
+                            <div style={{ height: '4px', background: '#bfdbfe', borderRadius: '2px' }}></div>
+                            <div style={{ height: '4px', background: '#bfdbfe', borderRadius: '2px' }}></div>
+                          </div>
+                        </div>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}>
+                          <input type="checkbox" checked readOnly style={{ accentColor: '#0E61F3', cursor: 'pointer' }} /> Column
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ height: '1px', background: '#e2e8f0' }} />
+
+                  {/* Default view */}
+                  <div style={{ padding: '24px' }}>
+                    <h3 style={{ margin: '0 0 12px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Default view</h3>
+                    
+                    <div style={{ display: 'inline-flex', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '4px', marginBottom: '16px' }}>
+                      <button onClick={() => setAppLayout('Month')} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: appLayout === 'Month' ? '#eff6ff' : 'transparent', color: appLayout === 'Month' ? '#0E61F3' : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Month</button>
+                      <button onClick={() => setAppLayout('Weekly')} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: appLayout === 'Weekly' ? '#eff6ff' : 'transparent', color: appLayout === 'Weekly' ? '#0E61F3' : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Weekly</button>
+                      <button onClick={() => setAppLayout('Column')} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: appLayout === 'Column' ? '#eff6ff' : 'transparent', color: appLayout === 'Column' ? '#0E61F3' : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Column</button>
+                    </div>
+
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>
+                      You can manage this for all your event types in Settings -&gt; Appearance or <a href="#" style={{color:'#0E61F3', textDecoration:'none', fontWeight: 500}}>Override</a> for this event only.
+                    </p>
+                  </div>
+
+                  <div style={{ height: '1px', background: '#e2e8f0' }} />
+
+                  {/* Event type color */}
+                  <div style={{ padding: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                    <div style={{ paddingRight: '24px' }}>
+                      <h3 style={{ margin: '0 0 4px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Event type color</h3>
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>This is only used for event type & booking differentiation within the app. It is not displayed to bookers.</p>
+                    </div>
+                    <input type="color" value={eventColor} onChange={e => setEventColor(e.target.value)} style={{ cursor: 'pointer', border: 'none', background: 'none', width: '36px', height: '36px', padding: 0 }} />
+                  </div>
+
+                  <div style={{ height: '1px', background: '#e2e8f0' }} />
+
+                  {/* Auto translate title and description */}
+                  <div style={{ padding: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                    <div style={{ paddingRight: '24px' }}>
+                      <h3 style={{ margin: '0 0 4px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Auto translate title and description</h3>
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Automatically translate titles and descriptions to the visitor's browser language using AI.</p>
+                    </div>
+                    <ToggleSwitch checked={autoTranslate} onChange={() => setAutoTranslate(!autoTranslate)} />
+                  </div>
+
+                  <div style={{ height: '1px', background: '#e2e8f0' }} />
+
+                  {/* Interface language */}
+                  <div style={{ padding: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                    <div style={{ paddingRight: '24px' }}>
+                      <h3 style={{ margin: '0 0 4px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Interface language</h3>
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Set your preferred language for the booking interface</p>
+                    </div>
+                    <select value={interfaceLang} onChange={e => setInterfaceLang(e.target.value)} style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.9rem', color: '#0f172a', fontWeight: 500, minWidth: '120px' }}>
+                      <option>English</option>
+                      <option>French</option>
+                      <option>Spanish</option>
+                      <option>German</option>
+                    </select>
+                  </div>
+
+                  <div style={{ height: '1px', background: '#e2e8f0' }} />
+
+                  {/* Lock timezone on booking page */}
+                  <div style={{ padding: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                    <div style={{ paddingRight: '24px' }}>
+                      <h3 style={{ margin: '0 0 4px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Lock timezone on booking page</h3>
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>To lock the timezone on booking page, useful for in-person events. <a href="#" style={{color:'#0E61F3', textDecoration:'none', fontWeight: 500}}>Learn more</a></p>
+                    </div>
+                    <ToggleSwitch checked={lockTimezone} onChange={() => setLockTimezone(!lockTimezone)} />
+                  </div>
+
+                </div>
+              </div>
+
+              {/* RIGHT COLUMN: PREVIEW */}
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', padding: '32px 0' }}>
+                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', display: 'flex', width: '100%', maxWidth: '820px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
+                  
+                  {/* Preview Left: Details */}
+                  <div style={{ width: '320px', borderRight: '1px solid #e2e8f0', padding: '32px 24px', background: '#ffffff' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#0E61F3', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 700, marginBottom: '20px' }}>
+                      {hostInitials}
+                    </div>
+                    <div style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600, marginBottom: '4px' }}>{hostName}</div>
+                    <h2 style={{ margin: '0 0 24px', fontSize: '1.4rem', fontWeight: 700, color: '#0f172a' }}>
+                      {appLayout === 'Month' ? (form.title || '15 min meeting') : `${form.title || '15 min meeting'} (${appLayout} View)`}
+                      {autoTranslate && <span style={{ fontSize: '0.65rem', background: '#fef3c7', color: '#b45309', padding: '2px 6px', borderRadius: '4px', marginLeft: '8px', verticalAlign: 'middle', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Translated</span>}
+                    </h2>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
+                        <Calendar size={18} style={{ marginTop: '2px' }} />
+                        <div>
+                          <div>Saturday, July 4, 2026</div>
+                          <div style={{ color: '#0f172a', fontWeight: 600 }}>10:00 - 10:15 am</div>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
+                        <Clock size={18} />
+                        {durMinutes}m
+                      </div>
+                      <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
+                        <Video size={18} />
+                        LinksMeet Video
+                      </div>
+                      <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500, alignItems: 'center' }}>
+                        <Globe size={18} />
+                        Asia/Calcutta
+                        {!lockTimezone && <ChevronDown size={14} />}
+                        {lockTimezone && <span style={{ fontSize: '0.7rem', background: '#f1f5f9', color: '#64748b', padding: '2px 6px', borderRadius: '4px', marginLeft: 'auto' }}>Locked</span>}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Preview Right: Form */}
+                  <div style={{ flex: 1, padding: '32px 40px', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ marginBottom: '20px' }}>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>
+                        {interfaceLang === 'French' ? 'Votre nom *' : interfaceLang === 'Spanish' ? 'Tu nombre *' : interfaceLang === 'German' ? 'Dein Name *' : 'Your name *'}
+                      </label>
+                      <input type="text" readOnly value={hostName} style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
+                    </div>
+                    <div style={{ marginBottom: '20px' }}>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>
+                        {interfaceLang === 'French' ? 'Adresse e-mail *' : interfaceLang === 'Spanish' ? 'Correo electrónico *' : interfaceLang === 'German' ? 'E-Mail-Adresse *' : 'Email address *'}
+                      </label>
+                      <input type="text" readOnly value="guest@example.com" style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
+                    </div>
+                    <div style={{ marginBottom: '20px' }}>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Additional notes</label>
+                      <textarea readOnly value="Please share anything that will help prepare for our meeting." style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', minHeight: '80px', resize: 'none', outline: 'none' }} />
+                    </div>
+
+                    <button style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.85rem', fontWeight: 600, padding: 0, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginBottom: '40px' }}>
+                      <Plus size={15} color="#64748b" /> Add guests
+                    </button>
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '16px', marginTop: 'auto' }}>
+                      <button style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>Back</button>
+                      <button style={{ background: '#0E61F3', border: 'none', borderRadius: '8px', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, padding: '10px 24px', cursor: 'pointer' }}>Confirm</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '32px' }}>
+                  <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', color: '#0E61F3', padding: '10px 24px', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                    <Info size={16} /> Save changes to preview all updates
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : activeTab === 'limits' ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(420px, 1fr) auto', gap: '48px', height: '100%' }}>
+              
+              {/* LEFT COLUMN: SETUP */}
+              <div onClick={e => e.stopPropagation()} style={{ overflowY: 'auto', height: '100%', padding: '32px 16px 32px 0' }}>
+                
+                {/* Buffers & Intervals Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '32px' }}>
+                  
+                  {/* Before event */}
+                  <div>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', fontWeight: 600, color: '#0f172a', marginBottom: '12px' }}>
+                      Before event <Info size={14} color="#64748b" />
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <select style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none' }}>
+                        <option>No buffer time</option>
+                      </select>
+                      <ChevronDown size={16} color="#64748b" style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                    </div>
+                  </div>
+
+                  {/* After event */}
+                  <div>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', fontWeight: 600, color: '#0f172a', marginBottom: '12px' }}>
+                      After event <Info size={14} color="#64748b" />
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <select style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none' }}>
+                        <option>No buffer time</option>
+                      </select>
+                      <ChevronDown size={16} color="#64748b" style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                    </div>
+                  </div>
+
+                  {/* Minimum notice */}
+                  <div>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', fontWeight: 600, color: '#0f172a', marginBottom: '12px' }}>
+                      Minimum notice <Info size={14} color="#64748b" />
+                    </label>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <div style={{ position: 'relative', width: '80px' }}>
+                        <select style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none' }}>
+                          <option>2</option>
+                        </select>
+                        <ChevronDown size={16} color="#64748b" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                      </div>
+                      <div style={{ position: 'relative', flex: 1 }}>
+                        <select style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none' }}>
+                          <option>Hours</option>
+                        </select>
+                        <ChevronDown size={16} color="#64748b" style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Time-slot intervals */}
+                  <div>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', fontWeight: 600, color: '#0f172a', marginBottom: '12px' }}>
+                      Time-slot intervals <Info size={14} color="#64748b" />
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <select style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none' }}>
+                        <option>Use event length (default)</option>
+                      </select>
+                      <ChevronDown size={16} color="#64748b" style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                    </div>
+                  </div>
+
+                </div>
+
+                <div style={{ height: '1px', background: '#e2e8f0', marginBottom: '24px' }} />
+
+                {/* Toggles */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  
+                  {/* Limit booking frequency */}
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                      <div style={{ paddingRight: '24px' }}>
+                        <h3 style={{ margin: '0 0 6px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Limit booking frequency</h3>
+                        <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Limit how many times this event can be booked. <a href="#" style={{color:'#0E61F3', textDecoration:'none', fontWeight: 500}}>Learn more</a></p>
+                      </div>
+                      <ToggleSwitch checked={false} />
+                    </div>
+                    <div style={{ height: '1px', background: '#f1f5f9', marginTop: '24px' }} />
+                  </div>
+
+                  {/* Limit total booking duration */}
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                      <div style={{ paddingRight: '24px' }}>
+                        <h3 style={{ margin: '0 0 6px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Limit total booking duration</h3>
+                        <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Limit total amount of time that this event can be booked</p>
+                      </div>
+                      <ToggleSwitch checked={false} />
+                    </div>
+                    <div style={{ height: '1px', background: '#f1f5f9', marginTop: '24px' }} />
+                  </div>
+
+                  {/* Limit future bookings */}
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                      <div style={{ paddingRight: '24px' }}>
+                        <h3 style={{ margin: '0 0 6px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Limit future bookings</h3>
+                        <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Limit how far in the future this event can be booked. <a href="#" style={{color:'#0E61F3', textDecoration:'none', fontWeight: 500}}>Learn more</a></p>
+                      </div>
+                      <ToggleSwitch checked={false} />
+                    </div>
+                    <div style={{ height: '1px', background: '#f1f5f9', marginTop: '24px' }} />
+                  </div>
+
+                  {/* Limit number of upcoming bookings per booker */}
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                      <div style={{ paddingRight: '24px' }}>
+                        <h3 style={{ margin: '0 0 6px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Limit number of upcoming bookings per booker</h3>
+                        <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Limit the number of active bookings a booker can make for this event type. <a href="#" style={{color:'#0E61F3', textDecoration:'none', fontWeight: 500}}>Learn more</a></p>
+                      </div>
+                      <ToggleSwitch checked={false} />
+                    </div>
+                    <div style={{ height: '1px', background: '#f1f5f9', marginTop: '24px' }} />
+                  </div>
+
+                  {/* Show only the first available slot each day */}
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                      <div style={{ paddingRight: '24px' }}>
+                        <h3 style={{ margin: '0 0 6px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Show only the first available slot each day</h3>
+                        <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Limit to one slot per day at the earliest available time.</p>
+                      </div>
+                      <ToggleSwitch checked={showOnlyFirstSlot} onChange={() => setShowOnlyFirstSlot(!showOnlyFirstSlot)} />
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              {/* RIGHT COLUMN: PREVIEW */}
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', padding: '32px 0' }}>
+                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', width: '100%', maxWidth: '860px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
+                  
+                  {/* Calendar View Left */}
+                  <div style={{ flex: 1, padding: '32px', borderRight: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+                      <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>July 2026</h3>
+                      <div style={{ display: 'flex', gap: '16px' }}>
+                        <ArrowLeft size={18} color="#64748b" style={{ cursor: 'pointer' }} />
+                        <span style={{ fontSize: '1.2rem', lineHeight: '18px', color: '#64748b', cursor: 'pointer' }}>&rsaquo;</span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', textAlign: 'center', marginBottom: '16px' }}>
+                      {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
+                        <div key={day} style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b' }}>{day}</div>
+                      ))}
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', textAlign: 'center' }}>
+                      {/* empty spots */}
+                      <div /> <div /> <div />
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>1</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>2</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>3</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>4</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>5</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#ffffff', fontWeight: 700, background: '#0E61F3', borderRadius: '8px', cursor: 'pointer' }}>6</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>7</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>8</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>9</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>10</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>11</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>12</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>13</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>14</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>15</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>16</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>17</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>18</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>19</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>20</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>21</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>22</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>23</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>24</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>25</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>26</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>27</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>28</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>29</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>30</div>
+                      <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>31</div>
+                    </div>
+                  </div>
+
+                  {/* Time Slots Right */}
+                  <div style={{ width: '280px', padding: '32px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+                      <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#0f172a' }}>Mon 06</h3>
+                      <div style={{ display: 'flex', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                        <button style={{ padding: '4px 12px', background: '#eff6ff', color: '#0f172a', border: 'none', borderRight: '1px solid #e2e8f0', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>12h</button>
+                        <button style={{ padding: '4px 12px', background: 'transparent', color: '#64748b', border: 'none', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>24h</button>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '360px', overflowY: 'auto', paddingRight: '8px' }}>
+                      {(showOnlyFirstSlot 
+                        ? ['9:00am'] 
+                        : ['9:00am', '9:15am', '9:30am', '9:45am', '10:00am', '10:15am', '10:30am', '10:45am', '11:00am', '11:15am']
+                      ).map(time => (
+                        <button key={time} style={{ padding: '12px', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', color: '#0f172a', fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer', textAlign: 'center' }}>
+                          {time}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+
+                <div style={{ marginTop: '32px' }}>
+                  <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', color: '#0E61F3', padding: '10px 24px', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                    <Info size={16} /> Save changes to preview all updates
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : activeTab === 'pay' ? (
+            <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', padding: '64px 32px' }}>
+              <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '48px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#eff6ff', color: '#0E61F3', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
+                  <CreditCard size={32} />
+                </div>
+                <h3 style={{ margin: '0 0 12px', fontSize: '1.4rem', fontWeight: 700, color: '#0f172a' }}>Payments & Seats</h3>
+                <p style={{ margin: '0 0 24px', fontSize: '1rem', color: '#64748b' }}>This feature is coming soon! You will be able to collect payments and limit seats for your bookings.</p>
+                <div style={{ background: '#f8fafc', color: '#334155', padding: '8px 16px', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: 600, border: '1px solid #e2e8f0' }}>Coming Soon</div>
+              </div>
+            </div>
+          ) : activeTab === 'reschedule' ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(420px, 1fr) auto', gap: '48px', height: '100%' }}>
+              
+              {/* LEFT COLUMN: SETUP */}
+              <div onClick={e => e.stopPropagation()} style={{ overflowY: 'auto', height: '100%', padding: '32px 16px 32px 0' }}>
+                
+                {/* Require cancellation reason */}
+                <div style={{ marginBottom: '32px' }}>
+                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: '#0f172a', marginBottom: '12px' }}>Require cancellation reason</label>
+                  <div style={{ position: 'relative', width: '320px' }}>
+                    <select style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none' }}>
+                      <option>Mandatory for host only</option>
+                    </select>
+                    <ChevronDown size={16} color="#64748b" style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                  </div>
+                </div>
+
+                <div style={{ height: '1px', background: '#e2e8f0', marginBottom: '24px' }} />
+
+                {/* Toggles */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  
+                  {/* Disable cancelling */}
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                      <div style={{ paddingRight: '24px' }}>
+                        <h3 style={{ margin: '0 0 6px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Disable cancelling</h3>
+                        <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Disable event cancellation via calendar invite or email. <a href="#" style={{color:'#0E61F3', textDecoration:'none', fontWeight: 500}}>Learn more</a></p>
+                      </div>
+                      <ToggleSwitch checked={disableCancelling} onChange={() => setDisableCancelling(!disableCancelling)} />
+                    </div>
+                    <div style={{ height: '1px', background: '#f1f5f9', marginTop: '24px' }} />
+                  </div>
+
+                  {/* Disable rescheduling */}
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                      <div style={{ paddingRight: '24px' }}>
+                        <h3 style={{ margin: '0 0 6px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Disable rescheduling</h3>
+                        <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Disable rescheduling via calendar invite or email. <a href="#" style={{color:'#0E61F3', textDecoration:'none', fontWeight: 500}}>Learn more</a></p>
+                      </div>
+                      <ToggleSwitch checked={disableRescheduling} onChange={() => setDisableRescheduling(!disableRescheduling)} />
+                    </div>
+                    <div style={{ height: '1px', background: '#f1f5f9', marginTop: '24px' }} />
+                  </div>
+
+                  {/* Allow rescheduling past events */}
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                      <div style={{ paddingRight: '24px' }}>
+                        <h3 style={{ margin: '0 0 6px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Allow rescheduling past events</h3>
+                        <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Enabling this option allows for past events to be rescheduled. <a href="#" style={{color:'#0E61F3', textDecoration:'none', fontWeight: 500}}>Learn more</a></p>
+                      </div>
+                      <ToggleSwitch checked={false} />
+                    </div>
+                    <div style={{ height: '1px', background: '#f1f5f9', marginTop: '24px' }} />
+                  </div>
+
+                  {/* Allow booking through reschedule link */}
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                      <div style={{ paddingRight: '24px' }}>
+                        <h3 style={{ margin: '0 0 6px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Allow booking through reschedule link</h3>
+                        <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>When enabled, users will be able to create a new booking when trying to reschedule a cancelled booking</p>
+                      </div>
+                      <ToggleSwitch checked={false} />
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              {/* RIGHT COLUMN: PREVIEW */}
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', padding: '32px 0' }}>
+                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', display: 'flex', width: '100%', maxWidth: '820px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
+                  
+                  {/* Preview Left: Details */}
+                  <div style={{ width: '320px', borderRight: '1px solid #e2e8f0', padding: '32px 24px', background: '#ffffff' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#0E61F3', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 700, marginBottom: '20px' }}>
+                      K
+                    </div>
+                    <div style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600, marginBottom: '4px' }}>Kontham sohith</div>
+                    <h2 style={{ margin: '0 0 16px', fontSize: '1.4rem', fontWeight: 700, color: '#0f172a' }}>{form.title || '15 min meeting'}</h2>
+                    
+                    {(disableCancelling || disableRescheduling) && (
+                      <div style={{ padding: '8px 12px', background: '#fffbeb', color: '#b45309', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600, marginBottom: '20px', border: '1px solid #fde68a', lineHeight: 1.5 }}>
+                        {disableCancelling && <div>&bull; Guests cannot cancel this event</div>}
+                        {disableRescheduling && <div>&bull; Guests cannot reschedule this event</div>}
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
+                        <Calendar size={18} style={{ marginTop: '2px' }} />
+                        <div>
+                          <div>Saturday, July 4, 2026</div>
+                          <div style={{ color: '#0f172a', fontWeight: 600 }}>10:00 - 10:15 am</div>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
+                        <Clock size={18} />
+                        {durMinutes}m
+                      </div>
+                      <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
+                        <Video size={18} />
+                        LinksMeet Video
+                      </div>
+                      <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
+                        <Globe size={18} />
+                        Asia/Calcutta
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Preview Right: Form */}
+                  <div style={{ flex: 1, padding: '32px 40px', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ marginBottom: '20px' }}>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Your name *</label>
+                      <input type="text" readOnly value="Kontham sohith" style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
+                    </div>
+                    <div style={{ marginBottom: '20px' }}>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Email address *</label>
+                      <input type="text" readOnly value="sohithkontham5@gmail.com" style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
+                    </div>
+                    <div style={{ marginBottom: '20px' }}>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Additional notes</label>
+                      <textarea readOnly value="Please share anything that will help prepare for our meeting." style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', minHeight: '80px', resize: 'none', outline: 'none' }} />
+                    </div>
+
+                    <button style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.85rem', fontWeight: 600, padding: 0, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginBottom: '40px' }}>
+                      <Plus size={15} color="#64748b" /> Add guests
+                    </button>
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '16px', marginTop: 'auto' }}>
+                      <button style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>Back</button>
+                      <button style={{ background: '#0E61F3', border: 'none', borderRadius: '8px', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, padding: '10px 24px', cursor: 'pointer' }}>Confirm</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '32px' }}>
+                  <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', color: '#0E61F3', padding: '10px 24px', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                    <Info size={16} /> Save changes to preview all updates
+                  </div>
+                </div>
+              </div>
+            </div>
           ) : (
             <div style={{ maxWidth: '800px' }}>
               <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '32px' }}>
                 <h3 style={{ margin: '0 0 12px', fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', textTransform: 'capitalize' }}>{activeTab} Settings</h3>
-                <p style={{ margin: 0, fontSize: '0.9rem', color: '#64748b' }}>Configure {activeTab} rules and options for this meeting type.</p>
+                <p style={{ margin: '0', fontSize: '0.9rem', color: '#64748b' }}>Configure {activeTab} rules and options for this meeting type.</p>
               </div>
             </div>
           )}

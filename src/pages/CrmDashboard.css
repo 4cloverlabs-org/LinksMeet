@@ -150,7 +150,7 @@
 .crm-chip-btn { border: 1px solid var(--border-2); background: #fff; cursor: pointer; font-size: 0.78rem; font-weight: 400; color: var(--text); padding: 6px 13px; border-radius: 999px; transition: all 0.15s ease; }
 .crm-chip-btn.on { background: var(--ac); color: #fff; border-color: var(--ac); }
 
-/* Cal.com Inspired Availability Settings UI */
+/* LinksMeet Inspired Availability Settings UI */
 .cal-layout {
   display: flex; flex-direction: column; width: 100%;
 }
