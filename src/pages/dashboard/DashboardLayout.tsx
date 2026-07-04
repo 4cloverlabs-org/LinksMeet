@@ -19,7 +19,7 @@ import {
   listenEventTypes, addEventType, updateEventType, deleteEventType,
   listenBookings, type Contact, type ContactStatus, type EventType, type Booking 
 } from '../../lib/crm';
-import './CrmDashboard.css';
+import '../../pages/CrmDashboard.css';
 import CampaignModule from '../../components/campaigns/CampaignModule';
 import WorkflowEditor, { type WorkflowDraft } from '../../components/WorkflowEditor';
 import EventTypeEditor from '../../components/EventTypeEditor';
@@ -222,7 +222,7 @@ const PAGE_META: Record<View, { title: string; sub: string }> = {
   dashboard: { title: 'Dashboard', sub: 'Your leads and follow-ups at a glance.' },
   eventTypes: { title: 'Event Types', sub: 'Create scheduling links people can book.' },
   bookings: { title: 'Bookings', sub: 'Your upcoming and past meetings.' },
-  eventTypes: { title: 'Availability', sub: 'Set the hours you’re open for bookings.' },
+  availability: { title: 'Availability', sub: 'Set the hours you’re open for bookings.' },
   people: { title: 'Leads', sub: 'Manage your leads and follow-ups.' },
   teams: { title: 'Team', sub: 'Manage your organization and team members.' },
   workflows: { title: 'Workflows', sub: 'Create workflows to automate notifications and reminders' },
@@ -909,18 +909,8 @@ export default function DashboardLayout() {
           
         <div className="crm-content" style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', background: '#fcfcfd', padding: 0 }}>
           <Outlet context={{
-            user, uid, userProfile, displayName, firstName, userInitials,
-            toast, setToast, sideOpen, setSideOpen, search, setSearch,
-            notif, setNotif, setView,
-            contacts, eventTypes, bookings, myWorkflows, installedApps,
-            handleCreateWorkflow, logoutAndGo, exportContactsCSV,
-            showContactForm, setShowContactForm, cForm, setCForm, blankContact, contactErr, setContactErr, submitContact, savingContact,
-            changeStatus, setEditingEvent, editingEvent, etTab, setEtTab, googleConnected, handleConnectGoogle,
-            bookingTab, setBookingTab, joinMeeting, cancelBooking, leadsTab, setLeadsTab, peopleTab: 'contacts', setPeopleTab: () => {},
-            appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp,
-            teamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember,
-            editingWorkflow, setEditingWorkflow
-          , setAvailIsDefault, availIsDefault, saveAvailability, availSchedule, setAvailSchedule, tzOpen, tzSearch, TIMEZONES, availPrefs, setTzOpen, setTzSearch, setAvailPrefs, followUps, statusCounts, addedThisWeek, ACCENT_SOFT, ACCENT, contactsLoading, STATUS_META, statusStages, filteredContacts, Donut, avColor, initials, removeContact, fileInputRef, handleUploadFile, ContactStatus, CONTACT_STATUSES, setInitCampaignLead, EmptyState, handleSaveWorkflow, setMyWorkflows, API_BASE_URL, showWorkflowTypeModal, setShowWorkflowTypeModal, handleSelectType, appCats, filteredApps, connectingApps, filteredBookings , toggleEventType, etDropdown, setEtDropdown, addEventType, deleteEventType, initCampaignLead, setInitCampaignLead, joinMeeting, cancelBooking }} />
+            user, uid, userProfile, displayName, firstName, userInitials, toast, setToast, sideOpen, setSideOpen, search, setSearch, notif, setNotif, setView, contacts, eventTypes, bookings, myWorkflows, installedApps, handleCreateWorkflow, logoutAndGo, exportContactsCSV, showContactForm, setShowContactForm, cForm, setCForm, blankContact, contactErr, setContactErr, submitContact, savingContact, changeStatus, setEditingEvent, editingEvent, etTab, setEtTab, googleConnected, handleConnectGoogle, bookingTab, setBookingTab, joinMeeting, cancelBooking, leadsTab, setLeadsTab, peopleTab: 'contacts', setPeopleTab: () => {}, appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp, teamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember, editingWorkflow, setEditingWorkflow, setAvailIsDefault, availIsDefault, saveAvailability, availSchedule, setAvailSchedule, tzOpen, tzSearch, TIMEZONES, availPrefs, setTzOpen, setTzSearch, setAvailPrefs, followUps, statusCounts, addedThisWeek, ACCENT_SOFT, ACCENT, contactsLoading, STATUS_META, statusStages, filteredContacts, Donut, avColor, initials, removeContact, fileInputRef, handleUploadFile, ContactStatus, CONTACT_STATUSES, setInitCampaignLead, EmptyState, handleSaveWorkflow, setMyWorkflows, API_BASE_URL, showWorkflowTypeModal, setShowWorkflowTypeModal, handleSelectType, appCats, filteredApps, connectingApps, filteredBookings, toggleEventType, etDropdown, setEtDropdown, addEventType, deleteEventType, initCampaignLead
+          }} />
         </div>
       </div>
       )}
