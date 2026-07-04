@@ -40,6 +40,7 @@ export default function HelpPage() {
                   { icon: MessageCircle, h: 'Contact support', p: 'Reach our team — we reply within a few hours.' },
                   { icon: Keyboard, h: 'Keyboard shortcuts', p: 'Move faster with handy shortcuts.' },
                 ].map(c => {
+
                   const Icon = c.icon;
                   return (
                     <div className="crm-help-card" key={c.h}>
@@ -47,7 +48,8 @@ export default function HelpPage() {
                       <h4>{c.h}</h4><p>{c.p}</p>
                     </div>
                   );
-                }
+                })}
+      </div>
     </>
   );
 }
