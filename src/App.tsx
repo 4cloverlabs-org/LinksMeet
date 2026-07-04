@@ -22,6 +22,19 @@ import SuccessPage from './pages/SuccessPage';
 import Dashboard from './pages/Dashboard';
 import BookingPage from './pages/BookingPage';
 import Onboarding from './pages/Onboarding';
+import DashboardLayout from './pages/dashboard/DashboardLayout';
+import OverviewPage from './pages/dashboard/OverviewPage';
+import EventTypesPage from './pages/dashboard/EventTypesPage';
+import BookingsPage from './pages/dashboard/BookingsPage';
+import PeoplePage from './pages/dashboard/PeoplePage';
+import TeamsPage from './pages/dashboard/TeamsPage';
+import WorkflowsPage from './pages/dashboard/WorkflowsPage';
+import CampaignsPage from './pages/dashboard/CampaignsPage';
+import RoutingPage from './pages/dashboard/RoutingPage';
+import AppsPage from './pages/dashboard/AppsPage';
+import PaymentsPage from './pages/dashboard/PaymentsPage';
+import AdminPage from './pages/dashboard/AdminPage';
+import HelpPage from './pages/dashboard/HelpPage';
 
 function App() {
   return (
@@ -49,9 +62,21 @@ function App() {
 
           {/* ---- App (requires a logged-in user) ---- */}
           <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
-          {['/dashboard', '/eventTypes', '/bookings', '/people', '/teams', '/workflows', '/campaigns', '/routing', '/apps', '/payments', '/admin', '/help'].map(path => (
-            <Route key={path} path={path} element={<RequireAuth><CrmDashboard /></RequireAuth>} />
-          ))}
+          
+          <Route element={<RequireAuth><DashboardLayout /></RequireAuth>}>
+            <Route path="/dashboard" element={<OverviewPage />} />
+            <Route path="/eventTypes" element={<EventTypesPage />} />
+            <Route path="/bookings" element={<BookingsPage />} />
+            <Route path="/people" element={<PeoplePage />} />
+            <Route path="/teams" element={<TeamsPage />} />
+            <Route path="/workflows" element={<WorkflowsPage />} />
+            <Route path="/campaigns" element={<CampaignsPage />} />
+            <Route path="/routing" element={<RoutingPage />} />
+            <Route path="/apps" element={<AppsPage />} />
+            <Route path="/payments" element={<PaymentsPage />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/help" element={<HelpPage />} />
+          </Route>
 
           {/* ---- Public Booking Page & Aliases ---- */}
           <Route path="/book/:uid/:slug" element={<BookingPage />} />
