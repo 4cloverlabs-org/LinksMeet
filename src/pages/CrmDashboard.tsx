@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  LayoutGrid, Users, BarChart3, Search, Bell, Plus, ArrowUpRight, ArrowDownRight,
-  DollarSign, Trophy, Target, UserPlus, MoreHorizontal, FileText,
-  CheckCircle2, Menu, TrendingUp, CalendarRange, CalendarCheck,
+  LayoutGrid, Users, Search, Bell, Plus, ArrowUpRight, ArrowDownRight,
+  DollarSign, Trophy, UserPlus, MoreHorizontal, FileText,
+  CheckCircle2, Menu, CalendarRange, CalendarCheck,
   Clock, Workflow, Spline, Store, CreditCard, Shield, HelpCircle,
   Sparkles, Link2, Video, Zap, BookOpen, MessageCircle, Keyboard, Check, X,
-  Copy, Rocket, Calendar, Trash2, LogOut, Loader2, EyeOff, ExternalLink, Edit2, Code, Info, ArrowLeft, Globe, Activity
+  Copy, Rocket, Calendar, Trash2, LogOut, Loader2, EyeOff, ExternalLink, Edit2, Code, Info, ArrowLeft, Globe
 } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -39,13 +39,6 @@ const initials = (n?: string) => {
   if (words.length === 0) return '?';
   return words.map(w => w[0]).join('').slice(0, 2).toUpperCase();
 };
-
-
-const REVENUE = [
-  { m: 'Jan', v: 42 }, { m: 'Feb', v: 55 }, { m: 'Mar', v: 48 }, { m: 'Apr', v: 67 },
-  { m: 'May', v: 72 }, { m: 'Jun', v: 64 }, { m: 'Jul', v: 81 }, { m: 'Aug', v: 88 },
-  { m: 'Sep', v: 76 }, { m: 'Oct', v: 95 }, { m: 'Nov', v: 102 }, { m: 'Dec', v: 118 },
-];
 
 // Lead follow-up status → tag class + ramp color for the donut
 const STATUS_META: Record<ContactStatus, { tag: string; color: string }> = {

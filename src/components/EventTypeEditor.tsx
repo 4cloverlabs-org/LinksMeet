@@ -1,8 +1,8 @@
 import { useState, useRef } from 'react';
 import {
   ArrowLeft, Video, Link2, Clock, Calendar, CreditCard, LayoutTemplate,
-  Check, Eye, ShieldCheck, ExternalLink, Bold, Italic, Edit2, Link as LinkIcon,
-  Globe, ChevronDown, Code, Trash2, Plus, Info, Zap, RefreshCw, X, MessageSquare,
+  Check, Eye, ExternalLink, Bold, Italic, Edit2, Link as LinkIcon,
+  Globe, ChevronDown, Code, Trash2, Plus, Info, Zap, X, MessageSquare,
   Phone, MapPin, Copy, Download, AlertTriangle
 } from 'lucide-react';
 import { addEventType, updateEventType, type EventType } from '../lib/crm';
