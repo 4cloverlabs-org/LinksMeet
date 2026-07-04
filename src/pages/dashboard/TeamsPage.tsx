@@ -110,9 +110,6 @@ export default function TeamsPage() {
                     </div>
                   </div>
               </div>
-            )}
-
-            {/* ---------- WORKFLOWS ---------- */}
     </>
   );
 }

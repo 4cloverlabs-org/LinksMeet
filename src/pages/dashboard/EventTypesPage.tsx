@@ -358,9 +358,6 @@ export default function EventTypesPage() {
                   </div>
                 )}
               </div>
-            )}
-
-            {/* ---------- BOOKINGS ---------- */}
     </>
   );
 }

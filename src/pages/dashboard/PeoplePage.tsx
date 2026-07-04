@@ -113,9 +113,6 @@ export default function PeoplePage() {
                     )}
                   </div>
               </div>
-            )}
-
-            {/* ---------- TEAMS ---------- */}
     </>
   );
 }

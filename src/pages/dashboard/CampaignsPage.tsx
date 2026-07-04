@@ -34,9 +34,6 @@ export default function CampaignsPage() {
   return (
     <>
       <CampaignModule initLead={initCampaignLead} onInitConsumed={() => setInitCampaignLead(null)} userProfile={userProfile} />
-            )}
-
-            {/* ---------- ROUTING ---------- */}
     </>
   );
 }

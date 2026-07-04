@@ -47,9 +47,6 @@ export default function PaymentsPage() {
                   </button>
                 </div>
               </div>
-            )}
-
-            {/* ---------- ADMIN CENTER ---------- */}
     </>
   );
 }

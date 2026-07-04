@@ -59,9 +59,6 @@ export default function BookingsPage() {
                   </div>
                 ))}
               </div>
-            )}
-
-            {/* ---------- PEOPLE (Leads) ---------- */}
     </>
   );
 }

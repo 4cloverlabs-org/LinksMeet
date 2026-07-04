@@ -95,9 +95,6 @@ export default function AppsPage() {
                   </div>
                 )}
               </div>
-            )}
-
-            {/* ---------- PAYMENTS ---------- */}
     </>
   );
 }

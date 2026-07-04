@@ -34,11 +34,6 @@ export default function RoutingPage() {
   return (
     <>
       <EmptyState icon={Spline} title="Build your first routing form" body="Ask qualifying questions, then automatically send bookers to the right person or event type." cta="Create routing form" />
-            )}
-
-
-
-            {/* ---------- APPS (App Store + Installed) ---------- */}
     </>
   );
 }

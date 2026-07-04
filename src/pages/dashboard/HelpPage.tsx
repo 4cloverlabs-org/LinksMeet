@@ -47,9 +47,7 @@ export default function HelpPage() {
                       <h4>{c.h}</h4><p>{c.p}</p>
                     </div>
                   );
-                })}
-              </div>
-            
+                }
     </>
   );
 }

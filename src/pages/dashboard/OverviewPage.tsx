@@ -145,9 +145,6 @@ export default function OverviewPage() {
                   )}
                 </div>
               </div>
-            )}
-
-            {/* ---------- EVENT TYPES & AVAILABILITY ---------- */}
     </>
   );
 }
