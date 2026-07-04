@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, type FormEvent, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import {
   LayoutGrid, Users, Search, Bell, Plus, ArrowUpRight, ArrowDownRight,
@@ -243,7 +243,21 @@ export default function CrmDashboard() {
   const firstName = displayName.split(' ')[0];
   const userInitials = displayName.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
 
-  const [view, setView] = useState<View>('dashboard');
+  const location = useLocation();
+  const currentPath = location.pathname.substring(1);
+  const initialView = (currentPath && PAGE_META[currentPath as View]) ? (currentPath as View) : 'dashboard';
+  const [view, setViewState] = useState<View>(initialView);
+
+  useEffect(() => {
+    if (currentPath && PAGE_META[currentPath as View] && currentPath !== view) {
+      setViewState(currentPath as View);
+    }
+  }, [currentPath]);
+
+  const setView = (newView: View) => {
+    setViewState(newView);
+    navigate(`/${newView}`);
+  };
   const [sideOpen, setSideOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [notif, setNotif] = useState({ deals: true, weekly: true, mentions: false });

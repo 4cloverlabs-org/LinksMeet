@@ -49,7 +49,9 @@ function App() {
 
           {/* ---- App (requires a logged-in user) ---- */}
           <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
-          <Route path="/dashboard" element={<RequireAuth><CrmDashboard /></RequireAuth>} />
+          {['/dashboard', '/eventTypes', '/bookings', '/people', '/teams', '/workflows', '/campaigns', '/routing', '/apps', '/payments', '/admin', '/help'].map(path => (
+            <Route key={path} path={path} element={<RequireAuth><CrmDashboard /></RequireAuth>} />
+          ))}
 
           {/* ---- Public Booking Page & Aliases ---- */}
           <Route path="/book/:uid/:slug" element={<BookingPage />} />
