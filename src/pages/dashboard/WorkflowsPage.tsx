@@ -89,7 +89,7 @@ export default function WorkflowsPage() {
 
                 <div style={{ marginBottom: 40 }}>
                   <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#111827', marginBottom: 16 }}>LinksMeet AI templates</h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: 20 }}>
                     {[
                       { title: "Call to confirm booking", desc: "2 hrs before event starts", Icon: Phone, Badge: Clock, badgeColor: "#10B981" },
                       { title: "Follow up with no shows", desc: "30m after event ends", Icon: Mail, Badge: XCircle, badgeColor: "#EF4444" },
@@ -109,7 +109,7 @@ export default function WorkflowsPage() {
                           <div style={{ fontSize: '14px', color: '#6B7280', lineHeight: 1.4 }}>{t.desc}</div>
                         </div>
                         <div style={{ alignSelf: 'flex-end', marginTop: '24px' }}>
-                          <button className="crm-btn crm-btn-primary" style={{ padding: '8px 16px', fontSize: '14px', fontWeight: 600 }}>Add automation</button>
+                          <button className="crm-btn crm-btn-primary" style={{ padding: '8px 16px', fontSize: '14px', fontWeight: 600 }}>Add workflow</button>
                         </div>
                       </div>
                     ))}
@@ -118,7 +118,7 @@ export default function WorkflowsPage() {
 
                 <div>
                   <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#111827', marginBottom: 16 }}>Standard templates</h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: 20 }}>
                     {[
                       { title: "Email reminder to host", desc: "Never miss an event — get automated email reminders", Icon: Mail, Badge: Clock, badgeColor: "#10B981" },
                       { title: "Email reminder to invitee", desc: "Reduce no-shows — send automated email reminders to invitees", Icon: Mail, Badge: Clock, badgeColor: "#10B981" },
@@ -154,7 +154,7 @@ export default function WorkflowsPage() {
                           <div style={{ fontSize: '14px', color: '#6B7280', lineHeight: 1.4 }}>{t.desc}</div>
                         </div>
                         <div style={{ alignSelf: 'flex-end', marginTop: '24px' }}>
-                          <button className="crm-btn crm-btn-primary" style={{ padding: '8px 16px', fontSize: '14px', fontWeight: 600 }}>Add automation</button>
+                          <button className="crm-btn crm-btn-primary" style={{ padding: '8px 16px', fontSize: '14px', fontWeight: 600 }}>Add workflow</button>
                         </div>
                       </div>
                     ))}

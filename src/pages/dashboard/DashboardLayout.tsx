@@ -9,7 +9,7 @@ import {
   Clock, Workflow, Spline, Store, CreditCard, Shield, HelpCircle,
   Sparkles, Link2, Video, Zap, BookOpen, MessageCircle, Keyboard, Check, X,
   Copy, Rocket, Calendar, Trash2, LogOut, Loader2, EyeOff, ExternalLink, Edit2, Code, Info, ArrowLeft, Globe, Settings, Mail, Phone, ChevronRight,
-  Smartphone, Heart, AlertCircle, RefreshCw, Pencil, XCircle
+  Smartphone, Heart, AlertCircle, RefreshCw, Pencil, XCircle, ChevronsUpDown, User, PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -193,7 +193,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutGrid },
     { id: 'eventTypes', label: 'Event Types', icon: CalendarRange },
     { id: 'bookings', label: 'Bookings', icon: CalendarCheck },
-    { id: 'people', label: 'Leads', icon: Users },
+    { id: 'people', label: 'Leads', icon: User },
     { id: 'teams', label: 'Teams', icon: Users },
   ]},
   { label: 'Automate', items: [
@@ -269,6 +269,10 @@ export default function DashboardLayout() {
   const [myWorkflows, setMyWorkflows] = useState<any[]>([]);
   const [editingWorkflow, setEditingWorkflow] = useState<WorkflowDraft | null>(null);
   const [showWorkflowTypeModal, setShowWorkflowTypeModal] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  
+  const [loading, setLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Apps State
@@ -281,16 +285,74 @@ export default function DashboardLayout() {
       return;
     }
     
-    const isVoice = template?.title?.includes('Call');
-    const isSms = template?.title?.includes('SMS');
+    const title = (template?.title || '').toLowerCase();
+    const desc = (template?.desc || '').toLowerCase();
+    
+    let isVoice = title.includes('call');
+    let isSms = title.includes('text') || title.includes('sms');
+    let isEmail = title.includes('email');
+    
+    if (!isVoice && !isSms && !isEmail) {
+      isEmail = true; // Fallback
+    }
+    
     const actionType = isVoice ? 'voice' : (isSms ? 'sms' : 'email');
+    
+    let trigger_event = 'booking_created'; 
+    let delay_ms = 0;
+    
+    if (desc.includes('before event starts')) {
+      trigger_event = 'event_starts_before';
+      if (desc.includes('2 hrs') || desc.includes('2 hours')) delay_ms = 2 * 60 * 60 * 1000;
+      else if (desc.includes('1 day')) delay_ms = 24 * 60 * 60 * 1000;
+      else if (desc.includes('30m')) delay_ms = 30 * 60 * 1000;
+    } else if (desc.includes('after event ends') || title.includes('follow-up') || title.includes('feedback')) {
+      trigger_event = 'event_ends_after';
+      if (desc.includes('30m')) delay_ms = 30 * 60 * 1000;
+      else if (desc.includes('1 day')) delay_ms = 24 * 60 * 60 * 1000;
+    } else if (title.includes('cancel') || desc.includes('cancel')) {
+      trigger_event = 'booking_cancelled';
+    } else if (title.includes('reconfirm')) {
+      trigger_event = 'event_starts_before';
+      delay_ms = 24 * 60 * 60 * 1000; // 1 day before
+    }
+    
+    let defaultBody = '';
+    let subject = '';
+    if (actionType === 'email') {
+      if (title.includes('thank you')) {
+        subject = 'Thank you for attending!';
+        defaultBody = 'Hi {ATTENDEE},\n\nThank you so much for joining our recent event. We hope you found it valuable!\n\nBest,\n{ORGANIZER}';
+      } else if (title.includes('feedback survey')) {
+        subject = 'We value your feedback on {EVENT_NAME}';
+        defaultBody = 'Hi {ATTENDEE},\n\nWe would love to hear your thoughts on the recent {EVENT_NAME} event. Please take a moment to fill out our feedback survey: [Survey Link]\n\nThanks,\n{ORGANIZER}';
+      } else if (title.includes('resources')) {
+        subject = 'Additional resources for {EVENT_NAME}';
+        defaultBody = 'Hi {ATTENDEE},\n\nHere are some additional resources to help you prepare or review what we discussed in {EVENT_NAME}.\n\n[Links]\n\nBest,\n{ORGANIZER}';
+      } else if (title.includes('new time')) {
+        subject = 'Sorry we missed you! Let\'s reschedule';
+        defaultBody = 'Hi {ATTENDEE},\n\nIt looks like you weren\'t able to make it to {EVENT_NAME}. No worries—you can book a new time using my scheduling link: [Your Link]\n\nBest,\n{ORGANIZER}';
+      } else if (title.includes('bring id')) {
+        subject = 'Important: Please bring your ID to {EVENT_NAME}';
+        defaultBody = 'Hi {ATTENDEE},\n\nJust a quick reminder to please bring a valid form of ID to your upcoming event: {EVENT_NAME}.\n\nSee you soon,\n{ORGANIZER}';
+      } else if (title.includes('reconfirm')) {
+        subject = 'Please reconfirm your attendance for {EVENT_NAME}';
+        defaultBody = 'Hi {ATTENDEE},\n\nPlease let us know if you will still be able to attend {EVENT_NAME} at {EVENT_DATE_ddd, h:mma}.\n\nReply YES to confirm, or let us know if you need to reschedule.\n\nThanks,\n{ORGANIZER}';
+      }
+    } else if (actionType === 'sms') {
+      if (title.includes('thank you')) defaultBody = 'Hi {ATTENDEE}, thanks for joining our recent event! We hope you found it valuable.';
+      else if (title.includes('reconfirm')) defaultBody = 'Hi {ATTENDEE}, please reply YES to reconfirm your attendance for {EVENT_NAME} at {EVENT_DATE_ddd, h:mma}.';
+    }
     
     setEditingWorkflow({
       template_name: template?.title || 'Untitled',
-      trigger_event: 'booking_created',
-      delay_ms: 0,
+      trigger_event,
+      delay_ms,
       action_type: actionType,
-      action_payload: {}
+      action_payload: {
+        ...(subject && { subject }),
+        ...(defaultBody && { body: defaultBody })
+      }
     });
   };
 
@@ -446,6 +508,25 @@ export default function DashboardLayout() {
       if (Array.isArray(data)) setMyWorkflows(data);
     })
     .catch(console.error);
+
+    const wfChannel = supabase.channel('realtime_workflows')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'workflows', filter: `user_id=eq.${uid}` }, payload => {
+        setMyWorkflows(prev => {
+          if (prev.find(w => w.id === payload.new.id)) return prev;
+          return [payload.new, ...prev];
+        });
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'workflows', filter: `user_id=eq.${uid}` }, payload => {
+        setMyWorkflows(prev => prev.map(w => w.id === payload.new.id ? payload.new : w));
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'workflows', filter: `user_id=eq.${uid}` }, payload => {
+        setMyWorkflows(prev => prev.filter(w => w.id !== payload.old.id));
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(wfChannel);
+    };
   }, [uid, user]);
   
   // Real-time Notifications
@@ -932,10 +1013,15 @@ export default function DashboardLayout() {
 
         {/* ============ SIDEBAR ============ */}
         {!editingEvent && (
-        <aside className={`crm-side${sideOpen ? ' open' : ''}`}>
-          <div className="crm-brand" style={{ color: '#111' }}>
-            <img src="/logo.png" alt="LinksMeet" style={{ width: '24px', height: '24px', objectFit: 'contain', borderRadius: '4px' }} />
-            <span>LinksMeet</span>
+        <aside className={`crm-side${sideOpen ? ' open' : ''}${sidebarCollapsed ? ' collapsed' : ''}`}>
+          <div className="crm-brand" style={{ color: '#111', display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', position: 'relative' }}>
+            <div className="crm-brand-logo-container" style={{ display: 'flex', alignItems: 'center', gap: '10px', overflow: 'hidden' }}>
+              <img src="/logo.png" alt="LinksMeet" className="crm-brand-logo" style={{ width: '32px', height: '32px', objectFit: 'contain', borderRadius: '6px', flexShrink: 0, transition: 'opacity 0.2s' }} />
+              {!sidebarCollapsed && <span style={{ whiteSpace: 'nowrap', fontSize: '1.15rem', fontWeight: 600, letterSpacing: '-0.01em', marginTop: '6px' }}>LinksMeet</span>}
+            </div>
+            <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="collapse-btn" style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#6B7280', padding: 0, flexShrink: 0, transition: 'opacity 0.2s' }} title="Toggle Sidebar">
+              {sidebarCollapsed ? <PanelLeftOpen size={22} /> : <PanelLeftClose size={22} />}
+            </button>
           </div>
 
           <div className="crm-nav-scroll">
@@ -961,19 +1047,36 @@ export default function DashboardLayout() {
           </div>
 
           <div className="crm-side-foot">
-            <button className={`crm-nav-item${view === 'admin' ? ' active' : ''}`} onClick={() => { setView('admin'); setSideOpen(false); }}>
-              <Shield size={17} /> <span>Admin Center</span>
-            </button>
-            <button className={`crm-nav-item${view === 'help' ? ' active' : ''}`} onClick={() => { setView('help'); setSideOpen(false); }}>
-              <HelpCircle size={17} /> <span>Help</span>
-            </button>
-            <div className="crm-userbox" style={{ marginTop: 8 }}>
-              <span className="av">{userInitials}</span>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <div className="nm">{displayName}</div>
-                <div className="rl">{user?.email}</div>
+            <div style={{ position: 'relative' }}>
+              {showProfileMenu && (
+                <div style={{ position: 'absolute', bottom: 'calc(100% + 8px)', left: 0, width: '100%', background: '#fff', border: '1px solid #F5F5F5', borderRadius: '10px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)', overflow: 'hidden', zIndex: 100 }}>
+                  <button onClick={() => { setShowProfileMenu(false); setView('admin'); }} style={{ width: '100%', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px', border: 'none', background: 'none', cursor: 'pointer', fontSize: '14px', fontWeight: 400, color: '#374151', textAlign: 'left' }} onMouseOver={(e) => e.currentTarget.style.background = '#F9FAFB'} onMouseOut={(e) => e.currentTarget.style.background = 'none'}>
+                    <Settings size={17} color="#6B7280" strokeWidth={1.75} /> Account Settings
+                  </button>
+                  <button onClick={logoutAndGo} style={{ width: '100%', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px', border: 'none', borderTop: '1px solid #F3F4F6', background: 'none', cursor: 'pointer', fontSize: '14px', fontWeight: 400, color: '#EF4444', textAlign: 'left' }} onMouseOver={(e) => e.currentTarget.style.background = '#FEF2F2'} onMouseOut={(e) => e.currentTarget.style.background = 'none'}>
+                    <LogOut size={17} color="#EF4444" strokeWidth={1.75} /> Log out
+                  </button>
+                </div>
+              )}
+              <div className="crm-userbox" style={{ marginTop: 8 }} onClick={() => setShowProfileMenu(!showProfileMenu)}>
+                <div className="crm-userbox-avatar-wrapper">
+                  {(user?.user_metadata?.avatar_url || user?.user_metadata?.picture) ? (
+                    <img src={user.user_metadata.avatar_url || user.user_metadata.picture} alt="avatar" className="crm-userbox-avatar" />
+                  ) : (
+                    <div className="crm-userbox-avatar" style={{ background: '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <User size={20} color="#9CA3AF" />
+                    </div>
+                  )}
+                  <div className="crm-userbox-status">
+                    <svg viewBox="0 0 10 10" width="8" height="8"><path d="M2 5L4 7L8 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+                  </div>
+                </div>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div className="nm">{displayName || "24311a05h6"}</div>
+                  <div className="rl">{user?.email || "24311a05h6@cse.sreenidhi.edu.in"}</div>
+                </div>
+                <ChevronsUpDown size={14} color="#6B7280" />
               </div>
-              <button className="crm-logout" title="Log out" onClick={logoutAndGo}><LogOut size={16} /></button>
             </div>
           </div>
         </aside>

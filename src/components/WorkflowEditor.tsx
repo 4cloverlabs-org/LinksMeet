@@ -21,10 +21,31 @@ export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTy
   const [draft, setDraft] = useState<WorkflowDraft>(initialDraft);
   
   // Parse delay_ms into unit and value
-  const [delayValue, setDelayValue] = useState(draft.delay_ms === 0 ? 24 : draft.delay_ms / (1000 * 60 * 60));
-  const [delayUnit, setDelayUnit] = useState('hours');
+  let initialDelayValue = 24;
+  let initialDelayUnit = 'hours';
+  if (initialDraft.delay_ms) {
+    if (initialDraft.delay_ms % (24 * 60 * 60 * 1000) === 0) {
+      initialDelayValue = initialDraft.delay_ms / (24 * 60 * 60 * 1000);
+      initialDelayUnit = 'days';
+    } else if (initialDraft.delay_ms % (60 * 60 * 1000) === 0) {
+      initialDelayValue = initialDraft.delay_ms / (60 * 60 * 1000);
+      initialDelayUnit = 'hours';
+    } else {
+      initialDelayValue = initialDraft.delay_ms / (60 * 1000);
+      initialDelayUnit = 'minutes';
+    }
+  }
+
+  const [delayValue, setDelayValue] = useState(initialDelayValue);
+  const [delayUnit, setDelayUnit] = useState(initialDelayUnit);
   
-  const [when, setWhen] = useState('Before event starts');
+  const initialWhen = 
+    initialDraft.trigger_event === 'booking_cancelled' ? 'When event is cancelled' :
+    initialDraft.trigger_event === 'booking_created' ? 'When event is scheduled' :
+    initialDraft.trigger_event === 'event_ends_after' ? 'After event ends' :
+    'Before event starts';
+
+  const [when, setWhen] = useState(initialWhen);
   
   // Payload states
   const [senderName, setSenderName] = useState('LinksMeet');
@@ -41,13 +62,19 @@ export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTy
   const handleSave = () => {
     // Calculate new delay_ms
     let ms = 0;
-    if (when.includes('Before event starts')) {
-      const multiplier = delayUnit === 'hours' ? 60 * 60 * 1000 : (delayUnit === 'minutes' ? 60 * 1000 : 24 * 60 * 60 * 1000);
+    if (when.includes('Before event starts') || when.includes('After event ends')) {
+      const multiplier = delayUnit === 'days' ? 24 * 60 * 60 * 1000 : (delayUnit === 'hours' ? 60 * 60 * 1000 : 60 * 1000);
       ms = delayValue * multiplier;
     }
     
+    let trigger_event = 'event_starts_before';
+    if (when === 'After event ends') trigger_event = 'event_ends_after';
+    if (when === 'When event is scheduled') trigger_event = 'booking_created';
+    if (when === 'When event is cancelled') trigger_event = 'booking_cancelled';
+
     onSave({
       ...draft,
+      trigger_event,
       delay_ms: ms,
       action_payload: {
         senderName,

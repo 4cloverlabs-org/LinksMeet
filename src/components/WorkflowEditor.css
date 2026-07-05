@@ -1,8 +1,8 @@
 .wf-editor {
   background: #F9FAFB;
   min-height: 100vh;
-  margin: -32px; /* Negate the dashboard padding if needed */
   padding: 32px;
+  box-sizing: border-box;
 }
 
 .wf-editor-header {

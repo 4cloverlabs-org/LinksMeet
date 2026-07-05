@@ -51,6 +51,8 @@
   position: sticky;
   top: 0;
   height: 100vh;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-x: hidden;
 }
 .crm-brand {
   display: flex; align-items: center; gap: 9px;
@@ -74,7 +76,7 @@
   padding: 8px 12px; margin-bottom: 2px;
   border: none; background: none; cursor: pointer;
   border-radius: 12px; font-size: 0.88rem; font-weight: 500;
-  color: #4f4f4f; transition: all 0.15s ease;
+  color: #4f4f4f; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .crm-nav-item:hover { background: #E9E9F0; color: #333; }
 .crm-nav-item.active {
@@ -311,18 +313,32 @@
 .crm-help-card h4 { font-size: 0.92rem; margin-bottom: 4px; }
 .crm-help-card p { font-size: 0.78rem; color: var(--text); line-height: 1.45; }
 .crm-userbox {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px; border-radius: 11px; border: 2px solid #F5F5F5;
-  background: #FAF8F5;
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px; border-radius: 8px; border: 1px solid #F5F5F5;
+  background: #FFFFFF; cursor: pointer; transition: all 0.2s;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
-.crm-userbox .av {
-  width: 34px; height: 34px; border-radius: 50%;
+.crm-userbox:hover { background: #F9FAFB; border-color: #D1D5DB; }
+
+.crm-userbox-avatar-wrapper {
+  position: relative; width: 36px; height: 36px; flex-shrink: 0;
+}
+.crm-userbox-avatar {
+  width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+}
+.crm-userbox-avatar.av {
   background: var(--ac); color: #fff;
   display: flex; align-items: center; justify-content: center;
-  font-size: 0.8rem; font-weight: 500; flex-shrink: 0;
+  font-size: 0.8rem; font-weight: 500;
 }
-.crm-userbox .nm { font-size: 0.82rem; font-weight: 500; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.crm-userbox .rl { font-size: 0.7rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.crm-userbox-status {
+  position: absolute; bottom: 0; right: 0; width: 14px; height: 14px;
+  background-color: #10B981; border: 2px solid #FFFFFF; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.crm-userbox .nm { font-size: 14px; font-weight: 600; color: #111827; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.crm-userbox .rl { font-size: 13px; color: #6B7280; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ---------- Main ---------- */
 .crm-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
@@ -663,6 +679,24 @@
 @media (max-width: 760px) {
   .crm-tr.lead { grid-template-columns: 1.6fr 1.4fr 110px 40px; }
 }
+
+/* ---------- Sidebar Collapsed ---------- */
+.crm-side.collapsed { width: 76px; padding: 22px 10px; }
+.crm-side.collapsed .crm-brand span { display: none; }
+.crm-side.collapsed .crm-brand { flex-direction: row; justify-content: center !important; padding-bottom: 22px; }
+.crm-side.collapsed .crm-brand-logo-container { justify-content: center; width: 100%; }
+.crm-side.collapsed .collapse-btn { position: absolute; top: 0px; left: 50%; transform: translateX(-50%); opacity: 0; background: #F6F6F6 !important; width: 32px; height: 32px; justify-content: center; border-radius: 6px; pointer-events: none; transition: opacity 0.2s ease-in-out; }
+.crm-side.collapsed .crm-brand:hover .collapse-btn { opacity: 1; pointer-events: auto; }
+.crm-side.collapsed .crm-brand-logo { transition: opacity 0.2s ease-in-out; }
+.crm-side.collapsed .crm-brand:hover .crm-brand-logo { opacity: 0; }
+.crm-side.collapsed .crm-nav-label { display: none; }
+.crm-side.collapsed .crm-nav-item span { display: none; }
+.crm-side.collapsed .crm-nav-item .crm-badge { display: none; }
+.crm-side.collapsed .crm-nav-item { justify-content: center; padding: 0; width: 44px; height: 44px; margin: 2px auto; }
+.crm-side.collapsed .crm-nav-item svg { margin: 0; }
+.crm-side.collapsed .crm-userbox { padding: 4px; justify-content: center; width: 46px; height: 46px; margin: 0 auto; }
+.crm-side.collapsed .crm-userbox .nm, .crm-side.collapsed .crm-userbox .rl { display: none; }
+.crm-side.collapsed .crm-userbox .lucide-chevrons-up-down { display: none; }
 
 /* ---------- Animations ---------- */
 @keyframes crmFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
