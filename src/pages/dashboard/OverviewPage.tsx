@@ -44,12 +44,15 @@ export default function OverviewPage() {
                     const Icon = k.icon;
                     return (
                       <div className="crm-kpi" key={k.lab}>
-                        <div className="crm-kpi-top">
-                          <span className="crm-kpi-ic" style={{ background: ACCENT_SOFT, color: ACCENT }}><Icon size={19} /></span>
-                          {k.up && k.val > 0 && <span className="crm-kpi-delta up"><ArrowUpRight size={12} />+{k.val}</span>}
+                        <div className="crm-kpi-top" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div className="crm-kpi-lab" style={{ fontSize: '1.05rem', color: '#111', fontWeight: 500, margin: 0 }}>{k.lab}</div>
+                          <span className="crm-kpi-ic" style={{ border: '2px solid #F5F5F5', background: '#fff', color: '#333', borderRadius: '50%', width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={17} /></span>
                         </div>
-                        <div className="crm-kpi-val">{contactsLoading ? '—' : k.val}</div>
-                        <div className="crm-kpi-lab">{k.lab}</div>
+                        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px', marginTop: '16px' }}>
+                          <div className="crm-kpi-val" style={{ margin: 0, fontSize: '2rem', lineHeight: 1 }}>{contactsLoading ? '—' : k.val}</div>
+                          {k.up && k.val > 0 && <span className="crm-kpi-delta up" style={{ marginBottom: 4 }}><ArrowUpRight size={12} />+{k.val}%</span>}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '12px' }}>Update : Today</div>
                       </div>
                     );
                   })}

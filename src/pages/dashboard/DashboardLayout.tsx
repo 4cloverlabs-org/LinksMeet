@@ -951,7 +951,8 @@ export default function DashboardLayout() {
           />
         </div>
       ) : (
-      <div className="crm-main" style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+      <div className="crm-main" style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', padding: '16px 16px 16px 0', background: '#F6F6F6' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#FFFFFF', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
           {view !== 'campaigns' && (
           <div className="crm-topbar">
             <button className="crm-icon-btn crm-menu-btn" onClick={() => setSideOpen(true)} aria-label="Menu"><Menu size={18} /></button>
@@ -1007,10 +1008,11 @@ export default function DashboardLayout() {
           )}
 
           
-        <div className="crm-content" style={view === 'campaigns' ? { display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', background: '#fcfcfd', padding: 0 } : { display: 'flex', flexDirection: 'column', flex: 1, background: '#fcfcfd' }}>
+        <div className="crm-content" style={view === 'campaigns' ? { display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', background: '#FFFFFF', padding: 0 } : { display: 'flex', flexDirection: 'column', flex: 1, background: '#FFFFFF' }}>
           <Outlet context={{
             user, uid, userProfile, displayName, firstName, userInitials, toast, setToast, sideOpen, setSideOpen, search, setSearch, notif, setNotif, setView, contacts, eventTypes, bookings, myWorkflows, installedApps, handleCreateWorkflow, logoutAndGo, exportContactsCSV, showContactForm, setShowContactForm, cForm, setCForm, blankContact, contactErr, setContactErr, submitContact, savingContact, changeStatus, setEditingEvent, editingEvent, etTab, setEtTab, googleConnected, handleConnectGoogle, bookingTab, setBookingTab, joinMeeting, cancelBooking, leadsTab, setLeadsTab, peopleTab: 'contacts', setPeopleTab: () => {}, appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp, teamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember, editingWorkflow, setEditingWorkflow, setAvailIsDefault, availIsDefault, saveAvailability, availSchedule, setAvailSchedule, tzOpen, tzSearch, TIMEZONES, availPrefs, setTzOpen, setTzSearch, setAvailPrefs, followUps, statusCounts, addedThisWeek, ACCENT_SOFT, ACCENT, contactsLoading, STATUS_META, statusStages, filteredContacts, Donut, avColor, initials, removeContact, fileInputRef, handleUploadFile, CONTACT_STATUSES, setInitCampaignLead, EmptyState, handleSaveWorkflow, setMyWorkflows, API_BASE_URL, showWorkflowTypeModal, setShowWorkflowTypeModal, handleSelectType, appCats, filteredApps, connectingApps, filteredBookings, toggleEventType, etDropdown, setEtDropdown, addEventType: handleAddEventType, deleteEventType: handleDeleteEventType, initCampaignLead
           }} />
+        </div>
         </div>
       </div>
       )}

@@ -117,12 +117,12 @@ a {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #e0e0e0;
   border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--text-muted));
+  background: #c0c0c0;
 }
 
 /* Glassmorphism utility card */
