@@ -226,7 +226,7 @@ export default function EventTypesPage() {
                                   className={`cal-switch${d.on ? ' on' : ''}`} 
                                   aria-label={d.day}
                                   onClick={() => {
-                                    const newSched = [...availSchedule];
+                                    const newSched = JSON.parse(JSON.stringify(availSchedule));
                                     newSched[index].on = !newSched[index].on;
                                     setAvailSchedule(newSched);
                                   }}
@@ -243,7 +243,7 @@ export default function EventTypesPage() {
                                         className="cal-time-input"
                                         value={slot.start} 
                                         onChange={(e) => {
-                                          const newSched = [...availSchedule];
+                                          const newSched = JSON.parse(JSON.stringify(availSchedule));
                                           newSched[index].slots[sIndex].start = e.target.value;
                                           setAvailSchedule(newSched);
                                         }}
@@ -254,14 +254,14 @@ export default function EventTypesPage() {
                                         className="cal-time-input"
                                         value={slot.end} 
                                         onChange={(e) => {
-                                          const newSched = [...availSchedule];
+                                          const newSched = JSON.parse(JSON.stringify(availSchedule));
                                           newSched[index].slots[sIndex].end = e.target.value;
                                           setAvailSchedule(newSched);
                                         }}
                                       />
                                       <div className="cal-row-actions" style={{ marginLeft: 0 }}>
                                         <Trash2 size={16} onClick={() => {
-                                          const newSched = [...availSchedule];
+                                          const newSched = JSON.parse(JSON.stringify(availSchedule));
                                           newSched[index].slots.splice(sIndex, 1);
                                           if (newSched[index].slots.length === 0) newSched[index].on = false;
                                           setAvailSchedule(newSched);
@@ -276,12 +276,12 @@ export default function EventTypesPage() {
                               
                               <div className="cal-row-actions" style={{ marginLeft: 'auto', alignSelf: 'flex-start', marginTop: '6px' }}>
                                 {d.on && <Plus size={16} onClick={() => {
-                                  const newSched = [...availSchedule];
+                                  const newSched = JSON.parse(JSON.stringify(availSchedule));
                                   newSched[index].slots.push({start: '09:00', end: '17:00'});
                                   setAvailSchedule(newSched);
                                 }} />}
                                 <Copy size={16} onClick={() => {
-                                  const newSched = [...availSchedule];
+                                  const newSched = JSON.parse(JSON.stringify(availSchedule));
                                   const slotsToCopy = JSON.parse(JSON.stringify(d.slots));
                                   newSched.forEach(day => {
                                     if (day.day !== 'Saturday' && day.day !== 'Sunday') {
