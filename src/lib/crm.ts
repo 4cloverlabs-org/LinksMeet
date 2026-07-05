@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { createNotification } from './db';
 
 // ---- Types ----
 export type ContactStatus = 'New' | 'Contacted' | 'Follow-up' | 'Won' | 'Lost';
@@ -33,6 +34,14 @@ export async function listContacts(uid: string): Promise<Contact[]> {
 export async function addContact(uid: string, data: Omit<Contact, 'id' | 'createdAt'>): Promise<void> {
   const { error } = await supabase.from('contacts').insert({ ...data, user_id: uid });
   if (error) throw error;
+  
+  await createNotification({
+    user_id: uid,
+    title: 'New contact added',
+    description: `${data.name} joined your list`,
+    target: 'people',
+    type: 'user-plus'
+  }).catch(console.error);
 }
 export async function updateContact(uid: string, id: string, data: Partial<Omit<Contact, 'id'>>): Promise<void> {
   const { error } = await supabase.from('contacts').update(data).eq('id', id).eq('user_id', uid);

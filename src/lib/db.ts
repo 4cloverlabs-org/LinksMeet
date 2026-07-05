@@ -442,3 +442,36 @@ export async function cancelBooking(id: string): Promise<void> {
     localStorage.setItem('linksmeet_bookings', JSON.stringify(bookings));
   }
 }
+
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string;
+  target: string;
+  type: string;
+  is_read: boolean;
+  created_at: string;
+}
+
+export async function getNotifications(userId: string) {
+  const { data, error } = await supabase.from('notifications').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+  if (error) throw error;
+  return data as Notification[];
+}
+
+export async function markNotificationAsRead(id: string) {
+  const { error } = await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+  if (error) throw error;
+}
+
+export async function markAllNotificationsAsRead(userId: string) {
+  const { error } = await supabase.from('notifications').update({ is_read: true }).eq('user_id', userId);
+  if (error) throw error;
+}
+
+export async function createNotification(notif: Omit<Notification, 'id' | 'created_at' | 'is_read'>) {
+  const { error } = await supabase.from('notifications').insert([notif]);
+  if (error) throw error;
+}

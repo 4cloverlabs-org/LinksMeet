@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '../../lib/db';
+import type { Notification } from '../../lib/db';
 import { API_BASE_URL } from '../../lib/config';
 import { 
   listContacts, addContact, updateContact, deleteContact,
@@ -140,20 +142,7 @@ const TRANSACTIONS = [
   { name: 'Daniel Osei', event: '15 Min Meeting', amt: '$30.00', tag: 'rose', tagLabel: 'Refunded' },
 ];
 
-const PLANS_UP = [
-  { name: 'Starter', price: '$19', period: '/mo', featured: false, feats: ['Up to 3 event types', 'Basic workflows', '1 team seat', 'Email support'] },
-  { name: 'Growth', price: '$39', period: '/mo', featured: true, feats: ['Unlimited event types', 'Advanced workflows', '5 team seats', 'Priority support', 'Custom branding'] },
-  { name: 'Scale', price: '$79', period: '/mo', featured: false, feats: ['Everything in Growth', 'Unlimited seats', 'SSO & SAML', 'Dedicated manager', 'Full API access'] },
-];
 
-type Notif = { id: number; icon: typeof Users; title: string; desc: string; time: string; read: boolean; target: View };
-const NOTIFS_INIT: Notif[] = [
-  { id: 1, icon: CheckCircle2, title: 'Deal won', desc: 'Ramp closed for $40,000', time: '12m', read: false, target: 'dashboard' },
-  { id: 2, icon: CalendarCheck, title: 'New booking', desc: 'Product Demo with Logan Mitchell', time: '1h', read: false, target: 'bookings' },
-  { id: 3, icon: UserPlus, title: 'New contact added', desc: 'Sienna Brooks joined your list', time: '3h', read: false, target: 'people' },
-  { id: 4, icon: CreditCard, title: 'Payment received', desc: '$250.00 from Maya Coleman', time: '5h', read: true, target: 'payments' },
-  { id: 5, icon: Zap, title: 'Workflow ran', desc: 'Booking reminder sent to 24 people', time: 'Yesterday', read: true, target: 'workflows' },
-];
 
 /* ---------------- chart helpers ---------------- */
 function Donut({ stages, total, label }: { stages: { name: string; color: string; value: number }[]; total: number; label: string }) {
@@ -191,6 +180,7 @@ function EmptyState({ icon: Icon, title, body, cta }: { icon: typeof Users; titl
         <h3>{title}</h3>
         <p>{body}</p>
         <button className="crm-btn crm-btn-primary" style={{ margin: '0 auto' }}><Plus size={15} /> {cta}</button>
+
       </div>
     </div>
   );
@@ -261,6 +251,7 @@ export default function DashboardLayout() {
   };
   const [sideOpen, setSideOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const joinMeeting = (e: any) => {};
   const cancelBooking = (e: any) => {};
   const [notif, setNotif] = useState({ deals: true, weekly: true, mentions: false });
@@ -816,32 +807,101 @@ export default function DashboardLayout() {
   const logoutAndGo = async () => { try { await logOut(); } catch { /* ignore */ } navigate('/'); };
 
   const [wf, setWf] = useState(WORKFLOWS.map(w => w.on));
-  const [notifs, setNotifs] = useState<Notif[]>(NOTIFS_INIT);
+  const [notifs, setNotifs] = useState<Notification[]>([]);
   const [notifOpen, setNotifOpen] = useState(false);
-  const [upgradeOpen, setUpgradeOpen] = useState(false);
-  const [plan, setPlan] = useState('Free');
   const [toast, setToast] = useState<string | null>(null);
 
-  const choosePlan = (name: string) => {
-    setPlan(name);
-    setUpgradeOpen(false);
-    setToast(`You're now on the ${name} plan`);
-    window.setTimeout(() => setToast(null), 3200);
+  useEffect(() => {
+    if (!uid) return;
+    
+    getNotifications(uid).then(data => setNotifs(data || [])).catch(err => console.error("Error fetching notifs:", err));
+    
+    const channel = supabase.channel('notifs-channel')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${uid}` }, payload => {
+        setNotifs(prev => [payload.new as Notification, ...prev]);
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${uid}` }, payload => {
+        setNotifs(prev => prev.map(n => n.id === payload.new.id ? (payload.new as Notification) : n));
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [uid]);
+
+
+
+
+  
+  const formatTimeAgo = (dateStr: string) => {
+    if (!dateStr) return '';
+    const diff = (new Date().getTime() - new Date(dateStr).getTime()) / 1000;
+    if (isNaN(diff)) return '';
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm';
+    if (diff < 86400) return Math.floor(diff / 3600) + 'h';
+    return Math.floor(diff / 86400) + 'd';
   };
 
-  const unreadCount = notifs.filter(n => !n.read).length;
-  const openNotif = (n: Notif) => {
-    setNotifs(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
-    setNotifOpen(false);
-    setView(n.target);
+  const getNotifGroup = (dateStr: string) => {
+    if (!dateStr) return 'Earlier';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return 'Earlier';
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    
+    if (d.toDateString() === today.toDateString()) return 'Today';
+    if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+    return 'Earlier';
   };
-  const markAllRead = () => setNotifs(prev => prev.map(x => ({ ...x, read: true })));
+
+  const unreadCount = (notifs || []).filter(n => !n?.is_read).length;
+  const openNotif = async (n: Notification) => {
+    if (!n.is_read) {
+      setNotifs(prev => (prev || []).map(x => x.id === n.id ? { ...x, is_read: true } : x));
+      await markNotificationAsRead(n.id).catch(console.error);
+    }
+    setNotifOpen(false);
+    setView(n.target as View);
+  };
+  const markAllRead = async () => {
+    setNotifs(prev => (prev || []).map(x => ({ ...x, is_read: true })));
+    await markAllNotificationsAsRead(uid).catch(console.error);
+  };
+
+  
+  const globalSearchResults = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return { contacts: [], bookings: [], workflows: [], apps: [] };
+    return {
+      contacts: contacts.filter((c: any) => 
+        (c.name && c.name.toLowerCase().includes(q)) || 
+        (c.company && c.company.toLowerCase().includes(q)) || 
+        (c.email && c.email.toLowerCase().includes(q))
+      ).slice(0, 3),
+      bookings: bookings.filter((b: any) => 
+        (b.title && b.title.toLowerCase().includes(q)) || 
+        (b.attendeeName && b.attendeeName.toLowerCase().includes(q)) || 
+        (b.attendeeEmail && b.attendeeEmail.toLowerCase().includes(q))
+      ).slice(0, 3),
+      workflows: myWorkflows.filter((w: any) => 
+        (w.name && w.name.toLowerCase().includes(q)) || 
+        (w.description && w.description.toLowerCase().includes(q))
+      ).slice(0, 3),
+      apps: installedApps.filter((a: any) => 
+        (a.nm && a.nm.toLowerCase().includes(q)) || 
+        (a.cat && a.cat.toLowerCase().includes(q))
+      ).slice(0, 3)
+    };
+  }, [search, contacts, bookings, myWorkflows, installedApps]);
 
   const filteredContacts = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return contacts;
-    return contacts.filter(c =>
-      c.name.toLowerCase().includes(q) || c.company.toLowerCase().includes(q) || c.email.toLowerCase().includes(q)
+    return contacts.filter((c: any) =>
+      (c.name && c.name.toLowerCase().includes(q)) || 
+      (c.company && c.company.toLowerCase().includes(q)) || 
+      (c.email && c.email.toLowerCase().includes(q))
     );
   }, [contacts, search]);
 
@@ -866,7 +926,9 @@ export default function DashboardLayout() {
     <div className="crm">
       <div className="crm-shell">
         <div className={`crm-scrim${sideOpen ? ' show' : ''}`} onClick={() => setSideOpen(false)} />
-        {notifOpen && <div className="crm-notif-backdrop" onClick={() => setNotifOpen(false)} />}
+        
+
+                
 
         {/* ============ SIDEBAR ============ */}
         {!editingEvent && (
@@ -899,15 +961,6 @@ export default function DashboardLayout() {
           </div>
 
           <div className="crm-side-foot">
-            <div className="crm-upgrade">
-              <div className="ut"><Sparkles size={14} /> {plan === 'Free' ? 'Upgrade to Pro' : `${plan} plan`}</div>
-              <div className="ud">
-                {plan === 'Free'
-                  ? 'Unlock unlimited event types, workflows, and team seats.'
-                  : 'You have access to premium features. Manage or change your plan anytime.'}
-              </div>
-              <button onClick={() => setUpgradeOpen(true)}>{plan === 'Free' ? 'Upgrade plan' : 'Manage plan'}</button>
-            </div>
             <button className={`crm-nav-item${view === 'admin' ? ' active' : ''}`} onClick={() => { setView('admin'); setSideOpen(false); }}>
               <Shield size={17} /> <span>Admin Center</span>
             </button>
@@ -952,13 +1005,71 @@ export default function DashboardLayout() {
         </div>
       ) : (
       <div className="crm-main" style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', padding: '16px 16px 16px 0', background: '#F6F6F6' }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#FFFFFF', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'row', background: '#FFFFFF', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, transition: 'width 0.3s ease' }}>
           {view !== 'campaigns' && (
           <div className="crm-topbar">
             <button className="crm-icon-btn crm-menu-btn" onClick={() => setSideOpen(true)} aria-label="Menu"><Menu size={18} /></button>
-            <div className="crm-search">
+            <div className="crm-search" style={{ position: 'relative' }}>
               <Search size={15} color="#9b9bab" />
-              <input placeholder="Search contacts, deals, companies…" value={search} onChange={e => setSearch(e.target.value)} />
+              <input 
+                placeholder="Search across dashboard…" 
+                value={search} 
+                onChange={e => setSearch(e.target.value)}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+              />
+              {isSearchFocused && search.trim() !== '' && (
+                <div className="crm-search-dropdown">
+                  {globalSearchResults.contacts.length > 0 && (
+                    <div className="crm-search-section">
+                      <h4>Contacts</h4>
+                      {globalSearchResults.contacts.map((c: any) => (
+                        <div key={c.id} className="crm-search-item" onClick={() => { setView('people'); setSearch(''); }}>
+                          <div className="crm-search-item-title">{c.name}</div>
+                          <div className="crm-search-item-sub">{c.email}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {globalSearchResults.bookings.length > 0 && (
+                    <div className="crm-search-section">
+                      <h4>Bookings</h4>
+                      {globalSearchResults.bookings.map((b: any) => (
+                        <div key={b.id} className="crm-search-item" onClick={() => { setView('bookings'); setSearch(''); }}>
+                          <div className="crm-search-item-title">{b.title}</div>
+                          <div className="crm-search-item-sub">{b.attendeeName}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {globalSearchResults.workflows.length > 0 && (
+                    <div className="crm-search-section">
+                      <h4>Workflows</h4>
+                      {globalSearchResults.workflows.map((w: any) => (
+                        <div key={w.id} className="crm-search-item" onClick={() => { setView('workflows'); setSearch(''); }}>
+                          <div className="crm-search-item-title">{w.name}</div>
+                          <div className="crm-search-item-sub">{w.description}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {globalSearchResults.apps.length > 0 && (
+                    <div className="crm-search-section">
+                      <h4>Apps</h4>
+                      {globalSearchResults.apps.map((a: any) => (
+                        <div key={a.id} className="crm-search-item" onClick={() => { setView('apps'); setSearch(''); }}>
+                          <div className="crm-search-item-title">{a.nm}</div>
+                          <div className="crm-search-item-sub">{a.cat}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {globalSearchResults.contacts.length === 0 && globalSearchResults.bookings.length === 0 && globalSearchResults.workflows.length === 0 && globalSearchResults.apps.length === 0 && (
+                    <div className="crm-search-empty">No results found for "{search}"</div>
+                  )}
+                </div>
+              )}
             </div>
             <div className="crm-top-actions">
               <div className="crm-notif-wrap">
@@ -971,37 +1082,6 @@ export default function DashboardLayout() {
                   <Bell size={17} />
                   {unreadCount > 0 && <span className="crm-notif-badge">{unreadCount}</span>}
                 </button>
-
-                {notifOpen && (
-                  <div className="crm-notif-panel">
-                    <div className="crm-notif-head">
-                      <span className="ttl">Notifications {unreadCount > 0 && <em>{unreadCount} new</em>}</span>
-                      {unreadCount > 0 && <button onClick={markAllRead}>Mark all read</button>}
-                    </div>
-                    <div className="crm-notif-list">
-                      {notifs.map(n => {
-                        const Icon = n.icon;
-                        return (
-                          <button
-                            key={n.id}
-                            className={`crm-notif-item${n.read ? '' : ' unread'}`}
-                            onClick={() => openNotif(n)}
-                          >
-                            <span className="ic"><Icon size={15} /></span>
-                            <span className="txt">
-                              <span className="tb">{n.title}</span>
-                              <span className="tm">{n.time} ago</span>
-                            </span>
-                            {!n.read && <span className="crm-notif-unread-dot" />}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <button className="crm-notif-foot" onClick={() => { setNotifOpen(false); setView('dashboard'); }}>
-                      View all activity
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -1014,8 +1094,53 @@ export default function DashboardLayout() {
           }} />
         </div>
         </div>
+        <div className={`crm-notif-panel-wrapper ${notifOpen ? 'open' : ''}`}>
+          <div className="crm-notif-panel">
+                    <div className="crm-notif-head">
+                      <span className="ttl">Notifications</span>
+                      <div className="crm-notif-head-bell" onClick={() => setNotifOpen(false)} style={{ cursor: 'pointer' }}>
+                        <X size={20} />
+                      </div>
+                    </div>
+                    <div className="crm-notif-content-area">
+                      {['Today', 'Yesterday', 'Earlier'].map(dateGroup => {
+                        const items = (notifs || []).filter(n => getNotifGroup(n?.created_at) === dateGroup);
+                        if (items.length === 0) return null;
+                        
+                        return (
+                          <div key={dateGroup} className="crm-notif-date-group">
+                            <div className="crm-notif-date-header">
+                              {dateGroup}
+                              <MoreHorizontal size={14} />
+                            </div>
+                            {items.map(n => {
+                              let color = 'pink';
+                              if (n.target === 'dashboard') color = 'green';
+                              if (n.target === 'bookings') color = 'blue';
+                              if (n.target === 'people') color = 'orange';
+                              if (n.target === 'payments') color = 'purple';
+                              
+                              return (
+                                <div key={n.id} className="crm-notif-timeline-item">
+                                  <div className="crm-notif-timeline-time">{formatTimeAgo(n.created_at)}</div>
+                                  <div className={`crm-notif-timeline-line ${color}`} />
+                                  <div className="crm-notif-timeline-content" style={{ opacity: n.is_read ? 0.6 : 1, cursor: 'pointer' }} onClick={() => openNotif(n as any)}>
+                                    <div className="title" style={{ fontSize: '0.85rem', color: '#9A94A6', fontWeight: 600 }}>{n.title}</div>
+                                    <div className="desc" style={{ fontSize: '0.95rem', color: '#322B4A', fontWeight: 700 }}>{n.description}</div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+        </div>
+        </div>
       </div>
       )}
+
       </div>
     </div>
   );
