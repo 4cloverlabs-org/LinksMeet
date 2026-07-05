@@ -29,7 +29,7 @@ export default function PeoplePage() {
     appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp,
     teamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember,
     editingWorkflow, setEditingWorkflow
-  , filteredContacts, fileInputRef, handleUploadFile, contactsLoading, avColor, initials, any, CONTACT_STATUSES, setInitCampaignLead, removeContact } = ctx || {};
+  , filteredContacts, fileInputRef, handleUploadFile, contactsLoading, avColor, initials, CONTACT_STATUSES, setInitCampaignLead, removeContact } = ctx || {};
 
   return (
     <>
