@@ -122,10 +122,10 @@ export default function BookingPage() {
             if (!etData.active) return setError('This event type is currently paused.');
             setEventType({ ...etData, desc: etData.description || etData.desc });
             // Fetch bookings
+            // We fall back to fetching 'slot' if start_time is missing since bookings table didn't have start_time originally
             const { data: bData } = await supabase.from('bookings')
-              .select('start_time, end_time')
-              .eq('owner_uid', uid)
-              .gte('start_time', new Date().toISOString());
+              .select('slot')
+              .eq('user_id', uid);
             if (bData) setBookings(bData);
             setLoading(false);
             return;
@@ -204,30 +204,66 @@ export default function BookingPage() {
       const durMinutes = parseInt(eventType.dur) || 30;
       const endTime = new Date(d.getTime() + durMinutes * 60000).toISOString();
 
-      const res = await fetch(`${API_BASE_URL}/api/bookings`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ownerUid: uid,
-          bookerName: name,
-          bookerEmail: email,
-          bookerNotes: notes,
-          startTime,
-          endTime,
-          eventTitle: eventType.title,
-          eventTypeSlug: slug
-        })
-      });
+      let meetLink = '';
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/bookings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ownerUid: uid,
+            bookerName: name,
+            bookerEmail: email,
+            bookerNotes: notes,
+            startTime,
+            endTime,
+            eventTitle: eventType.title,
+            eventTypeSlug: slug
+          })
+        });
 
-      if (!res.ok) {
-        throw new Error('Backend failed to book');
+        if (!res.ok) {
+          throw new Error('Backend failed to book');
+        }
+        const data = await res.json();
+        meetLink = data.booking?.meet_link || '';
+      } catch (backendErr) {
+        console.warn("Backend unavailable, using direct Supabase fallback.", backendErr);
+        
+        // Format slot string
+        const startDate = new Date(startTime);
+        const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const formattedDate = `${months[startDate.getMonth()]} ${startDate.getDate()}, ${startDate.getFullYear()}`;
+        const formattedTime = startDate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        const slotStr = `${formattedDate} · ${formattedTime}`;
+
+        // 1. Insert Booking directly
+        const { error: insertError } = await supabase.from('bookings').insert({
+          user_id: uid,
+          event_slug: slug,
+          event_title: eventType.title,
+          booker_name: name,
+          booker_email: email,
+          slot: slotStr,
+          status: 'upcoming'
+        });
+        
+        if (insertError) throw insertError;
+        
+        // 2. Auto-create Contact directly
+        await supabase.from('contacts').insert({
+          user_id: uid,
+          name: name,
+          email: email,
+          company: notes || '',
+          source: `Booking: ${eventType.title}`,
+          status: 'New'
+        });
       }
-      const data = await res.json();
       
-      setMeetLink(data.booking?.meet_link || '');
-
+      setMeetLink(meetLink);
       setBookingStatus('success');
     } catch (err) {
+      console.error(err);
       alert('Failed to complete booking. Please try again.');
       setBookingStatus('idle');
     }
