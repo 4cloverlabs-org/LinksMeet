@@ -735,6 +735,28 @@ export default function DashboardLayout() {
     }
   };
 
+  
+  const handleAddEventType = async (uid: string, data: any) => {
+    await addEventType(uid, data);
+    const { data: fresh } = await supabase.from('event_types').select('*').eq('user_id', uid).order('created_at', { ascending: false });
+    if (fresh) {
+      setEventTypes(fresh.map(d => ({
+        id: d.id,
+        title: d.title,
+        dur: d.duration,
+        slug: d.slug,
+        desc: d.description,
+        active: d.active,
+        createdAt: new Date(d.created_at).getTime()
+      })));
+    }
+  };
+
+  const handleDeleteEventType = async (uid: string, id: string) => {
+    await deleteEventType(uid, id);
+    setEventTypes(prev => prev.filter(e => e.id !== id));
+  };
+
   const exportContactsCSV = () => {
     const head = ['Name', 'Company', 'Email', 'Phone', 'Status', 'Source'];
     const rows = contacts.map(c => [c.name, c.company, c.email, c.phone, c.status, c.source || ''].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
@@ -865,7 +887,21 @@ export default function DashboardLayout() {
             uid={uid}
             initialData={editingEvent === 'new' ? null : editingEvent}
             onClose={() => setEditingEvent(null)}
-            onSaved={() => setEditingEvent(null)}
+                        onSaved={async () => {
+              setEditingEvent(null);
+              const { data: fresh } = await supabase.from('event_types').select('*').eq('user_id', uid).order('created_at', { ascending: false });
+              if (fresh) {
+                setEventTypes(fresh.map(d => ({
+                  id: d.id,
+                  title: d.title,
+                  dur: d.duration,
+                  slug: d.slug,
+                  desc: d.description,
+                  active: d.active,
+                  createdAt: new Date(d.created_at).getTime()
+                })));
+              }
+            }}
           />
         </div>
       ) : (
@@ -927,7 +963,7 @@ export default function DashboardLayout() {
           
         <div className="crm-content" style={view === 'campaigns' ? { display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', background: '#fcfcfd', padding: 0 } : { display: 'flex', flexDirection: 'column', flex: 1, background: '#fcfcfd' }}>
           <Outlet context={{
-            user, uid, userProfile, displayName, firstName, userInitials, toast, setToast, sideOpen, setSideOpen, search, setSearch, notif, setNotif, setView, contacts, eventTypes, bookings, myWorkflows, installedApps, handleCreateWorkflow, logoutAndGo, exportContactsCSV, showContactForm, setShowContactForm, cForm, setCForm, blankContact, contactErr, setContactErr, submitContact, savingContact, changeStatus, setEditingEvent, editingEvent, etTab, setEtTab, googleConnected, handleConnectGoogle, bookingTab, setBookingTab, joinMeeting, cancelBooking, leadsTab, setLeadsTab, peopleTab: 'contacts', setPeopleTab: () => {}, appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp, teamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember, editingWorkflow, setEditingWorkflow, setAvailIsDefault, availIsDefault, saveAvailability, availSchedule, setAvailSchedule, tzOpen, tzSearch, TIMEZONES, availPrefs, setTzOpen, setTzSearch, setAvailPrefs, followUps, statusCounts, addedThisWeek, ACCENT_SOFT, ACCENT, contactsLoading, STATUS_META, statusStages, filteredContacts, Donut, avColor, initials, removeContact, fileInputRef, handleUploadFile, CONTACT_STATUSES, setInitCampaignLead, EmptyState, handleSaveWorkflow, setMyWorkflows, API_BASE_URL, showWorkflowTypeModal, setShowWorkflowTypeModal, handleSelectType, appCats, filteredApps, connectingApps, filteredBookings, toggleEventType, etDropdown, setEtDropdown, addEventType, deleteEventType, initCampaignLead
+            user, uid, userProfile, displayName, firstName, userInitials, toast, setToast, sideOpen, setSideOpen, search, setSearch, notif, setNotif, setView, contacts, eventTypes, bookings, myWorkflows, installedApps, handleCreateWorkflow, logoutAndGo, exportContactsCSV, showContactForm, setShowContactForm, cForm, setCForm, blankContact, contactErr, setContactErr, submitContact, savingContact, changeStatus, setEditingEvent, editingEvent, etTab, setEtTab, googleConnected, handleConnectGoogle, bookingTab, setBookingTab, joinMeeting, cancelBooking, leadsTab, setLeadsTab, peopleTab: 'contacts', setPeopleTab: () => {}, appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp, teamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember, editingWorkflow, setEditingWorkflow, setAvailIsDefault, availIsDefault, saveAvailability, availSchedule, setAvailSchedule, tzOpen, tzSearch, TIMEZONES, availPrefs, setTzOpen, setTzSearch, setAvailPrefs, followUps, statusCounts, addedThisWeek, ACCENT_SOFT, ACCENT, contactsLoading, STATUS_META, statusStages, filteredContacts, Donut, avColor, initials, removeContact, fileInputRef, handleUploadFile, CONTACT_STATUSES, setInitCampaignLead, EmptyState, handleSaveWorkflow, setMyWorkflows, API_BASE_URL, showWorkflowTypeModal, setShowWorkflowTypeModal, handleSelectType, appCats, filteredApps, connectingApps, filteredBookings, toggleEventType, etDropdown, setEtDropdown, addEventType: handleAddEventType, deleteEventType: handleDeleteEventType, initCampaignLead
           }} />
         </div>
       </div>

@@ -16,6 +16,7 @@ import EventTypeEditor from '../../components/EventTypeEditor';
 
 export default function EventTypesPage() {
   const ctx = useOutletContext<any>();
+  const [deleteModalEvent, setDeleteModalEvent] = useState<any>(null);
   const { 
     user, uid, userProfile, displayName, firstName, userInitials,
     toast, setToast, sideOpen, setSideOpen, search, setSearch,
@@ -34,6 +35,16 @@ export default function EventTypesPage() {
   return (
     <>
       <div className="crm-fade">
+        <div className="crm-card-head">
+          <div>
+            <h2 className="ttl">Event Types</h2>
+            <p className="sub">Create scheduling links people can book.</p>
+          </div>
+          <button className="crm-btn crm-btn-primary" onClick={() => setEditingEvent('new')}>
+            <Plus size={15} /> New Event Type
+          </button>
+        </div>
+        <div className="crm-card">
                 <div className="crm-seg" style={{ width: 'fit-content', marginBottom: 22 }}>
                   <button className={etTab === 'eventTypes' ? 'on' : ''} onClick={() => setEtTab('eventTypes')}>Event Types</button>
                   <button className={etTab === 'availability' ? 'on' : ''} onClick={() => setEtTab('availability')}>Availability</button>
@@ -145,7 +156,8 @@ export default function EventTypesPage() {
                                 <button className="et-dd-btn" onClick={async () => { 
                                   setEtDropdown(null); 
                                   try {
-                                    await addEventType(uid, { ...e, slug: e.slug + '-copy', title: e.title + ' (Copy)' });
+                                    const { id, createdAt, ...rest } = e as any;
+                                    await addEventType(uid, { ...rest, slug: e.slug + '-copy', title: e.title + ' (Copy)' });
                                     setToast('Event type duplicated');
                                   } catch (err: any) {
                                     setToast('Failed to duplicate');
@@ -167,7 +179,8 @@ export default function EventTypesPage() {
                                 <div style={{ height: '1px', background: '#e2e8f0', margin: '4px 0' }} />
                                 <button className="et-dd-btn" style={{ color: '#ef4444' }} onClick={async () => {
                                   setEtDropdown(null);
-                                  if (confirm(`Delete ${e.title}?`)) {
+                                  setDeleteModalEvent(e);
+                                  /*
                                     try {
                                       await deleteEventType(uid, e.id);
                                       setToast('Event type deleted');
@@ -175,6 +188,7 @@ export default function EventTypesPage() {
                                       setToast('Failed to delete');
                                     }
                                   }
+                                  */
                                 }}>
                                   <Trash2 size={14} /> Delete
                                 </button>
@@ -358,6 +372,36 @@ export default function EventTypesPage() {
                   </div>
                 )}
               </div>
+
+      {deleteModalEvent && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100001 }} onClick={() => setDeleteModalEvent(null)}>
+          <div style={{ background: '#ffffff', borderRadius: '16px', width: '90%', maxWidth: '440px', padding: '28px', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', color: '#ef4444' }}>
+              <AlertCircle size={24} />
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700, color: '#0f172a' }}>Delete Event Type?</h3>
+            </div>
+            <p style={{ fontSize: '0.95rem', color: '#475569', lineHeight: 1.5, margin: '0 0 24px' }}>
+              Are you sure you want to delete the <strong>{deleteModalEvent.title}</strong> event type? This action cannot be undone and any existing bookings for this type might lose their context.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button onClick={() => setDeleteModalEvent(null)} style={{ padding: '10px 18px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#334155', fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={async () => {
+                try {
+                  await deleteEventType(uid, deleteModalEvent.id);
+                  setToast('Event type deleted');
+                } catch (err) {
+                  setToast('Failed to delete');
+                }
+                setDeleteModalEvent(null);
+              }} style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: '#ef4444', color: '#ffffff', fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Trash2 size={16} /> Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      </div>
     </>
   );
 }
+
