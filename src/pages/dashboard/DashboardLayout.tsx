@@ -557,22 +557,40 @@ export default function DashboardLayout() {
       setContactsLoading(false);
     }
   };
+  const hasSeededET = useRef(false);
 
   useEffect(() => {
     if (uid === 'anon') return;
     
     // Listen to real-time Event Types
     const unsubET = listenEventTypes(uid, (data) => {
-      if (data.length === 0) {
+      if (data.length === 0 && !hasSeededET.current) {
+        hasSeededET.current = true;
         // Seed default event types if none exist
         Promise.all(DEFAULT_EVENT_TYPES.map(type => addEventType(uid, { ...type, active: true })))
           .then(() => {
             // Optimistically set the event types so they appear immediately
             setEventTypes(DEFAULT_EVENT_TYPES.map(t => ({ id: t.slug, ...t, active: true, createdAt: Date.now() }) as any));
           })
-          .catch(e => console.error("Failed to seed event types:", e));
+          .catch(e => {
+             console.error("Failed to seed event types:", e);
+             hasSeededET.current = false;
+          });
       } else {
-        setEventTypes(data);
+        // One-time cleanup for duplicates created by the strict-mode bug
+        const unique = new Set();
+        const duplicates: any[] = [];
+        data.forEach(e => {
+          if (unique.has(e.slug)) duplicates.push(e);
+          else unique.add(e.slug);
+        });
+        if (duplicates.length > 0) {
+          duplicates.forEach(d => deleteEventType(uid, d.id));
+          // Optimistically remove from view
+          setEventTypes(data.filter(e => !duplicates.includes(e)));
+        } else {
+          setEventTypes(data);
+        }
       }
     });
 
