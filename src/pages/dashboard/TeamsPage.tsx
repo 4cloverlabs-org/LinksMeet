@@ -6,7 +6,7 @@ import {
   CheckCircle2, Menu, CalendarRange, CalendarCheck,
   Clock, Workflow, Spline, Store, CreditCard, Shield, HelpCircle,
   Sparkles, Link2, Video, Zap, BookOpen, MessageCircle, Keyboard, Check, X,
-  Copy, Rocket, Calendar, Trash2, LogOut, Loader2, EyeOff, ExternalLink, Edit2, Code, Info, ArrowLeft, Globe, Settings, Mail, Phone, ChevronRight,
+  Copy, Rocket, Calendar, Trash2, MoreVertical, ChevronLeft, Download, LogOut, Loader2, EyeOff, ExternalLink, Edit2, Code, Info, ArrowLeft, Globe, Settings, Mail, Phone, ChevronRight,
   Smartphone, Heart, AlertCircle, RefreshCw, Pencil, XCircle
 } from 'lucide-react';
 import CampaignModule from '../../components/campaigns/CampaignModule';
@@ -31,85 +31,282 @@ export default function TeamsPage() {
     editingWorkflow, setEditingWorkflow
   } = ctx || {};
 
+  const [activeTab, setActiveTab] = useState('members');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState('All Roles');
+  const [deptFilter, setDeptFilter] = useState('All Depts');
+  const [statusFilter, setStatusFilter] = useState('All Status');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Derive filtered members
+  const filteredMembers = (teamMembers || []).filter((m: any) => {
+    const matchesSearch = (m.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          (m.email || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesRole = roleFilter === 'All Roles' || m.role === roleFilter;
+    const matchesDept = deptFilter === 'All Depts' || (m.department || 'Unassigned') === deptFilter;
+    const matchesStatus = statusFilter === 'All Status' || m.status === statusFilter;
+    return matchesSearch && matchesRole && matchesDept && matchesStatus;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filteredMembers.length / itemsPerPage));
+  const paginatedMembers = filteredMembers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const activeCount = (teamMembers || []).filter((m: any) => m.status === 'Active').length;
+  const pendingCount = (teamMembers || []).filter((m: any) => m.status === 'Pending').length;
+
   return (
     <>
       <div className="crm-fade">
-                  <div className="crm-card" style={{ borderRadius: '8px', border: '1px solid #E5E7EB', overflow: 'hidden', background: '#FFFFFF', boxShadow: 'none' }}>
-                    <div style={{ padding: '24px 32px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                          <h3 style={{ margin: '0 0 4px', fontSize: '18px', fontWeight: 700, color: '#111827' }}>Team Members</h3>
-                          <p style={{ margin: 0, fontSize: '14px', color: '#6B7280' }}>Manage your organization's members, roles, and access.</p>
+        <div style={{ background: '#FFFFFF', minHeight: '100%', width: '100%', padding: '24px' }}>
+          
+          {/* Header Row */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+            <div>
+              <h3 style={{ margin: '0 0 8px', fontSize: '24px', fontWeight: 600, color: '#111827' }}>Team Members</h3>
+              <p style={{ margin: 0, fontSize: '14px', color: '#6B7280' }}>Manage who has access to your workspace.</p>
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button className="crm-btn" style={{ background: '#FFFFFF', color: '#4B5563', border: '1px solid #E5E7EB', borderRadius: '8px', padding: '0 16px', height: '40px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <Calendar size={16} /> 27 April, 2026
+              </button>
+              <button className="crm-btn" style={{ background: '#FFFFFF', color: '#4B5563', border: '1px solid #E5E7EB', borderRadius: '8px', padding: '0 16px', height: '40px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <Settings size={16} /> Team Settings
+              </button>
+              <button className="crm-btn" style={{ background: '#2563EB', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '0 16px', height: '40px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => setShowInviteModal(true)}>
+                <Plus size={16} /> Invite Member
+              </button>
+            </div>
+          </div>
+
+          {/* Nav Tabs */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+             <div style={{ display: 'flex', gap: '4px', background: '#FFFFFF', padding: '4px', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
+                <button 
+                  onClick={() => setActiveTab('members')}
+                  style={{ padding: '8px 16px', background: activeTab === 'members' ? '#F3F4F6' : 'transparent', color: activeTab === 'members' ? '#111827' : '#6B7280', border: activeTab === 'members' ? '1px solid #E5E7EB' : 'none', borderRadius: '6px', fontSize: '14px', fontWeight: 500, cursor: 'pointer' }}
+                >
+                  Team Members
+                </button>
+                <button 
+                  onClick={() => setActiveTab('details')}
+                  style={{ padding: '8px 16px', background: activeTab === 'details' ? '#F3F4F6' : 'transparent', color: activeTab === 'details' ? '#111827' : '#6B7280', border: activeTab === 'details' ? '1px solid #E5E7EB' : 'none', borderRadius: '6px', fontSize: '14px', fontWeight: 500, cursor: 'pointer' }}
+                >
+                  Team Details
+                </button>
+             </div>
+             <button className="crm-btn" style={{ background: '#FFFFFF', color: '#4B5563', border: '1px solid #E5E7EB', borderRadius: '8px', padding: '0 16px', height: '40px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <Download size={16} /> Export CSV
+              </button>
+          </div>
+
+          {activeTab === 'members' ? (
+            <>
+              {/* Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+             {[
+               { icon: <Users size={16} />, label: 'Total Member', value: (teamMembers?.length || 0).toString() },
+               { icon: <Users size={16} />, label: 'Active Now', value: activeCount.toString() },
+               { icon: <Users size={16} />, label: 'Pending Invites', value: pendingCount.toString().padStart(2, '0') },
+               { icon: <Users size={16} />, label: 'Seats Used', value: `${teamMembers?.length || 0} / 50` }
+             ].map((card, i) => (
+                <div key={i} style={{ background: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '12px', padding: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <div style={{ width: 24, height: 24, background: '#F3F4F6', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#111827' }}>
+                      {card.icon}
+                    </div>
+                    <span style={{ fontSize: '14px', color: '#6B7280', fontWeight: 500 }}>{card.label}</span>
+                  </div>
+                  <div style={{ fontSize: '28px', fontWeight: 600, color: '#111827' }}>{card.value}</div>
+                </div>
+             ))}
+          </div>
+
+          {/* Filters Row */}
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+            <div style={{ position: 'relative', width: '240px' }}>
+              <Search size={16} style={{ position: 'absolute', left: 12, top: 12, color: '#9CA3AF' }} />
+              <input type="text" placeholder="Search Team.." value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }} style={{ width: '100%', height: '40px', paddingLeft: '36px', borderRadius: '8px', border: '1px solid #E5E7EB', fontSize: '14px' }} />
+            </div>
+            <select value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setCurrentPage(1); }} style={{ height: '40px', padding: '0 32px 0 16px', borderRadius: '8px', border: '1px solid #E5E7EB', fontSize: '14px', color: '#4B5563', appearance: 'none', background: '#FFFFFF url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%236B7280\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'m6 9 6 6 6-6\'/%3E%3C/svg%3E") no-repeat right 12px center' }}>
+              <option>All Roles</option>
+              <option>Owner</option>
+              <option>Admin</option>
+              <option>Editor</option>
+              <option>Viewer</option>
+              <option>Member</option>
+            </select>
+            <select value={deptFilter} onChange={e => { setDeptFilter(e.target.value); setCurrentPage(1); }} style={{ height: '40px', padding: '0 32px 0 16px', borderRadius: '8px', border: '1px solid #E5E7EB', fontSize: '14px', color: '#4B5563', appearance: 'none', background: '#FFFFFF url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%236B7280\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'m6 9 6 6 6-6\'/%3E%3C/svg%3E") no-repeat right 12px center' }}>
+              <option>All Depts</option>
+              <option>Management</option>
+              <option>Marketing</option>
+              <option>Engineering</option>
+              <option>Design</option>
+              <option>Finance</option>
+              <option>Sales</option>
+              <option>Unassigned</option>
+            </select>
+            <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setCurrentPage(1); }} style={{ height: '40px', padding: '0 32px 0 16px', borderRadius: '8px', border: '1px solid #E5E7EB', fontSize: '14px', color: '#4B5563', appearance: 'none', background: '#FFFFFF url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%236B7280\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'m6 9 6 6 6-6\'/%3E%3C/svg%3E") no-repeat right 12px center' }}>
+              <option>All Status</option>
+              <option>Active</option>
+              <option>Pending</option>
+              <option>Offline</option>
+            </select>
+            
+            <div style={{ flex: 1 }}></div>
+            
+            <button className="crm-btn" style={{ background: '#FFFFFF', color: '#4B5563', border: '1px solid #E5E7EB', borderRadius: '8px', padding: '0 16px', height: '40px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <LayoutGrid size={16} /> Filter
+            </button>
+          </div>
+          
+          {/* Table Container */}
+          <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E5E7EB', overflow: 'hidden' }}>
+            <div style={{ overflowX: 'auto' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '80px minmax(200px, 1.5fr) 100px 120px 150px 100px 120px 100px 80px', padding: '16px 24px', background: '#F9FAFB', borderBottom: '1px solid #E5E7EB', fontSize: '12px', fontWeight: 600, color: '#6B7280' }}>
+                <span>ID</span>
+                <span>Members Name</span>
+                <span>Role</span>
+                <span>Department</span>
+                <span>Contact Number</span>
+                <span>Status</span>
+                <span>Joined Date</span>
+                <span>Workflow</span>
+                <span style={{ textAlign: 'right' }}>Action</span>
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {paginatedMembers.length === 0 && (
+                  <div style={{ padding: '32px', textAlign: 'center', color: '#6B7280', fontSize: '14px' }}>No team members match your filters.</div>
+                )}
+                {paginatedMembers.map((member: any, i: number) => {
+                  
+                  // Use real details from DB if available
+                  const displayId = `MBR-00${((currentPage - 1) * itemsPerPage) + i + 1}`;
+                  const dept = member.department || 'Unassigned';
+                  const phone = member.phone || '--';
+                  const joinedDate = new Date(member.created_at || Date.now()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                  
+                  const workflow = member.workflow_progress !== undefined ? `${member.workflow_progress}%` : '--';
+                  const workflowColor = workflow === '--' ? '#9CA3AF' : (member.workflow_progress < 20 ? '#D97706' : '#059669');
+
+                  let statusBg = '#EFF8FF';
+                  let statusColor = '#2563EB';
+                  let dotColor = '#3B82F6';
+                  if (member.status === 'Pending') {
+                    statusBg = '#FEF9C3';
+                    statusColor = '#CA8A04';
+                    dotColor = '#EAB308';
+                  } else if (member.status === 'Offline') {
+                    statusBg = '#F3F4F6';
+                    statusColor = '#4B5563';
+                    dotColor = '#6B7280';
+                  }
+                  
+                  const statusText = member.status || 'Active';
+
+                  return (
+                    <div key={member.id} style={{ display: 'grid', gridTemplateColumns: '80px minmax(200px, 1.5fr) 100px 120px 150px 100px 120px 100px 80px', padding: '16px 24px', borderBottom: '1px solid #E5E7EB', alignItems: 'center', fontSize: '13px', color: '#4B5563' }}>
+                      {/* ID */}
+                      <span style={{ color: '#6B7280' }}>{displayId}</span>
+                      
+                      {/* Name */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                          <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${member.email}&backgroundColor=f8fafc`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={member.name} />
                         </div>
-                        <button className="crm-btn" style={{ background: '#2563EB', color: '#FFFFFF', border: 'none', borderRadius: '6px', padding: '0 16px', height: '36px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => setShowInviteModal(true)}>
-                          <UserPlus size={16} /> Invite member
+                        <span style={{ fontWeight: 500, color: '#111827' }}>{member.name}</span>
+                      </div>
+                      
+                      {/* Role */}
+                      <span>{member.role}</span>
+                      
+                      {/* Department */}
+                      <span>{dept}</span>
+                      
+                      {/* Contact Number */}
+                      <span>{phone}</span>
+                      
+                      {/* Status */}
+                      <div>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '2px 8px', borderRadius: '16px', fontSize: '12px', fontWeight: 500, background: statusBg, color: statusColor }}>
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: dotColor }} />
+                          {statusText}
+                        </span>
+                      </div>
+                      
+                      {/* Joined Date */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Calendar size={14} style={{ color: '#9CA3AF' }} />
+                        <span>{joinedDate}</span>
+                      </div>
+                      
+                      {/* Workflow */}
+                      <span style={{ color: workflowColor, fontWeight: 500 }}>{workflow}</span>
+                      
+                      {/* Action */}
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px', color: '#6B7280' }}>
+                        <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#6B7280', fontSize: '13px' }} onClick={() => removeMember(member.id)}>
+                          Edit
+                        </button>
+                        <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#9CA3AF' }}>
+                          <MoreVertical size={16} />
                         </button>
                       </div>
                     </div>
-                    
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      {/* Table Header */}
-                      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(250px, 2fr) 1fr 1fr 100px', padding: '12px 32px', background: '#F9FAFB', borderTop: '1px solid #E5E7EB', borderBottom: '1px solid #E5E7EB', fontSize: '12px', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>
-                        <span>User</span>
-                        <span>Status</span>
-                        <span>Role</span>
-                        <span style={{ textAlign: 'right' }}>Actions</span>
-                      </div>
-                      
-                      {/* Table Rows */}
-                      {teamMembers.map((member, i) => {
-                        const memberInitials = member.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-                        const isPending = member.status === 'Pending';
-                        
-                        return (
-                          <div key={member.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(250px, 2fr) 1fr 1fr 100px', padding: '16px 32px', borderBottom: '1px solid #E5E7EB', alignItems: 'center' }}>
-                            {/* User Column */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                              <div style={{ width: 40, height: 40, borderRadius: '50%', background: isPending ? '#F3F4F6' : '#2563EB', color: isPending ? '#4B5563' : '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 500, flexShrink: 0 }}>
-                                {isPending ? 'JS' : '21'}
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                <span style={{ fontWeight: 600, color: '#111827', fontSize: '14px' }}>{isPending ? 'Jane Smith' : '2431fa05fbf6 (You)'}</span>
-                                <span style={{ color: '#6B7280', fontSize: '14px' }}>{isPending ? 'jane.smith@acmecorp.com' : '2431fa05fbf6@linksmeet.com'}</span>
-                              </div>
-                            </div>
-                            
-                            {/* Status Column */}
-                            <div>
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '2px 10px', borderRadius: '9999px', fontSize: '12px', fontWeight: 500, background: isPending ? '#FFFBEB' : '#ECFDF5', color: isPending ? '#D97706' : '#059669' }}>
-                                <span style={{ width: 6, height: 6, borderRadius: '50%', background: isPending ? '#F59E0B' : '#10B981' }} />
-                                {member.status}
-                              </span>
-                            </div>
-                            
-                            {/* Role Column */}
-                            <div>
-                              <span style={{ padding: '2px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 500, background: '#F3F4F6', color: '#4B5563' }}>
-                                {member.role}
-                              </span>
-                            </div>
-                            
-                            {/* Actions Column */}
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', color: '#9CA3AF' }}>
-                               {isPending ? (
-                                 <>
-                                   <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#9CA3AF' }} title="Resend Invite" onClick={() => { setToast('Invite resent to ' + member.email); setTimeout(() => setToast(null), 2000); }}><Mail size={18} strokeWidth={1.5} /></button>
-                                   <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#9CA3AF' }} title="Cancel Invite" onClick={() => removeMember(member.id)}><Trash2 size={18} strokeWidth={1.5} /></button>
-                                 </>
-                               ) : (
-                                 member.role !== 'Owner' ? (
-                                   <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#9CA3AF' }} title="Remove Member" onClick={() => removeMember(member.id)}><Trash2 size={18} strokeWidth={1.5} /></button>
-                                 ) : (
-                                   <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#9CA3AF' }} title="Settings"><Settings size={18} strokeWidth={1.5} /></button>
-                                 )
-                               )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  );
+                })}
               </div>
+            </div>
+            
+            {/* Pagination Footer */}
+            <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #E5E7EB' }}>
+              <span style={{ fontSize: '14px', color: '#6B7280' }}>
+                Showing {filteredMembers.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredMembers.length)} of {filteredMembers.length}
+              </span>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '8px', color: currentPage === 1 ? '#D1D5DB' : '#4B5563', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}>
+                  <ChevronLeft size={16} />
+                </button>
+                
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <button 
+                    key={i}
+                    onClick={() => setCurrentPage(i + 1)}
+                    style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', background: currentPage === i + 1 ? '#111827' : '#FFFFFF', border: currentPage === i + 1 ? 'none' : '1px solid #E5E7EB', borderRadius: '8px', color: currentPage === i + 1 ? '#FFFFFF' : '#4B5563', fontWeight: currentPage === i + 1 ? 500 : 400, cursor: 'pointer' }}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                
+                <button 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '8px', color: currentPage === totalPages ? '#D1D5DB' : '#4B5563', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}>
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+            </>
+          ) : (
+            <div style={{ padding: '64px 40px', textAlign: 'center', background: '#F9FAFB', border: '1px dashed #E5E7EB', borderRadius: '12px' }}>
+              <div style={{ width: 48, height: 48, background: '#EFF6FF', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: '#2563EB' }}>
+                <Settings size={24} />
+              </div>
+              <h3 style={{ margin: '0 0 8px', fontSize: '18px', fontWeight: 600, color: '#111827' }}>Team Details Settings</h3>
+              <p style={{ margin: 0, fontSize: '14px', color: '#6B7280' }}>Configure workspace name, billing, and global permissions here.</p>
+              <button className="crm-btn" style={{ marginTop: '24px', background: '#2563EB', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '0 16px', height: '36px', fontSize: '14px', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                Save Settings
+              </button>
+            </div>
+          )}
+          
+        </div>
+      </div>
     </>
   );
 }

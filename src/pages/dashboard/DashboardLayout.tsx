@@ -427,36 +427,76 @@ export default function DashboardLayout() {
   }, []);
 
   // Teams State
-  const [teamMembers, setTeamMembers] = useState([
-    { id: '1', name: displayName + ' (You)', email: user?.email || 'admin@linksmeet.com', role: 'Owner', status: 'Active' },
-    { id: '2', name: 'Jane Smith', email: 'jane.smith@example.com', role: 'Member', status: 'Pending' }
-  ]);
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('Member');
 
-  const handleInviteSubmit = (e: FormEvent) => {
+  useEffect(() => {
+    if (!uid) return;
+    const fetchTeam = async () => {
+      const { data, error } = await supabase.from('team_members').select('*').eq('user_id', uid).order('created_at', { ascending: true });
+      if (!error && data) {
+        setTeamMembers(data);
+      }
+    };
+    fetchTeam();
+  }, [uid]);
+
+  // The UI displays the Owner + fetched team members
+  const allTeamMembers = useMemo(() => {
+    const ownerMember = {
+      id: 'owner',
+      name: displayName + ' (You)',
+      email: user?.email || 'admin@linksmeet.com',
+      role: 'Owner',
+      status: 'Active',
+      department: 'Management',
+      phone: '+1 (555) 000-0000',
+      workflow_progress: 100,
+      created_at: new Date().toISOString()
+    };
+    return [ownerMember, ...teamMembers];
+  }, [displayName, user, teamMembers]);
+
+  const handleInviteSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!inviteEmail) return;
-    const newId = Math.random().toString(36).substring(7);
+    if (!inviteEmail || !uid) return;
+    
+    // Auto-active for now as requested
     const newMember = {
-      id: newId,
-      name: inviteEmail.split('@')[0], // placeholder name
+      user_id: uid,
+      name: inviteEmail.split('@')[0],
       email: inviteEmail,
       role: inviteRole,
-      status: 'Pending'
+      status: 'Active',
+      department: 'Unassigned',
+      phone: '',
+      workflow_progress: 0
     };
-    setTeamMembers(prev => [...prev, newMember]);
+    
+    const { data, error } = await supabase.from('team_members').insert(newMember).select().single();
+    if (error) {
+      setToast('Error adding member');
+    } else if (data) {
+      setTeamMembers(prev => [...prev, data]);
+      setToast('Member added');
+    }
+    
     setShowInviteModal(false);
     setInviteEmail('');
     setInviteRole('Member');
-    setToast('Invite sent!');
-    setTimeout(() => setToast(null), 2000);
   };
 
-  const removeMember = (id: string) => {
-    setTeamMembers(prev => prev.filter(m => m.id !== id));
-    setToast('Member removed');
+  const removeMember = async (id: string) => {
+    if (id === 'owner') return; // Cannot remove owner
+    const { error } = await supabase.from('team_members').delete().eq('id', id);
+    if (!error) {
+      setTeamMembers(prev => prev.filter(m => m.id !== id));
+      setToast('Member removed');
+    } else {
+      setToast('Error removing member');
+    }
     setTimeout(() => setToast(null), 2000);
   };
 
@@ -1238,7 +1278,7 @@ export default function DashboardLayout() {
           
         <div className="crm-content" style={view === 'campaigns' ? { display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', background: '#FFFFFF', padding: 0 } : { display: 'flex', flexDirection: 'column', flex: 1, background: '#FFFFFF' }}>
           <Outlet context={{
-            user, uid, userProfile, displayName, firstName, userInitials, toast, setToast, sideOpen, setSideOpen, search, setSearch, notif, setNotif, setView, setIsOnboardingModalOpen, setUserProfile, contacts, eventTypes, bookings, myWorkflows, installedApps, handleCreateWorkflow, logoutAndGo, exportContactsCSV, showContactForm, setShowContactForm, cForm, setCForm, blankContact, contactErr, setContactErr, submitContact, savingContact, changeStatus, setEditingEvent, editingEvent, etTab, setEtTab, googleConnected, handleConnectGoogle, bookingTab, setBookingTab, joinMeeting, cancelBooking, leadsTab, setLeadsTab, peopleTab: 'contacts', setPeopleTab: () => {}, appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp, teamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember, editingWorkflow, setEditingWorkflow, setAvailIsDefault, availIsDefault, saveAvailability, availSchedule, setAvailSchedule, tzOpen, tzSearch, TIMEZONES, availPrefs, setTzOpen, setTzSearch, setAvailPrefs, followUps, statusCounts, addedThisWeek, ACCENT_SOFT, ACCENT, contactsLoading, STATUS_META, statusStages, filteredContacts, Donut, avColor, initials, removeContact, fileInputRef, handleUploadFile, CONTACT_STATUSES, setInitCampaignLead, EmptyState, handleSaveWorkflow, setMyWorkflows, API_BASE_URL, showWorkflowTypeModal, setShowWorkflowTypeModal, handleSelectType, appCats, filteredApps, connectingApps, filteredBookings, toggleEventType, etDropdown, setEtDropdown, addEventType: handleAddEventType, deleteEventType: handleDeleteEventType, initCampaignLead
+            user, uid, userProfile, displayName, firstName, userInitials, toast, setToast, sideOpen, setSideOpen, search, setSearch, notif, setNotif, setView, setIsOnboardingModalOpen, setUserProfile, contacts, eventTypes, bookings, myWorkflows, installedApps, handleCreateWorkflow, logoutAndGo, exportContactsCSV, showContactForm, setShowContactForm, cForm, setCForm, blankContact, contactErr, setContactErr, submitContact, savingContact, changeStatus, setEditingEvent, editingEvent, etTab, setEtTab, googleConnected, handleConnectGoogle, bookingTab, setBookingTab, joinMeeting, cancelBooking, leadsTab, setLeadsTab, peopleTab: 'contacts', setPeopleTab: () => {}, appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp, teamMembers: allTeamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember, editingWorkflow, setEditingWorkflow, setAvailIsDefault, availIsDefault, saveAvailability, availSchedule, setAvailSchedule, tzOpen, tzSearch, TIMEZONES, availPrefs, setTzOpen, setTzSearch, setAvailPrefs, followUps, statusCounts, addedThisWeek, ACCENT_SOFT, ACCENT, contactsLoading, STATUS_META, statusStages, filteredContacts, Donut, avColor, initials, removeContact, fileInputRef, handleUploadFile, CONTACT_STATUSES, setInitCampaignLead, EmptyState, handleSaveWorkflow, setMyWorkflows, API_BASE_URL, showWorkflowTypeModal, setShowWorkflowTypeModal, handleSelectType, appCats, filteredApps, connectingApps, filteredBookings, toggleEventType, etDropdown, setEtDropdown, addEventType: handleAddEventType, deleteEventType: handleDeleteEventType, initCampaignLead
           }} />
         </div>
         </div>

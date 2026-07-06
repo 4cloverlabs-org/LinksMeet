@@ -467,6 +467,13 @@ app.post('/api/bookings', async (req, res) => {
     const { data: ownerData, error: userError } = await supabase.from('users').select('*').eq('id', ownerUid).single();
     if (userError || !ownerData) return res.status(404).json({ error: "Owner not found" });
     
+    // 1.5 Fetch Team Members
+    const { data: teamMembers } = await supabase.from('team_members').select('*').eq('user_id', ownerUid).eq('status', 'Active');
+    let selectedMember = null;
+    if (teamMembers && teamMembers.length > 0) {
+      selectedMember = teamMembers[Math.floor(Math.random() * teamMembers.length)];
+    }
+
     const tokens = ownerData.google_tokens;
     let meetLink = null;
     let calendarSuccess = false;
@@ -486,7 +493,11 @@ app.post('/api/bookings', async (req, res) => {
           description: `Scheduled via LinksMeet for event: ${eventTitle}`,
           start: { dateTime: startTime },
           end: { dateTime: endTime },
-          attendees: [{ email: bookerEmail }, { email: ownerData.email }],
+          attendees: [
+            { email: bookerEmail },
+            { email: ownerData.email },
+            ...(selectedMember ? [{ email: selectedMember.email }] : [])
+          ],
           conferenceData: {
             createRequest: {
               requestId: `sm-${Date.now()}`,
@@ -576,6 +587,12 @@ app.post('/api/bookings', async (req, res) => {
         `;
         const ownerRaw = makeBody(ownerEmail, ownerEmail, `New Lead: ${bookerName} booked ${eventTitle}`, ownerHtml);
         await gmail.users.messages.send({ userId: 'me', requestBody: { raw: ownerRaw } });
+        
+        if (selectedMember) {
+          const tmHtml = ownerHtml.replace(eOwnerName, escapeHtml(selectedMember.name));
+          const tmRaw = makeBody(selectedMember.email, ownerEmail, `New Lead: ${bookerName} booked ${eventTitle}`, tmHtml);
+          await gmail.users.messages.send({ userId: 'me', requestBody: { raw: tmRaw } });
+        }
         
         calendarSuccess = true;
       } catch (gcalErr) {
