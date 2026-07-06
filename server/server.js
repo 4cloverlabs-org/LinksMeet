@@ -176,9 +176,14 @@ app.get('/api/user/profile', requireAuth, async (req, res) => {
 
     if (error) {
       console.error("Fetch profile error:", error);
+      if (error.code === 'PGRST116' || !data) {
+        const defaultProfile = { onboarding_completed: false };
+        return res.json({ ...defaultProfile, user: defaultProfile });
+      }
       return res.status(500).json({ error: error.message });
     }
-    res.json(data);
+    const profile = data || { onboarding_completed: false };
+    res.json({ ...profile, user: profile });
   } catch (err) {
     console.error("Profile error:", err);
     res.status(500).json({ error: err.message });
