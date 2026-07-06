@@ -25,9 +25,7 @@ export default function RequireAuth({ children }: { children: ReactNode }) {
       .then(({ data, error }) => {
         if (!mounted) return;
         if (!error && data) {
-          if (!data.onboarding_completed && location.pathname !== '/onboarding') {
-            navigate('/onboarding', { replace: true });
-          } else if (data.onboarding_completed && location.pathname === '/onboarding') {
+          if (location.pathname === '/onboarding') {
             navigate('/dashboard', { replace: true });
           }
         }

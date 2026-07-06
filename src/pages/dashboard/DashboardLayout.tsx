@@ -8,7 +8,7 @@ import {
   CheckCircle2, Menu, CalendarRange, CalendarCheck,
   Clock, Workflow, Spline, Store, CreditCard, Shield, HelpCircle,
   Sparkles, Link2, Video, Zap, BookOpen, MessageCircle, Keyboard, Check, X,
-  Copy, Rocket, Calendar, Trash2, LogOut, Loader2, EyeOff, ExternalLink, Edit2, Code, Info, ArrowLeft, Globe, Settings, Mail, Phone, ChevronRight,
+  Copy, Rocket, Calendar, Trash2, LogOut, Loader2, EyeOff, ExternalLink, Edit2, Code, Info, ArrowLeft, ArrowRight, Globe, Settings, Mail, Phone, ChevronRight,
   Smartphone, Heart, AlertCircle, RefreshCw, Pencil, XCircle, ChevronsUpDown, User, PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
@@ -25,6 +25,7 @@ import '../../pages/CrmDashboard.css';
 import CampaignModule from '../../components/campaigns/CampaignModule';
 import WorkflowEditor, { type WorkflowDraft } from '../../components/WorkflowEditor';
 import EventTypeEditor from '../../components/EventTypeEditor';
+import CompleteProfileModal from '../../components/CompleteProfileModal';
 
 type View =
   | 'dashboard' | 'eventTypes' | 'bookings' | 'people' | 'teams'
@@ -263,6 +264,7 @@ export default function DashboardLayout() {
   const [etDropdown, setEtDropdown] = useState<string | null>(null);
   
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(false);
   
   const [initCampaignLead, setInitCampaignLead] = useState<any>(null);
 
@@ -485,14 +487,57 @@ export default function DashboardLayout() {
     // Fetch user profile
     const fetchProfile = async () => {
       try {
+        // 1. Query Supabase directly first (instant & bulletproof across new logins without waiting for Express headers!)
+        const { data: supaProfile, error: supaErr } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', uid)
+          .single();
+
+        const meta = user?.user_metadata || {};
+        const googleAvatar = meta.avatar_url || meta.picture || meta.avatar || '';
+        const googleName = meta.full_name || meta.name || '';
+
+        if (supaProfile) {
+          setUserProfile({
+            ...supaProfile,
+            profile_picture: supaProfile.profile_picture || supaProfile.avatar_url || googleAvatar,
+            avatar_url: supaProfile.avatar_url || supaProfile.profile_picture || googleAvatar,
+            full_name: supaProfile.full_name || supaProfile.first_name || supaProfile.name || googleName
+          });
+          if (supaProfile.onboarding_completed !== true) {
+            setIsOnboardingModalOpen(true);
+          }
+        } else if (supaErr && (supaErr.code === 'PGRST116' || !supaProfile)) {
+          // Brand new user whose DB row hasn't finished generating yet -> open onboarding modal immediately!
+          const defaultProfile = { 
+            onboarding_completed: false,
+            profile_picture: googleAvatar,
+            avatar_url: googleAvatar,
+            full_name: googleName,
+            name: googleName
+          };
+          setUserProfile(defaultProfile);
+          setIsOnboardingModalOpen(true);
+        }
+
+        // 2. Also fetch from Express API to keep backend synchronized
         const { data: sessionData } = await supabase.auth.getSession();
         const token = sessionData?.session?.access_token || '';
-        const res = await fetch(`${API_BASE_URL}/api/user/profile`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setUserProfile(data.user);
+        if (token) {
+          const res = await fetch(`${API_BASE_URL}/api/user/profile`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const profileData = data.user || data;
+            if (profileData) {
+              setUserProfile(prev => ({ ...prev, ...profileData }));
+              if (profileData.onboarding_completed !== true) {
+                setIsOnboardingModalOpen(true);
+              }
+            }
+          }
         }
       } catch (err) {
         console.error("Failed to fetch profile", err);
@@ -580,11 +625,6 @@ export default function DashboardLayout() {
 
   useEffect(() => {
     async function checkGoogle() {
-      if (localStorage.getItem('sm_gmail_token')) {
-        setGoogleConnected(true);
-        return;
-      }
-      
       const params = new URLSearchParams(window.location.search);
       if (params.get('google_connected') === 'true') {
         setGoogleConnected(true);
@@ -598,14 +638,19 @@ export default function DashboardLayout() {
           const { data } = await supabase.from('users').select('google_tokens').eq('id', uid).single();
           if (data?.google_tokens?.access_token || data?.google_tokens?.refresh_token) {
             setGoogleConnected(true);
+          } else {
+            setGoogleConnected(false);
           }
-        } catch(e) {}
+        } catch(e) {
+          setGoogleConnected(false);
+        }
       }
     }
     checkGoogle();
   }, [uid]);
 
   const handleConnectGoogle = () => {
+    localStorage.setItem('sm_onboarding_step_3', 'true');
     window.location.href = `${API_BASE_URL}/auth/google?uid=${uid}`;
   };
   const handleDisconnectGoogle = async () => {
@@ -1193,7 +1238,7 @@ export default function DashboardLayout() {
           
         <div className="crm-content" style={view === 'campaigns' ? { display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', background: '#FFFFFF', padding: 0 } : { display: 'flex', flexDirection: 'column', flex: 1, background: '#FFFFFF' }}>
           <Outlet context={{
-            user, uid, userProfile, displayName, firstName, userInitials, toast, setToast, sideOpen, setSideOpen, search, setSearch, notif, setNotif, setView, contacts, eventTypes, bookings, myWorkflows, installedApps, handleCreateWorkflow, logoutAndGo, exportContactsCSV, showContactForm, setShowContactForm, cForm, setCForm, blankContact, contactErr, setContactErr, submitContact, savingContact, changeStatus, setEditingEvent, editingEvent, etTab, setEtTab, googleConnected, handleConnectGoogle, bookingTab, setBookingTab, joinMeeting, cancelBooking, leadsTab, setLeadsTab, peopleTab: 'contacts', setPeopleTab: () => {}, appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp, teamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember, editingWorkflow, setEditingWorkflow, setAvailIsDefault, availIsDefault, saveAvailability, availSchedule, setAvailSchedule, tzOpen, tzSearch, TIMEZONES, availPrefs, setTzOpen, setTzSearch, setAvailPrefs, followUps, statusCounts, addedThisWeek, ACCENT_SOFT, ACCENT, contactsLoading, STATUS_META, statusStages, filteredContacts, Donut, avColor, initials, removeContact, fileInputRef, handleUploadFile, CONTACT_STATUSES, setInitCampaignLead, EmptyState, handleSaveWorkflow, setMyWorkflows, API_BASE_URL, showWorkflowTypeModal, setShowWorkflowTypeModal, handleSelectType, appCats, filteredApps, connectingApps, filteredBookings, toggleEventType, etDropdown, setEtDropdown, addEventType: handleAddEventType, deleteEventType: handleDeleteEventType, initCampaignLead
+            user, uid, userProfile, displayName, firstName, userInitials, toast, setToast, sideOpen, setSideOpen, search, setSearch, notif, setNotif, setView, setIsOnboardingModalOpen, setUserProfile, contacts, eventTypes, bookings, myWorkflows, installedApps, handleCreateWorkflow, logoutAndGo, exportContactsCSV, showContactForm, setShowContactForm, cForm, setCForm, blankContact, contactErr, setContactErr, submitContact, savingContact, changeStatus, setEditingEvent, editingEvent, etTab, setEtTab, googleConnected, handleConnectGoogle, bookingTab, setBookingTab, joinMeeting, cancelBooking, leadsTab, setLeadsTab, peopleTab: 'contacts', setPeopleTab: () => {}, appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp, teamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember, editingWorkflow, setEditingWorkflow, setAvailIsDefault, availIsDefault, saveAvailability, availSchedule, setAvailSchedule, tzOpen, tzSearch, TIMEZONES, availPrefs, setTzOpen, setTzSearch, setAvailPrefs, followUps, statusCounts, addedThisWeek, ACCENT_SOFT, ACCENT, contactsLoading, STATUS_META, statusStages, filteredContacts, Donut, avColor, initials, removeContact, fileInputRef, handleUploadFile, CONTACT_STATUSES, setInitCampaignLead, EmptyState, handleSaveWorkflow, setMyWorkflows, API_BASE_URL, showWorkflowTypeModal, setShowWorkflowTypeModal, handleSelectType, appCats, filteredApps, connectingApps, filteredBookings, toggleEventType, etDropdown, setEtDropdown, addEventType: handleAddEventType, deleteEventType: handleDeleteEventType, initCampaignLead
           }} />
         </div>
         </div>
@@ -1243,6 +1288,23 @@ export default function DashboardLayout() {
         </div>
       </div>
       )}
+
+      <CompleteProfileModal
+        isOpen={isOnboardingModalOpen}
+        onClose={() => setIsOnboardingModalOpen(false)}
+        userProfile={userProfile}
+        userEmail={user?.email}
+        userMetadata={user?.user_metadata}
+        googleConnected={googleConnected}
+        onConnectGoogle={handleConnectGoogle}
+        onDisconnectGoogle={handleDisconnectGoogle}
+        onComplete={(updatedUser) => {
+          setUserProfile(updatedUser);
+          setIsOnboardingModalOpen(false);
+          setToast('Profile completed successfully! 🎉');
+          setTimeout(() => setToast(null), 3000);
+        }}
+      />
 
       </div>
     </div>
