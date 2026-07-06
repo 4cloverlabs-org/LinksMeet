@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import {
-  Sparkles, LogOut, Loader2, Globe, User, Check, AlertCircle, RefreshCw
+  Sparkles, LogOut, Loader2, Globe, User, Check, AlertCircle, RefreshCw, Edit2
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { API_BASE_URL } from '../../lib/config';
@@ -24,6 +24,7 @@ export default function AdminPage() {
   
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState('Profile Settings');
 
   const calculateProgress = () => {
     if (userProfile?.onboarding_completed) return 100;
@@ -125,214 +126,306 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
     }
   };
 
+  const inputStyle = {
+    width: '100%',
+    background: 'transparent',
+    border: 'none',
+    borderBottom: '1px solid #E5E7EB',
+    fontSize: '14px',
+    fontWeight: 600,
+    color: '#111827',
+    padding: '6px 0',
+    outline: 'none',
+  };
+
   return (
-    <>
-      <div className="crm-fade crm-grid-2b">
-        <div className="crm-card">
-          <div className="crm-card-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h3>Profile & Brand Completion</h3>
-            {setIsOnboardingModalOpen && (
-              <button
-                onClick={() => setIsOnboardingModalOpen(true)}
-                style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '6px 12px', borderRadius: 8, fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
-              >
-                <Sparkles size={14} /> Launch Setup Wizard
-              </button>
-            )}
-          </div>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', paddingBottom: '40px' }}>
+      {/* Top Tabs */}
+      <div style={{ display: 'flex', gap: '8px', background: '#F3F4F6', padding: '8px', borderRadius: '12px', marginBottom: '24px', overflowX: 'auto' }}>
+        {['Profile Settings', 'Preferences', 'Billing & Plans', 'Security'].map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            style={{
+              background: activeTab === tab ? '#FFFFFF' : 'transparent',
+              color: activeTab === tab ? '#0E61F3' : '#6B7280',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              fontWeight: activeTab === tab ? 600 : 500,
+              border: 'none',
+              boxShadow: activeTab === tab ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+              fontSize: '14px',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              transition: 'all 0.2s'
+            }}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
 
-          {/* Onboarding Progress Card */}
-          <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: '#fff', borderRadius: 16, padding: '20px', marginBottom: 24, boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.25)', border: '1px solid #334155' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)' }}>
-                  <Sparkles size={22} color="#fff" />
-                </div>
-                <div>
-                  <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    Onboarding Progress
-                    <span style={{ fontSize: '0.75rem', padding: '2px 10px', borderRadius: 20, background: progress === 100 ? '#10b981' : '#3b82f6', color: '#fff', fontWeight: 700 }}>
-                      {progress === 100 ? '✓ Completed' : '⚡ In Progress'}
-                    </span>
-                  </h4>
-                  <p style={{ margin: '2px 0 0 0', fontSize: '0.82rem', color: '#94a3b8' }}>
-                    {progress === 100 
-                      ? 'Your brand profile is 100% configured for AI automation.' 
-                      : 'Complete your profile details below to unlock all AI features.'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Progress Bar */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, fontSize: '0.82rem', fontWeight: 600 }}>
-                <span style={{ color: '#cbd5e1' }}>Profile Setup Score</span>
-                <span style={{ color: '#60a5fa', fontWeight: 800, fontSize: '0.95rem' }}>{progress}%</span>
-              </div>
-              <div style={{ width: '100%', height: 10, background: '#334155', borderRadius: 10, overflow: 'hidden' }}>
-                <div style={{ width: `${progress}%`, height: '100%', background: 'linear-gradient(90deg, #3b82f6 0%, #60a5fa 50%, #38bdf8 100%)', borderRadius: 10, transition: 'width 0.5s cubic-bezier(0.4, 0, 0.2, 1)' }} />
-              </div>
-              {progress < 100 && (
-                <div style={{ display: 'flex', gap: 14, marginTop: 14, fontSize: '0.78rem', color: '#94a3b8', flexWrap: 'wrap' }}>
-                  <span style={{ color: username ? '#10b981' : '#94a3b8', fontWeight: username ? 600 : 400 }}>{username ? '✓' : '○'} Username (+15%)</span>
-                  <span style={{ color: bio ? '#10b981' : '#94a3b8', fontWeight: bio ? 600 : 400 }}>{bio ? '✓' : '○'} Bio (+15%)</span>
-                  <span style={{ color: profilePic ? '#10b981' : '#94a3b8', fontWeight: profilePic ? 600 : 400 }}>{profilePic ? '✓' : '○'} Avatar (+10%)</span>
-                  <span style={{ color: websiteUrl ? '#10b981' : '#94a3b8', fontWeight: websiteUrl ? 600 : 400 }}>{websiteUrl ? '✓' : '○'} Website (+20%)</span>
-                  <span style={{ color: brandDesc ? '#10b981' : '#94a3b8', fontWeight: brandDesc ? 600 : 400 }}>{brandDesc ? '✓' : '○'} AI Brand Details (+20%)</span>
-                </div>
-              )}
-            </div>
+      {/* Header Card */}
+      <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '32px', marginBottom: '24px', display: 'flex', flexWrap: 'wrap', gap: '32px', border: '1px solid #E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flex: '1 1 300px' }}>
+          <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#F3F4F6', overflow: 'hidden', border: '2px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0E61F3', fontSize: '24px', fontWeight: 700 }}>
+            {profilePic ? <img src={profilePic} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Avatar" /> : (userInitials || <User size={32} />)}
           </div>
-
-          <div style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%)', border: '1px solid #e2e8f0', borderRadius: 14, padding: '16px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              {profilePic ? (
-                <img src={profilePic} alt="Avatar" style={{ width: 60, height: 60, borderRadius: '50%', objectFit: 'cover', border: '2px solid #3b82f6', background: '#fff' }} />
-              ) : (
-                <span className="crm-av" style={{ width: 60, height: 60, fontSize: '1.25rem', background: '#0E61F3', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontWeight: 700 }}>
-                  {userInitials || <User size={28} />}
-                </span>
-              )}
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '1.05rem', color: '#0f172a' }}>{name || displayName || 'Your Name'}</div>
-                <div style={{ fontSize: '0.82rem', color: '#64748b' }}>{user?.email}</div>
-                <div style={{ fontSize: '0.75rem', color: '#3b82f6', marginTop: 2, fontWeight: 600 }}>
-                  {userProfile?.onboarding_completed ? '✓ Profile Completed' : '⚡ Profile Incomplete'}
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={handleGenerateAvatar}
-              type="button"
-              style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '8px 14px', borderRadius: 10, fontSize: '0.82rem', fontWeight: 600, color: '#334155', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
-            >
-              <RefreshCw size={14} /> Change Avatar
-            </button>
-          </div>
-
-          <div className="crm-field">
-            <label style={{ fontWeight: 600, color: '#334155', marginBottom: 6, display: 'block' }}>Full Name</label>
-            <input 
-              value={name} 
-              onChange={e => setName(e.target.value)} 
-              placeholder="e.g. Jane Doe"
-              style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: '0.95rem' }} 
-            />
-          </div>
-
-          <div className="crm-field" style={{ marginTop: 16 }}>
-            <label style={{ fontWeight: 600, color: '#334155', marginBottom: 6, display: 'block' }}>Email</label>
-            <input 
-              defaultValue={user?.email || ''} 
-              disabled 
-              style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #e2e8f0', background: '#f1f5f9', color: '#64748b', fontSize: '0.95rem', cursor: 'not-allowed' }} 
-            />
-          </div>
-
-          <div className="crm-field" style={{ marginTop: 16 }}>
-            <label style={{ fontWeight: 600, color: '#334155', marginBottom: 6, display: 'block' }}>Scheduling Username</label>
-            <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: 10, overflow: 'hidden', background: '#fff' }}>
-              <span style={{ padding: '10px 14px', background: '#f8fafc', color: '#64748b', fontSize: '0.9rem', borderRight: '1px solid #e2e8f0', fontWeight: 500 }}>
-                linksmeet.com/
-              </span>
-              <input 
-                value={username} 
-                onChange={e => setUsername(e.target.value)} 
-                placeholder="janedoe"
-                style={{ flex: 1, border: 'none', padding: '10px 14px', fontSize: '0.95rem', outline: 'none' }} 
-              />
-            </div>
-          </div>
-
-          <div className="crm-field" style={{ marginTop: 16 }}>
-            <label style={{ fontWeight: 600, color: '#334155', marginBottom: 6, display: 'block' }}>Short Bio / Headline</label>
-            <input 
-              value={bio} 
-              onChange={e => setBio(e.target.value)} 
-              placeholder="e.g. Founder at Acme Corp | Helping teams scale"
-              style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: '0.95rem' }} 
-            />
-          </div>
-
-          <div className="crm-field" style={{ marginTop: 16 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <label style={{ fontWeight: 600, color: '#334155', margin: 0 }}>Website URL</label>
-              <button 
-                type="button"
-                onClick={handleAnalyze} 
-                disabled={isAnalyzing || !websiteUrl}
-                style={{ 
-                  background: isAnalyzing ? '#cbd5e1' : 'linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)', 
-                  color: '#fff', 
-                  border: 'none', 
-                  padding: '4px 10px', 
-                  borderRadius: 6, 
-                  fontSize: '0.78rem', 
-                  fontWeight: 700, 
-                  cursor: isAnalyzing || !websiteUrl ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4
-                }}
-              >
-                {isAnalyzing ? <Loader2 size={12} className="cpm-spin" /> : <Sparkles size={12} />}
-                {isAnalyzing ? 'Analyzing AI...' : 'AI Analyze Website'}
-              </button>
-            </div>
-            <div style={{ position: 'relative' }}>
-              <Globe size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-              <input 
-                value={websiteUrl} 
-                onChange={e => setWebsiteUrl(e.target.value)} 
-                placeholder="https://yourcompany.com"
-                style={{ width: '100%', padding: '10px 14px 10px 42px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: '0.95rem' }} 
-              />
-            </div>
-          </div>
-
-          <div className="crm-field" style={{ marginTop: 16 }}>
-            <label style={{ fontWeight: 600, color: '#334155', marginBottom: 6, display: 'block' }}>
-              Company Details & Brand Description (AI Trained)
-            </label>
-            <textarea 
-              value={brandDesc} 
-              onChange={e => setBrandDesc(e.target.value)} 
-              placeholder="Click 'AI Analyze Website' above to automatically extract your company products, value propositions, and brand voice..."
-              style={{ width: '100%', minHeight: 140, resize: 'vertical', padding: '12px 14px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: '0.9rem', lineHeight: 1.5, fontFamily: 'inherit' }} 
-            />
-          </div>
-          
-          <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
-            <button 
-              onClick={handleSave}
-              disabled={saving}
-              className="crm-btn crm-btn-primary" 
-              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px', fontSize: '0.95rem', fontWeight: 700 }}
-            >
-              {saving ? <Loader2 size={18} className="cpm-spin" /> : <Check size={18} />}
-              {saving ? 'Saving changes...' : 'Save Profile Changes'}
-            </button>
-            <button type="button" className="crm-btn crm-btn-ghost" onClick={logoutAndGo} style={{ padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <LogOut size={16} /> Log out
-            </button>
+          <div>
+            <h2 style={{ margin: '0 0 6px 0', fontSize: '20px', color: '#111827', fontWeight: 700 }}>{name || displayName || 'Your Name'}</h2>
+            <div style={{ color: '#0E61F3', fontSize: '14px', fontWeight: 600 }}>Workspace Owner <span style={{ color: '#9CA3AF', fontWeight: 500 }}>| Administration</span></div>
           </div>
         </div>
-
-        <div className="crm-card" style={{ alignSelf: 'start' }}>
-          <div className="crm-card-head"><h3>Notifications</h3></div>
-          {[
-            { key: 'deals' as const, tt: 'Deal alerts', ds: 'Get notified when a deal changes stage.' },
-            { key: 'weekly' as const, tt: 'Weekly summary', ds: 'A digest of your pipeline every Monday.' },
-            { key: 'mentions' as const, tt: 'Mentions', ds: 'When a teammate @mentions you.' },
-          ].map(n => (
-            <div className="crm-toggle-row" key={n.key}>
-              <div><div className="tt">{n.tt}</div><div className="ds">{n.ds}</div></div>
-              <button className={`crm-switch${notif[n.key] ? ' on' : ''}`} onClick={() => setNotif(prev => ({ ...prev, [n.key]: !prev[n.key] }))} aria-label={n.tt} />
+        
+        <div style={{ width: '1px', background: '#E5E7EB' }} className="desktop-only-divider" />
+        
+        <div style={{ flex: '2 1 400px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', alignItems: 'center' }}>
+          <div>
+            <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>User ID:</div>
+            <div style={{ color: '#111827', fontSize: '14px', fontWeight: 600 }}>{userProfile?.id ? userProfile.id.substring(0, 8).toUpperCase() : 'USR-53862'}</div>
+          </div>
+          <div>
+            <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>Account Status:</div>
+            <div style={{ color: '#111827', fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10B981' }} /> Active
             </div>
-          ))}
+          </div>
+          <div>
+            <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>Username:</div>
+            <div style={{ color: '#111827', fontSize: '14px', fontWeight: 600 }}>{username || '--'}</div>
+          </div>
+          <div>
+            <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>Email:</div>
+            <div style={{ color: '#111827', fontSize: '14px', fontWeight: 600 }}>{user?.email || '--'}</div>
+          </div>
         </div>
       </div>
-    </>
+
+      {/* Grid Cards - Profile Settings */}
+      {activeTab === 'Profile Settings' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '24px', alignItems: 'start' }}>
+        
+        {/* Personal Information Card */}
+        <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '24px', border: '1px solid #E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid #E5E7EB', paddingBottom: '16px' }}>
+            <h3 style={{ margin: 0, fontSize: '16px', color: '#6B7280', fontWeight: 600 }}>Personal information</h3>
+            <button style={{ background: 'none', border: 'none', color: '#9CA3AF', cursor: 'pointer' }}><Edit2 size={16} /></button>
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+            <div>
+              <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>Full Name</div>
+              <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Jane Doe" style={inputStyle} />
+            </div>
+            <div>
+              <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>Email Address</div>
+              <input value={user?.email || ''} disabled style={{ ...inputStyle, color: '#6B7280', cursor: 'not-allowed' }} />
+            </div>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>Scheduling Username</div>
+              <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid #E5E7EB' }}>
+                <span style={{ color: '#6B7280', fontSize: '14px', fontWeight: 500 }}>linksmeet.com/</span>
+                <input value={username} onChange={e => setUsername(e.target.value)} placeholder="janedoe" style={{ ...inputStyle, borderBottom: 'none' }} />
+              </div>
+            </div>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>Short Bio / Headline</div>
+              <input value={bio} onChange={e => setBio(e.target.value)} placeholder="e.g. Founder at Acme Corp" style={inputStyle} />
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column wrapper for Brand & Actions */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          
+          {/* Brand Information */}
+          <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '24px', border: '1px solid #E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid #E5E7EB', paddingBottom: '16px' }}>
+              <h3 style={{ margin: 0, fontSize: '16px', color: '#6B7280', fontWeight: 600 }}>Brand information</h3>
+              <button style={{ background: 'none', border: 'none', color: '#9CA3AF', cursor: 'pointer' }}><Edit2 size={16} /></button>
+            </div>
+            
+            <div style={{ marginBottom: '24px' }}>
+               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <div style={{ color: '#9CA3AF', fontSize: '12px' }}>Website URL</div>
+                  <button onClick={handleAnalyze} disabled={isAnalyzing || !websiteUrl} style={{ background: isAnalyzing ? '#E5E7EB' : '#EEF2FF', color: isAnalyzing ? '#9CA3AF' : '#4F46E5', border: 'none', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', cursor: isAnalyzing || !websiteUrl ? 'not-allowed' : 'pointer' }}>
+                     {isAnalyzing ? <Loader2 size={10} className="cpm-spin" /> : <Sparkles size={10} />} 
+                     AI Analyze
+                  </button>
+               </div>
+               <input value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} placeholder="https://yourcompany.com" style={inputStyle} />
+            </div>
+            
+            <div>
+               <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '8px' }}>Company Details & Brand Description</div>
+               <textarea value={brandDesc} onChange={e => setBrandDesc(e.target.value)} placeholder="Extracted AI details..." style={{ width: '100%', minHeight: '100px', padding: '12px', borderRadius: '8px', border: '1px solid #E5E7EB', fontSize: '13px', color: '#111827', resize: 'vertical', background: '#F9FAFB', outline: 'none' }} />
+            </div>
+          </div>
+          
+          {/* Account Actions */}
+          <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '24px', border: '1px solid #E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid #E5E7EB', paddingBottom: '16px' }}>
+              <h3 style={{ margin: 0, fontSize: '16px', color: '#6B7280', fontWeight: 600 }}>Account actions</h3>
+              <button style={{ background: 'none', border: 'none', color: '#9CA3AF', cursor: 'pointer' }}><Edit2 size={16} /></button>
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <div style={{ color: '#6B7280', fontSize: '13px', fontWeight: 500 }}>Profile Setup Score</div>
+                <div style={{ color: '#2563EB', fontSize: '14px', fontWeight: 700 }}>{progress}%</div>
+              </div>
+              <div style={{ width: '100%', height: '8px', background: '#E5E7EB', borderRadius: '4px', overflow: 'hidden' }}>
+                <div style={{ width: `${progress}%`, height: '100%', background: '#2563EB', borderRadius: '4px', transition: 'width 0.5s ease' }} />
+              </div>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+               <button onClick={handleGenerateAvatar} style={{ background: '#F9FAFB', color: '#374151', border: '1px solid #E5E7EB', borderRadius: '8px', padding: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}><RefreshCw size={14} /> Change Avatar</button>
+               {setIsOnboardingModalOpen ? (
+                 <button onClick={() => setIsOnboardingModalOpen(true)} style={{ background: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', borderRadius: '8px', padding: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}><Sparkles size={14} /> Setup Wizard</button>
+               ) : <div />}
+               <button onClick={handleSave} disabled={saving} style={{ gridColumn: '1 / -1', background: '#2563EB', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
+                  {saving ? <Loader2 size={16} className="cpm-spin" /> : <Check size={16} />}
+                  {saving ? 'Saving...' : 'Save Profile Changes'}
+               </button>
+               <button onClick={logoutAndGo} style={{ gridColumn: '1 / -1', background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA', borderRadius: '8px', padding: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
+                  <LogOut size={14} /> Log out
+               </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      )}
+
+      {/* Preferences Tab */}
+      {activeTab === 'Preferences' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '24px', alignItems: 'start' }}>
+          <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '24px', border: '1px solid #E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid #E5E7EB', paddingBottom: '16px' }}>
+              <h3 style={{ margin: 0, fontSize: '16px', color: '#6B7280', fontWeight: 600 }}>Preferences</h3>
+            </div>
+            
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>Timezone</div>
+              <select style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #E5E7EB', fontSize: '14px', color: '#111827', background: '#F9FAFB', outline: 'none' }}>
+                <option>(GMT-05:00) Eastern Time (US & Canada)</option>
+                <option>(GMT-08:00) Pacific Time (US & Canada)</option>
+                <option>(GMT+00:00) London</option>
+              </select>
+            </div>
+            
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>Language</div>
+              <select style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #E5E7EB', fontSize: '14px', color: '#111827', background: '#F9FAFB', outline: 'none' }}>
+                <option>English (US)</option>
+                <option>Spanish</option>
+                <option>French</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '24px', border: '1px solid #E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid #E5E7EB', paddingBottom: '16px' }}>
+              <h3 style={{ margin: 0, fontSize: '16px', color: '#6B7280', fontWeight: 600 }}>Notifications</h3>
+            </div>
+            
+            {[
+              { key: 'deals', tt: 'Deal alerts', ds: 'Get notified when a deal changes stage.' },
+              { key: 'weekly', tt: 'Weekly summary', ds: 'A digest of your pipeline every Monday.' },
+              { key: 'mentions', tt: 'Mentions', ds: 'When a teammate @mentions you.' },
+            ].map(n => (
+              <div key={n.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #F3F4F6' }}>
+                <div>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>{n.tt}</div>
+                  <div style={{ fontSize: '13px', color: '#6B7280', marginTop: '2px' }}>{n.ds}</div>
+                </div>
+                <div 
+                  onClick={() => setNotif(prev => ({ ...prev, [n.key]: !prev[n.key] }))}
+                  style={{ width: '40px', height: '24px', background: notif[n.key as keyof typeof notif] ? '#10B981' : '#E5E7EB', borderRadius: '12px', position: 'relative', cursor: 'pointer', transition: 'background 0.2s' }}
+                >
+                  <div style={{ width: '20px', height: '20px', background: '#FFFFFF', borderRadius: '50%', position: 'absolute', top: '2px', left: notif[n.key as keyof typeof notif] ? '18px' : '2px', transition: 'left 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Billing & Plans Tab */}
+      {activeTab === 'Billing & Plans' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '24px', alignItems: 'start' }}>
+          <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '24px', border: '1px solid #E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid #E5E7EB', paddingBottom: '16px' }}>
+              <h3 style={{ margin: 0, fontSize: '16px', color: '#6B7280', fontWeight: 600 }}>Current Plan</h3>
+            </div>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+              <div style={{ width: '60px', height: '60px', borderRadius: '12px', background: 'linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                <Sparkles size={28} />
+              </div>
+              <div>
+                <div style={{ fontSize: '20px', fontWeight: 700, color: '#111827' }}>Pro Tier</div>
+                <div style={{ fontSize: '14px', color: '#6B7280' }}>$49 / month per user</div>
+              </div>
+            </div>
+            
+            <div style={{ background: '#F9FAFB', padding: '16px', borderRadius: '8px', border: '1px solid #E5E7EB', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px' }}>
+                <span style={{ color: '#6B7280' }}>Next billing date</span>
+                <span style={{ fontWeight: 600, color: '#111827' }}>Oct 1, 2026</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                <span style={{ color: '#6B7280' }}>Payment method</span>
+                <span style={{ fontWeight: 600, color: '#111827' }}>Visa ending in 4242</span>
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button style={{ flex: 1, background: '#F9FAFB', color: '#374151', border: '1px solid #E5E7EB', borderRadius: '8px', padding: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>View Invoices</button>
+              <button style={{ flex: 1, background: '#2563EB', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>Manage Billing</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+
+      {/* Security Tab */}
+      {activeTab === 'Security' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '24px', alignItems: 'start' }}>
+          <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '24px', border: '1px solid #E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid #E5E7EB', paddingBottom: '16px' }}>
+              <h3 style={{ margin: 0, fontSize: '16px', color: '#6B7280', fontWeight: 600 }}>Security Settings</h3>
+            </div>
+            
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>Current Password</div>
+              <input type="password" placeholder="••••••••" style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #E5E7EB', fontSize: '14px', color: '#111827', outline: 'none' }} />
+            </div>
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>New Password</div>
+              <input type="password" placeholder="••••••••" style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #E5E7EB', fontSize: '14px', color: '#111827', outline: 'none' }} />
+            </div>
+            <button style={{ background: '#2563EB', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 16px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>Update Password</button>
+          </div>
+
+          <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '24px', border: '1px solid #E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid #E5E7EB', paddingBottom: '16px' }}>
+              <h3 style={{ margin: 0, fontSize: '16px', color: '#6B7280', fontWeight: 600 }}>Two-Factor Authentication</h3>
+            </div>
+            
+            <p style={{ fontSize: '14px', color: '#6B7280', lineHeight: 1.5, marginBottom: '24px' }}>
+              Add an extra layer of security to your account. Once enabled, you'll be required to enter both your password and an authentication code from your mobile device.
+            </p>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: '8px' }}>
+              <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>Authenticator App</div>
+              <button style={{ background: '#FFFFFF', color: '#374151', border: '1px solid #E5E7EB', borderRadius: '6px', padding: '6px 12px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>Enable 2FA</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
