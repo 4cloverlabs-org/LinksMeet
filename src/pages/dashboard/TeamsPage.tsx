@@ -27,7 +27,7 @@ export default function TeamsPage() {
     changeStatus, setEditingEvent, editingEvent, etTab, setEtTab, googleConnected, handleConnectGoogle,
     bookingTab, setBookingTab, joinMeeting, cancelBooking, leadsTab, setLeadsTab, peopleTab, setPeopleTab,
     appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp,
-    teamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember,
+    teamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember, updateMember,
     editingWorkflow, setEditingWorkflow
   } = ctx || {};
 
@@ -37,6 +37,13 @@ export default function TeamsPage() {
   const [deptFilter, setDeptFilter] = useState('All Depts');
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [currentPage, setCurrentPage] = useState(1);
+  const [editingMember, setEditingMember] = useState<any>(null);
+  const [editName, setEditName] = useState('');
+  const [editRole, setEditRole] = useState('Member');
+  const [editDept, setEditDept] = useState('Unassigned');
+  const [dropdownOpenId, setDropdownOpenId] = useState<string | null>(null);
+  const [dropdownCoords, setDropdownCoords] = useState({ top: 0, right: 0 });
+  const [deletingMember, setDeletingMember] = useState<any>(null);
   const itemsPerPage = 10;
 
   // Derive filtered members
@@ -67,12 +74,6 @@ export default function TeamsPage() {
               <p style={{ margin: 0, fontSize: '14px', color: '#6B7280' }}>Manage who has access to your workspace.</p>
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
-              <button className="crm-btn" style={{ background: '#FFFFFF', color: '#4B5563', border: '1px solid #E5E7EB', borderRadius: '8px', padding: '0 16px', height: '40px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                <Calendar size={16} /> 27 April, 2026
-              </button>
-              <button className="crm-btn" style={{ background: '#FFFFFF', color: '#4B5563', border: '1px solid #E5E7EB', borderRadius: '8px', padding: '0 16px', height: '40px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                <Settings size={16} /> Team Settings
-              </button>
               <button className="crm-btn" style={{ background: '#2563EB', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '0 16px', height: '40px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => setShowInviteModal(true)}>
                 <Plus size={16} /> Invite Member
               </button>
@@ -95,9 +96,6 @@ export default function TeamsPage() {
                   Team Details
                 </button>
              </div>
-             <button className="crm-btn" style={{ background: '#FFFFFF', color: '#4B5563', border: '1px solid #E5E7EB', borderRadius: '8px', padding: '0 16px', height: '40px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                <Download size={16} /> Export CSV
-              </button>
           </div>
 
           {activeTab === 'members' ? (
@@ -163,15 +161,13 @@ export default function TeamsPage() {
           {/* Table Container */}
           <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E5E7EB', overflow: 'hidden' }}>
             <div style={{ overflowX: 'auto' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '80px minmax(200px, 1.5fr) 100px 120px 150px 100px 120px 100px 80px', padding: '16px 24px', background: '#F9FAFB', borderBottom: '1px solid #E5E7EB', fontSize: '12px', fontWeight: 600, color: '#6B7280' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '80px 3fr 1.5fr 1.5fr 1.5fr 1.5fr 80px', padding: '16px 24px', background: '#F9FAFB', borderBottom: '1px solid #E5E7EB', fontSize: '12px', fontWeight: 600, color: '#6B7280' }}>
                 <span>ID</span>
-                <span>Members Name</span>
+                <span style={{ paddingLeft: '148px' }}>Members Name</span>
                 <span>Role</span>
                 <span>Department</span>
-                <span>Contact Number</span>
                 <span>Status</span>
                 <span>Joined Date</span>
-                <span>Workflow</span>
                 <span style={{ textAlign: 'right' }}>Action</span>
               </div>
               
@@ -186,9 +182,6 @@ export default function TeamsPage() {
                   const dept = member.department || 'Unassigned';
                   const phone = member.phone || '--';
                   const joinedDate = new Date(member.created_at || Date.now()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-                  
-                  const workflow = member.workflow_progress !== undefined ? `${member.workflow_progress}%` : '--';
-                  const workflowColor = workflow === '--' ? '#9CA3AF' : (member.workflow_progress < 20 ? '#D97706' : '#059669');
 
                   let statusBg = '#EFF8FF';
                   let statusColor = '#2563EB';
@@ -206,14 +199,14 @@ export default function TeamsPage() {
                   const statusText = member.status || 'Active';
 
                   return (
-                    <div key={member.id} style={{ display: 'grid', gridTemplateColumns: '80px minmax(200px, 1.5fr) 100px 120px 150px 100px 120px 100px 80px', padding: '16px 24px', borderBottom: '1px solid #E5E7EB', alignItems: 'center', fontSize: '13px', color: '#4B5563' }}>
+                    <div key={member.id} style={{ display: 'grid', gridTemplateColumns: '80px 3fr 1.5fr 1.5fr 1.5fr 1.5fr 80px', padding: '16px 24px', borderBottom: '1px solid #E5E7EB', alignItems: 'center', fontSize: '13px', color: '#4B5563' }}>
                       {/* ID */}
                       <span style={{ color: '#6B7280' }}>{displayId}</span>
                       
                       {/* Name */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '104px' }}>
                         <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                          <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${member.email}&backgroundColor=f8fafc`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={member.name} />
+                          <img src={member.avatar_url || `https://api.dicebear.com/7.x/notionists/svg?seed=${member.email}&backgroundColor=f8fafc`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={member.name} />
                         </div>
                         <span style={{ fontWeight: 500, color: '#111827' }}>{member.name}</span>
                       </div>
@@ -223,9 +216,6 @@ export default function TeamsPage() {
                       
                       {/* Department */}
                       <span>{dept}</span>
-                      
-                      {/* Contact Number */}
-                      <span>{phone}</span>
                       
                       {/* Status */}
                       <div>
@@ -241,17 +231,21 @@ export default function TeamsPage() {
                         <span>{joinedDate}</span>
                       </div>
                       
-                      {/* Workflow */}
-                      <span style={{ color: workflowColor, fontWeight: 500 }}>{workflow}</span>
-                      
                       {/* Action */}
                       <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px', color: '#6B7280' }}>
-                        <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#6B7280', fontSize: '13px' }} onClick={() => removeMember(member.id)}>
-                          Edit
-                        </button>
-                        <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#9CA3AF' }}>
-                          <MoreVertical size={16} />
-                        </button>
+                        {member.id !== 'owner' && (
+                          <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#9CA3AF', display: 'flex', alignItems: 'center', borderRadius: '4px', transition: 'background 0.2s' }} onClick={(e) => {
+                            if (dropdownOpenId === member.id) {
+                              setDropdownOpenId(null);
+                            } else {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setDropdownCoords({ top: rect.bottom, right: window.innerWidth - rect.right });
+                              setDropdownOpenId(member.id);
+                            }
+                          }} onMouseOver={e => e.currentTarget.style.background = '#F3F4F6'} onMouseOut={e => e.currentTarget.style.background = 'none'}>
+                            <MoreVertical size={16} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
@@ -307,6 +301,115 @@ export default function TeamsPage() {
           
         </div>
       </div>
+
+      {editingMember && (
+        <div className="crm-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(17, 24, 39, 0.65)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
+          <div className="crm-modal" style={{ maxWidth: '440px', width: '100%', background: '#FFFFFF', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <div className="crm-modal-head" style={{ padding: '24px 32px 20px', position: 'relative', display: 'block', borderBottom: '1px solid #E5E7EB' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
+                <div style={{ width: '48px', height: '48px', flexShrink: 0, background: '#EFF6FF', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB' }}>
+                  <Edit2 size={24} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 600, color: '#111827', lineHeight: 1.2 }}>Edit Team Member</h3>
+                  <p style={{ margin: '4px 0 0', fontSize: '14px', color: '#6B7280', lineHeight: 1.4 }}>Update {editingMember.name}'s details.</p>
+                </div>
+              </div>
+              <button className="crm-modal-close" onClick={() => setEditingMember(null)} style={{ position: 'absolute', top: '24px', right: '24px', background: '#F3F4F6', border: 'none', color: '#6B7280', cursor: 'pointer', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
+                <X size={16} />
+              </button>
+            </div>
+            
+            <div className="crm-modal-body" style={{ padding: '24px 32px' }}>
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                await updateMember(editingMember.id, { name: editName, role: editRole, department: editDept });
+                setEditingMember(null);
+              }}>
+                <div className="crm-form-group" style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 500, color: '#374151' }}>Full Name</label>
+                  <input type="text" value={editName} onChange={e => setEditName(e.target.value)} required style={{ width: '100%', height: '46px', padding: '0 14px', borderRadius: '10px', border: '1px solid #D1D5DB', fontSize: '14px', boxSizing: 'border-box', background: '#FFFFFF', outline: 'none', color: '#111827' }} />
+                </div>
+                
+                <div className="crm-form-group" style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 500, color: '#374151' }}>Role & Permissions</label>
+                  <select value={editRole} onChange={e => setEditRole(e.target.value)} style={{ width: '100%', height: '46px', padding: '0 14px', borderRadius: '10px', border: '1px solid #D1D5DB', fontSize: '14px', boxSizing: 'border-box', background: '#FFFFFF', outline: 'none', color: '#111827' }}>
+                    <option value="Admin">Admin (Full Access)</option>
+                    <option value="Editor">Editor (Can edit content)</option>
+                    <option value="Member">Member (Standard access)</option>
+                    <option value="Viewer">Viewer (Read-only)</option>
+                  </select>
+                </div>
+                
+                <div className="crm-form-group" style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 500, color: '#374151' }}>Department</label>
+                  <select value={editDept} onChange={e => setEditDept(e.target.value)} style={{ width: '100%', height: '46px', padding: '0 14px', borderRadius: '10px', border: '1px solid #D1D5DB', fontSize: '14px', boxSizing: 'border-box', background: '#FFFFFF', outline: 'none', color: '#111827' }}>
+                    <option>Management</option>
+                    <option>Marketing</option>
+                    <option>Engineering</option>
+                    <option>Design</option>
+                    <option>Finance</option>
+                    <option>Sales</option>
+                    <option>Unassigned</option>
+                  </select>
+                </div>
+                
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '32px' }}>
+                  <button type="button" className="crm-btn" style={{ background: '#FFFFFF', color: '#4B5563', border: '1px solid #D1D5DB', borderRadius: '10px', padding: '0 20px', height: '44px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }} onClick={() => setEditingMember(null)}>Cancel</button>
+                  <button type="submit" className="crm-btn" style={{ background: '#2563EB', color: '#FFFFFF', border: 'none', borderRadius: '10px', padding: '0 20px', height: '44px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>Save Changes</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deletingMember && (
+        <div className="crm-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(17, 24, 39, 0.65)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
+          <div className="crm-modal" style={{ maxWidth: '400px', width: '100%', background: '#FFFFFF', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', overflow: 'hidden', padding: '32px', textAlign: 'center' }}>
+            <div style={{ width: '56px', height: '56px', background: '#FEF2F2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#DC2626', margin: '0 auto 16px' }}>
+              <Trash2 size={28} />
+            </div>
+            <h3 style={{ margin: '0 0 8px', fontSize: '20px', fontWeight: 600, color: '#111827' }}>Remove Member?</h3>
+            <p style={{ margin: '0 0 24px', fontSize: '14px', color: '#6B7280', lineHeight: 1.5 }}>
+              Are you sure you want to remove <strong>{deletingMember.name}</strong> from the team? They will lose access to this workspace.
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button className="crm-btn" style={{ flex: 1, background: '#FFFFFF', color: '#4B5563', border: '1px solid #D1D5DB', borderRadius: '10px', padding: '0 16px', height: '44px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }} onClick={() => setDeletingMember(null)}>Cancel</button>
+              <button className="crm-btn" style={{ flex: 1, background: '#DC2626', color: '#FFFFFF', border: 'none', borderRadius: '10px', padding: '0 16px', height: '44px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }} onClick={() => {
+                removeMember(deletingMember.id);
+                setDeletingMember(null);
+              }}>Yes, Remove</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {dropdownOpenId && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9998 }} onClick={() => setDropdownOpenId(null)}>
+          <div style={{ position: 'fixed', top: dropdownCoords.top + 4, right: dropdownCoords.right, background: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)', zIndex: 9999, width: '180px', padding: '4px 0', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
+            <button style={{ width: '100%', textAlign: 'left', padding: '8px 16px', background: 'none', border: 'none', color: '#4B5563', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'background 0.2s' }} onMouseOver={e => e.currentTarget.style.background = '#F9FAFB'} onMouseOut={e => e.currentTarget.style.background = 'none'} onClick={() => {
+              const member = (teamMembers || []).find((m: any) => m.id === dropdownOpenId);
+              if (member) {
+                setEditingMember(member);
+                setEditName(member.name || '');
+                setEditRole(member.role || 'Member');
+                setEditDept(member.department || 'Unassigned');
+              }
+              setDropdownOpenId(null);
+            }}>
+              <Edit2 size={14} /> Edit Member
+            </button>
+            <button style={{ width: '100%', textAlign: 'left', padding: '8px 16px', background: 'none', border: 'none', color: '#DC2626', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'background 0.2s' }} onMouseOver={e => e.currentTarget.style.background = '#FEF2F2'} onMouseOut={e => e.currentTarget.style.background = 'none'} onClick={() => { 
+              const member = (teamMembers || []).find((m: any) => m.id === dropdownOpenId);
+              if (member) setDeletingMember(member);
+              setDropdownOpenId(null); 
+            }}>
+              <Trash2 size={14} /> Remove Member
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

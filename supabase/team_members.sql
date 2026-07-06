@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS public.team_members (
   workflow_progress integer DEFAULT 0,
   created_at timestamp with time zone DEFAULT now() NOT NULL
 );
-
+```
 -- Alter existing table to add new columns if they don't exist
 DO $$
 BEGIN

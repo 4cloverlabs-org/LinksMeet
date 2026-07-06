@@ -8,7 +8,7 @@ import {
   CheckCircle2, Menu, CalendarRange, CalendarCheck,
   Clock, Workflow, Spline, Store, CreditCard, Shield, HelpCircle,
   Sparkles, Link2, Video, Zap, BookOpen, MessageCircle, Keyboard, Check, X,
-  Copy, Rocket, Calendar, Trash2, LogOut, Loader2, EyeOff, ExternalLink, Edit2, Code, Info, ArrowLeft, ArrowRight, Globe, Settings, Mail, Phone, ChevronRight,
+  Copy, Rocket, Calendar, Trash2, LogOut, Loader2, EyeOff, ExternalLink, Edit2, Code, Info, ArrowLeft, ArrowRight, Globe, Settings, Mail, Phone, ChevronRight, ChevronDown,
   Smartphone, Heart, AlertCircle, RefreshCw, Pencil, XCircle, ChevronsUpDown, User, PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
@@ -454,10 +454,11 @@ export default function DashboardLayout() {
       department: 'Management',
       phone: '+1 (555) 000-0000',
       workflow_progress: 100,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      avatar_url: userProfile?.profile_picture || user?.user_metadata?.avatar_url || null
     };
     return [ownerMember, ...teamMembers];
-  }, [displayName, user, teamMembers]);
+  }, [displayName, user, userProfile, teamMembers]);
 
   const handleInviteSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -496,6 +497,18 @@ export default function DashboardLayout() {
       setToast('Member removed');
     } else {
       setToast('Error removing member');
+    }
+    setTimeout(() => setToast(null), 2000);
+  };
+
+  const updateMember = async (id: string, updates: any) => {
+    if (id === 'owner') return; // Cannot update owner this way
+    const { error } = await supabase.from('team_members').update(updates).eq('id', id);
+    if (!error) {
+      setTeamMembers(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m));
+      setToast('Member updated');
+    } else {
+      setToast('Error updating member');
     }
     setTimeout(() => setToast(null), 2000);
   };
@@ -1278,7 +1291,7 @@ export default function DashboardLayout() {
           
         <div className="crm-content" style={view === 'campaigns' ? { display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', background: '#FFFFFF', padding: 0 } : { display: 'flex', flexDirection: 'column', flex: 1, background: '#FFFFFF' }}>
           <Outlet context={{
-            user, uid, userProfile, displayName, firstName, userInitials, toast, setToast, sideOpen, setSideOpen, search, setSearch, notif, setNotif, setView, setIsOnboardingModalOpen, setUserProfile, contacts, eventTypes, bookings, myWorkflows, installedApps, handleCreateWorkflow, logoutAndGo, exportContactsCSV, showContactForm, setShowContactForm, cForm, setCForm, blankContact, contactErr, setContactErr, submitContact, savingContact, changeStatus, setEditingEvent, editingEvent, etTab, setEtTab, googleConnected, handleConnectGoogle, bookingTab, setBookingTab, joinMeeting, cancelBooking, leadsTab, setLeadsTab, peopleTab: 'contacts', setPeopleTab: () => {}, appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp, teamMembers: allTeamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember, editingWorkflow, setEditingWorkflow, setAvailIsDefault, availIsDefault, saveAvailability, availSchedule, setAvailSchedule, tzOpen, tzSearch, TIMEZONES, availPrefs, setTzOpen, setTzSearch, setAvailPrefs, followUps, statusCounts, addedThisWeek, ACCENT_SOFT, ACCENT, contactsLoading, STATUS_META, statusStages, filteredContacts, Donut, avColor, initials, removeContact, fileInputRef, handleUploadFile, CONTACT_STATUSES, setInitCampaignLead, EmptyState, handleSaveWorkflow, setMyWorkflows, API_BASE_URL, showWorkflowTypeModal, setShowWorkflowTypeModal, handleSelectType, appCats, filteredApps, connectingApps, filteredBookings, toggleEventType, etDropdown, setEtDropdown, addEventType: handleAddEventType, deleteEventType: handleDeleteEventType, initCampaignLead
+            user, uid, userProfile, displayName, firstName, userInitials, toast, setToast, sideOpen, setSideOpen, search, setSearch, notif, setNotif, setView, setIsOnboardingModalOpen, setUserProfile, contacts, eventTypes, bookings, myWorkflows, installedApps, handleCreateWorkflow, logoutAndGo, exportContactsCSV, showContactForm, setShowContactForm, cForm, setCForm, blankContact, contactErr, setContactErr, submitContact, savingContact, changeStatus, setEditingEvent, editingEvent, etTab, setEtTab, googleConnected, handleConnectGoogle, bookingTab, setBookingTab, joinMeeting, cancelBooking, leadsTab, setLeadsTab, peopleTab: 'contacts', setPeopleTab: () => {}, appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp, teamMembers: allTeamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember, updateMember, editingWorkflow, setEditingWorkflow, setAvailIsDefault, availIsDefault, saveAvailability, availSchedule, setAvailSchedule, tzOpen, tzSearch, TIMEZONES, availPrefs, setTzOpen, setTzSearch, setAvailPrefs, followUps, statusCounts, addedThisWeek, ACCENT_SOFT, ACCENT, contactsLoading, STATUS_META, statusStages, filteredContacts, Donut, avColor, initials, removeContact, fileInputRef, handleUploadFile, CONTACT_STATUSES, setInitCampaignLead, EmptyState, handleSaveWorkflow, setMyWorkflows, API_BASE_URL, showWorkflowTypeModal, setShowWorkflowTypeModal, handleSelectType, appCats, filteredApps, connectingApps, filteredBookings, toggleEventType, etDropdown, setEtDropdown, addEventType: handleAddEventType, deleteEventType: handleDeleteEventType, initCampaignLead
           }} />
         </div>
         </div>
@@ -1327,6 +1340,61 @@ export default function DashboardLayout() {
         </div>
         </div>
       </div>
+      )}
+
+      {showInviteModal && (
+        <div className="crm-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(17, 24, 39, 0.65)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
+          <div className="crm-modal" style={{ maxWidth: '440px', width: '100%', background: '#FFFFFF', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            
+            <div className="crm-modal-head" style={{ padding: '24px 32px 20px', position: 'relative', display: 'block', borderBottom: '1px solid #E5E7EB' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
+                <div style={{ width: '48px', height: '48px', flexShrink: 0, background: '#EFF6FF', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB' }}>
+                  <UserPlus size={24} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 600, color: '#111827', lineHeight: 1.2 }}>Invite Team Member</h3>
+                  <p style={{ margin: '4px 0 0', fontSize: '14px', color: '#6B7280', lineHeight: 1.4 }}>Add a new member to your workspace.</p>
+                </div>
+              </div>
+              <button className="crm-modal-close" onClick={() => setShowInviteModal(false)} style={{ position: 'absolute', top: '24px', right: '24px', background: '#F3F4F6', border: 'none', color: '#6B7280', cursor: 'pointer', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
+                <X size={16} />
+              </button>
+            </div>
+            
+            <div className="crm-modal-body" style={{ padding: '24px 32px' }}>
+              <form onSubmit={handleInviteSubmit}>
+                <div className="crm-form-group" style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 500, color: '#374151' }}>Email Address</label>
+                  <div style={{ position: 'relative' }}>
+                    <Mail size={18} style={{ position: 'absolute', left: '14px', top: '14px', color: '#9CA3AF' }} />
+                    <input type="email" required value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="colleague@company.com" style={{ width: '100%', height: '46px', padding: '0 14px 0 42px', borderRadius: '10px', border: '1px solid #D1D5DB', fontSize: '14px', boxSizing: 'border-box', outline: 'none', color: '#111827', backgroundColor: '#FFFFFF', transition: 'border-color 0.2s' }} />
+                  </div>
+                </div>
+                
+                <div className="crm-form-group" style={{ marginBottom: '8px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 500, color: '#374151' }}>Role & Permissions</label>
+                  <div style={{ position: 'relative' }}>
+                    <Shield size={18} style={{ position: 'absolute', left: '14px', top: '14px', color: '#9CA3AF' }} />
+                    <select value={inviteRole} onChange={e => setInviteRole(e.target.value)} style={{ width: '100%', height: '46px', padding: '0 36px 0 42px', borderRadius: '10px', border: '1px solid #D1D5DB', fontSize: '14px', boxSizing: 'border-box', background: '#FFFFFF', outline: 'none', color: '#111827', appearance: 'none', transition: 'border-color 0.2s' }}>
+                      <option value="Admin">Admin (Full Access)</option>
+                      <option value="Editor">Editor (Can edit content)</option>
+                      <option value="Member">Member (Standard access)</option>
+                      <option value="Viewer">Viewer (Read-only)</option>
+                    </select>
+                    <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '15px', color: '#9CA3AF', pointerEvents: 'none' }} />
+                  </div>
+                </div>
+                
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '32px' }}>
+                  <button type="button" className="crm-btn" style={{ background: '#FFFFFF', color: '#4B5563', border: '1px solid #D1D5DB', borderRadius: '10px', padding: '0 20px', height: '44px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }} onClick={() => setShowInviteModal(false)}>Cancel</button>
+                  <button type="submit" className="crm-btn" style={{ background: '#2563EB', color: '#FFFFFF', border: 'none', borderRadius: '10px', padding: '0 20px', height: '44px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)', transition: 'all 0.2s' }}>
+                    Send Invite <ArrowRight size={16} />
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
       )}
 
       <CompleteProfileModal
