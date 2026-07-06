@@ -162,13 +162,13 @@ export default function TeamsPage() {
           <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E5E7EB', overflow: 'hidden' }}>
             <div style={{ overflowX: 'auto' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '80px 3fr 1.5fr 1.5fr 1.5fr 1.5fr 80px', padding: '16px 24px', background: '#F9FAFB', borderBottom: '1px solid #E5E7EB', fontSize: '12px', fontWeight: 600, color: '#6B7280' }}>
-                <span>ID</span>
-                <span style={{ paddingLeft: '148px' }}>Members Name</span>
-                <span>Role</span>
-                <span>Department</span>
-                <span>Status</span>
-                <span>Joined Date</span>
-                <span style={{ textAlign: 'right' }}>Action</span>
+                <span style={{ textAlign: 'center' }}>ID</span>
+                <span style={{ textAlign: 'center' }}>Members Name</span>
+                <span style={{ textAlign: 'center' }}>Role</span>
+                <span style={{ textAlign: 'center' }}>Department</span>
+                <span style={{ textAlign: 'center' }}>Status</span>
+                <span style={{ textAlign: 'center' }}>Joined Date</span>
+                <span style={{ textAlign: 'center' }}>Action</span>
               </div>
               
               <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -201,10 +201,11 @@ export default function TeamsPage() {
                   return (
                     <div key={member.id} style={{ display: 'grid', gridTemplateColumns: '80px 3fr 1.5fr 1.5fr 1.5fr 1.5fr 80px', padding: '16px 24px', borderBottom: '1px solid #E5E7EB', alignItems: 'center', fontSize: '13px', color: '#4B5563' }}>
                       {/* ID */}
-                      <span style={{ color: '#6B7280' }}>{displayId}</span>
+                      {/* ID */}
+                      <span style={{ color: '#6B7280', textAlign: 'center' }}>{displayId}</span>
                       
                       {/* Name */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '104px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
                         <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                           <img src={member.avatar_url || `https://api.dicebear.com/7.x/notionists/svg?seed=${member.email}&backgroundColor=f8fafc`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={member.name} />
                         </div>
@@ -212,13 +213,13 @@ export default function TeamsPage() {
                       </div>
                       
                       {/* Role */}
-                      <span>{member.role}</span>
+                      <span style={{ textAlign: 'center' }}>{member.role}</span>
                       
                       {/* Department */}
-                      <span>{dept}</span>
+                      <span style={{ textAlign: 'center' }}>{dept}</span>
                       
                       {/* Status */}
-                      <div>
+                      <div style={{ display: 'flex', justifyContent: 'center' }}>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '2px 8px', borderRadius: '16px', fontSize: '12px', fontWeight: 500, background: statusBg, color: statusColor }}>
                           <span style={{ width: 6, height: 6, borderRadius: '50%', background: dotColor }} />
                           {statusText}
@@ -226,13 +227,13 @@ export default function TeamsPage() {
                       </div>
                       
                       {/* Joined Date */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                         <Calendar size={14} style={{ color: '#9CA3AF' }} />
                         <span>{joinedDate}</span>
                       </div>
                       
                       {/* Action */}
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px', color: '#6B7280' }}>
+                      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', color: '#6B7280' }}>
                         {member.id !== 'owner' && (
                           <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#9CA3AF', display: 'flex', alignItems: 'center', borderRadius: '4px', transition: 'background 0.2s' }} onClick={(e) => {
                             if (dropdownOpenId === member.id) {
