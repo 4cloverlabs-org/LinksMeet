@@ -68,7 +68,19 @@ export default function WorkflowsPage() {
                             <div className="nm" style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{w.template_name}</div>
                             <div className="fl" style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>Triggers on {w.trigger_event}</div>
                           </div>
-                          <span className="runs" style={{ fontSize: 13, color: '#64748b', marginRight: 24 }}>{w.runs} runs</span>
+                          <span className="runs" style={{ fontSize: 13, color: '#64748b', marginRight: 16 }}>{w.runs} runs</span>
+                          <button className="crm-btn crm-btn-ghost" style={{ padding: '6px 10px', marginRight: 8 }} onClick={() => setEditingWorkflow(w)}>
+                            <Edit2 size={14} />
+                          </button>
+                          <button className="crm-btn crm-btn-ghost" style={{ padding: '6px 10px', marginRight: 16, color: '#DC2626' }} onClick={() => {
+                            if (window.confirm('Delete this workflow?')) {
+                              setMyWorkflows((prev: any[]) => prev.filter(old => old.id !== w.id));
+                              setToast('Workflow deleted.');
+                              setTimeout(() => setToast(null), 3000);
+                            }
+                          }}>
+                            <Trash2 size={14} />
+                          </button>
                           <button 
                             className={`crm-switch${w.is_active ? ' on' : ''}`} 
                             onClick={() => {

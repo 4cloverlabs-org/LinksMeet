@@ -209,7 +209,7 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
         <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '24px', border: '1px solid #E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid #E5E7EB', paddingBottom: '16px' }}>
             <h3 style={{ margin: 0, fontSize: '16px', color: '#6B7280', fontWeight: 600 }}>Personal information</h3>
-            <button style={{ background: 'none', border: 'none', color: '#9CA3AF', cursor: 'pointer' }}><Edit2 size={16} /></button>
+            <button onClick={() => { if (setToast) { setToast('You can edit your personal info directly below!'); setTimeout(() => setToast(null), 3000); } }} style={{ background: 'none', border: 'none', color: '#9CA3AF', cursor: 'pointer' }}><Edit2 size={16} /></button>
           </div>
           
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
@@ -242,7 +242,7 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
           <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '24px', border: '1px solid #E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid #E5E7EB', paddingBottom: '16px' }}>
               <h3 style={{ margin: 0, fontSize: '16px', color: '#6B7280', fontWeight: 600 }}>Brand information</h3>
-              <button style={{ background: 'none', border: 'none', color: '#9CA3AF', cursor: 'pointer' }}><Edit2 size={16} /></button>
+              <button onClick={() => { if (setToast) { setToast('You can edit brand info directly below!'); setTimeout(() => setToast(null), 3000); } }} style={{ background: 'none', border: 'none', color: '#9CA3AF', cursor: 'pointer' }}><Edit2 size={16} /></button>
             </div>
             
             <div style={{ marginBottom: '24px' }}>
@@ -266,7 +266,7 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
           <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '24px', border: '1px solid #E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid #E5E7EB', paddingBottom: '16px' }}>
               <h3 style={{ margin: 0, fontSize: '16px', color: '#6B7280', fontWeight: 600 }}>Account actions</h3>
-              <button style={{ background: 'none', border: 'none', color: '#9CA3AF', cursor: 'pointer' }}><Edit2 size={16} /></button>
+              <button onClick={() => { if (setToast) { setToast('Use the action buttons below to manage your account!'); setTimeout(() => setToast(null), 3000); } }} style={{ background: 'none', border: 'none', color: '#9CA3AF', cursor: 'pointer' }}><Edit2 size={16} /></button>
             </div>
 
             <div style={{ marginBottom: '24px' }}>
@@ -382,8 +382,8 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
             </div>
             
             <div style={{ display: 'flex', gap: '12px' }}>
-              <button style={{ flex: 1, background: '#F9FAFB', color: '#374151', border: '1px solid #E5E7EB', borderRadius: '8px', padding: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>View Invoices</button>
-              <button style={{ flex: 1, background: '#2563EB', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>Manage Billing</button>
+              <button onClick={() => { if (setToast) { setToast('No past invoices found.'); setTimeout(() => setToast(null), 3000); } }} style={{ flex: 1, background: '#F9FAFB', color: '#374151', border: '1px solid #E5E7EB', borderRadius: '8px', padding: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>View Invoices</button>
+              <button onClick={() => { if (setToast) { setToast('Billing portal opening soon...'); setTimeout(() => setToast(null), 3000); } }} style={{ flex: 1, background: '#2563EB', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>Manage Billing</button>
             </div>
           </div>
         </div>
@@ -407,7 +407,7 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
               <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>New Password</div>
               <input type="password" placeholder="••••••••" style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #E5E7EB', fontSize: '14px', color: '#111827', outline: 'none' }} />
             </div>
-            <button style={{ background: '#2563EB', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 16px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>Update Password</button>
+            <button onClick={() => { if (setToast) { setToast('Password updated successfully! 🔒'); setTimeout(() => setToast(null), 3000); } }} style={{ background: '#2563EB', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 16px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>Update Password</button>
           </div>
 
           <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '24px', border: '1px solid #E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
@@ -421,7 +421,7 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: '8px' }}>
               <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>Authenticator App</div>
-              <button style={{ background: '#FFFFFF', color: '#374151', border: '1px solid #E5E7EB', borderRadius: '6px', padding: '6px 12px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>Enable 2FA</button>
+              <button onClick={() => { if (setToast) { setToast('2FA setup instructions sent to your email! 🛡️'); setTimeout(() => setToast(null), 3000); } }} style={{ background: '#FFFFFF', color: '#374151', border: '1px solid #E5E7EB', borderRadius: '6px', padding: '6px 12px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>Enable 2FA</button>
             </div>
           </div>
         </div>

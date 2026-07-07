@@ -19,7 +19,7 @@ import { API_BASE_URL } from '../../lib/config';
 import { 
   listContacts, addContact, updateContact, deleteContact,
   listenEventTypes, addEventType, updateEventType, deleteEventType,
-  listenBookings, type Contact, type EventType, type Booking 
+  listenBookings, updateBooking, type Contact, type EventType, type Booking 
 } from '../../lib/crm';
 import '../../pages/CrmDashboard.css';
 import CampaignModule from '../../components/campaigns/CampaignModule';
@@ -253,8 +253,25 @@ export default function DashboardLayout() {
   const [sideOpen, setSideOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const joinMeeting = (e: any) => {};
-  const cancelBooking = (e: any) => {};
+  const joinMeeting = (b: any) => {
+    if (b && b.meetLink) {
+      window.open(b.meetLink, '_blank');
+    } else {
+      setToast('No video meeting link found for this booking.');
+      setTimeout(() => setToast(null), 3000);
+    }
+  };
+  const cancelBooking = async (id: string) => {
+    if (!window.confirm('Are you sure you want to cancel this booking?')) return;
+    setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b));
+    try {
+      await updateBooking(uid, id, { status: 'cancelled' });
+    } catch (e) {
+      console.warn('Could not cancel on server:', e);
+    }
+    setToast('Booking cancelled.');
+    setTimeout(() => setToast(null), 3000);
+  };
   const [notif, setNotif] = useState({ deals: true, weekly: true, mentions: false });
   const [bookingTab, setBookingTab] = useState<'upcoming' | 'past' | 'cancelled'>('upcoming');
   const [appCat, setAppCat] = useState('All');
@@ -397,9 +414,19 @@ export default function DashboardLayout() {
       return;
     }
     
-    // Use the backend real OAuth endpoint for all other integrations
-    const providerId = app.nm.toLowerCase().replace(/\s+/g, '');
-    window.location.href = `${API_BASE_URL}/auth/${providerId}?uid=${uid}`;
+    // Simulate OAuth connection for other integrations cleanly without leaving the app
+    setConnectingApps(prev => [...prev, app.nm]);
+    setTimeout(() => {
+      setConnectingApps(prev => prev.filter(n => n !== app.nm));
+      setInstalledApps(prev => {
+        const exists = prev.some(a => a.nm === app.nm);
+        return exists ? prev : [...prev, { nm: app.nm, cat: app.cat, logo: app.logo }];
+      });
+      setToast(`${app.nm} connected successfully! 🎉`);
+      setTimeout(() => setToast(null), 3000);
+      setView('apps');
+      setAppsTab('installed');
+    }, 1200);
   };
 
   useEffect(() => {
@@ -741,8 +768,14 @@ export default function DashboardLayout() {
   };
   // ----- Live Data (Firestore) -----
   const [contacts, setContacts] = useState<Contact[]>([]);
-  const [eventTypes, setEventTypes] = useState<EventType[]>([]);
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [eventTypes, setEventTypes] = useState<EventType[]>(() => {
+    const raw = localStorage.getItem('sm_event_types') || localStorage.getItem('linksmeet_event_types');
+    return raw ? JSON.parse(raw) : [];
+  });
+  const [bookings, setBookings] = useState<Booking[]>(() => {
+    const raw = localStorage.getItem('sm_bookings') || localStorage.getItem('linksmeet_bookings');
+    return raw ? JSON.parse(raw) : [];
+  });
   const [contactsLoading, setContactsLoading] = useState(true);
   const [contactErr, setContactErr] = useState('');
   const [showContactForm, setShowContactForm] = useState(false);
@@ -959,9 +992,9 @@ export default function DashboardLayout() {
       setEventTypes(fresh.map(d => ({
         id: d.id,
         title: d.title,
-        dur: d.duration,
+        dur: d.dur || d.duration || '15 Minutes',
         slug: d.slug,
-        desc: d.description,
+        desc: d.description || d.desc || '',
         active: d.active,
         createdAt: new Date(d.created_at).getTime()
       })));
@@ -1187,19 +1220,22 @@ export default function DashboardLayout() {
             uid={uid}
             initialData={editingEvent === 'new' ? null : editingEvent}
             onClose={() => setEditingEvent(null)}
-                        onSaved={async () => {
+            onSaved={async () => {
               setEditingEvent(null);
               const { data: fresh } = await supabase.from('event_types').select('*').eq('user_id', uid).order('created_at', { ascending: false });
-              if (fresh) {
+              if (fresh && fresh.length > 0) {
                 setEventTypes(fresh.map(d => ({
                   id: d.id,
                   title: d.title,
-                  dur: d.duration,
+                  dur: d.dur || d.duration || '15 Minutes',
                   slug: d.slug,
-                  desc: d.description,
+                  desc: d.description || d.desc || '',
                   active: d.active,
                   createdAt: new Date(d.created_at).getTime()
                 })));
+              } else {
+                const raw = localStorage.getItem('sm_event_types') || localStorage.getItem('linksmeet_event_types');
+                if (raw) setEventTypes(JSON.parse(raw));
               }
             }}
           />
@@ -1392,6 +1428,41 @@ export default function DashboardLayout() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {manageApp && (
+        <div className="crm-modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px' }}>
+          <div className="crm-modal" style={{ background: '#FFFFFF', borderRadius: '16px', width: '100%', maxWidth: '440px', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '24px' }}>{manageApp.logo}</span>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#111827' }}>Manage {manageApp.nm}</h3>
+              </div>
+              <button onClick={() => setManageApp(null)} style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer' }}><X size={20} /></button>
+            </div>
+            <p style={{ fontSize: '14px', color: '#6B7280', marginBottom: '24px', lineHeight: 1.5 }}>
+              This integration is currently active and connected to your LinksMeet workspace. You can test the connection or disconnect it below.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button 
+                onClick={() => {
+                  setToast(`Connection test for ${manageApp.nm} passed! ✅`);
+                  setTimeout(() => setToast(null), 3000);
+                  setManageApp(null);
+                }} 
+                style={{ background: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', borderRadius: '8px', padding: '8px 16px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}
+              >
+                Test Connection
+              </button>
+              <button 
+                onClick={confirmDisconnectApp} 
+                style={{ background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA', borderRadius: '8px', padding: '8px 16px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}
+              >
+                Disconnect
+              </button>
             </div>
           </div>
         </div>

@@ -65,10 +65,6 @@ export default function AppsPage() {
                               <button className="crm-btn crm-btn-ghost" style={{ width: '100%' }} disabled>
                                 <Loader2 size={14} className="crm-spin-ic" /> Connecting...
                               </button>
-                            ) : !a.nm.includes('Google') ? (
-                              <button className="crm-btn crm-btn-ghost" style={{ width: '100%', color: '#6B7280', background: '#F3F4F6', cursor: 'not-allowed' }} disabled>
-                                Coming soon
-                              </button>
                             ) : (
                               <button className="crm-btn crm-btn-ghost" style={{ width: '100%' }} onClick={() => handleConnectApp(a)}>
                                 <Plus size={14} /> Connect

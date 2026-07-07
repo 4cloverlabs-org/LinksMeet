@@ -228,8 +228,9 @@ export async function fetchEventTypes(): Promise<EventType[]> {
   }
 
   // Local Storage Fallback
-  const raw = localStorage.getItem('linksmeet_event_types');
+  const raw = localStorage.getItem('sm_event_types') || localStorage.getItem('linksmeet_event_types');
   if (!raw) {
+    localStorage.setItem('sm_event_types', JSON.stringify(DEFAULT_EVENT_TYPES));
     localStorage.setItem('linksmeet_event_types', JSON.stringify(DEFAULT_EVENT_TYPES));
     return DEFAULT_EVENT_TYPES;
   }
@@ -264,6 +265,7 @@ export async function saveEventType(event: EventType): Promise<void> {
   } else {
     events.push(event);
   }
+  localStorage.setItem('sm_event_types', JSON.stringify(events));
   localStorage.setItem('linksmeet_event_types', JSON.stringify(events));
 }
 
@@ -284,6 +286,7 @@ export async function deleteEventType(id: string): Promise<void> {
   // Local Storage
   const events = await fetchEventTypes();
   const filtered = events.filter(e => e.id !== id);
+  localStorage.setItem('sm_event_types', JSON.stringify(filtered));
   localStorage.setItem('linksmeet_event_types', JSON.stringify(filtered));
 }
 
@@ -367,7 +370,7 @@ export async function fetchBookings(): Promise<Booking[]> {
   }
 
   // Local Storage
-  const raw = localStorage.getItem('linksmeet_bookings');
+  const raw = localStorage.getItem('sm_bookings') || localStorage.getItem('linksmeet_bookings');
   const bookings: Booking[] = raw ? JSON.parse(raw) : [];
   return bookings.sort((a, b) => {
     const dateCompare = a.date.localeCompare(b.date);
@@ -412,9 +415,10 @@ export async function saveBooking(booking: Omit<Booking, 'id' | 'createdAt' | 's
   }
 
   // Local Storage
-  const raw = localStorage.getItem('linksmeet_bookings');
+  const raw = localStorage.getItem('sm_bookings') || localStorage.getItem('linksmeet_bookings');
   const bookings: Booking[] = raw ? JSON.parse(raw) : [];
   bookings.push(newBooking);
+  localStorage.setItem('sm_bookings', JSON.stringify(bookings));
   localStorage.setItem('linksmeet_bookings', JSON.stringify(bookings));
   return newBooking;
 }
@@ -434,11 +438,12 @@ export async function cancelBooking(id: string): Promise<void> {
   }
 
   // Local Storage
-  const raw = localStorage.getItem('linksmeet_bookings');
+  const raw = localStorage.getItem('sm_bookings') || localStorage.getItem('linksmeet_bookings');
   const bookings: Booking[] = raw ? JSON.parse(raw) : [];
   const existing = bookings.find(b => b.id === id);
   if (existing) {
     existing.status = 'cancelled';
+    localStorage.setItem('sm_bookings', JSON.stringify(bookings));
     localStorage.setItem('linksmeet_bookings', JSON.stringify(bookings));
   }
 }

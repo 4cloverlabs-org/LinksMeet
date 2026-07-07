@@ -53,7 +53,12 @@ export default function BookingsPage() {
                       <div style={{ fontSize: '0.78rem', color: '#9b9bab' }}>{b.event} · {b.slot}</div>
                     </div>
                     <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-                      {b.status === 'upcoming' && <button className="crm-btn crm-btn-ghost"><Video size={14} /> Join</button>}
+                      {b.status === 'upcoming' && (
+                        <>
+                          <button className="crm-btn crm-btn-ghost" onClick={() => joinMeeting(b)}><Video size={14} /> Join</button>
+                          <button className="crm-btn crm-btn-ghost" style={{ color: '#DC2626' }} onClick={() => cancelBooking(b.id)}><X size={14} /> Cancel</button>
+                        </>
+                      )}
                       <span className={`crm-tag ${b.status === 'upcoming' ? 'violet' : b.status === 'cancelled' ? 'rose' : 'green'}`}>{b.status}</span>
                     </div>
                   </div>

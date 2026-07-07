@@ -5,7 +5,7 @@ import {
   Globe, ChevronDown, Code, Trash2, Plus, Info, Zap, X, MessageSquare,
   Phone, MapPin, Copy, Download, AlertTriangle
 } from 'lucide-react';
-import { addEventType, updateEventType, type EventType } from '../lib/crm';
+import { addEventType, updateEventType, deleteEventType, type EventType } from '../lib/crm';
 import { useAuth } from '../lib/AuthContext';
 
 interface Props {
@@ -112,18 +112,124 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
   const [interfaceLang, setInterfaceLang] = useState('English');
   const [lockTimezone, setLockTimezone] = useState(false);
 
-  const [schedule, setSchedule] = useState([
-    { day: 'Sunday', active: false, start: '09:00 AM', end: '05:00 PM' },
-    { day: 'Monday', active: true, start: '09:00 AM', end: '05:00 PM' },
-    { day: 'Tuesday', active: true, start: '09:00 AM', end: '05:00 PM' },
-    { day: 'Wednesday', active: true, start: '09:00 AM', end: '05:00 PM' },
-    { day: 'Thursday', active: true, start: '09:00 AM', end: '05:00 PM' },
-    { day: 'Friday', active: true, start: '09:00 AM', end: '05:00 PM' },
-    { day: 'Saturday', active: false, start: '09:00 AM', end: '05:00 PM' },
+  // Booking Form questions state
+  const [questions, setQuestions] = useState([
+    { id: 'name', label: 'Your name', type: 'Name', required: true, active: true },
+    { id: 'email', label: 'Email address', type: 'Email', required: true, active: true },
+    { id: 'phone', label: 'Phone number', type: 'Phone', required: requirePhone, active: requirePhone },
+    { id: 'about', label: 'What is this meeting about?', type: 'Short text', required: false, active: false },
+    { id: 'notes', label: 'Additional notes', type: 'Long text', required: false, active: true },
+    { id: 'guests', label: 'Add guests', type: 'Multiple Emails', required: false, active: true },
+    { id: 'reschedule', label: 'Reason for reschedule', type: 'Long text', required: false, active: true },
   ]);
+
+  // Confirmation state
+  const [confChannel, setConfChannel] = useState<'email' | 'phone'>('email');
+  const [calEventName, setCalEventName] = useState('15 min meeting between Kontham sohith and {Scheduler}');
+  const [customReplyTo, setCustomReplyTo] = useState(false);
+  const [sendTranscription, setSendTranscription] = useState(true);
+
+  // Limits & buffers state
+  const [bufferBefore, setBufferBefore] = useState('No buffer time');
+  const [bufferAfter, setBufferAfter] = useState('No buffer time');
+  const [minNoticeVal, setMinNoticeVal] = useState('2');
+  const [minNoticeUnit, setMinNoticeUnit] = useState('Hours');
+  const [timeInterval, setTimeInterval] = useState('Use event length (default)');
+  const [limitFreq, setLimitFreq] = useState(false);
+  const [limitDuration, setLimitDuration] = useState(false);
+  const [limitFuture, setLimitFuture] = useState(false);
+  const [limitBooker, setLimitBooker] = useState(false);
+
+  // Reschedule & cancel additional state
+  const [cancelReasonReq, setCancelReasonReq] = useState('Mandatory for host only');
+  const [allowPastReschedule, setAllowPastReschedule] = useState(false);
+  const [allowRescheduleBooking, setAllowRescheduleBooking] = useState(false);
+
+  // Payments & Seats state
+  const [requirePayment, setRequirePayment] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState('50');
+  const [paymentCurrency, setPaymentCurrency] = useState('USD ($)');
+  const [maxSeats, setMaxSeats] = useState('1');
+
+  // Apps state
+  const [appsConnected, setAppsConnected] = useState<{ [key: string]: boolean }>({
+    gcal: true, zoom: false, stripe: false, hubspot: false, slack: false
+  });
+
+  // Workflows state
+  const [workflows, setWorkflows] = useState([
+    { id: 'remind_24', title: 'Email reminder 24 hours before', active: true },
+    { id: 'remind_1', title: 'SMS reminder 1 hour before', active: false },
+    { id: 'followup', title: 'Thank you email after meeting', active: true },
+  ]);
+
+  // Webhooks state
+  const [webhooks, setWebhooks] = useState([
+    { id: '1', url: 'https://api.mycompany.com/events/salemail', events: 'booking.created, booking.cancelled', active: true }
+  ]);
+  const [newWebhookUrl, setNewWebhookUrl] = useState('');
+
+  const [schedule, setSchedule] = useState(() => {
+    const saved = localStorage.getItem('sm_avail_schedule_' + (initialData?.slug || initialData?.id || 'default'));
+    if (saved) {
+      try { return JSON.parse(saved); } catch {}
+    }
+    return [
+      { day: 'Sunday', active: false, start: '09:00 AM', end: '05:00 PM' },
+      { day: 'Monday', active: true, start: '09:00 AM', end: '05:00 PM' },
+      { day: 'Tuesday', active: true, start: '09:00 AM', end: '05:00 PM' },
+      { day: 'Wednesday', active: true, start: '09:00 AM', end: '05:00 PM' },
+      { day: 'Thursday', active: true, start: '09:00 AM', end: '05:00 PM' },
+      { day: 'Friday', active: true, start: '09:00 AM', end: '05:00 PM' },
+      { day: 'Saturday', active: false, start: '09:00 AM', end: '05:00 PM' },
+    ];
+  });
 
   const toggleDay = (idx: number) => {
     setSchedule(prev => prev.map((item, i) => i === idx ? { ...item, active: !item.active } : item));
+  };
+
+  const TIME_OPTIONS = [
+    '06:00 AM', '07:00 AM', '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM',
+    '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM',
+    '06:00 PM', '07:00 PM', '08:00 PM', '09:00 PM', '10:00 PM', '11:00 PM'
+  ];
+
+  const handleTimeChange = (idx: number, field: 'start' | 'end', val: string) => {
+    setSchedule(prev => prev.map((item, i) => i === idx ? { ...item, [field]: val } : item));
+    triggerToast(`Updated ${schedule[idx]?.day} ${field} time to ${val}`);
+  };
+
+  const handleCopyDayToAll = (idx: number) => {
+    const source = schedule[idx];
+    if (!source) return;
+    setSchedule(prev => prev.map((item, i) => i === idx ? item : { ...item, active: true, start: source.start, end: source.end }));
+    triggerToast(`Copied ${source.day} hours (${source.start} - ${source.end}) to all days!`);
+  };
+
+  const handleAddHour = (idx: number) => {
+    const source = schedule[idx];
+    if (!source) return;
+    const currentEndIdx = TIME_OPTIONS.indexOf(source.end);
+    const nextEnd = currentEndIdx !== -1 && currentEndIdx < TIME_OPTIONS.length - 1 ? TIME_OPTIONS[currentEndIdx + 1] : '11:00 PM';
+    setSchedule(prev => prev.map((item, i) => i === idx ? { ...item, end: nextEnd } : item));
+    triggerToast(`Extended ${source.day} until ${nextEnd}`);
+  };
+
+  const applyPresetSchedule = (preset: 'business' | 'extended' | 'weekends' | 'all') => {
+    if (preset === 'business') {
+      setSchedule(prev => prev.map(item => ({ ...item, active: !['Sunday', 'Saturday'].includes(item.day), start: '09:00 AM', end: '05:00 PM' })));
+      triggerToast('Applied Standard Business Hours (Mon-Fri, 9am-5pm)');
+    } else if (preset === 'extended') {
+      setSchedule(prev => prev.map(item => ({ ...item, active: !['Sunday', 'Saturday'].includes(item.day), start: '08:00 AM', end: '08:00 PM' })));
+      triggerToast('Applied Extended Work Hours (Mon-Fri, 8am-8pm)');
+    } else if (preset === 'weekends') {
+      setSchedule(prev => prev.map(item => ({ ...item, active: ['Sunday', 'Saturday'].includes(item.day), start: '10:00 AM', end: '04:00 PM' })));
+      triggerToast('Applied Weekends Only (Sat-Sun, 10am-4pm)');
+    } else if (preset === 'all') {
+      setSchedule(prev => prev.map(item => ({ ...item, active: true, start: '09:00 AM', end: '06:00 PM' })));
+      triggerToast('Applied All 7 Days (Sun-Sat, 9am-6pm)');
+    }
   };
 
   const getMonthStartOffset = (mIdx: number) => {
@@ -222,6 +328,84 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
     setTimeout(() => setToastMsg(null), 3000);
   };
 
+  const handleEditQuestion = (idx: number) => {
+    const q = questions[idx];
+    const newLabel = window.prompt('Enter new question label:', q.label);
+    if (newLabel && newLabel.trim()) {
+      setQuestions(prev => prev.map((item, i) => i === idx ? { ...item, label: newLabel.trim() } : item));
+      triggerToast(`Updated question label to "${newLabel.trim()}"`);
+    }
+  };
+
+  const handleAddQuestion = () => {
+    const label = window.prompt('Enter new question label (e.g., Company Name, Job Title):');
+    if (label && label.trim()) {
+      setQuestions(prev => [...prev, { id: 'custom_' + Date.now(), label: label.trim(), type: 'Short text', required: false, active: true }]);
+      triggerToast(`Added new question "${label.trim()}"`);
+    }
+  };
+
+  const toggleQuestionActive = (idx: number) => {
+    setQuestions(prev => prev.map((item, i) => {
+      if (i === idx) {
+        const nextActive = !item.active;
+        if (item.id === 'phone') setRequirePhone(nextActive);
+        return { ...item, active: nextActive };
+      }
+      return item;
+    }));
+  };
+
+  const handleEditCalEventName = () => {
+    const val = window.prompt('Customize calendar event name template:', calEventName);
+    if (val && val.trim()) {
+      setCalEventName(val.trim());
+      triggerToast('Updated calendar event name template!');
+    }
+  };
+
+  const toggleAppConnection = (appId: string, appName: string) => {
+    setAppsConnected(prev => {
+      const nextState = !prev[appId];
+      triggerToast(`${nextState ? 'Connected' : 'Disconnected'} ${appName} integration`);
+      return { ...prev, [appId]: nextState };
+    });
+  };
+
+  const toggleWorkflow = (wId: string, title: string) => {
+    setWorkflows(prev => prev.map(w => {
+      if (w.id === wId) {
+        const nextState = !w.active;
+        triggerToast(`${nextState ? 'Activated' : 'Paused'} workflow: "${title}"`);
+        return { ...w, active: nextState };
+      }
+      return w;
+    }));
+  };
+
+  const handleAddWorkflow = () => {
+    const title = window.prompt('Enter new workflow automation rule (e.g., Send SMS 15m before meeting):');
+    if (title && title.trim()) {
+      setWorkflows(prev => [...prev, { id: 'wf_' + Date.now(), title: title.trim(), active: true }]);
+      triggerToast(`Created automation: "${title.trim()}"`);
+    }
+  };
+
+  const handleAddWebhook = () => {
+    if (!newWebhookUrl || !newWebhookUrl.startsWith('http')) {
+      triggerToast('Please enter a valid HTTP/HTTPS URL');
+      return;
+    }
+    setWebhooks(prev => [...prev, { id: String(Date.now()), url: newWebhookUrl.trim(), events: 'booking.created, booking.rescheduled', active: true }]);
+    setNewWebhookUrl('');
+    triggerToast('Webhook endpoint added successfully!');
+  };
+
+  const handleDeleteWebhook = (wId: string) => {
+    setWebhooks(prev => prev.filter(w => w.id !== wId));
+    triggerToast('Webhook endpoint deleted.');
+  };
+
   // Real-time slug derivation if title changes
   const handleTitleChange = (newTitle: string) => {
     setForm(prev => {
@@ -283,6 +467,8 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
     if (!form.title || !form.slug) return;
     setSaving(true);
     try {
+      localStorage.setItem('sm_avail_schedule_' + (form.slug || form.id || 'default'), JSON.stringify(schedule));
+      localStorage.setItem('sm_avail_schedule', JSON.stringify(schedule));
       if (form.id) {
         await updateEventType(uid, form.id, form as EventType);
       } else {
@@ -292,8 +478,9 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
       triggerToast('Event type saved successfully.');
       onSaved();
     } catch (e: any) {
-      console.error(e);
+      console.error('Error saving event type:', e);
       setSaving(false);
+      triggerToast(`Failed to save: ${e.message || 'Unknown error'}`);
     }
   };
 
@@ -338,9 +525,18 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
   // 5. Delete Handler
   const handleDeleteConfirm = async () => {
+    if (form.id) {
+      try {
+        await deleteEventType(uid, form.id);
+      } catch (err: any) {
+        console.error('Failed to delete:', err);
+        triggerToast(`Failed to delete: ${err.message || 'Error'}`);
+        return;
+      }
+    }
     triggerToast('Event type deleted.');
     setShowDeleteModal(false);
-    onClose();
+    onSaved();
   };
 
   const NavItem = ({ icon: Icon, label, id }: { icon: any, label: string, id: string }) => {
@@ -964,10 +1160,10 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   </div>
                   <button
                     type="button"
-                    onClick={() => triggerToast('Opening availability template editor...')}
+                    onClick={() => applyPresetSchedule('business')}
                     style={{ border: '1px solid #bfdbfe', background: '#ffffff', color: '#0E61F3', padding: '8px 16px', borderRadius: '8px', fontWeight: 600, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}
                   >
-                    <Edit2 size={14} /> Edit availability
+                    <Edit2 size={14} /> Reset to 9am-5pm
                   </button>
                 </div>
 
@@ -1004,23 +1200,33 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                           <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 500 }}>Unavailable</span>
                         ) : (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{ padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 600, color: '#0f172a', background: '#ffffff', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              {item.start} <ChevronDown size={14} color="#64748b" />
-                            </div>
+                            <select
+                              value={item.start}
+                              onChange={e => handleTimeChange(idx, 'start', e.target.value)}
+                              style={{ padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 600, color: '#0f172a', background: '#ffffff', outline: 'none', cursor: 'pointer' }}
+                            >
+                              {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                            </select>
                             <span style={{ color: '#94a3b8', fontWeight: 600 }}>-</span>
-                            <div style={{ padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 600, color: '#0f172a', background: '#ffffff', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              {item.end} <ChevronDown size={14} color="#64748b" />
-                            </div>
+                            <select
+                              value={item.end}
+                              onChange={e => handleTimeChange(idx, 'end', e.target.value)}
+                              style={{ padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 600, color: '#0f172a', background: '#ffffff', outline: 'none', cursor: 'pointer' }}
+                            >
+                              {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                            </select>
                             <button
                               type="button"
-                              onClick={() => triggerToast(`Add time block for ${item.day}`)}
+                              title="Extend end time by 1 hour"
+                              onClick={() => handleAddHour(idx)}
                               style={{ width: '32px', height: '32px', border: '1px solid #e2e8f0', borderRadius: '6px', background: '#ffffff', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                             >
                               <Plus size={15} />
                             </button>
                             <button
                               type="button"
-                              onClick={() => triggerToast(`Copy ${item.day} hours to other days`)}
+                              title="Copy these hours to all days"
+                              onClick={() => handleCopyDayToAll(idx)}
                               style={{ width: '32px', height: '32px', border: '1px solid #e2e8f0', borderRadius: '6px', background: '#ffffff', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                             >
                               <Copy size={15} />
@@ -1033,19 +1239,29 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
                   <button
                     type="button"
-                    onClick={() => triggerToast('Custom hours modal opened')}
+                    onClick={() => applyPresetSchedule('extended')}
                     style={{ width: '100%', padding: '12px', border: '1px dashed #bfdbfe', borderRadius: '8px', background: '#eff6ff', color: '#0E61F3', fontWeight: 600, fontSize: '0.88rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer', marginTop: '18px' }}
                   >
-                    <Plus size={16} /> Add custom hours
+                    <Plus size={16} /> Apply Extended Hours (8am - 8pm)
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => triggerToast('Select source schedule to copy from')}
-                    style={{ width: '100%', padding: '12px', border: 'none', borderRadius: '8px', background: '#f8fafc', color: '#0E61F3', fontWeight: 600, fontSize: '0.88rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer', marginTop: '12px' }}
-                  >
-                    Copy availability from... <ChevronDown size={16} />
-                  </button>
+                  <div style={{ position: 'relative', marginTop: '12px' }}>
+                    <select
+                      onChange={e => {
+                        if (e.target.value) {
+                          applyPresetSchedule(e.target.value as any);
+                          e.target.value = '';
+                        }
+                      }}
+                      style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '8px', background: '#f8fafc', color: '#0E61F3', fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer', outline: 'none', appearance: 'none', textAlign: 'center' }}
+                    >
+                      <option value="">Copy availability from preset...</option>
+                      <option value="business">Standard Business Hours (Mon-Fri 9:00 AM - 5:00 PM)</option>
+                      <option value="extended">Extended Work Hours (Mon-Fri 8:00 AM - 8:00 PM)</option>
+                      <option value="weekends">Weekends Only (Sat-Sun 10:00 AM - 4:00 PM)</option>
+                      <option value="all">All 7 Days (Sun-Sat 9:00 AM - 6:00 PM)</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -1241,8 +1457,8 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     <h3 style={{ margin: '0 0 4px', fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>Confirmation</h3>
                     <p style={{ margin: '0 0 16px', fontSize: '0.88rem', color: '#64748b' }}>What your booker should provide to receive confirmations</p>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <button style={{ padding: '6px 16px', borderRadius: '8px', background: '#ffffff', border: '1px solid #0E61F3', color: '#0E61F3', fontSize: '0.88rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{width:16,height:16,border:'2px solid #0E61F3',borderRadius:'4px',display:'flex',alignItems:'center',justifyContent:'center'}}><div style={{width:8,height:8,background:'#0E61F3',borderRadius:'2px'}}></div></div> Email</button>
-                      <button style={{ padding: '6px 16px', borderRadius: '8px', background: 'transparent', border: '1px solid #cbd5e1', color: '#64748b', fontSize: '0.88rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}><Phone size={16} /> Phone</button>
+                      <button type="button" onClick={() => { setConfChannel('email'); triggerToast('Set confirmation channel to Email'); }} style={{ padding: '6px 16px', borderRadius: '8px', background: confChannel === 'email' ? '#eff6ff' : '#ffffff', border: `1px solid ${confChannel === 'email' ? '#0E61F3' : '#cbd5e1'}`, color: confChannel === 'email' ? '#0E61F3' : '#64748b', fontSize: '0.88rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}><div style={{width:16,height:16,border: `2px solid ${confChannel === 'email' ? '#0E61F3' : '#cbd5e1'}`,borderRadius:'4px',display:'flex',alignItems:'center',justifyContent:'center'}}>{confChannel === 'email' && <div style={{width:8,height:8,background:'#0E61F3',borderRadius:'2px'}}></div>}</div> Email</button>
+                      <button type="button" onClick={() => { setConfChannel('phone'); triggerToast('Set confirmation channel to Phone'); }} style={{ padding: '6px 16px', borderRadius: '8px', background: confChannel === 'phone' ? '#eff6ff' : 'transparent', border: `1px solid ${confChannel === 'phone' ? '#0E61F3' : '#cbd5e1'}`, color: confChannel === 'phone' ? '#0E61F3' : '#64748b', fontSize: '0.88rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}><Phone size={16} /> Phone</button>
                     </div>
                   </div>
 
@@ -1256,111 +1472,25 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
                   {/* Questions List */}
                   <div>
-                    {/* Your name */}
-                    <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                          <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>Your name</span>
-                          <span style={{ fontSize: '0.7rem', fontWeight: 600, background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: '4px' }}>Required</span>
+                    {questions.map((q, idx) => (
+                      <div key={q.id} style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                            <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>{q.label}</span>
+                            <span style={{ fontSize: '0.7rem', fontWeight: 600, background: q.required ? '#f0fdf4' : '#f1f5f9', color: q.required ? '#16a34a' : '#475569', padding: '2px 6px', borderRadius: '4px' }}>{q.required ? 'Required' : q.active ? 'Optional' : 'Hidden'}</span>
+                          </div>
+                          <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{q.type}</div>
                         </div>
-                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Name</div>
-                      </div>
-                      <button style={{ padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#334155', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
-                    </div>
-
-                    {/* Email address */}
-                    <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                          <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>Email address</span>
-                          <span style={{ fontSize: '0.7rem', fontWeight: 600, background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: '4px' }}>Required</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <ToggleSwitch checked={q.active} onChange={() => toggleQuestionActive(idx)} />
+                          <button type="button" onClick={() => handleEditQuestion(idx)} style={{ padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#334155', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
                         </div>
-                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Email</div>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <ToggleSwitch checked={true} />
-                        <button style={{ padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#334155', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
-                      </div>
-                    </div>
-
-                    {/* Phone number */}
-                    <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                          <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>Phone number</span>
-                          <span style={{ fontSize: '0.7rem', fontWeight: 600, background: requirePhone ? '#f0fdf4' : '#f1f5f9', color: requirePhone ? '#16a34a' : '#475569', padding: '2px 6px', borderRadius: '4px' }}>{requirePhone ? 'Required' : 'Hidden'}</span>
-                        </div>
-                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Phone</div>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <ToggleSwitch checked={requirePhone} onChange={() => setRequirePhone(!requirePhone)} />
-                        <button style={{ padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#334155', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
-                      </div>
-                    </div>
-
-                    {/* What is this meeting about? */}
-                    <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                          <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>What is this meeting about?</span>
-                          <span style={{ fontSize: '0.7rem', fontWeight: 600, background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: '4px' }}>Hidden</span>
-                        </div>
-                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Short text</div>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <ToggleSwitch checked={false} />
-                        <button style={{ padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#334155', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
-                      </div>
-                    </div>
-
-                    {/* Additional notes */}
-                    <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                          <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>Additional notes</span>
-                          <span style={{ fontSize: '0.7rem', fontWeight: 600, background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: '4px' }}>Optional</span>
-                        </div>
-                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Long text</div>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <ToggleSwitch checked={true} />
-                        <button style={{ padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#334155', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
-                      </div>
-                    </div>
-
-                    {/* Add guests */}
-                    <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                          <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>Add guests</span>
-                          <span style={{ fontSize: '0.7rem', fontWeight: 600, background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: '4px' }}>Optional</span>
-                        </div>
-                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Multiple Emails</div>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <ToggleSwitch checked={true} />
-                        <button style={{ padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#334155', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
-                      </div>
-                    </div>
-
-                    {/* Reason for reschedule */}
-                    <div style={{ padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                          <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>Reason for reschedule</span>
-                          <span style={{ fontSize: '0.7rem', fontWeight: 600, background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: '4px' }}>Optional</span>
-                        </div>
-                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Long text</div>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <ToggleSwitch checked={true} />
-                        <button style={{ padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#334155', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
-                      </div>
-                    </div>
+                    ))}
                   </div>
 
                   <div style={{ padding: '16px 24px 24px' }}>
-                    <button style={{ padding: '8px 16px', borderRadius: '8px', background: 'transparent', border: '1px dashed #cbd5e1', color: '#0E61F3', fontSize: '0.88rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                    <button type="button" onClick={handleAddQuestion} style={{ padding: '8px 16px', borderRadius: '8px', background: 'transparent', border: '1px dashed #cbd5e1', color: '#0E61F3', fontSize: '0.88rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                       <Plus size={16} /> Add question
                     </button>
                   </div>
@@ -1374,9 +1504,9 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   {/* Preview Left: Details */}
                   <div style={{ width: '320px', borderRight: '1px solid #e2e8f0', padding: '32px 24px', background: '#ffffff' }}>
                     <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#a855f7', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 700, marginBottom: '20px' }}>
-                      K
+                      {hostInitials}
                     </div>
-                    <div style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600, marginBottom: '4px' }}>Kontham sohith</div>
+                    <div style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600, marginBottom: '4px' }}>{hostName}</div>
                     <h2 style={{ margin: '0 0 24px', fontSize: '1.4rem', fontWeight: 700, color: '#0f172a' }}>{form.title || '15 min meeting'}</h2>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -1404,32 +1534,26 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
                   {/* Preview Right: Form */}
                   <div style={{ flex: 1, padding: '32px 40px', display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ marginBottom: '20px' }}>
-                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Your name *</label>
-                      <input type="text" readOnly value="Kontham sohith" style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
-                    </div>
-                    <div style={{ marginBottom: '20px' }}>
-                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Email address *</label>
-                      <input type="text" readOnly value="sohithkontham5@gmail.com" style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
-                    </div>
-                    {requirePhone && (
-                      <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Phone number *</label>
-                        <input type="text" readOnly value="+91 98765 43210" style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
+                    {questions.filter(q => q.active && q.id !== 'guests').map(q => (
+                      <div key={q.id} style={{ marginBottom: '20px' }}>
+                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>{q.label} {q.required ? '*' : ''}</label>
+                        {q.type === 'Long text' ? (
+                          <textarea readOnly value={q.id === 'notes' ? "Please share anything that will help prepare for our meeting." : ""} style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', minHeight: '70px', resize: 'none', outline: 'none' }} />
+                        ) : (
+                          <input type="text" readOnly value={q.id === 'name' ? hostName : q.id === 'email' ? "guest@example.com" : q.id === 'phone' ? "+91 98765 43210" : ""} style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
+                        )}
                       </div>
-                    )}
-                    <div style={{ marginBottom: '20px' }}>
-                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Additional notes</label>
-                      <textarea readOnly value="Please share anything that will help prepare for our meeting." style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', minHeight: '80px', resize: 'none', outline: 'none' }} />
-                    </div>
+                    ))}
 
-                    <button style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.85rem', fontWeight: 600, padding: 0, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginBottom: '40px' }}>
-                      <Plus size={15} color="#64748b" /> Add guests
-                    </button>
+                    {questions.some(q => q.id === 'guests' && q.active) && (
+                      <button type="button" onClick={() => triggerToast('Opening Add Guests input...')} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.85rem', fontWeight: 600, padding: 0, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginBottom: '30px' }}>
+                        <Plus size={15} color="#64748b" /> Add guests
+                      </button>
+                    )}
 
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '16px', marginTop: 'auto' }}>
-                      <button style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>Back</button>
-                      <button style={{ background: '#0E61F3', border: 'none', borderRadius: '8px', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, padding: '10px 24px', cursor: 'pointer' }}>Confirm</button>
+                      <button type="button" onClick={() => triggerToast('Navigating back...')} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>Back</button>
+                      <button type="button" onClick={() => triggerToast('Preview: Confirm booking clicked!')} style={{ background: '#0E61F3', border: 'none', borderRadius: '8px', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, padding: '10px 24px', cursor: 'pointer' }}>Confirm</button>
                     </div>
                   </div>
                 </div>
@@ -1455,10 +1579,10 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       <input 
                         type="text" 
                         readOnly 
-                        value="15 min meeting between Kontham sohith and {Scheduler}"
+                        value={calEventName}
                         style={{ flex: 1, padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#f8fafc', color: '#334155', fontSize: '0.9rem', outline: 'none' }}
                       />
-                      <button style={{ padding: '0 16px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
+                      <button type="button" onClick={handleEditCalEventName} style={{ padding: '0 16px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
                     </div>
                   </div>
 
@@ -1472,7 +1596,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       </div>
                       <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>Redirect to a custom URL after a successful booking</p>
                     </div>
-                    <ToggleSwitch checked={confRedirect} onChange={() => setConfRedirect(!confRedirect)} />
+                    <ToggleSwitch checked={confRedirect} onChange={() => { setConfRedirect(!confRedirect); triggerToast(!confRedirect ? 'Enabled post-booking redirect' : 'Disabled redirect'); }} />
                   </div>
 
                   <div style={{ height: '1px', background: '#e2e8f0' }} />
@@ -1483,18 +1607,18 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       <h3 style={{ margin: '0 0 8px', fontSize: '0.95rem', fontWeight: 600, color: '#0f172a' }}>Custom 'Reply-To' email</h3>
                       <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Use a different email address as the replyTo for confirmation emails instead of the organizer's email</p>
                     </div>
-                    <ToggleSwitch checked={false} />
+                    <ToggleSwitch checked={customReplyTo} onChange={() => { setCustomReplyTo(!customReplyTo); triggerToast(!customReplyTo ? 'Enabled Custom Reply-To' : 'Disabled Custom Reply-To'); }} />
                   </div>
 
                   <div style={{ height: '1px', background: '#e2e8f0' }} />
 
                   {/* Send LinksMeet Video transcription emails */}
-                  <div style={{ padding: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', opacity: 0.6 }}>
+                  <div style={{ padding: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9' }}>
                     <div style={{ paddingRight: '24px' }}>
                       <h3 style={{ margin: '0 0 8px', fontSize: '0.95rem', fontWeight: 600, color: '#0f172a' }}>Send LinksMeet Video transcription emails</h3>
-                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Send emails with the transcription of the LinksMeet Video after the meeting ends. (Requires a paid plan)</p>
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Send emails with the transcription of the LinksMeet Video after the meeting ends.</p>
                     </div>
-                    <ToggleSwitch checked={true} />
+                    <ToggleSwitch checked={sendTranscription} onChange={() => { setSendTranscription(!sendTranscription); triggerToast(!sendTranscription ? 'Enabled transcription emails' : 'Disabled transcription emails'); }} />
                   </div>
 
                 </div>
@@ -1524,7 +1648,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     {/* What */}
                     <div style={{ display: 'flex' }}>
                       <div style={{ width: '100px', fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>What</div>
-                      <div style={{ flex: 1, fontSize: '0.9rem', color: '#334155' }}>15 min meeting between {hostName} and {'{Guest Name}'}</div>
+                      <div style={{ flex: 1, fontSize: '0.9rem', color: '#334155' }}>{calEventName.replace('{Scheduler}', '{Guest Name}')}</div>
                     </div>
 
                     {/* When */}
@@ -1567,18 +1691,18 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   <div style={{ padding: '24px 32px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
                     <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>Add to calendar</span>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <div style={{ width: '36px', height: '36px', borderRadius: '6px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <button type="button" onClick={() => triggerToast('Downloading Google Calendar invite...')} style={{ width: '36px', height: '36px', borderRadius: '6px', border: '1px solid #e2e8f0', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                          <span style={{ fontWeight: 700, color: '#ea4335' }}>G</span>
-                      </div>
-                      <div style={{ width: '36px', height: '36px', borderRadius: '6px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      </button>
+                      <button type="button" onClick={() => triggerToast('Downloading Outlook invite...')} style={{ width: '36px', height: '36px', borderRadius: '6px', border: '1px solid #e2e8f0', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                          <span style={{ fontWeight: 700, color: '#0078d4' }}>M</span>
-                      </div>
-                      <div style={{ width: '36px', height: '36px', borderRadius: '6px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      </button>
+                      <button type="button" onClick={() => triggerToast('Downloading Office 365 invite...')} style={{ width: '36px', height: '36px', borderRadius: '6px', border: '1px solid #e2e8f0', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                          <span style={{ fontWeight: 700, color: '#0078d4' }}>O</span>
-                      </div>
-                      <div style={{ width: '36px', height: '36px', borderRadius: '6px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      </button>
+                      <button type="button" onClick={() => triggerToast('Downloading Yahoo Calendar invite...')} style={{ width: '36px', height: '36px', borderRadius: '6px', border: '1px solid #e2e8f0', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                          <span style={{ fontWeight: 700, color: '#6001d2' }}>Y!</span>
-                      </div>
+                      </button>
                     </div>
                   </div>
 
@@ -1586,7 +1710,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
                   {/* Reschedule/Cancel */}
                   <div style={{ padding: '24px 32px', textAlign: 'center', fontSize: '0.9rem', color: '#64748b' }}>
-                    Need to make a change? <a href="#" style={{ color: '#0E61F3', textDecoration: 'none', fontWeight: 600 }}>Reschedule</a> or <a href="#" style={{ color: '#0E61F3', textDecoration: 'none', fontWeight: 600 }}>Cancel</a>
+                    Need to make a change? <button type="button" onClick={() => triggerToast('Previewing Reschedule flow...')} style={{ background: 'none', border: 'none', color: '#0E61F3', textDecoration: 'none', fontWeight: 600, cursor: 'pointer', padding: 0 }}>Reschedule</button> or <button type="button" onClick={() => triggerToast('Previewing Cancel flow...')} style={{ background: 'none', border: 'none', color: '#0E61F3', textDecoration: 'none', fontWeight: 600, cursor: 'pointer', padding: 0 }}>Cancel</button>
                   </div>
                 </div>
               </div>
@@ -1605,8 +1729,8 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     
                     <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
                       {/* Month */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div style={{ width: '110px', height: '70px', border: '2px solid #bfdbfe', borderRadius: '8px', background: '#f8fafc', padding: '8px', position: 'relative' }}>
+                      <div onClick={() => { setAppLayout('Month'); triggerToast('Switched layout to Month'); }} style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}>
+                        <div style={{ width: '110px', height: '70px', border: appLayout === 'Month' ? '2px solid #0E61F3' : '1px solid #e2e8f0', borderRadius: '8px', background: appLayout === 'Month' ? '#f8fafc' : '#ffffff', padding: '8px', position: 'relative' }}>
                           <div style={{ width: '20px', height: '4px', background: '#3b82f6', borderRadius: '2px', marginBottom: '8px' }}></div>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
                              <div style={{ height: '4px', background: '#cbd5e1', borderRadius: '2px' }}></div>
@@ -1620,13 +1744,13 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                           </div>
                         </div>
                         <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}>
-                          <input type="checkbox" checked readOnly style={{ accentColor: '#0E61F3', cursor: 'pointer' }} /> Month <span style={{ color: '#64748b', fontWeight: 400 }}>(Default)</span>
+                          <input type="checkbox" checked={appLayout === 'Month'} readOnly style={{ accentColor: '#0E61F3', cursor: 'pointer' }} /> Month <span style={{ color: '#64748b', fontWeight: 400 }}>(Default)</span>
                         </label>
                       </div>
 
                       {/* Weekly */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div style={{ width: '110px', height: '70px', border: '1px solid #e2e8f0', borderRadius: '8px', background: '#ffffff', padding: '8px', display: 'flex', gap: '6px' }}>
+                      <div onClick={() => { setAppLayout('Weekly'); triggerToast('Switched layout to Weekly'); }} style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}>
+                        <div style={{ width: '110px', height: '70px', border: appLayout === 'Weekly' ? '2px solid #0E61F3' : '1px solid #e2e8f0', borderRadius: '8px', background: appLayout === 'Weekly' ? '#f8fafc' : '#ffffff', padding: '8px', display: 'flex', gap: '6px' }}>
                           <div style={{ flex: 1 }}>
                             <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: '2px solid #bfdbfe', marginBottom: '8px' }}></div>
                             <div style={{ width: '80%', height: '2px', background: '#cbd5e1', borderRadius: '2px', marginBottom: '2px' }}></div>
@@ -1639,13 +1763,13 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                           </div>
                         </div>
                         <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}>
-                          <input type="checkbox" checked readOnly style={{ accentColor: '#0E61F3', cursor: 'pointer' }} /> Weekly
+                          <input type="checkbox" checked={appLayout === 'Weekly'} readOnly style={{ accentColor: '#0E61F3', cursor: 'pointer' }} /> Weekly
                         </label>
                       </div>
 
                       {/* Column */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div style={{ width: '110px', height: '70px', border: '1px solid #e2e8f0', borderRadius: '8px', background: '#ffffff', padding: '8px', display: 'flex', gap: '8px' }}>
+                      <div onClick={() => { setAppLayout('Column'); triggerToast('Switched layout to Column'); }} style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}>
+                        <div style={{ width: '110px', height: '70px', border: appLayout === 'Column' ? '2px solid #0E61F3' : '1px solid #e2e8f0', borderRadius: '8px', background: appLayout === 'Column' ? '#f8fafc' : '#ffffff', padding: '8px', display: 'flex', gap: '8px' }}>
                           <div style={{ flex: 1 }}>
                             <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: '2px solid #bfdbfe', marginBottom: '8px' }}></div>
                             <div style={{ width: '80%', height: '2px', background: '#cbd5e1', borderRadius: '2px', marginBottom: '2px' }}></div>
@@ -1658,7 +1782,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                           </div>
                         </div>
                         <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}>
-                          <input type="checkbox" checked readOnly style={{ accentColor: '#0E61F3', cursor: 'pointer' }} /> Column
+                          <input type="checkbox" checked={appLayout === 'Column'} readOnly style={{ accentColor: '#0E61F3', cursor: 'pointer' }} /> Column
                         </label>
                       </div>
                     </div>
@@ -1671,13 +1795,13 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     <h3 style={{ margin: '0 0 12px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Default view</h3>
                     
                     <div style={{ display: 'inline-flex', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '4px', marginBottom: '16px' }}>
-                      <button onClick={() => setAppLayout('Month')} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: appLayout === 'Month' ? '#eff6ff' : 'transparent', color: appLayout === 'Month' ? '#0E61F3' : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Month</button>
-                      <button onClick={() => setAppLayout('Weekly')} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: appLayout === 'Weekly' ? '#eff6ff' : 'transparent', color: appLayout === 'Weekly' ? '#0E61F3' : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Weekly</button>
-                      <button onClick={() => setAppLayout('Column')} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: appLayout === 'Column' ? '#eff6ff' : 'transparent', color: appLayout === 'Column' ? '#0E61F3' : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Column</button>
+                      <button type="button" onClick={() => { setAppLayout('Month'); triggerToast('Set default view to Month'); }} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: appLayout === 'Month' ? '#eff6ff' : 'transparent', color: appLayout === 'Month' ? '#0E61F3' : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Month</button>
+                      <button type="button" onClick={() => { setAppLayout('Weekly'); triggerToast('Set default view to Weekly'); }} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: appLayout === 'Weekly' ? '#eff6ff' : 'transparent', color: appLayout === 'Weekly' ? '#0E61F3' : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Weekly</button>
+                      <button type="button" onClick={() => { setAppLayout('Column'); triggerToast('Set default view to Column'); }} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: appLayout === 'Column' ? '#eff6ff' : 'transparent', color: appLayout === 'Column' ? '#0E61F3' : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Column</button>
                     </div>
 
                     <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>
-                      You can manage this for all your event types in Settings -&gt; Appearance or <a href="#" style={{color:'#0E61F3', textDecoration:'none', fontWeight: 500}}>Override</a> for this event only.
+                      You can manage this for all your event types in Settings -&gt; Appearance or <button type="button" onClick={() => triggerToast('Opening Override rules modal...')} style={{ background: 'none', border: 'none', color:'#0E61F3', textDecoration:'none', fontWeight: 500, cursor: 'pointer', padding: 0 }}>Override</button> for this event only.
                     </p>
                   </div>
 
@@ -1689,7 +1813,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       <h3 style={{ margin: '0 0 4px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Event type color</h3>
                       <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>This is only used for event type & booking differentiation within the app. It is not displayed to bookers.</p>
                     </div>
-                    <input type="color" value={eventColor} onChange={e => setEventColor(e.target.value)} style={{ cursor: 'pointer', border: 'none', background: 'none', width: '36px', height: '36px', padding: 0 }} />
+                    <input type="color" value={eventColor} onChange={e => { setEventColor(e.target.value); triggerToast(`Updated event accent color`); }} style={{ cursor: 'pointer', border: 'none', background: 'none', width: '36px', height: '36px', padding: 0 }} />
                   </div>
 
                   <div style={{ height: '1px', background: '#e2e8f0' }} />
@@ -1700,7 +1824,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       <h3 style={{ margin: '0 0 4px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Auto translate title and description</h3>
                       <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Automatically translate titles and descriptions to the visitor's browser language using AI.</p>
                     </div>
-                    <ToggleSwitch checked={autoTranslate} onChange={() => setAutoTranslate(!autoTranslate)} />
+                    <ToggleSwitch checked={autoTranslate} onChange={() => { setAutoTranslate(!autoTranslate); triggerToast(!autoTranslate ? 'Enabled AI Auto-translate' : 'Disabled Auto-translate'); }} />
                   </div>
 
                   <div style={{ height: '1px', background: '#e2e8f0' }} />
@@ -1711,7 +1835,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       <h3 style={{ margin: '0 0 4px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Interface language</h3>
                       <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Set your preferred language for the booking interface</p>
                     </div>
-                    <select value={interfaceLang} onChange={e => setInterfaceLang(e.target.value)} style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.9rem', color: '#0f172a', fontWeight: 500, minWidth: '120px' }}>
+                    <select value={interfaceLang} onChange={e => { setInterfaceLang(e.target.value); triggerToast(`Set interface language to ${e.target.value}`); }} style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.9rem', color: '#0f172a', fontWeight: 500, minWidth: '120px', cursor: 'pointer' }}>
                       <option>English</option>
                       <option>French</option>
                       <option>Spanish</option>
@@ -1727,7 +1851,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       <h3 style={{ margin: '0 0 4px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Lock timezone on booking page</h3>
                       <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>To lock the timezone on booking page, useful for in-person events. <a href="#" style={{color:'#0E61F3', textDecoration:'none', fontWeight: 500}}>Learn more</a></p>
                     </div>
-                    <ToggleSwitch checked={lockTimezone} onChange={() => setLockTimezone(!lockTimezone)} />
+                    <ToggleSwitch checked={lockTimezone} onChange={() => { setLockTimezone(!lockTimezone); triggerToast(!lockTimezone ? 'Locked timezone on booking page' : 'Unlocked timezone'); }} />
                   </div>
 
                 </div>
@@ -1792,13 +1916,13 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       <textarea readOnly value="Please share anything that will help prepare for our meeting." style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', minHeight: '80px', resize: 'none', outline: 'none' }} />
                     </div>
 
-                    <button style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.85rem', fontWeight: 600, padding: 0, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginBottom: '40px' }}>
+                    <button type="button" onClick={() => triggerToast('Opening Add Guests input...')} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.85rem', fontWeight: 600, padding: 0, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginBottom: '40px' }}>
                       <Plus size={15} color="#64748b" /> Add guests
                     </button>
 
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '16px', marginTop: 'auto' }}>
-                      <button style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>Back</button>
-                      <button style={{ background: '#0E61F3', border: 'none', borderRadius: '8px', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, padding: '10px 24px', cursor: 'pointer' }}>Confirm</button>
+                      <button type="button" onClick={() => triggerToast('Navigating back...')} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>Back</button>
+                      <button type="button" onClick={() => triggerToast('Preview: Confirm booking clicked!')} style={{ background: '#0E61F3', border: 'none', borderRadius: '8px', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, padding: '10px 24px', cursor: 'pointer' }}>Confirm</button>
                     </div>
                   </div>
                 </div>
@@ -1825,8 +1949,13 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       Before event <Info size={14} color="#64748b" />
                     </label>
                     <div style={{ position: 'relative' }}>
-                      <select style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none' }}>
+                      <select value={bufferBefore} onChange={e => { setBufferBefore(e.target.value); triggerToast(`Set buffer before event to ${e.target.value}`); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none', cursor: 'pointer' }}>
                         <option>No buffer time</option>
+                        <option>5 minutes</option>
+                        <option>10 minutes</option>
+                        <option>15 minutes</option>
+                        <option>30 minutes</option>
+                        <option>1 hour</option>
                       </select>
                       <ChevronDown size={16} color="#64748b" style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
                     </div>
@@ -1838,8 +1967,13 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       After event <Info size={14} color="#64748b" />
                     </label>
                     <div style={{ position: 'relative' }}>
-                      <select style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none' }}>
+                      <select value={bufferAfter} onChange={e => { setBufferAfter(e.target.value); triggerToast(`Set buffer after event to ${e.target.value}`); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none', cursor: 'pointer' }}>
                         <option>No buffer time</option>
+                        <option>5 minutes</option>
+                        <option>10 minutes</option>
+                        <option>15 minutes</option>
+                        <option>30 minutes</option>
+                        <option>1 hour</option>
                       </select>
                       <ChevronDown size={16} color="#64748b" style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
                     </div>
@@ -1852,14 +1986,20 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     </label>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <div style={{ position: 'relative', width: '80px' }}>
-                        <select style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none' }}>
+                        <select value={minNoticeVal} onChange={e => { setMinNoticeVal(e.target.value); triggerToast(`Set minimum notice to ${e.target.value} ${minNoticeUnit}`); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none', cursor: 'pointer' }}>
+                          <option>1</option>
                           <option>2</option>
+                          <option>4</option>
+                          <option>12</option>
+                          <option>24</option>
+                          <option>48</option>
                         </select>
                         <ChevronDown size={16} color="#64748b" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
                       </div>
                       <div style={{ position: 'relative', flex: 1 }}>
-                        <select style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none' }}>
+                        <select value={minNoticeUnit} onChange={e => { setMinNoticeUnit(e.target.value); triggerToast(`Set minimum notice unit to ${e.target.value}`); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none', cursor: 'pointer' }}>
                           <option>Hours</option>
+                          <option>Days</option>
                         </select>
                         <ChevronDown size={16} color="#64748b" style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
                       </div>
@@ -1872,8 +2012,12 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       Time-slot intervals <Info size={14} color="#64748b" />
                     </label>
                     <div style={{ position: 'relative' }}>
-                      <select style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none' }}>
+                      <select value={timeInterval} onChange={e => { setTimeInterval(e.target.value); triggerToast(`Set time-slot interval to ${e.target.value}`); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none', cursor: 'pointer' }}>
                         <option>Use event length (default)</option>
+                        <option>15 mins</option>
+                        <option>30 mins</option>
+                        <option>45 mins</option>
+                        <option>60 mins</option>
                       </select>
                       <ChevronDown size={16} color="#64748b" style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
                     </div>
@@ -1893,7 +2037,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                         <h3 style={{ margin: '0 0 6px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Limit booking frequency</h3>
                         <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Limit how many times this event can be booked. <a href="#" style={{color:'#0E61F3', textDecoration:'none', fontWeight: 500}}>Learn more</a></p>
                       </div>
-                      <ToggleSwitch checked={false} />
+                      <ToggleSwitch checked={limitFreq} onChange={() => { setLimitFreq(!limitFreq); triggerToast(!limitFreq ? 'Enabled booking frequency limit' : 'Disabled frequency limit'); }} />
                     </div>
                     <div style={{ height: '1px', background: '#f1f5f9', marginTop: '24px' }} />
                   </div>
@@ -1905,7 +2049,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                         <h3 style={{ margin: '0 0 6px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Limit total booking duration</h3>
                         <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Limit total amount of time that this event can be booked</p>
                       </div>
-                      <ToggleSwitch checked={false} />
+                      <ToggleSwitch checked={limitDuration} onChange={() => { setLimitDuration(!limitDuration); triggerToast(!limitDuration ? 'Enabled duration limit' : 'Disabled duration limit'); }} />
                     </div>
                     <div style={{ height: '1px', background: '#f1f5f9', marginTop: '24px' }} />
                   </div>
@@ -1917,7 +2061,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                         <h3 style={{ margin: '0 0 6px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Limit future bookings</h3>
                         <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Limit how far in the future this event can be booked. <a href="#" style={{color:'#0E61F3', textDecoration:'none', fontWeight: 500}}>Learn more</a></p>
                       </div>
-                      <ToggleSwitch checked={false} />
+                      <ToggleSwitch checked={limitFuture} onChange={() => { setLimitFuture(!limitFuture); triggerToast(!limitFuture ? 'Enabled future booking limit' : 'Disabled future limit'); }} />
                     </div>
                     <div style={{ height: '1px', background: '#f1f5f9', marginTop: '24px' }} />
                   </div>
@@ -1929,7 +2073,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                         <h3 style={{ margin: '0 0 6px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Limit number of upcoming bookings per booker</h3>
                         <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Limit the number of active bookings a booker can make for this event type. <a href="#" style={{color:'#0E61F3', textDecoration:'none', fontWeight: 500}}>Learn more</a></p>
                       </div>
-                      <ToggleSwitch checked={false} />
+                      <ToggleSwitch checked={limitBooker} onChange={() => { setLimitBooker(!limitBooker); triggerToast(!limitBooker ? 'Enabled per-booker limit' : 'Disabled per-booker limit'); }} />
                     </div>
                     <div style={{ height: '1px', background: '#f1f5f9', marginTop: '24px' }} />
                   </div>
@@ -1941,7 +2085,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                         <h3 style={{ margin: '0 0 6px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Show only the first available slot each day</h3>
                         <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Limit to one slot per day at the earliest available time.</p>
                       </div>
-                      <ToggleSwitch checked={showOnlyFirstSlot} onChange={() => setShowOnlyFirstSlot(!showOnlyFirstSlot)} />
+                      <ToggleSwitch checked={showOnlyFirstSlot} onChange={() => { setShowOnlyFirstSlot(!showOnlyFirstSlot); triggerToast(!showOnlyFirstSlot ? 'Showing only first slot per day' : 'Showing all available slots'); }} />
                     </div>
                   </div>
 
@@ -1969,7 +2113,6 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', textAlign: 'center' }}>
-                      {/* empty spots */}
                       <div /> <div /> <div />
                       <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>1</div>
                       <div style={{ padding: '10px 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer' }}>2</div>
@@ -2010,8 +2153,8 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
                       <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#0f172a' }}>Mon 06</h3>
                       <div style={{ display: 'flex', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-                        <button style={{ padding: '4px 12px', background: '#eff6ff', color: '#0f172a', border: 'none', borderRight: '1px solid #e2e8f0', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>12h</button>
-                        <button style={{ padding: '4px 12px', background: 'transparent', color: '#64748b', border: 'none', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>24h</button>
+                        <button type="button" onClick={() => triggerToast('Switched slot view to 12h format')} style={{ padding: '4px 12px', background: '#eff6ff', color: '#0f172a', border: 'none', borderRight: '1px solid #e2e8f0', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>12h</button>
+                        <button type="button" onClick={() => triggerToast('Switched slot view to 24h format')} style={{ padding: '4px 12px', background: 'transparent', color: '#64748b', border: 'none', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>24h</button>
                       </div>
                     </div>
 
@@ -2020,7 +2163,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                         ? ['9:00am'] 
                         : ['9:00am', '9:15am', '9:30am', '9:45am', '10:00am', '10:15am', '10:30am', '10:45am', '11:00am', '11:15am']
                       ).map(time => (
-                        <button key={time} style={{ padding: '12px', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', color: '#0f172a', fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer', textAlign: 'center' }}>
+                        <button key={time} type="button" onClick={() => triggerToast(`Selected slot ${time}`)} style={{ padding: '12px', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', color: '#0f172a', fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer', textAlign: 'center' }}>
                           {time}
                         </button>
                       ))}
@@ -2037,14 +2180,89 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
               </div>
             </div>
           ) : activeTab === 'pay' ? (
-            <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', padding: '64px 32px' }}>
-              <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '48px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#eff6ff', color: '#0E61F3', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
-                  <CreditCard size={32} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(420px, 1fr) auto', gap: '48px', height: '100%' }}>
+              <div onClick={e => e.stopPropagation()} style={{ overflowY: 'auto', height: '100%', padding: '32px 16px 32px 0' }}>
+                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
+                  
+                  {/* Require payment */}
+                  <div style={{ padding: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9' }}>
+                    <div>
+                      <h3 style={{ margin: '0 0 6px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Require payment on booking</h3>
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>Collect credit card or PayPal payments when guests book this event</p>
+                    </div>
+                    <ToggleSwitch checked={requirePayment} onChange={() => { setRequirePayment(!requirePayment); triggerToast(!requirePayment ? 'Enabled payment collection' : 'Disabled payments'); }} />
+                  </div>
+
+                  {requirePayment && (
+                    <div style={{ padding: '24px', background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px', gap: '16px', marginBottom: '16px' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Amount</label>
+                          <input type="number" value={paymentAmount} onChange={e => { setPaymentAmount(e.target.value); triggerToast(`Set price to ${paymentCurrency.split(' ')[1] || '$'}${e.target.value}`); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Currency</label>
+                          <select value={paymentCurrency} onChange={e => { setPaymentCurrency(e.target.value); triggerToast(`Set currency to ${e.target.value}`); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', cursor: 'pointer' }}>
+                            <option>USD ($)</option>
+                            <option>EUR (€)</option>
+                            <option>GBP (£)</option>
+                            <option>INR (₹)</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: '0.82rem', color: '#64748b' }}>
+                        Payments will be processed via your connected Stripe account. <button type="button" onClick={() => triggerToast('Redirecting to Payment Gateway settings...')} style={{ background: 'none', border: 'none', color: '#0E61F3', fontWeight: 600, cursor: 'pointer', padding: 0 }}>Configure Stripe</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Seat limits */}
+                  <div style={{ padding: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                    <div>
+                      <h3 style={{ margin: '0 0 6px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Limit seats per time slot</h3>
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>Allow multiple people to book the same time slot (group meetings, classes, webinars)</p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '16px' }}>
+                        <span style={{ fontSize: '0.88rem', fontWeight: 600, color: '#334155' }}>Max attendees per slot:</span>
+                        <select value={maxSeats} onChange={e => { setMaxSeats(e.target.value); triggerToast(`Set seat limit to ${e.target.value} attendees per slot`); }} style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', fontWeight: 600, outline: 'none', cursor: 'pointer' }}>
+                          <option value="1">1 (1-on-1 meeting)</option>
+                          <option value="5">5 attendees</option>
+                          <option value="10">10 attendees</option>
+                          <option value="25">25 attendees</option>
+                          <option value="100">100 attendees</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
-                <h3 style={{ margin: '0 0 12px', fontSize: '1.4rem', fontWeight: 700, color: '#0f172a' }}>Payments & Seats</h3>
-                <p style={{ margin: '0 0 24px', fontSize: '1rem', color: '#64748b' }}>This feature is coming soon! You will be able to collect payments and limit seats for your bookings.</p>
-                <div style={{ background: '#f8fafc', color: '#334155', padding: '8px 16px', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: 600, border: '1px solid #e2e8f0' }}>Coming Soon</div>
+              </div>
+
+              {/* RIGHT COLUMN: PREVIEW */}
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', padding: '32px 0' }}>
+                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '32px', boxShadow: '0 8px 30px rgba(0,0,0,0.04)', width: '100%', maxWidth: '420px', textAlign: 'center' }}>
+                  <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: '#f0fdf4', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                    <CreditCard size={28} />
+                  </div>
+                  <h3 style={{ margin: '0 0 8px', fontSize: '1.25rem', fontWeight: 700, color: '#0f172a' }}>{form.title || '15 min meeting'}</h3>
+                  <div style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '24px' }}>
+                    {maxSeats === '1' ? 'Private 1-on-1 Session' : `Group Session (Max ${maxSeats} seats)`}
+                  </div>
+                  {requirePayment ? (
+                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', marginBottom: '24px' }}>
+                      <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '4px' }}>Total Due on Booking</div>
+                      <div style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a' }}>
+                        {paymentCurrency.split(' ')[1]?.replace('(', '').replace(')', '')}{paymentAmount}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ background: '#f0f9ff', color: '#0369a1', padding: '12px', borderRadius: '8px', fontSize: '0.88rem', fontWeight: 600, marginBottom: '24px' }}>
+                      Free Meeting (No payment required)
+                    </div>
+                  )}
+                  <button type="button" onClick={() => triggerToast('Preview: Proceed to Checkout clicked!')} style={{ width: '100%', padding: '12px', background: '#0E61F3', color: '#ffffff', border: 'none', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer' }}>
+                    {requirePayment ? 'Proceed to Payment' : 'Confirm Booking'}
+                  </button>
+                </div>
               </div>
             </div>
           ) : activeTab === 'reschedule' ? (
@@ -2057,8 +2275,11 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                 <div style={{ marginBottom: '32px' }}>
                   <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: '#0f172a', marginBottom: '12px' }}>Require cancellation reason</label>
                   <div style={{ position: 'relative', width: '320px' }}>
-                    <select style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none' }}>
+                    <select value={cancelReasonReq} onChange={e => { setCancelReasonReq(e.target.value); triggerToast(`Set cancellation reason: ${e.target.value}`); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none', cursor: 'pointer' }}>
                       <option>Mandatory for host only</option>
+                      <option>Mandatory for all</option>
+                      <option>Optional</option>
+                      <option>Disabled</option>
                     </select>
                     <ChevronDown size={16} color="#64748b" style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
                   </div>
@@ -2076,7 +2297,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                         <h3 style={{ margin: '0 0 6px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Disable cancelling</h3>
                         <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Disable event cancellation via calendar invite or email. <a href="#" style={{color:'#0E61F3', textDecoration:'none', fontWeight: 500}}>Learn more</a></p>
                       </div>
-                      <ToggleSwitch checked={disableCancelling} onChange={() => setDisableCancelling(!disableCancelling)} />
+                      <ToggleSwitch checked={disableCancelling} onChange={() => { setDisableCancelling(!disableCancelling); triggerToast(!disableCancelling ? 'Disabled event cancellation' : 'Enabled event cancellation'); }} />
                     </div>
                     <div style={{ height: '1px', background: '#f1f5f9', marginTop: '24px' }} />
                   </div>
@@ -2088,7 +2309,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                         <h3 style={{ margin: '0 0 6px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Disable rescheduling</h3>
                         <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Disable rescheduling via calendar invite or email. <a href="#" style={{color:'#0E61F3', textDecoration:'none', fontWeight: 500}}>Learn more</a></p>
                       </div>
-                      <ToggleSwitch checked={disableRescheduling} onChange={() => setDisableRescheduling(!disableRescheduling)} />
+                      <ToggleSwitch checked={disableRescheduling} onChange={() => { setDisableRescheduling(!disableRescheduling); triggerToast(!disableRescheduling ? 'Disabled event rescheduling' : 'Enabled event rescheduling'); }} />
                     </div>
                     <div style={{ height: '1px', background: '#f1f5f9', marginTop: '24px' }} />
                   </div>
@@ -2100,7 +2321,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                         <h3 style={{ margin: '0 0 6px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Allow rescheduling past events</h3>
                         <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Enabling this option allows for past events to be rescheduled. <a href="#" style={{color:'#0E61F3', textDecoration:'none', fontWeight: 500}}>Learn more</a></p>
                       </div>
-                      <ToggleSwitch checked={false} />
+                      <ToggleSwitch checked={allowPastReschedule} onChange={() => { setAllowPastReschedule(!allowPastReschedule); triggerToast(!allowPastReschedule ? 'Allowed rescheduling past events' : 'Disabled past event rescheduling'); }} />
                     </div>
                     <div style={{ height: '1px', background: '#f1f5f9', marginTop: '24px' }} />
                   </div>
@@ -2112,7 +2333,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                         <h3 style={{ margin: '0 0 6px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Allow booking through reschedule link</h3>
                         <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>When enabled, users will be able to create a new booking when trying to reschedule a cancelled booking</p>
                       </div>
-                      <ToggleSwitch checked={false} />
+                      <ToggleSwitch checked={allowRescheduleBooking} onChange={() => { setAllowRescheduleBooking(!allowRescheduleBooking); triggerToast(!allowRescheduleBooking ? 'Allowed new booking via reschedule link' : 'Disabled new booking via reschedule link'); }} />
                     </div>
                   </div>
 
@@ -2126,9 +2347,9 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   {/* Preview Left: Details */}
                   <div style={{ width: '320px', borderRight: '1px solid #e2e8f0', padding: '32px 24px', background: '#ffffff' }}>
                     <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#0E61F3', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 700, marginBottom: '20px' }}>
-                      K
+                      {hostInitials}
                     </div>
-                    <div style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600, marginBottom: '4px' }}>Kontham sohith</div>
+                    <div style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600, marginBottom: '4px' }}>{hostName}</div>
                     <h2 style={{ margin: '0 0 16px', fontSize: '1.4rem', fontWeight: 700, color: '#0f172a' }}>{form.title || '15 min meeting'}</h2>
                     
                     {(disableCancelling || disableRescheduling) && (
@@ -2176,13 +2397,13 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       <textarea readOnly value="Please share anything that will help prepare for our meeting." style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', minHeight: '80px', resize: 'none', outline: 'none' }} />
                     </div>
 
-                    <button style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.85rem', fontWeight: 600, padding: 0, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginBottom: '40px' }}>
+                    <button type="button" onClick={() => triggerToast('Opening Add Guests input...')} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.85rem', fontWeight: 600, padding: 0, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginBottom: '40px' }}>
                       <Plus size={15} color="#64748b" /> Add guests
                     </button>
 
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '16px', marginTop: 'auto' }}>
-                      <button style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>Back</button>
-                      <button style={{ background: '#0E61F3', border: 'none', borderRadius: '8px', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, padding: '10px 24px', cursor: 'pointer' }}>Confirm</button>
+                      <button type="button" onClick={() => triggerToast('Navigating back...')} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>Back</button>
+                      <button type="button" onClick={() => triggerToast('Preview: Confirm booking clicked!')} style={{ background: '#0E61F3', border: 'none', borderRadius: '8px', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, padding: '10px 24px', cursor: 'pointer' }}>Confirm</button>
                     </div>
                   </div>
                 </div>
@@ -2192,6 +2413,119 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     <Info size={16} /> Save changes to preview all updates
                   </div>
                 </div>
+              </div>
+            </div>
+          ) : activeTab === 'apps' ? (
+            <div style={{ maxWidth: '860px', padding: '32px 0' }}>
+              <div style={{ marginBottom: '24px' }}>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>Connected Apps & Integrations</h2>
+                <p style={{ fontSize: '0.88rem', color: '#64748b', margin: 0 }}>Connect third-party tools to automate your scheduling workflows for this event type.</p>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
+                {[
+                  { id: 'gcal', name: 'Google Calendar', desc: 'Add events directly to your primary calendar and check for conflicts.', icon: Calendar, color: '#ea4335' },
+                  { id: 'zoom', name: 'Zoom Video', desc: 'Automatically generate unique Zoom meeting links for every booking.', icon: Video, color: '#2d8cff' },
+                  { id: 'stripe', name: 'Stripe Payments', desc: 'Accept credit card payments and deposit funds directly to your bank.', icon: CreditCard, color: '#635bff' },
+                  { id: 'hubspot', name: 'HubSpot CRM', desc: 'Create and update contacts and deals whenever someone schedules.', icon: Globe, color: '#ff7a59' },
+                  { id: 'slack', name: 'Slack Notifications', desc: 'Receive instant alerts in your Slack channels for new bookings or cancellations.', icon: MessageSquare, color: '#4a154b' },
+                ].map(app => {
+                  const Icon = app.icon;
+                  const isConn = appsConnected[app.id];
+                  return (
+                    <div key={app.id} style={{ background: '#ffffff', border: `1px solid ${isConn ? '#bfdbfe' : '#e2e8f0'}`, borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: `${app.color}15`, color: app.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Icon size={22} />
+                          </div>
+                          <div>
+                            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>{app.name}</h3>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: isConn ? '#16a34a' : '#64748b' }}>{isConn ? '● Connected' : 'Not connected'}</span>
+                          </div>
+                        </div>
+                        <p style={{ margin: '0 0 20px', fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>{app.desc}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => toggleAppConnection(app.id, app.name)}
+                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: isConn ? '1px solid #fca5a5' : '1px solid #0E61F3', background: isConn ? '#fef2f2' : '#0E61F3', color: isConn ? '#dc2626' : '#ffffff', fontSize: '0.88rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                      >
+                        {isConn ? 'Disconnect' : 'Connect Integration'}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : activeTab === 'workflows' ? (
+            <div style={{ maxWidth: '800px', padding: '32px 0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+                <div>
+                  <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>Workflows & Automations</h2>
+                  <p style={{ fontSize: '0.88rem', color: '#64748b', margin: 0 }}>Automate notifications, reminders, and follow-ups before and after meetings.</p>
+                </div>
+                <button type="button" onClick={handleAddWorkflow} style={{ background: '#0E61F3', color: '#ffffff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontSize: '0.88rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <Plus size={16} /> Add Workflow
+                </button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {workflows.map(wf => (
+                  <div key={wf.id} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: wf.active ? '#eff6ff' : '#f1f5f9', color: wf.active ? '#0E61F3' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Zap size={20} />
+                      </div>
+                      <div>
+                        <h3 style={{ margin: '0 0 4px', fontSize: '0.98rem', fontWeight: 700, color: '#0f172a' }}>{wf.title}</h3>
+                        <span style={{ fontSize: '0.8rem', color: '#64748b' }}>{wf.active ? 'Trigger active' : 'Paused'}</span>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <ToggleSwitch checked={wf.active} onChange={() => toggleWorkflow(wf.id, wf.title)} />
+                      <button type="button" onClick={() => triggerToast(`Configuring workflow: "${wf.title}"`)} style={{ padding: '6px 14px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#334155', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : activeTab === 'webhooks' ? (
+            <div style={{ maxWidth: '800px', padding: '32px 0' }}>
+              <div style={{ marginBottom: '24px' }}>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>Webhooks & API Endpoints</h2>
+                <p style={{ fontSize: '0.88rem', color: '#64748b', margin: 0 }}>Receive HTTP POST payloads in real-time when scheduling events occur.</p>
+              </div>
+              <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
+                <h3 style={{ margin: '0 0 12px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Add New Webhook</h3>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <input
+                    type="text"
+                    placeholder="https://api.yourdomain.com/webhook/salemail"
+                    value={newWebhookUrl}
+                    onChange={e => setNewWebhookUrl(e.target.value)}
+                    style={{ flex: 1, padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem', outline: 'none' }}
+                  />
+                  <button type="button" onClick={handleAddWebhook} style={{ background: '#0E61F3', color: '#ffffff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                    <Plus size={16} /> Add Endpoint
+                  </button>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <h3 style={{ margin: '0', fontSize: '0.95rem', fontWeight: 700, color: '#475569' }}>Active Endpoints ({webhooks.length})</h3>
+                {webhooks.map(wh => (
+                  <div key={wh.id} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                        <Code size={16} color="#0E61F3" />
+                        <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a', fontFamily: 'monospace' }}>{wh.url}</span>
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Events: {wh.events}</div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <button type="button" onClick={() => triggerToast(`Sending test payload to ${wh.url}...`)} style={{ padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#f8fafc', color: '#0f172a', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer' }}>Test</button>
+                      <button type="button" onClick={() => handleDeleteWebhook(wh.id)} style={{ padding: '6px 10px', border: '1px solid #fecaca', borderRadius: '6px', background: '#fef2f2', color: '#dc2626', cursor: 'pointer' }}><Trash2 size={15} /></button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           ) : (
