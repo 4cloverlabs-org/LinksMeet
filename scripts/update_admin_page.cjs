@@ -1,145 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
-import {
-  Sparkles, LogOut, Loader2, Globe, User, Check, AlertCircle, RefreshCw, Edit2
-} from 'lucide-react';
-import { supabase } from '../../lib/supabase';
-import { API_BASE_URL } from '../../lib/config';
-import { campaignEngine } from '../../components/campaigns/campaignEngine';
-import './AdminPage.css';
+const fs = require('fs');
+const path = require('path');
 
-export default function AdminPage() {
-  const ctx = useOutletContext<any>();
-  const { 
-    user, uid, userProfile, displayName, firstName, userInitials,
-    toast, setToast, notif, setNotif, logoutAndGo,
-    setIsOnboardingModalOpen, setUserProfile
-  } = ctx || {};
+const file = path.join(__dirname, 'src', 'pages', 'dashboard', 'AdminPage.tsx');
+let content = fs.readFileSync(file, 'utf8');
 
-  const [name, setName] = useState('');
-  const [username, setUsername] = useState('');
-  const [bio, setBio] = useState('');
-  const [websiteUrl, setWebsiteUrl] = useState('');
-  const [brandDesc, setBrandDesc] = useState('');
-  const [profilePic, setProfilePic] = useState('');
-  
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState('Profile Settings');
-
-  const calculateProgress = () => {
-    if (userProfile?.onboarding_completed) return 100;
-    let score = 20; // Account created
-    if (username && username.trim().length > 0) score += 15;
-    if (bio && bio.trim().length > 0) score += 15;
-    if (profilePic && profilePic.length > 0) score += 10;
-    if (websiteUrl && websiteUrl.trim().length > 0) score += 20;
-    if (brandDesc && brandDesc.trim().length > 0) score += 20;
-    return Math.min(score, 100);
-  };
-  const progress = calculateProgress();
-
-  useEffect(() => {
-    if (userProfile) {
-      setName(userProfile.first_name || userProfile.full_name || displayName || '');
-      setUsername(userProfile.username || '');
-      setBio(userProfile.bio || '');
-      setWebsiteUrl(userProfile.website_url || '');
-      setBrandDesc(userProfile.brand_description || '');
-      setProfilePic(userProfile.profile_picture || userProfile.avatar_url || '');
-    } else if (displayName) {
-      setName(displayName);
-    }
-  }, [userProfile, displayName]);
-
-  const handleGenerateAvatar = () => {
-    const seeds = ['Felix', 'Aneka', 'Oliver', 'Bob', 'Mimi', 'Sophia', 'Lucas', 'Emma', 'Alex', 'Jack', 'Maya', 'Leo'];
-    const randomSeed = seeds[Math.floor(Math.random() * seeds.length)] + '-' + Math.floor(Math.random() * 1000);
-    const newAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(randomSeed)}`;
-    setProfilePic(newAvatar);
-  };
-
-  const handleAnalyze = async () => {
-    if (!websiteUrl) {
-      if (setToast) setToast("Please enter a Website URL first.");
-      return;
-    }
-    setIsAnalyzing(true);
-    try {
-      const data = await campaignEngine.scrapeUrlMetadata(websiteUrl);
-      const formattedDesc = `Company Overview: ${data.companyOverview || 'N/A'}
-Industry: ${data.industry || 'N/A'}
-Products & Services: ${data.productsAndServices || 'N/A'}
-Target Audience: ${data.targetAudience || 'N/A'}
-Value Proposition: ${data.valueProposition || 'N/A'}
-Brand Voice: ${data.brandVoice || 'N/A'}
-Unique Selling Points: ${data.uniqueSellingPoints || 'N/A'}
-Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
-      setBrandDesc(formattedDesc);
-      if (setToast) setToast("AI Analysis Complete! ✨");
-    } catch (err: any) {
-      if (setToast) setToast("Failed to analyze website: " + (err.message || 'Unknown error'));
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token || '';
-
-      const res = await fetch(`${API_BASE_URL}/api/user/onboarding`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          first_name: name.trim(),
-          username: username.trim(),
-          bio: bio.trim(),
-          website_url: websiteUrl.trim(),
-          brand_description: brandDesc.trim(),
-          profile_picture: profilePic
-        })
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update profile');
-
-      if (setUserProfile && data.user) {
-        setUserProfile(data.user);
-      }
-
-      if (setToast) {
-        setToast('Profile & Account Settings saved successfully! 🎉');
-        setTimeout(() => setToast(null), 3000);
-      }
-    } catch (err: any) {
-      if (setToast) {
-        setToast('Error saving profile: ' + (err.message || 'Unknown error'));
-        setTimeout(() => setToast(null), 3000);
-      }
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const inputStyle = {
-    width: '100%',
-    background: 'transparent',
-    border: 'none',
-    borderBottom: '1px solid #E5E7EB',
-    fontSize: '14px',
-    fontWeight: 600,
-    color: '#111827',
-    padding: '6px 0',
-    outline: 'none',
-  };
-
-  return (
+const replacement = `  return (
     <div className="admin-page-container">
       {/* Top Tabs */}
       <div className="admin-tabs-container">
@@ -147,7 +12,7 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`admin-tab ${activeTab === tab ? 'active' : ''}`}
+            className={\`admin-tab \${activeTab === tab ? 'active' : ''}\`}
           >
             {tab}
           </button>
@@ -264,7 +129,7 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
                 <div style={{ color: 'var(--ac)', fontSize: '1rem', fontWeight: 800 }}>{progress}%</div>
               </div>
               <div className="admin-progress-wrap">
-                <div className="admin-progress-fill" style={{ width: `${progress}%` }} />
+                <div className="admin-progress-fill" style={{ width: \`\${progress}%\` }} />
               </div>
             </div>
             
@@ -334,7 +199,7 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
                   <div style={{ fontSize: '0.85rem', color: '#6B7280', marginTop: '4px' }}>{n.ds}</div>
                 </div>
                 <div 
-                  className={`admin-toggle ${notif[n.key as keyof typeof notif] ? 'on' : ''}`}
+                  className={\`admin-toggle \${notif[n.key as keyof typeof notif] ? 'on' : ''}\`}
                   onClick={() => setNotif(prev => ({ ...prev, [n.key]: !prev[n.key] }))}
                 >
                   <div className="admin-toggle-knob" />
@@ -427,4 +292,23 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
       )}
     </div>
   );
+}
+`;
+
+// Replace from 'return (' up to the end of the file.
+const returnIndex = content.indexOf('  return (\n    <div style={{ maxWidth: \'1200px\'');
+if (returnIndex === -1) {
+  // Try another match
+  const alternateIndex = content.indexOf('  return (');
+  if (alternateIndex !== -1) {
+    const newContent = content.substring(0, alternateIndex) + replacement;
+    fs.writeFileSync(file, newContent, 'utf8');
+    console.log('Successfully replaced return block.');
+  } else {
+    console.error('Could not find return statement.');
+  }
+} else {
+  const newContent = content.substring(0, returnIndex) + replacement;
+  fs.writeFileSync(file, newContent, 'utf8');
+  console.log('Successfully replaced return block.');
 }
