@@ -26,7 +26,7 @@ export default function Calendar({
   today.setHours(0, 0, 0, 0);
 
   const maxBookingDate = new Date(today);
-  maxBookingDate.setDate(today.getDate() + 30);
+  maxBookingDate.setDate(today.getDate() + 730);
 
   const handlePrevMonth = () => {
     setCurrentMonth(prev => {

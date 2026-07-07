@@ -23,10 +23,29 @@ const LOCATION_OPTIONS = [
   { id: 'inperson', label: 'In-Person Meeting', icon: MapPin }
 ];
 
-const DURATION_OPTIONS = ['15 Minutes', '30 Minutes', '45 Minutes', '60 Minutes', '90 Minutes'];
+const DURATION_OPTIONS = ['15 Minutes', '30 Minutes', '45 Minutes', '60 Minutes', '90 Minutes', 'Custom...'];
 
-const MONTHS = ['May 2026', 'June 2026', 'July 2026'];
-const DAYS_IN_MONTH = [31, 30, 31];
+const ALL_MONTHS_DATA = (() => {
+  const months = [];
+  const names = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  for (let year = 2026; year <= 2027; year++) {
+    for (let m = 0; m < 12; m++) {
+      const days = new Date(year, m + 1, 0).getDate();
+      const startDay = new Date(year, m, 1).getDay();
+      months.push({
+        name: `${names[m]} ${year}`,
+        year,
+        monthIndex: m,
+        days,
+        startDay
+      });
+    }
+  }
+  return months;
+})();
+
+const MONTHS = ALL_MONTHS_DATA.map(m => m.name);
+const DAYS_IN_MONTH = ALL_MONTHS_DATA.map(m => m.days);
 
 export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: Props) {
   const { user } = useAuth();
@@ -47,6 +66,14 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
   const [saving, setSaving] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [allowMultiDur, setAllowMultiDur] = useState(false);
+  const [isSlugEdited, setIsSlugEdited] = useState(false);
+  const [multiDurOptions, setMultiDurOptions] = useState<string[]>(['15 Minutes', '30 Minutes']);
+  const [customDurInput, setCustomDurInput] = useState('20');
+  const [showLocAdvanced, setShowLocAdvanced] = useState(false);
+  const [locInstructions, setLocInstructions] = useState('');
+  const [customMeetingUrl, setCustomMeetingUrl] = useState('');
+  const [additionalLocations, setAdditionalLocations] = useState<string[]>([]);
+  const [showAddLocMenu, setShowAddLocMenu] = useState(false);
 
   // Interactive menu states
   const [showDurMenu, setShowDurMenu] = useState(false);
@@ -58,9 +85,18 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [embedTab, setEmbedTab] = useState<'inline' | 'popup'>('inline');
 
-  // Interactive calendar preview states
-  const [monthIdx, setMonthIdx] = useState(1); // 1 = June 2026
-  const [selectedDate, setSelectedDate] = useState(30);
+  // Interactive calendar preview states - Dynamic daily update!
+  const [monthIdx, setMonthIdx] = useState(() => {
+    const now = new Date();
+    const idx = ALL_MONTHS_DATA.findIndex(m => m.year === now.getFullYear() && m.monthIndex === now.getMonth());
+    return idx !== -1 ? idx : 0;
+  });
+  const [selectedMonthIdx, setSelectedMonthIdx] = useState(() => {
+    const now = new Date();
+    const idx = ALL_MONTHS_DATA.findIndex(m => m.year === now.getFullYear() && m.monthIndex === now.getMonth());
+    return idx !== -1 ? idx : 0;
+  });
+  const [selectedDate, setSelectedDate] = useState(() => new Date().getDate());
   const [timeFormat, setTimeFormat] = useState<'12h' | '24h'>('12h');
 
   // Real-time Settings States for UI previews
@@ -90,26 +126,94 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
     setSchedule(prev => prev.map((item, i) => i === idx ? { ...item, active: !item.active } : item));
   };
 
-  const availSlots12h = [
-    '09:00 AM', '09:15 AM', '09:30 AM', '09:45 AM',
-    '10:00 AM', '10:15 AM', '10:30 AM', '10:45 AM',
-    '11:00 AM', '11:15 AM', '11:30 AM', '11:45 AM',
-    '12:00 PM', '12:15 PM', '12:30 PM', '12:45 PM',
-    '01:00 PM', '01:15 PM', '01:30 PM', '01:45 PM',
-    '02:00 PM', '02:15 PM', '02:30 PM', '02:45 PM',
-    '03:00 PM', '03:15 PM', '03:30 PM', '03:45 PM',
-    '04:00 PM', '04:15 PM', '04:30 PM', '04:45 PM'
-  ];
-  const availSlots24h = [
-    '09:00', '09:15', '09:30', '09:45',
-    '10:00', '10:15', '10:30', '10:45',
-    '11:00', '11:15', '11:30', '11:45',
-    '12:00', '12:15', '12:30', '12:45',
-    '13:00', '13:15', '13:30', '13:45',
-    '14:00', '14:15', '14:30', '14:45',
-    '15:00', '15:15', '15:30', '15:45',
-    '16:00', '16:15', '16:30', '16:45'
-  ];
+  const getMonthStartOffset = (mIdx: number) => {
+    return ALL_MONTHS_DATA[mIdx]?.startDay || 0;
+  };
+
+  const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  const getDayOfWeek = (dateNum: number, mIdx: number) => {
+    const mObj = ALL_MONTHS_DATA[mIdx];
+    if (!mObj) return 0;
+    return new Date(mObj.year, mObj.monthIndex, dateNum).getDay();
+  };
+
+  const getDayName = (dateNum: number, mIdx: number) => {
+    return DAY_NAMES[getDayOfWeek(dateNum, mIdx)];
+  };
+
+  const isDateInPast = (d: number, mIdx: number) => {
+    const mObj = ALL_MONTHS_DATA[mIdx];
+    if (!mObj) return false;
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const targetDate = new Date(mObj.year, mObj.monthIndex, d);
+    return targetDate < now;
+  };
+
+  const parseTimeToMinutes = (timeStr: string) => {
+    const parts = timeStr.trim().split(' ');
+    if (!parts[0]) return 540;
+    const [hStr, mStr] = parts[0].split(':');
+    let h = parseInt(hStr, 10) || 9;
+    const m = parseInt(mStr, 10) || 0;
+    const period = parts[1]?.toUpperCase();
+    if (period === 'PM' && h < 12) h += 12;
+    if (period === 'AM' && h === 12) h = 0;
+    return h * 60 + m;
+  };
+
+  const formatMinutesToTime = (totalMinutes: number, format: '12h' | '24h') => {
+    const h24 = Math.floor(totalMinutes / 60) % 24;
+    const m = totalMinutes % 60;
+    const mStr = m < 10 ? `0${m}` : `${m}`;
+    if (format === '24h') {
+      const hStr = h24 < 10 ? `0${h24}` : `${h24}`;
+      return `${hStr}:${mStr}`;
+    } else {
+      const period = h24 >= 12 ? 'PM' : 'AM';
+      let h12 = h24 % 12;
+      if (h12 === 0) h12 = 12;
+      const hStr = h12 < 10 ? `0${h12}` : `${h12}`;
+      return `${hStr}:${mStr} ${period}`;
+    }
+  };
+
+  const generateRealTimeSlots = (dateNum: number, mIdx: number, format: '12h' | '24h', durMins: number) => {
+    if (isDateInPast(dateNum, mIdx)) return [];
+    const dayName = getDayName(dateNum, mIdx);
+    const daySchedule = schedule.find(s => s.day === dayName);
+    if (!daySchedule || !daySchedule.active) return [];
+    
+    const startMins = parseTimeToMinutes(daySchedule.start);
+    const endMins = parseTimeToMinutes(daySchedule.end);
+    
+    const slots = [];
+    const step = Math.max(5, durMins || 15);
+    for (let m = startMins; m + step <= endMins; m += step) {
+      const startTime = formatMinutesToTime(m, format);
+      const endTime = formatMinutesToTime(m + step, format);
+      slots.push(`${startTime} - ${endTime}`);
+    }
+    return slots;
+  };
+
+  const getAvailabilitySummary = () => {
+    const activeDays = schedule.filter(s => s.active);
+    if (activeDays.length === 0) return 'No available hours configured';
+    const first = activeDays[0];
+    const allSameHours = activeDays.every(s => s.start === first.start && s.end === first.end);
+    if (allSameHours) {
+      if (activeDays.length === 5 && !schedule[0].active && !schedule[6].active) {
+        return `Mon - Fri: ${first.start} - ${first.end} (IST)`;
+      }
+      if (activeDays.length === 7) {
+        return `Every day: ${first.start} - ${first.end} (IST)`;
+      }
+    }
+    const dayAbbrs = activeDays.map(s => s.day.substring(0, 3)).join(', ');
+    return `${dayAbbrs}: ${first.start} - ${first.end} (IST)`;
+  };
 
   const descInputRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -120,12 +224,14 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
   // Real-time slug derivation if title changes
   const handleTitleChange = (newTitle: string) => {
-    const autoSlug = newTitle.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/--+/g, '-').replace(/^-|-$/g, '');
-    setForm(prev => ({
-      ...prev,
-      title: newTitle,
-      slug: autoSlug || prev.slug
-    }));
+    setForm(prev => {
+      const next = { ...prev, title: newTitle };
+      if (!isSlugEdited && !initialData?.id) {
+        const autoSlug = newTitle.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/--+/g, '-').replace(/^-|-$/g, '');
+        next.slug = autoSlug || prev.slug;
+      }
+      return next;
+    });
   };
 
   // Real-time rich text formatting insertion
@@ -138,10 +244,19 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
     const selected = text.substring(start, end) || 'text';
     const newText = text.substring(0, start) + tagStart + selected + tagEnd + text.substring(end);
     setForm(prev => ({ ...prev, desc: newText }));
+    setTimeout(() => {
+      if (descInputRef.current) {
+        descInputRef.current.focus();
+        descInputRef.current.setSelectionRange(start + tagStart.length, start + tagStart.length + selected.length);
+      }
+    }, 0);
   };
 
   // Compute dynamic time slots based on duration
-  const durMinutes = parseInt(form.dur || '15') || 15;
+  const isCustomDur = form.dur === 'Custom...' || form.dur?.includes('Custom');
+  const durMinutes = isCustomDur
+    ? (parseInt(customDurInput, 10) || 15)
+    : (parseInt(form.dur || '15', 10) || 15);
   /* const generateSlots = () => {
     const slots = [];
     let startMins = 9 * 60; // 9:00 AM
@@ -543,7 +658,10 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     </div>
                     <input
                       value={form.slug || ''}
-                      onChange={e => setForm({ ...form, slug: e.target.value })}
+                      onChange={e => {
+                        setIsSlugEdited(true);
+                        setForm({ ...form, slug: e.target.value });
+                      }}
                       style={{ flex: 1, background: 'transparent', border: 'none', color: '#0E61F3', padding: '10px 14px', fontSize: '0.88rem', outline: 'none', fontWeight: 600 }}
                     />
                   </div>
@@ -557,7 +675,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '10px 14px', cursor: 'pointer', userSelect: 'none' }}
                   >
                     <span style={{ fontSize: '0.92rem', color: '#0f172a', fontWeight: 500 }}>
-                      {durMinutes}
+                      {isCustomDur ? `${customDurInput} Minutes (Custom)` : durMinutes}
                     </span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.88rem', color: '#475569', fontWeight: 500 }}>
                       Minutes <ChevronDown size={15} />
@@ -579,13 +697,24 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       ))}
                     </div>
                   )}
+                  
+                  {isCustomDur && (
+                    <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <input
+                        type="number"
+                        min="1"
+                        value={customDurInput}
+                        onChange={e => {
+                          setCustomDurInput(e.target.value);
+                          setForm({ ...form, dur: `${e.target.value || '15'} Minutes (Custom)` });
+                        }}
+                        style={{ width: '100px', background: '#ffffff', border: '1px solid #0E61F3', borderRadius: '6px', padding: '8px 12px', fontSize: '0.88rem', fontWeight: 600, color: '#0f172a', outline: 'none' }}
+                      />
+                      <span style={{ fontSize: '0.85rem', color: '#64748b' }}>minutes custom duration</span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Allow multiple durations toggle */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '22px' }}>
-                  <ToggleSwitch checked={allowMultiDur} onChange={() => setAllowMultiDur(!allowMultiDur)} />
-                  <span style={{ fontSize: '0.88rem', fontWeight: 600, color: '#0f172a' }}>Allow multiple durations</span>
-                </div>
 
                 {/* Location */}
                 <div style={{ position: 'relative' }}>
@@ -595,11 +724,11 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px', cursor: 'pointer' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem', fontWeight: 600, color: '#0f172a' }}>
-                      <LocIcon size={16} color="#0E61F3" /> {form.location || 'LinksMeet Video (Default)'}
+                      <LocIcon size={16} color="#0E61F3" /> {form.location || 'Select a location...'}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#64748b' }}>
                       <ChevronDown size={16} />
-                      <X size={16} onClick={(e) => { e.stopPropagation(); setForm({ ...form, location: 'LinksMeet Video (Default)' }); }} />
+                      <X size={16} onClick={(e) => { e.stopPropagation(); setForm({ ...form, location: 'Select a location...' }); }} />
                     </div>
                   </div>
 
@@ -626,21 +755,86 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     </div>
                   )}
 
+                  {/* Additional Locations List */}
+                  {additionalLocations.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+                      {additionalLocations.map((loc, idx) => {
+                        const locObj = LOCATION_OPTIONS.find(o => o.label === loc) || LOCATION_OPTIONS[0];
+                        const AddIcon = locObj.icon;
+                        return (
+                          <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <AddIcon size={15} color="#0E61F3" /> <span>{loc} <span style={{ fontWeight: 400, color: '#64748b', fontSize: '0.78rem' }}>(Optional choice)</span></span>
+                            </div>
+                            <X size={15} style={{ cursor: 'pointer', color: '#94a3b8' }} onClick={() => setAdditionalLocations(prev => prev.filter((_, i) => i !== idx))} />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
                   <div
-                    onClick={() => setShowLocMenu(!showLocMenu)}
-                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', fontWeight: 600, color: '#334155', cursor: 'pointer', marginBottom: '14px' }}
+                    onClick={() => setShowLocAdvanced(!showLocAdvanced)}
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', fontWeight: 600, color: '#0E61F3', cursor: 'pointer', marginBottom: '14px', userSelect: 'none' }}
                   >
-                    <span>Show advanced settings</span>
-                    <ChevronDown size={15} />
+                    <span>{showLocAdvanced ? 'Hide advanced settings' : 'Show advanced settings'}</span>
+                    <ChevronDown size={15} style={{ transform: showLocAdvanced ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setShowLocMenu(!showLocMenu)}
-                    style={{ width: '100%', padding: '10px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', color: '#0E61F3', fontWeight: 600, fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginBottom: '10px' }}
-                  >
-                    <Plus size={16} /> Add a location
-                  </button>
+                  {showLocAdvanced && (
+                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '14px', marginBottom: '14px', display: 'flex', flexDirection: 'column', gap: '12px', animation: 'fadeIn 0.15s ease' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Location instructions for guests</label>
+                        <input
+                          value={locInstructions}
+                          onChange={e => setLocInstructions(e.target.value)}
+                          placeholder="e.g. Please dial extension 402 or meet at Room 3B"
+                          style={{ width: '100%', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '8px 10px', fontSize: '0.82rem', color: '#0f172a', outline: 'none' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Custom meeting URL (optional)</label>
+                        <input
+                          value={customMeetingUrl}
+                          onChange={e => setCustomMeetingUrl(e.target.value)}
+                          placeholder="https://zoom.us/j/123456789"
+                          style={{ width: '100%', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '8px 10px', fontSize: '0.82rem', color: '#0f172a', outline: 'none' }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{ position: 'relative' }}>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddLocMenu(!showAddLocMenu)}
+                      style={{ width: '100%', padding: '10px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', color: '#0E61F3', fontWeight: 600, fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginBottom: '10px' }}
+                    >
+                      <Plus size={16} /> Add a location
+                    </button>
+
+                    {showAddLocMenu && (
+                      <div style={{ position: 'absolute', top: '44px', left: 0, right: 0, background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 50, overflow: 'hidden' }}>
+                        <div style={{ padding: '8px 12px', fontSize: '0.75rem', fontWeight: 700, color: '#64748b', background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>SELECT SECONDARY LOCATION CHOICE</div>
+                        {LOCATION_OPTIONS.filter(o => o.label !== form.location && !additionalLocations.includes(o.label)).map(opt => {
+                          const OptIcon = opt.icon;
+                          return (
+                            <div
+                              key={opt.id}
+                              onClick={() => {
+                                setAdditionalLocations(prev => [...prev, opt.label]);
+                                setShowAddLocMenu(false);
+                              }}
+                              style={{ padding: '10px 14px', fontSize: '0.85rem', fontWeight: 500, color: '#0f172a', background: '#ffffff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                            >
+                              <OptIcon size={16} color="#0E61F3" />
+                              <span>{opt.label}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
 
                   <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
                     Can't find the right conferencing app? Visit our <span style={{ color: '#0E61F3', cursor: 'pointer', textDecoration: 'underline' }}>App Store</span>.
@@ -707,33 +901,40 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', fontSize: '0.78rem', fontWeight: 500, color: '#0f172a' }}>
-                      <div style={{ padding: '6px 0', opacity: 0 }}>-</div>
-                      <div style={{ padding: '6px 0', opacity: 0 }}>-</div>
-                      <div style={{ padding: '6px 0', opacity: 0 }}>-</div>
+                      {Array.from({ length: getMonthStartOffset(monthIdx) }, (_, i) => (
+                        <div key={`empty-${i}`} style={{ padding: '6px 0', opacity: 0 }}>-</div>
+                      ))}
                       {Array.from({ length: DAYS_IN_MONTH[monthIdx] }, (_, i) => i + 1).map(d => {
-                        const isSel = d === selectedDate;
+                        const isSel = d === selectedDate && monthIdx === selectedMonthIdx;
+                        const dayName = getDayName(d, monthIdx);
+                        const isAvailable = schedule.find(s => s.day === dayName)?.active || false;
+                        const isPast = isDateInPast(d, monthIdx);
                         return (
                           <div
                             key={d}
-                            onClick={() => { setSelectedDate(d); }}
+                            onClick={() => { if (!isPast) { setSelectedDate(d); setSelectedMonthIdx(monthIdx); } }}
                             style={{
                               width: '26px',
                               height: '26px',
                               margin: '0 auto',
                               borderRadius: '50%',
-                              background: isSel ? '#0E61F3' : 'transparent',
-                              color: isSel ? '#ffffff' : '#0f172a',
+                              background: isSel && !isPast ? '#0E61F3' : 'transparent',
+                              color: isSel && !isPast ? '#ffffff' : isPast ? '#cbd5e1' : '#0f172a',
                               display: 'flex',
                               flexDirection: 'column',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              fontWeight: isSel ? 700 : 500,
-                              cursor: 'pointer',
+                              fontWeight: isSel && !isPast ? 700 : 500,
+                              cursor: isPast ? 'not-allowed' : 'pointer',
+                              opacity: isPast ? 0.4 : 1,
+                              textDecoration: isPast ? 'line-through' : 'none',
                               position: 'relative'
                             }}
                           >
                             <span>{d}</span>
-                            {isSel && <div style={{ width: '3px', height: '3px', borderRadius: '50%', background: '#ffffff', position: 'absolute', bottom: '3px' }} />}
+                            {isAvailable && !isPast && (
+                              <div style={{ width: '3px', height: '3px', borderRadius: '50%', background: isSel ? '#ffffff' : '#0E61F3', position: 'absolute', bottom: '3px' }} />
+                            )}
                           </div>
                         );
                       })}
@@ -898,35 +1099,38 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       </div>
 
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', fontSize: '0.78rem', fontWeight: 500, color: '#0f172a' }}>
-                        <div style={{ padding: '4px 0', opacity: 0 }}>-</div>
-                        <div style={{ padding: '4px 0', opacity: 0 }}>-</div>
-                        <div style={{ padding: '4px 0', opacity: 0 }}>-</div>
+                        {Array.from({ length: getMonthStartOffset(monthIdx) }, (_, i) => (
+                          <div key={`empty-${i}`} style={{ padding: '4px 0', opacity: 0 }}>-</div>
+                        ))}
                         {Array.from({ length: DAYS_IN_MONTH[monthIdx] }, (_, i) => i + 1).map(d => {
-                          const isSel = d === selectedDate;
-                          const dayOfWeek = (d + 2) % 7;
-                          const isAvailable = dayOfWeek !== 0 && dayOfWeek !== 6;
+                          const isSel = d === selectedDate && monthIdx === selectedMonthIdx;
+                          const dayName = getDayName(d, monthIdx);
+                          const isAvailable = schedule.find(s => s.day === dayName)?.active || false;
+                          const isPast = isDateInPast(d, monthIdx);
                           return (
                             <div
                               key={d}
-                              onClick={() => setSelectedDate(d)}
+                              onClick={() => { if (!isPast) { setSelectedDate(d); setSelectedMonthIdx(monthIdx); } }}
                               style={{
                                 width: '28px',
                                 height: '28px',
                                 margin: '0 auto',
                                 borderRadius: '50%',
-                                background: isSel ? '#0E61F3' : 'transparent',
-                                color: isSel ? '#ffffff' : '#0f172a',
+                                background: isSel && !isPast ? '#0E61F3' : 'transparent',
+                                color: isSel && !isPast ? '#ffffff' : isPast ? '#cbd5e1' : '#0f172a',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                fontWeight: isSel ? 700 : 500,
-                                cursor: 'pointer',
+                                fontWeight: isSel && !isPast ? 700 : 500,
+                                cursor: isPast ? 'not-allowed' : 'pointer',
+                                opacity: isPast ? 0.4 : 1,
+                                textDecoration: isPast ? 'line-through' : 'none',
                                 position: 'relative'
                               }}
                             >
                               <span>{d}</span>
-                              {isAvailable && (
+                              {isAvailable && !isPast && (
                                 <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: isSel ? '#ffffff' : '#0E61F3', position: 'absolute', bottom: '2px' }} />
                               )}
                             </div>
@@ -938,7 +1142,11 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     {/* Right Pane: Selected Day Slots */}
                     <div style={{ borderLeft: '1px solid #f1f5f9', paddingLeft: '18px', display: 'flex', flexDirection: 'column' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>Tuesday, June {selectedDate}</span>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>
+                          {monthIdx === selectedMonthIdx
+                            ? `${getDayName(selectedDate, monthIdx)}, ${MONTHS[monthIdx].split(' ')[0]} ${selectedDate}`
+                            : `${MONTHS[monthIdx]}`}
+                        </span>
                         <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '6px', padding: '2px' }}>
                           <button
                             type="button"
@@ -954,24 +1162,48 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       </div>
 
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '250px', overflowY: 'auto', paddingRight: '4px' }}>
-                        {(timeFormat === '12h' ? availSlots12h : availSlots24h).map(slot => (
-                          <div
-                            key={slot}
-                            onClick={() => triggerToast(`Selected preview slot ${slot}`)}
-                            style={{
-                              padding: '8px',
-                              textAlign: 'center',
-                              background: '#ffffff',
-                              border: '1px solid #e2e8f0',
-                              borderRadius: '6px',
-                              fontSize: '0.8rem',
-                              fontWeight: 600,
-                              color: '#0E61F3',
-                              cursor: 'pointer',
-                              flexShrink: 0
-                            }}
-                          >{slot}</div>
-                        ))}
+                        {(() => {
+                          if (monthIdx !== selectedMonthIdx) {
+                            return (
+                              <div style={{ padding: '20px 10px', textAlign: 'center', color: '#94a3b8', fontSize: '0.82rem', fontWeight: 500 }}>
+                                Please select a date in {MONTHS[monthIdx]} to view available times.
+                              </div>
+                            );
+                          }
+                          if (isDateInPast(selectedDate, monthIdx)) {
+                            return (
+                              <div style={{ padding: '20px 10px', textAlign: 'center', color: '#94a3b8', fontSize: '0.82rem', fontWeight: 500 }}>
+                                This date is in the past. No times available.
+                              </div>
+                            );
+                          }
+                          const slots = generateRealTimeSlots(selectedDate, monthIdx, timeFormat, durMinutes);
+                          if (slots.length === 0) {
+                            return (
+                              <div style={{ padding: '20px 10px', textAlign: 'center', color: '#94a3b8', fontSize: '0.82rem', fontWeight: 500 }}>
+                                No times available on {getDayName(selectedDate, monthIdx)}s.
+                              </div>
+                            );
+                          }
+                          return slots.map(slot => (
+                            <div
+                              key={slot}
+                              onClick={() => triggerToast(`Selected preview slot ${slot}`)}
+                              style={{
+                                padding: '8px',
+                                textAlign: 'center',
+                                background: '#ffffff',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '6px',
+                                fontSize: '0.8rem',
+                                fontWeight: 600,
+                                color: '#0E61F3',
+                                cursor: 'pointer',
+                                flexShrink: 0
+                              }}
+                            >{slot}</div>
+                          ));
+                        })()}
                       </div>
                     </div>
 
@@ -982,7 +1214,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     <Clock size={18} color="#0E61F3" style={{ flexShrink: 0, marginTop: '2px' }} />
                     <div>
                       <div style={{ fontWeight: 600, color: '#1e40af', fontSize: '0.85rem', marginBottom: '2px' }}>Your available hours</div>
-                      <div style={{ color: '#1e3a8a', fontSize: '0.82rem' }}>Mon - Fri: 09:00 AM - 05:00 PM (IST)</div>
+                      <div style={{ color: '#1e3a8a', fontSize: '0.82rem' }}>{getAvailabilitySummary()}</div>
                     </div>
                   </div>
 

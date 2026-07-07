@@ -155,12 +155,8 @@ export function generateTimeSlots(intervalMinutes: number = 30): string[] {
       const slotStart = formatTime(hour, minutes);
       
       // Calculate end time
-      let nextHour = hour;
-      let nextMinutes = minutes + intervalMinutes;
-      if (nextMinutes >= 60) {
-        nextHour += 1;
-        nextMinutes -= 60;
-      }
+      let nextHour = hour + Math.floor((minutes + intervalMinutes) / 60);
+      let nextMinutes = (minutes + intervalMinutes) % 60;
       const slotEnd = formatTime(nextHour, nextMinutes);
       
       slots.push(`${slotStart} - ${slotEnd}`);
