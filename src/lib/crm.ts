@@ -210,7 +210,7 @@ export interface Booking {
   email: string; // db: booker_email
   slot: string;
   event: string; // db: event_title
-  status: 'upcoming' | 'past' | 'cancelled';
+  status: 'upcoming' | 'past' | 'cancelled' | 'rescheduled';
   meetLink?: string; // db: meet_link
   createdAt?: number;
 }
@@ -219,22 +219,47 @@ export async function listBookings(uid: string): Promise<Booking[]> {
     const { data, error } = await supabase.from('bookings').select('*').eq('user_id', uid).order('created_at', { ascending: false });
     if (error) throw error;
     if (data && data.length > 0) {
-      return data.map(d => ({
-        id: d.id,
-        name: d.booker_name,
-        email: d.booker_email,
-        slot: d.slot,
-        event: d.event_title,
-        status: d.status as Booking['status'],
-        meetLink: d.meet_link,
-        createdAt: new Date(d.created_at).getTime()
-      }));
+      return data.map(d => {
+        let realStatus = d.status as Booking['status'];
+        if (realStatus === 'upcoming' && d.slot) {
+          try {
+            const dateStr = d.slot.split('-')[0].replace('·', '').trim();
+            const parsedTime = new Date(dateStr).getTime();
+            if (!isNaN(parsedTime) && parsedTime < Date.now()) {
+              realStatus = 'past';
+            }
+          } catch(e) {}
+        }
+        return {
+          id: d.id,
+          name: d.booker_name,
+          email: d.booker_email,
+          slot: d.slot,
+          event: d.event_title,
+          status: realStatus,
+          meetLink: d.meet_link,
+          createdAt: new Date(d.created_at).getTime()
+        };
+      });
     }
   } catch (err) {
     console.warn('Supabase listBookings error, falling back to localStorage:', err);
   }
   const raw = localStorage.getItem('sm_bookings') || localStorage.getItem('linksmeet_bookings');
-  return raw ? JSON.parse(raw) : [];
+  const localList = raw ? JSON.parse(raw) : [];
+  return localList.map((b: any) => {
+    let realStatus = b.status;
+    if (realStatus === 'upcoming' && b.slot) {
+      try {
+        const dateStr = b.slot.split('-')[0].replace('·', '').trim();
+        const parsedTime = new Date(dateStr).getTime();
+        if (!isNaN(parsedTime) && parsedTime < Date.now()) {
+          realStatus = 'past';
+        }
+      } catch(e) {}
+    }
+    return { ...b, status: realStatus };
+  });
 }
 export function listenBookings(uid: string, cb: (data: Booking[]) => void) {
   // Initial fetch

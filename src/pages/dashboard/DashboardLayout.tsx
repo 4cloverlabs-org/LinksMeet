@@ -1130,7 +1130,7 @@ export default function DashboardLayout() {
     .filter(s => s.value > 0);
   const followUps = contacts.filter(c => OPEN_STATUSES.includes(c.status));
 
-  const filteredBookings = bookings.filter(b => b.status === bookingTab);
+  const filteredBookings = bookings.filter(b => bookingTab === 'upcoming' ? (b.status === 'upcoming' || b.status === 'rescheduled') : b.status === bookingTab);
   const appCats = ['All', ...Array.from(new Set(APPS.map(a => a.cat)))];
   const filteredApps = appCat === 'All' ? APPS : APPS.filter(a => a.cat === appCat);
 

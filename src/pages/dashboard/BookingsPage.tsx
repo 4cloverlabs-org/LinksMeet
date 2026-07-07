@@ -36,7 +36,7 @@ export default function BookingsPage() {
       <div className="crm-fade crm-card">
                 <div className="crm-card-head">
                   <div className="crm-seg">
-                    {(['upcoming', 'past', 'cancelled'] as const).map(t => (
+                    {(['upcoming', 'past', 'cancelled', 'rescheduled'] as const).map(t => (
                       <button key={t} className={bookingTab === t ? 'on' : ''} onClick={() => setBookingTab(t)}>
                         {t[0].toUpperCase() + t.slice(1)}
                       </button>
@@ -53,13 +53,13 @@ export default function BookingsPage() {
                       <div style={{ fontSize: '0.78rem', color: '#9b9bab' }}>{b.event} · {b.slot}</div>
                     </div>
                     <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-                      {b.status === 'upcoming' && (
+                      {(b.status === 'upcoming' || b.status === 'rescheduled') && (
                         <>
                           <button className="crm-btn crm-btn-ghost" onClick={() => joinMeeting(b)}><Video size={14} /> Join</button>
                           <button className="crm-btn crm-btn-ghost" style={{ color: '#DC2626' }} onClick={() => cancelBooking(b.id)}><X size={14} /> Cancel</button>
                         </>
                       )}
-                      <span className={`crm-tag ${b.status === 'upcoming' ? 'violet' : b.status === 'cancelled' ? 'rose' : 'green'}`}>{b.status}</span>
+                      <span className={`crm-tag ${b.status === 'upcoming' ? 'violet' : b.status === 'cancelled' ? 'rose' : b.status === 'rescheduled' ? 'amber' : 'green'}`}>{b.status}</span>
                     </div>
                   </div>
                 ))}
