@@ -1,12 +1,69 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import {
-  Sparkles, LogOut, Loader2, Globe, User, Check, AlertCircle, RefreshCw, Edit2
+  Sparkles, LogOut, Loader2, Globe, User, Check, AlertCircle, RefreshCw, Edit2, ChevronDown
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { API_BASE_URL } from '../../lib/config';
 import { campaignEngine } from '../../components/campaigns/campaignEngine';
 import './AdminPage.css';
+
+const CustomSelect = ({ options, value, onChange, searchable = false }: any) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  const filteredOptions = searchable 
+    ? options.filter((opt: string) => opt.toLowerCase().includes(searchQuery.toLowerCase()))
+    : options;
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <div 
+        className="admin-input" 
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', userSelect: 'none' }}
+        onClick={() => { setIsOpen(!isOpen); setSearchQuery(''); }}
+      >
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value || options[0]}</span>
+        <ChevronDown size={16} color="#71717a" style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s', flexShrink: 0 }} />
+      </div>
+      
+      {isOpen && (
+        <>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 9 }} onClick={() => setIsOpen(false)} />
+          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '4px', background: '#fff', border: '1px solid #e4e4e7', borderRadius: '6px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', zIndex: 10, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '300px' }}>
+            {searchable && (
+              <div style={{ padding: '8px', borderBottom: '1px solid #e4e4e7' }}>
+                <input 
+                  autoFocus
+                  type="text" 
+                  value={searchQuery} 
+                  onChange={e => setSearchQuery(e.target.value)} 
+                  placeholder="Search..." 
+                  style={{ width: '100%', border: 'none', outline: 'none', fontSize: '0.9rem', color: '#111' }}
+                />
+              </div>
+            )}
+            <div style={{ overflowY: 'auto' }}>
+              {filteredOptions.length > 0 ? filteredOptions.map((opt: string) => (
+                <div 
+                  key={opt}
+                  style={{ padding: '8px 12px', fontSize: '0.9rem', cursor: 'pointer', background: value === opt ? '#fafafa' : '#fff', color: value === opt ? '#111' : '#52525b' }}
+                  onClick={() => { onChange(opt); setIsOpen(false); }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = '#fafafa')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = value === opt ? '#fafafa' : '#fff')}
+                >
+                  {opt}
+                </div>
+              )) : (
+                <div style={{ padding: '8px 12px', fontSize: '0.9rem', color: '#a1a1aa' }}>No results found</div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 
 export default function AdminPage() {
   const ctx = useOutletContext<any>();
@@ -23,9 +80,15 @@ export default function AdminPage() {
   const [brandDesc, setBrandDesc] = useState('');
   const [profilePic, setProfilePic] = useState('');
   
+  const [timezone, setTimezone] = useState('(GMT+05:30) India Standard Time (IST)');
+  const [language, setLanguage] = useState('English (US)');
+  
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('Profile Settings');
+
+  const [isEditingPersonal, setIsEditingPersonal] = useState(false);
+  const [isEditingBrand, setIsEditingBrand] = useState(false);
 
   const calculateProgress = () => {
     if (userProfile?.onboarding_completed) return 100;
@@ -47,6 +110,14 @@ export default function AdminPage() {
       setWebsiteUrl(userProfile.website_url || '');
       setBrandDesc(userProfile.brand_description || '');
       setProfilePic(userProfile.profile_picture || userProfile.avatar_url || '');
+      
+      if (userProfile.preferences) {
+        if (userProfile.preferences.timezone) setTimezone(userProfile.preferences.timezone);
+        if (userProfile.preferences.language) setLanguage(userProfile.preferences.language);
+        if (userProfile.preferences.notif && setNotif) {
+          setNotif(userProfile.preferences.notif);
+        }
+      }
     } else if (displayName) {
       setName(displayName);
     }
@@ -81,6 +152,37 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
       if (setToast) setToast("Failed to analyze website: " + (err.message || 'Unknown error'));
     } finally {
       setIsAnalyzing(false);
+    }
+  };
+
+  const updatePreference = async (key: string, value: any) => {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token || '';
+
+      const res = await fetch(`${API_BASE_URL}/api/user/preferences`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          preferences: { [key]: value }
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update preferences');
+      
+      if (setToast) {
+        setToast('Preference saved! 🎉');
+        setTimeout(() => setToast(null), 3000);
+      }
+    } catch (err: any) {
+      if (setToast) {
+        setToast('Failed to save preference: ' + err.message);
+        setTimeout(() => setToast(null), 5000);
+      }
     }
   };
 
@@ -202,12 +304,14 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
         <div className="admin-card">
           <div className="admin-card-head">
             <h3><User size={18} color="var(--ac)" /> Personal information</h3>
-            <button className="admin-edit-btn" onClick={() => { if (setToast) { setToast('You can edit your personal info directly below!'); setTimeout(() => setToast(null), 3000); } }}><Edit2 size={16} /></button>
+            <button className="admin-edit-btn" onClick={() => setIsEditingPersonal(!isEditingPersonal)}>
+              {isEditingPersonal ? <Check size={16} color="var(--ac)" /> : <Edit2 size={16} />}
+            </button>
           </div>
           
           <div className="admin-input-group">
             <label>Full Name</label>
-            <input className="admin-input" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Jane Doe" />
+            <input className="admin-input" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Jane Doe" disabled={!isEditingPersonal} />
           </div>
           <div className="admin-input-group">
             <label>Email Address</label>
@@ -215,14 +319,14 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
           </div>
           <div className="admin-input-group">
             <label>Scheduling Username</label>
-            <div style={{ display: 'flex', alignItems: 'center', background: '#F9FAFB', borderBottom: '2px solid #E5E7EB', borderRadius: '8px 8px 0 0', paddingLeft: '12px', transition: 'border-color 0.3s' }}>
-              <span style={{ color: '#9CA3AF', fontSize: '0.95rem', fontWeight: 500 }}>linksmeet.com/</span>
-              <input className="admin-input" value={username} onChange={e => setUsername(e.target.value)} placeholder="janedoe" style={{ borderBottom: 'none', background: 'transparent', paddingLeft: '4px' }} />
+            <div className={`admin-input-prefix-group ${!isEditingPersonal ? 'disabled' : ''}`}>
+              <span>linksmeet.com/</span>
+              <input className="admin-input" value={username} onChange={e => setUsername(e.target.value)} placeholder="janedoe" disabled={!isEditingPersonal} />
             </div>
           </div>
           <div className="admin-input-group">
             <label>Short Bio / Headline</label>
-            <input className="admin-input" value={bio} onChange={e => setBio(e.target.value)} placeholder="e.g. Founder at Acme Corp" />
+            <input className="admin-input" value={bio} onChange={e => setBio(e.target.value)} placeholder="e.g. Founder at Acme Corp" disabled={!isEditingPersonal} />
           </div>
         </div>
 
@@ -232,23 +336,25 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
           <div className="admin-card">
             <div className="admin-card-head">
               <h3><Globe size={18} color="var(--ac)" /> Brand information</h3>
-              <button className="admin-edit-btn" onClick={() => { if (setToast) { setToast('You can edit brand info directly below!'); setTimeout(() => setToast(null), 3000); } }}><Edit2 size={16} /></button>
+              <button className="admin-edit-btn" onClick={() => setIsEditingBrand(!isEditingBrand)}>
+                {isEditingBrand ? <Check size={16} color="var(--ac)" /> : <Edit2 size={16} />}
+              </button>
             </div>
             
             <div className="admin-input-group" style={{ marginBottom: '16px' }}>
                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                   <label style={{ margin: 0 }}>Website URL</label>
-                  <button className="admin-magic-btn" onClick={handleAnalyze} disabled={isAnalyzing || !websiteUrl}>
+                  <button className="admin-magic-btn" onClick={handleAnalyze} disabled={isAnalyzing || !websiteUrl || !isEditingBrand}>
                      {isAnalyzing ? <Loader2 size={12} className="cpm-spin" /> : <Sparkles size={12} />} 
                      AI Analyze
                   </button>
                </div>
-               <input className="admin-input" value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} placeholder="https://yourcompany.com" />
+               <input className="admin-input" value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} placeholder="https://yourcompany.com" disabled={!isEditingBrand} />
             </div>
             
             <div className="admin-input-group">
                <label>Company Details & Brand Description</label>
-               <textarea className="admin-textarea" value={brandDesc} onChange={e => setBrandDesc(e.target.value)} placeholder="Extracted AI details..." />
+               <textarea className="admin-textarea" value={brandDesc} onChange={e => setBrandDesc(e.target.value)} placeholder="Extracted AI details..." disabled={!isEditingBrand} />
             </div>
           </div>
           
@@ -282,7 +388,7 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
                   {saving ? 'Saving Changes...' : 'Save Profile Changes'}
                </button>
                <button className="admin-btn danger" onClick={logoutAndGo} style={{ gridColumn: '1 / -1' }}>
-                  <LogOut size={16} /> Secure Log out
+                  <LogOut size={16} /> Delete Account
                </button>
             </div>
           </div>
@@ -301,20 +407,31 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
             
             <div className="admin-input-group">
               <label>Timezone</label>
-              <select className="admin-input" style={{ borderBottom: 'none', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: '8px' }}>
-                <option>(GMT-05:00) Eastern Time (US & Canada)</option>
-                <option>(GMT-08:00) Pacific Time (US & Canada)</option>
-                <option>(GMT+00:00) London</option>
-              </select>
+              <CustomSelect 
+                searchable={true}
+                options={[
+                  '(GMT-08:00) Pacific Time (US & Canada)', 
+                  '(GMT-05:00) Eastern Time (US & Canada)', 
+                  '(GMT+00:00) London',
+                  '(GMT+01:00) Central European Time',
+                  '(GMT+04:00) Dubai',
+                  '(GMT+05:30) India Standard Time (IST)',
+                  '(GMT+08:00) Singapore',
+                  '(GMT+09:00) Tokyo',
+                  '(GMT+10:00) Sydney'
+                ]} 
+                value={timezone} 
+                onChange={(val: string) => { setTimezone(val); updatePreference('timezone', val); }} 
+              />
             </div>
             
             <div className="admin-input-group">
               <label>Language</label>
-              <select className="admin-input" style={{ borderBottom: 'none', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: '8px' }}>
-                <option>English (US)</option>
-                <option>Spanish</option>
-                <option>French</option>
-              </select>
+              <CustomSelect 
+                options={['English (US)', 'Spanish', 'French']} 
+                value={language} 
+                onChange={(val: string) => { setLanguage(val); updatePreference('language', val); }} 
+              />
             </div>
           </div>
 
@@ -335,7 +452,11 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
                 </div>
                 <div 
                   className={`admin-toggle ${notif[n.key as keyof typeof notif] ? 'on' : ''}`}
-                  onClick={() => setNotif(prev => ({ ...prev, [n.key]: !prev[n.key] }))}
+                  onClick={() => {
+                    const newVal = { ...notif, [n.key]: !notif[n.key as keyof typeof notif] };
+                    if (setNotif) setNotif(newVal);
+                    updatePreference('notif', newVal);
+                  }}
                 >
                   <div className="admin-toggle-knob" />
                 </div>
@@ -396,11 +517,11 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
             
             <div className="admin-input-group">
               <label>Current Password</label>
-              <input type="password" placeholder="••••••••" className="admin-input" style={{ borderBottom: 'none', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: '8px' }} />
+              <input type="password" placeholder="••••••••" className="admin-input" />
             </div>
             <div className="admin-input-group">
               <label>New Password</label>
-              <input type="password" placeholder="••••••••" className="admin-input" style={{ borderBottom: 'none', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: '8px' }} />
+              <input type="password" placeholder="••••••••" className="admin-input" />
             </div>
             <button className="admin-btn primary" onClick={() => { if (setToast) { setToast('Password updated successfully! 🔒'); setTimeout(() => setToast(null), 3000); } }} style={{ width: '100%', marginTop: '8px' }}>
               Update Password

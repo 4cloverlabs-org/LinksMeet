@@ -237,6 +237,47 @@ app.post('/api/user/onboarding', requireAuth, async (req, res) => {
   }
 });
 
+app.post('/api/user/preferences', requireAuth, async (req, res) => {
+  try {
+    const { preferences } = req.body;
+    
+    // First, fetch existing preferences
+    const { data: user, error: fetchErr } = await supabase
+      .from('users')
+      .select('preferences')
+      .eq('id', req.userId)
+      .single();
+
+    if (fetchErr && fetchErr.code !== 'PGRST116') {
+      console.error("Fetch preferences error:", fetchErr);
+      // If the column doesn't exist yet, this will error. We should gracefully handle it.
+      if (fetchErr.message.includes('Could not find the column')) {
+        return res.status(400).json({ error: 'Database column missing. Please run the SQL migration to add the preferences column.' });
+      }
+      return res.status(500).json({ error: fetchErr.message });
+    }
+
+    const currentPrefs = user?.preferences || {};
+    const newPrefs = { ...currentPrefs, ...preferences };
+
+    const { data, error } = await supabase
+      .from('users')
+      .update({ preferences: newPrefs })
+      .eq('id', req.userId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Update preferences error:", error);
+      return res.status(500).json({ error: error.message });
+    }
+    res.json({ success: true, user: data });
+  } catch (err) {
+    console.error("Preferences error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // -------------------------------------------------------------------------------------------------------------
 // 1b. Real OAuth Flows (Zoom, Slack, Stripe, Salesforce, HubSpot)
 // ----------------------------------------------------
