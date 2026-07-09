@@ -51,6 +51,8 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
   const { user } = useAuth();
   const hostName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Host';
   const hostInitials = hostName.substring(0, 2).toUpperCase();
+  const userName = user?.user_metadata?.first_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'You';
+  const userEmail = user?.email || 'you@example.com';
 
   const [form, setForm] = useState<Partial<EventType> & { location?: string }>({
     title: '15 min meeting',
@@ -78,6 +80,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
   // Interactive menu states
   const [showDurMenu, setShowDurMenu] = useState(false);
   const [showLocMenu, setShowLocMenu] = useState(false);
+  const [showPresetMenu, setShowPresetMenu] = useState(false);
 
   // Toolbar action modals
   const [showEmbedModal, setShowEmbedModal] = useState(false);
@@ -125,7 +128,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
   // Confirmation state
   const [confChannel, setConfChannel] = useState<'email' | 'phone'>('email');
-  const [calEventName, setCalEventName] = useState('15 min meeting between Kontham sohith and {Scheduler}');
+  const [calEventName, setCalEventName] = useState(`${form.title || '15 min meeting'} between ${userName} and {Scheduler}`);
   const [customReplyTo, setCustomReplyTo] = useState(false);
   const [sendTranscription, setSendTranscription] = useState(true);
 
@@ -414,6 +417,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
         const autoSlug = newTitle.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/--+/g, '-').replace(/^-|-$/g, '');
         next.slug = autoSlug || prev.slug;
       }
+      setCalEventName(`${newTitle || 'Meeting'} between ${userName} and {Scheduler}`);
       return next;
     });
   };
@@ -441,27 +445,6 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
   const durMinutes = isCustomDur
     ? (parseInt(customDurInput, 10) || 15)
     : (parseInt(form.dur || '15', 10) || 15);
-  /* const generateSlots = () => {
-    const slots = [];
-    let startMins = 9 * 60; // 9:00 AM
-    for (let i = 0; i < 5; i++) {
-      const h = Math.floor(startMins / 60);
-      const m = startMins % 60;
-      const period = h >= 12 ? 'PM' : 'AM';
-      const dispH = h > 12 ? h - 12 : h;
-      const dispM = m < 10 ? `0${m}` : `${m}`;
-      slots.push(`${dispH}:${dispM} ${period}`);
-      startMins += durMinutes;
-    }
-    return slots;
-  }; */
-
-  // Compute dynamic day tabs around selected date
-  /* const computeDayTabs = () => {
-    const maxDays = DAYS_IN_MONTH[monthIdx] || 30;
-    let base = Math.min(Math.max(selectedDate - 2, 1), maxDays - 4);
-    return [base, base + 1, base + 2, base + 3, base + 4];
-  }; */
 
   const handleSave = async () => {
     if (!form.title || !form.slug) return;
@@ -639,11 +622,11 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
             <textarea
               readOnly
               value={embedCodeSnippet}
-              style={{ width: '100%', minHeight: '110px', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '12px', fontFamily: 'monospace', fontSize: '0.82rem', color: '#334155', outline: 'none', resize: 'none', marginBottom: '20px' }}
+              style={{ width: '100%', minHeight: '110px', background: '#f8fafc', border: '2px solid #F5F5F5', borderRadius: '8px', padding: '12px', fontFamily: 'monospace', fontSize: '0.82rem', color: '#334155', outline: 'none', resize: 'none', marginBottom: '20px' }}
             />
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-              <button onClick={() => setShowEmbedModal(false)} style={{ padding: '10px 18px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#334155', fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer' }}>Close</button>
+              <button onClick={() => setShowEmbedModal(false)} style={{ padding: '10px 18px', borderRadius: '8px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#334155', fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer' }}>Close</button>
               <button onClick={handleCopyEmbed} style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: '#7d3bec', color: '#ffffff', fontWeight: 600, fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                 <Copy size={16} /> Copy Code
               </button>
@@ -674,7 +657,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
             </p>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-              <button onClick={() => setShowCalModal(false)} style={{ padding: '10px 18px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#334155', fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer' }}>Close</button>
+              <button onClick={() => setShowCalModal(false)} style={{ padding: '10px 18px', borderRadius: '8px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#334155', fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer' }}>Close</button>
               <button onClick={handleDownloadIcs} style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: '#7d3bec', color: '#ffffff', fontWeight: 600, fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                 <Download size={16} /> Download .ics File
               </button>
@@ -696,7 +679,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
             </p>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-              <button onClick={() => setShowDeleteModal(false)} style={{ padding: '10px 18px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#334155', fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => setShowDeleteModal(false)} style={{ padding: '10px 18px', borderRadius: '8px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#334155', fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer' }}>Cancel</button>
               <button onClick={handleDeleteConfirm} style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: '#ef4444', color: '#ffffff', fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer' }}>Delete Permanently</button>
             </div>
           </div>
@@ -704,10 +687,10 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
       )}
 
       {/* TOP HEADER */}
-      <div style={{ display: 'flex', alignItems: 'center', height: '64px', borderBottom: '1px solid #e2e8f0', background: '#ffffff', flexShrink: 0, paddingRight: '24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', height: '64px', borderBottom: '2px solid #F5F5F5', background: '#ffffff', flexShrink: 0, paddingRight: '24px' }}>
 
         {/* Header Left (Sidebar Width) */}
-        <div style={{ width: '210px', padding: '0 20px', borderRight: '1px solid #e2e8f0', height: '100%', display: 'flex', alignItems: 'center' }}>
+        <div style={{ width: '210px', padding: '0 20px', borderRight: '2px solid #F5F5F5', height: '100%', display: 'flex', alignItems: 'center' }}>
           <button
             onClick={onClose}
             style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: '#334155', fontSize: '0.92rem', fontWeight: 600, cursor: 'pointer', padding: 0 }}
@@ -735,28 +718,28 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
             <button
               onClick={handleOpenPublicLink}
               title="Preview public booking page"
-              style={{ width: '36px', height: '36px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer', transition: 'all 0.15s ease' }}
+              style={{ width: '36px', height: '36px', borderRadius: '8px', border: '2px solid #F5F5F5', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer', transition: 'all 0.15s ease' }}
             >
               <ExternalLink size={16} />
             </button>
             <button
               onClick={handleCopyLink}
               title="Copy booking URL"
-              style={{ width: '36px', height: '36px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer', transition: 'all 0.15s ease' }}
+              style={{ width: '36px', height: '36px', borderRadius: '8px', border: '2px solid #F5F5F5', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer', transition: 'all 0.15s ease' }}
             >
               <LinkIcon size={16} />
             </button>
             <button
               onClick={() => setShowEmbedModal(true)}
               title="Embed website widget"
-              style={{ width: '36px', height: '36px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer', transition: 'all 0.15s ease' }}
+              style={{ width: '36px', height: '36px', borderRadius: '8px', border: '2px solid #F5F5F5', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer', transition: 'all 0.15s ease' }}
             >
               <Code size={16} />
             </button>
             <button
               onClick={() => setShowCalModal(true)}
               title="Calendar integrations & export"
-              style={{ width: '36px', height: '36px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer', transition: 'all 0.15s ease' }}
+              style={{ width: '36px', height: '36px', borderRadius: '8px', border: '2px solid #F5F5F5', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer', transition: 'all 0.15s ease' }}
             >
               <Calendar size={16} />
             </button>
@@ -782,7 +765,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
 
         {/* LEFT SIDEBAR NAVIGATION */}
-        <div style={{ width: '210px', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', background: '#ffffff', overflowY: 'hidden', padding: '14px 10px', flexShrink: 0 }}>
+        <div style={{ width: '210px', borderRight: '2px solid #F5F5F5', display: 'flex', flexDirection: 'column', background: '#ffffff', overflowY: 'hidden', padding: '14px 10px', flexShrink: 0 }}>
           <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 4px 10px' }}>SETUP</div>
           <NavItem icon={Link2} label="Basics" id="basics" />
           <NavItem icon={Calendar} label="Availability" id="availability" />
@@ -798,9 +781,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
           <NavItem icon={Clock} label="Reschedule & cancel" id="reschedule" />
 
           <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '12px 0 4px 10px' }}>AI & AUTOMATION</div>
-          <NavItem icon={LayoutTemplate} label="Apps" id="apps" />
           <NavItem icon={Zap} label="Workflows" id="workflows" />
-          <NavItem icon={LinkIcon} label="Webhooks" id="webhooks" />
         </div>
 
         {/* CONTENT AREA */}
@@ -818,14 +799,14 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   <input
                     value={form.title || ''}
                     onChange={e => handleTitleChange(e.target.value)}
-                    style={{ width: '100%', background: '#ffffff', border: '1px solid #cbd5e1', color: '#0f172a', padding: '10px 14px', borderRadius: '8px', fontSize: '0.92rem', outline: 'none', fontWeight: 500 }}
+                    style={{ width: '100%', background: '#ffffff', border: '2px solid #F5F5F5', color: '#0f172a', padding: '10px 14px', borderRadius: '8px', fontSize: '0.92rem', outline: 'none', fontWeight: 500 }}
                   />
                 </div>
 
                 {/* Description */}
                 <div style={{ marginBottom: '20px' }}>
                   <label style={{ display: 'block', fontSize: '0.88rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Description</label>
-                  <div style={{ border: '1px solid #cbd5e1', borderRadius: '8px', overflow: 'hidden', background: '#ffffff' }}>
+                  <div style={{ border: '2px solid #F5F5F5', borderRadius: '8px', overflow: 'hidden', background: '#ffffff' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 14px', borderBottom: '1px solid #f1f5f9', background: '#ffffff' }}>
                       <button type="button" style={{ background: 'none', border: 'none', color: '#334155', fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontWeight: 500, padding: 0 }}>
                         Normal <ChevronDown size={14} />
@@ -848,8 +829,8 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                 {/* URL */}
                 <div style={{ marginBottom: '20px' }}>
                   <label style={{ display: 'block', fontSize: '0.88rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>URL</label>
-                  <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '8px', overflow: 'hidden', background: '#ffffff' }}>
-                    <div style={{ padding: '10px 14px', background: '#f8fafc', color: '#64748b', fontSize: '0.88rem', borderRight: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', border: '2px solid #F5F5F5', borderRadius: '8px', overflow: 'hidden', background: '#ffffff' }}>
+                    <div style={{ padding: '10px 14px', background: '#f8fafc', color: '#64748b', fontSize: '0.88rem', borderRight: '2px solid #F5F5F5', whiteSpace: 'nowrap' }}>
                       linksmeet.ai/booking/
                     </div>
                     <input
@@ -868,7 +849,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   <label style={{ display: 'block', fontSize: '0.88rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Duration</label>
                   <div
                     onClick={() => setShowDurMenu(!showDurMenu)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '10px 14px', cursor: 'pointer', userSelect: 'none' }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '8px', padding: '10px 14px', cursor: 'pointer', userSelect: 'none' }}
                   >
                     <span style={{ fontSize: '0.92rem', color: '#0f172a', fontWeight: 500 }}>
                       {isCustomDur ? `${customDurInput} Minutes (Custom)` : durMinutes}
@@ -880,7 +861,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
                   {/* Interactive Duration Menu */}
                   {showDurMenu && (
-                    <div style={{ position: 'absolute', top: '72px', left: 0, right: 0, background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 50, overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', top: '72px', left: 0, right: 0, background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '8px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 50, overflow: 'hidden' }}>
                       {DURATION_OPTIONS.map(opt => (
                         <div
                           key={opt}
@@ -917,7 +898,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   <label style={{ display: 'block', fontSize: '0.88rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Location</label>
                   <div
                     onClick={() => setShowLocMenu(!showLocMenu)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px', cursor: 'pointer' }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px', cursor: 'pointer' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem', fontWeight: 600, color: '#0f172a' }}>
                       <LocIcon size={16} color="#7d3bec" /> {form.location || 'Select a location...'}
@@ -930,7 +911,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
                   {/* Interactive Location Selection Menu */}
                   {showLocMenu && (
-                    <div style={{ position: 'absolute', top: '72px', left: 0, right: 0, background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 50, overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', top: '72px', left: 0, right: 0, background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '8px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 50, overflow: 'hidden' }}>
                       {LOCATION_OPTIONS.map(opt => {
                         const OptIcon = opt.icon;
                         const isSel = form.location === opt.label;
@@ -958,7 +939,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                         const locObj = LOCATION_OPTIONS.find(o => o.label === loc) || LOCATION_OPTIONS[0];
                         const AddIcon = locObj.icon;
                         return (
-                          <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
+                          <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f8fafc', border: '2px solid #F5F5F5', borderRadius: '8px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                               <AddIcon size={15} color="#7d3bec" /> <span>{loc} <span style={{ fontWeight: 400, color: '#64748b', fontSize: '0.78rem' }}>(Optional choice)</span></span>
                             </div>
@@ -978,14 +959,14 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   </div>
 
                   {showLocAdvanced && (
-                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '14px', marginBottom: '14px', display: 'flex', flexDirection: 'column', gap: '12px', animation: 'fadeIn 0.15s ease' }}>
+                    <div style={{ background: '#f8fafc', border: '2px solid #F5F5F5', borderRadius: '8px', padding: '14px', marginBottom: '14px', display: 'flex', flexDirection: 'column', gap: '12px', animation: 'fadeIn 0.15s ease' }}>
                       <div>
                         <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Location instructions for guests</label>
                         <input
                           value={locInstructions}
                           onChange={e => setLocInstructions(e.target.value)}
                           placeholder="e.g. Please dial extension 402 or meet at Room 3B"
-                          style={{ width: '100%', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '8px 10px', fontSize: '0.82rem', color: '#0f172a', outline: 'none' }}
+                          style={{ width: '100%', background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '6px', padding: '8px 10px', fontSize: '0.82rem', color: '#0f172a', outline: 'none' }}
                         />
                       </div>
                       <div>
@@ -994,7 +975,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                           value={customMeetingUrl}
                           onChange={e => setCustomMeetingUrl(e.target.value)}
                           placeholder="https://zoom.us/j/123456789"
-                          style={{ width: '100%', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '8px 10px', fontSize: '0.82rem', color: '#0f172a', outline: 'none' }}
+                          style={{ width: '100%', background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '6px', padding: '8px 10px', fontSize: '0.82rem', color: '#0f172a', outline: 'none' }}
                         />
                       </div>
                     </div>
@@ -1004,13 +985,13 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     <button
                       type="button"
                       onClick={() => setShowAddLocMenu(!showAddLocMenu)}
-                      style={{ width: '100%', padding: '10px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', color: '#7d3bec', fontWeight: 600, fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginBottom: '10px' }}
+                      style={{ width: '100%', padding: '10px', background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '8px', color: '#7d3bec', fontWeight: 600, fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginBottom: '10px' }}
                     >
                       <Plus size={16} /> Add a location
                     </button>
 
                     {showAddLocMenu && (
-                      <div style={{ position: 'absolute', top: '44px', left: 0, right: 0, background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 50, overflow: 'hidden' }}>
+                      <div style={{ position: 'absolute', top: '44px', left: 0, right: 0, background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '8px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 50, overflow: 'hidden' }}>
                         <div style={{ padding: '8px 12px', fontSize: '0.75rem', fontWeight: 700, color: '#64748b', background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>SELECT SECONDARY LOCATION CHOICE</div>
                         {LOCATION_OPTIONS.filter(o => o.label !== form.location && !additionalLocations.includes(o.label)).map(opt => {
                           const OptIcon = opt.icon;
@@ -1040,7 +1021,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
               {/* RIGHT COLUMN: REAL-TIME LIVE PREVIEW CARD */}
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', padding: '20px 0' }}>
-                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', boxShadow: '0 8px 30px rgba(0,0,0,0.04)', display: 'grid', gridTemplateColumns: '170px 1fr', gap: '20px', maxWidth: '460px', width: '100%' }}>
+                <div style={{ background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '16px', padding: '20px', boxShadow: '0 8px 30px rgba(0,0,0,0.04)', display: 'grid', gridTemplateColumns: '170px 1fr', gap: '20px', maxWidth: '460px', width: '100%' }}>
 
                   {/* Column 1: Left Info Pane */}
                   <div>
@@ -1076,12 +1057,12 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                         <button
                           type="button"
                           onClick={() => setMonthIdx(Math.max(0, monthIdx - 1))}
-                          style={{ width: '28px', height: '28px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem' }}
+                          style={{ width: '28px', height: '28px', background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '6px', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem' }}
                         >&lt;</button>
                         <button
                           type="button"
                           onClick={() => setMonthIdx(Math.min(MONTHS.length - 1, monthIdx + 1))}
-                          style={{ width: '28px', height: '28px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem' }}
+                          style={{ width: '28px', height: '28px', background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '6px', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem' }}
                         >&gt;</button>
                       </div>
                     </div>
@@ -1168,11 +1149,11 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                 </div>
 
                 {/* Main Schedule Container Card */}
-                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
+                <div style={{ background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '16px', padding: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
                   
                   {/* Time zone selector */}
                   <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>Time zone</label>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', border: '1px solid #e2e8f0', borderRadius: '8px', background: '#ffffff', color: '#0f172a', fontWeight: 500, fontSize: '0.88rem', marginBottom: '20px', cursor: 'pointer' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', border: '2px solid #F5F5F5', borderRadius: '8px', background: '#ffffff', color: '#0f172a', fontWeight: 500, fontSize: '0.88rem', marginBottom: '20px', cursor: 'pointer' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <Globe size={16} color="#64748b" /> Asia/Kolkata (GMT +05:30)
                     </div>
@@ -1189,7 +1170,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '130px' }}>
                           <div
                             onClick={() => toggleDay(idx)}
-                            style={{ width: '18px', height: '18px', borderRadius: '4px', background: item.active ? '#7d3bec' : '#ffffff', border: item.active ? 'none' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
+                            style={{ width: '18px', height: '18px', borderRadius: '4px', background: item.active ? '#7d3bec' : '#ffffff', border: item.active ? 'none' : '2px solid #F5F5F5', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
                           >
                             {item.active && <Check size={13} color="#fff" strokeWidth={3} />}
                           </div>
@@ -1203,7 +1184,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                             <select
                               value={item.start}
                               onChange={e => handleTimeChange(idx, 'start', e.target.value)}
-                              style={{ padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 600, color: '#0f172a', background: '#ffffff', outline: 'none', cursor: 'pointer' }}
+                              style={{ padding: '6px 10px', border: '2px solid #F5F5F5', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 600, color: '#0f172a', background: '#ffffff', outline: 'none', cursor: 'pointer' }}
                             >
                               {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
                             </select>
@@ -1211,7 +1192,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                             <select
                               value={item.end}
                               onChange={e => handleTimeChange(idx, 'end', e.target.value)}
-                              style={{ padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 600, color: '#0f172a', background: '#ffffff', outline: 'none', cursor: 'pointer' }}
+                              style={{ padding: '6px 10px', border: '2px solid #F5F5F5', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 600, color: '#0f172a', background: '#ffffff', outline: 'none', cursor: 'pointer' }}
                             >
                               {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
                             </select>
@@ -1219,7 +1200,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                               type="button"
                               title="Extend end time by 1 hour"
                               onClick={() => handleAddHour(idx)}
-                              style={{ width: '32px', height: '32px', border: '1px solid #e2e8f0', borderRadius: '6px', background: '#ffffff', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                              style={{ width: '32px', height: '32px', border: '2px solid #F5F5F5', borderRadius: '6px', background: '#ffffff', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                             >
                               <Plus size={15} />
                             </button>
@@ -1227,7 +1208,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                               type="button"
                               title="Copy these hours to all days"
                               onClick={() => handleCopyDayToAll(idx)}
-                              style={{ width: '32px', height: '32px', border: '1px solid #e2e8f0', borderRadius: '6px', background: '#ffffff', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                              style={{ width: '32px', height: '32px', border: '2px solid #F5F5F5', borderRadius: '6px', background: '#ffffff', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                             >
                               <Copy size={15} />
                             </button>
@@ -1246,28 +1227,43 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   </button>
 
                   <div style={{ position: 'relative', marginTop: '12px' }}>
-                    <select
-                      onChange={e => {
-                        if (e.target.value) {
-                          applyPresetSchedule(e.target.value as any);
-                          e.target.value = '';
-                        }
-                      }}
-                      style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '8px', background: '#f8fafc', color: '#7d3bec', fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer', outline: 'none', appearance: 'none', textAlign: 'center' }}
+                    <div
+                      onClick={() => setShowPresetMenu(!showPresetMenu)}
+                      style={{ width: '100%', padding: '12px', border: '2px solid #F5F5F5', borderRadius: '8px', background: '#f8fafc', color: '#7d3bec', fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                     >
-                      <option value="">Copy availability from preset...</option>
-                      <option value="business">Standard Business Hours (Mon-Fri 9:00 AM - 5:00 PM)</option>
-                      <option value="extended">Extended Work Hours (Mon-Fri 8:00 AM - 8:00 PM)</option>
-                      <option value="weekends">Weekends Only (Sat-Sun 10:00 AM - 4:00 PM)</option>
-                      <option value="all">All 7 Days (Sun-Sat 9:00 AM - 6:00 PM)</option>
-                    </select>
+                      Copy availability from preset... <ChevronDown size={14} />
+                    </div>
+
+                    {showPresetMenu && (
+                      <div style={{ position: 'absolute', bottom: '48px', left: 0, right: 0, background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '8px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 50, overflow: 'hidden' }}>
+                        {[
+                          { val: 'business', label: 'Standard Business Hours (Mon-Fri 9:00 AM - 5:00 PM)' },
+                          { val: 'extended', label: 'Extended Work Hours (Mon-Fri 8:00 AM - 8:00 PM)' },
+                          { val: 'weekends', label: 'Weekends Only (Sat-Sun 10:00 AM - 4:00 PM)' },
+                          { val: 'all', label: 'All 7 Days (Sun-Sat 9:00 AM - 6:00 PM)' }
+                        ].map(opt => (
+                          <div
+                            key={opt.val}
+                            onClick={() => {
+                              applyPresetSchedule(opt.val as any);
+                              setShowPresetMenu(false);
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = '#eff6ff'}
+                            onMouseLeave={e => e.currentTarget.style.background = '#ffffff'}
+                            style={{ padding: '10px 14px', fontSize: '0.85rem', fontWeight: 500, color: '#7d3bec', cursor: 'pointer', textAlign: 'center', borderBottom: '1px solid #f1f5f9', transition: 'background 0.15s ease' }}
+                          >
+                            {opt.label}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
 
               {/* RIGHT COLUMN: PREVIEW AVAILABILITY */}
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', padding: '20px 0' }}>
-                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', boxShadow: '0 8px 30px rgba(0,0,0,0.04)', width: '100%', maxWidth: '520px' }}>
+                <div style={{ background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '16px', padding: '24px', boxShadow: '0 8px 30px rgba(0,0,0,0.04)', width: '100%', maxWidth: '520px' }}>
                   
                   {/* Top header inside right card */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
@@ -1281,12 +1277,12 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       <button
                         type="button"
                         onClick={() => setMonthIdx(Math.max(0, monthIdx - 1))}
-                        style={{ width: '32px', height: '32px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem' }}
+                        style={{ width: '32px', height: '32px', background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '8px', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem' }}
                       >&lt;</button>
                       <button
                         type="button"
                         onClick={() => setMonthIdx(Math.min(MONTHS.length - 1, monthIdx + 1))}
-                        style={{ width: '32px', height: '32px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem' }}
+                        style={{ width: '32px', height: '32px', background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '8px', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem' }}
                       >&gt;</button>
                     </div>
                   </div>
@@ -1299,8 +1295,8 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                         <span style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0f172a' }}>{MONTHS[monthIdx]}</span>
                         <div style={{ display: 'flex', gap: '4px' }}>
-                          <button type="button" onClick={() => setMonthIdx(Math.max(0, monthIdx - 1))} style={{ width: '24px', height: '24px', border: '1px solid #e2e8f0', borderRadius: '4px', background: '#ffffff', color: '#64748b', cursor: 'pointer' }}>&lt;</button>
-                          <button type="button" onClick={() => setMonthIdx(Math.min(MONTHS.length - 1, monthIdx + 1))} style={{ width: '24px', height: '24px', border: '1px solid #e2e8f0', borderRadius: '4px', background: '#ffffff', color: '#64748b', cursor: 'pointer' }}>&gt;</button>
+                          <button type="button" onClick={() => setMonthIdx(Math.max(0, monthIdx - 1))} style={{ width: '24px', height: '24px', border: '2px solid #F5F5F5', borderRadius: '4px', background: '#ffffff', color: '#64748b', cursor: 'pointer' }}>&lt;</button>
+                          <button type="button" onClick={() => setMonthIdx(Math.min(MONTHS.length - 1, monthIdx + 1))} style={{ width: '24px', height: '24px', border: '2px solid #F5F5F5', borderRadius: '4px', background: '#ffffff', color: '#64748b', cursor: 'pointer' }}>&gt;</button>
                         </div>
                       </div>
 
@@ -1409,7 +1405,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                                 padding: '8px',
                                 textAlign: 'center',
                                 background: '#ffffff',
-                                border: '1px solid #e2e8f0',
+                                border: '2px solid #F5F5F5',
                                 borderRadius: '6px',
                                 fontSize: '0.8rem',
                                 fontWeight: 600,
@@ -1450,19 +1446,9 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
               
               {/* LEFT COLUMN: SETUP */}
               <div onClick={e => e.stopPropagation()} style={{ overflowY: 'auto', height: '100%', padding: '32px 16px 32px 0' }}>
-                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
+                <div style={{ background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '8px', overflow: 'hidden' }}>
                   
-                  {/* Confirmation Section */}
-                  <div style={{ padding: '24px' }}>
-                    <h3 style={{ margin: '0 0 4px', fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>Confirmation</h3>
-                    <p style={{ margin: '0 0 16px', fontSize: '0.88rem', color: '#64748b' }}>What your booker should provide to receive confirmations</p>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button type="button" onClick={() => { setConfChannel('email'); triggerToast('Set confirmation channel to Email'); }} style={{ padding: '6px 16px', borderRadius: '8px', background: confChannel === 'email' ? '#eff6ff' : '#ffffff', border: `1px solid ${confChannel === 'email' ? '#7d3bec' : '#cbd5e1'}`, color: confChannel === 'email' ? '#7d3bec' : '#64748b', fontSize: '0.88rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}><div style={{width:16,height:16,border: `2px solid ${confChannel === 'email' ? '#7d3bec' : '#cbd5e1'}`,borderRadius:'4px',display:'flex',alignItems:'center',justifyContent:'center'}}>{confChannel === 'email' && <div style={{width:8,height:8,background:'#7d3bec',borderRadius:'2px'}}></div>}</div> Email</button>
-                      <button type="button" onClick={() => { setConfChannel('phone'); triggerToast('Set confirmation channel to Phone'); }} style={{ padding: '6px 16px', borderRadius: '8px', background: confChannel === 'phone' ? '#eff6ff' : 'transparent', border: `1px solid ${confChannel === 'phone' ? '#7d3bec' : '#cbd5e1'}`, color: confChannel === 'phone' ? '#7d3bec' : '#64748b', fontSize: '0.88rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}><Phone size={16} /> Phone</button>
-                    </div>
-                  </div>
 
-                  <div style={{ height: '1px', background: '#e2e8f0' }} />
 
                   {/* Booking Questions Header */}
                   <div style={{ padding: '24px 24px 16px' }}>
@@ -1483,7 +1469,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                           <ToggleSwitch checked={q.active} onChange={() => toggleQuestionActive(idx)} />
-                          <button type="button" onClick={() => handleEditQuestion(idx)} style={{ padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#334155', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
+                          <button type="button" onClick={() => handleEditQuestion(idx)} style={{ padding: '6px 12px', border: '2px solid #F5F5F5', borderRadius: '6px', background: '#ffffff', color: '#334155', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
                         </div>
                       </div>
                     ))}
@@ -1499,10 +1485,10 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
               {/* RIGHT COLUMN: PREVIEW */}
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', padding: '32px 0' }}>
-                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', display: 'flex', width: '100%', maxWidth: '820px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
+                <div style={{ background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '8px', display: 'flex', width: '100%', maxWidth: '820px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
                   
                   {/* Preview Left: Details */}
-                  <div style={{ width: '320px', borderRight: '1px solid #e2e8f0', padding: '32px 24px', background: '#ffffff' }}>
+                  <div style={{ width: '320px', borderRight: '2px solid #F5F5F5', padding: '32px 24px', background: '#ffffff' }}>
                     <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#a855f7', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 700, marginBottom: '20px' }}>
                       {hostInitials}
                     </div>
@@ -1534,16 +1520,18 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
                   {/* Preview Right: Form */}
                   <div style={{ flex: 1, padding: '32px 40px', display: 'flex', flexDirection: 'column' }}>
-                    {questions.filter(q => q.active && q.id !== 'guests').map(q => (
-                      <div key={q.id} style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>{q.label} {q.required ? '*' : ''}</label>
-                        {q.type === 'Long text' ? (
-                          <textarea readOnly value={q.id === 'notes' ? "Please share anything that will help prepare for our meeting." : ""} style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', minHeight: '70px', resize: 'none', outline: 'none' }} />
-                        ) : (
-                          <input type="text" readOnly value={q.id === 'name' ? hostName : q.id === 'email' ? "guest@example.com" : q.id === 'phone' ? "+91 98765 43210" : ""} style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
-                        )}
-                      </div>
-                    ))}
+                    <div style={{ marginBottom: '16px' }}>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Your name *</label>
+                      <input type="text" readOnly value={userName} style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
+                    </div>
+                    <div style={{ marginBottom: '16px' }}>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Email address *</label>
+                      <input type="text" readOnly value={userEmail} style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
+                    </div>
+                    <div style={{ marginBottom: '20px' }}>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Additional notes</label>
+                      <textarea readOnly value="Please share anything that will help prepare for our meeting." style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', minHeight: '80px', resize: 'none', outline: 'none' }} />
+                    </div>
 
                     {questions.some(q => q.id === 'guests' && q.active) && (
                       <button type="button" onClick={() => triggerToast('Opening Add Guests input...')} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.85rem', fontWeight: 600, padding: 0, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginBottom: '30px' }}>
@@ -1570,7 +1558,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
               
               {/* LEFT COLUMN: SETUP */}
               <div onClick={e => e.stopPropagation()} style={{ overflowY: 'auto', height: '100%', padding: '32px 16px 32px 0' }}>
-                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
+                <div style={{ background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '8px', overflow: 'hidden' }}>
                   
                   {/* Calendar event name */}
                   <div style={{ padding: '24px' }}>
@@ -1580,9 +1568,9 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                         type="text" 
                         readOnly 
                         value={calEventName}
-                        style={{ flex: 1, padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#f8fafc', color: '#334155', fontSize: '0.9rem', outline: 'none' }}
+                        style={{ flex: 1, padding: '10px 14px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#f8fafc', color: '#334155', fontSize: '0.9rem', outline: 'none' }}
                       />
-                      <button type="button" onClick={handleEditCalEventName} style={{ padding: '0 16px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
+                      <button type="button" onClick={handleEditCalEventName} style={{ padding: '0 16px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
                     </div>
                   </div>
 
@@ -1627,7 +1615,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
               {/* RIGHT COLUMN: PREVIEW */}
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', padding: '32px 0' }}>
-                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '560px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
+                <div style={{ background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '8px', display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '560px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
                   
                   {/* Top Confirmation Section */}
                   <div style={{ padding: '40px 32px 32px', textAlign: 'center' }}>
@@ -1691,17 +1679,37 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   <div style={{ padding: '24px 32px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
                     <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>Add to calendar</span>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <button type="button" onClick={() => triggerToast('Downloading Google Calendar invite...')} style={{ width: '36px', height: '36px', borderRadius: '6px', border: '1px solid #e2e8f0', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                         <span style={{ fontWeight: 700, color: '#ea4335' }}>G</span>
+                      <button type="button" onClick={() => triggerToast('Downloading Google Calendar invite...')} style={{ width: '36px', height: '36px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                        <svg viewBox="0 0 256 256" width="20" height="20">
+                          <path fill="#fff" d="M195.368 60.632H60.632v134.736h134.736z"/>
+                          <path fill="#ea4335" d="M195.368 256L256 195.368l-30.316-5.172l-30.316 5.172l-5.533 27.73z"/>
+                          <path fill="#188038" d="M0 195.368v40.421C0 246.956 9.044 256 20.21 256h40.422l6.225-30.316l-6.225-30.316l-33.033-5.172z"/>
+                          <path fill="#1967d2" d="M256 60.632V20.21C256 9.044 246.956 0 235.79 0h-40.422q-5.532 22.554-5.533 33.196q0 10.641 5.533 27.436q20.115 5.76 30.316 5.76T256 60.631"/>
+                          <path fill="#fbbc04" d="M256 60.632h-60.632v134.736H256z"/>
+                          <path fill="#34a853" d="M195.368 195.368H60.632V256h134.736z"/>
+                          <path fill="#4285f4" d="M195.368 0H20.211C9.044 0 0 9.044 0 20.21v175.158h60.632V60.632h134.736z"/>
+                          <path fill="#4285f4" d="M88.27 165.154c-5.036-3.402-8.523-8.37-10.426-14.94l11.689-4.816q1.59 6.063 5.558 9.398c2.627 2.223 5.827 3.318 9.566 3.318q5.734 0 9.852-3.487c2.746-2.324 4.127-5.288 4.127-8.875q0-5.508-4.345-8.994c-2.897-2.324-6.535-3.486-10.88-3.486h-6.754v-11.57h6.063q5.608 0 9.448-3.033c2.56-2.02 3.84-4.783 3.84-8.303c0-3.132-1.145-5.625-3.435-7.494c-2.29-1.87-5.188-2.813-8.708-2.813c-3.436 0-6.164.91-8.185 2.745a16.1 16.1 0 0 0-4.413 6.754l-11.57-4.817c1.532-4.345 4.345-8.185 8.471-11.503s9.398-4.985 15.798-4.985c4.733 0 8.994.91 12.767 2.745c3.772 1.836 6.736 4.379 8.875 7.613c2.14 3.25 3.2 6.888 3.2 10.93c0 4.126-.993 7.613-2.98 10.476s-4.43 5.052-7.327 6.585v.69a22.25 22.25 0 0 1 9.398 7.327c2.442 3.284 3.672 7.208 3.672 11.79c0 4.58-1.163 8.673-3.487 12.26c-2.324 3.588-5.54 6.417-9.617 8.472c-4.092 2.055-8.69 3.1-13.793 3.1c-5.912.016-11.369-1.685-16.405-5.087m71.797-58.005l-12.833 9.28l-6.417-9.734l23.023-16.607h8.825v78.333h-12.598z"/>
+                        </svg>
                       </button>
-                      <button type="button" onClick={() => triggerToast('Downloading Outlook invite...')} style={{ width: '36px', height: '36px', borderRadius: '6px', border: '1px solid #e2e8f0', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                         <span style={{ fontWeight: 700, color: '#0078d4' }}>M</span>
+                      <button type="button" onClick={() => triggerToast('Downloading Outlook invite...')} style={{ width: '36px', height: '36px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                        <svg viewBox="0 0 32 32" width="20" height="20">
+                          <path fill="#0072c6" d="M19.484 7.937v5.477l1.916 1.205a.5.5 0 0 0 .21 0l8.238-5.554a1.174 1.174 0 0 0-.959-1.128Z"/>
+                          <path fill="#0072c6" d="m19.484 15.457l1.747 1.2a.52.52 0 0 0 .543 0c-.3.181 8.073-5.378 8.073-5.378v10.066a1.408 1.408 0 0 1-1.49 1.555h-8.874zm-9.044-2.525a1.61 1.61 0 0 0-1.42.838a4.13 4.13 0 0 0-.526 2.218A4.05 4.05 0 0 0 9.02 18.2a1.6 1.6 0 0 0 2.771.022a4 4 0 0 0 .515-2.2a4.37 4.37 0 0 0-.5-2.281a1.54 1.54 0 0 0-1.366-.809"/>
+                          <path fill="#0072c6" d="M2.153 5.155v21.427L18.453 30V2Zm10.908 14.336a3.23 3.23 0 0 1-2.7 1.361a3.19 3.19 0 0 1-2.64-1.318A5.46 5.46 0 0 1 6.706 16.1a5.87 5.87 0 0 1 1.036-3.616a3.27 3.27 0 0 1 2.744-1.384a3.12 3.12 0 0 1 2.61 1.321a5.64 5.64 0 0 1 1 3.484a5.76 5.76 0 0 1-1.035 3.586"/>
+                        </svg>
                       </button>
-                      <button type="button" onClick={() => triggerToast('Downloading Office 365 invite...')} style={{ width: '36px', height: '36px', borderRadius: '6px', border: '1px solid #e2e8f0', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                         <span style={{ fontWeight: 700, color: '#0078d4' }}>O</span>
+                      <button type="button" onClick={() => triggerToast('Downloading Office 365 invite...')} style={{ width: '36px', height: '36px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                        <svg viewBox="0 0 48 48" width="20" height="20">
+                          <path fill="#d83b01" d="M22.25 5L8 10v28l14.25 5 17.75-6.5V11.5L22.25 5z"/>
+                          <path fill="#f36d21" d="M22.25 5v38l17.75-6.5V11.5L22.25 5z"/>
+                          <path fill="#ff8c00" d="M22.25 15.5L13.5 18v12l8.75 2.5 10.75-3.5V19L22.25 15.5z"/>
+                          <path fill="#fff" d="M22.25 19.5c-2.48 0-4.5 2.02-4.5 4.5s2.02 4.5 4.5 4.5 4.5-2.02 4.5-4.5-2.02-4.5-4.5-4.5zm0 6.8c-1.27 0-2.3-1.03-2.3-2.3s1.03-2.3 2.3-2.3 2.3 1.03 2.3 2.3-1.03 2.3-2.3 2.3z"/>
+                        </svg>
                       </button>
-                      <button type="button" onClick={() => triggerToast('Downloading Yahoo Calendar invite...')} style={{ width: '36px', height: '36px', borderRadius: '6px', border: '1px solid #e2e8f0', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                         <span style={{ fontWeight: 700, color: '#6001d2' }}>Y!</span>
+                      <button type="button" onClick={() => triggerToast('Downloading Yahoo Calendar invite...')} style={{ width: '36px', height: '36px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                        <svg viewBox="0 0 512 143" width="30" height="9">
+                          <path fill="#5f01d1" d="M0 34.607h30.475l17.69 45.324l17.95-45.324h29.7l-44.68 107.436H21.306l12.268-28.409zm126.676-1.808c-22.856 0-37.318 20.532-37.318 40.934c0 22.985 15.883 41.193 36.931 41.193c15.754 0 21.694-9.556 21.694-9.556v7.49h26.6V34.607h-26.6v7.102c-.13 0-6.715-8.91-21.307-8.91m5.682 25.18c10.589 0 16.012 8.394 16.012 15.883c0 8.135-5.81 16.142-16.012 16.142c-8.393 0-16.012-6.844-16.012-15.754c0-9.04 6.07-16.27 16.012-16.27m51.265 54.88V0h27.763v41.967s6.585-9.168 20.402-9.168c16.916 0 26.86 12.655 26.86 30.604v49.457h-27.635V70.118c0-6.07-2.84-12.01-9.426-12.01c-6.715 0-10.201 5.94-10.201 12.01v42.742zM306.038 32.8c-26.214 0-41.838 19.886-41.838 41.322c0 24.276 18.853 40.934 41.967 40.934c22.34 0 41.838-15.883 41.838-40.547c0-26.988-20.532-41.709-41.967-41.709m.258 25.31c9.297 0 15.625 7.747 15.625 15.882c0 6.973-5.94 15.625-15.625 15.625c-8.91 0-15.495-7.102-15.495-15.754c0-8.135 5.423-15.754 15.495-15.754m87.938-25.31c-26.214 0-41.839 19.886-41.839 41.322c0 24.276 18.853 40.934 41.968 40.934c22.34 0 41.838-15.883 41.838-40.547c0-26.988-20.403-41.709-41.967-41.709m.258 25.31c9.297 0 15.625 7.747 15.625 15.882c0 6.973-5.94 15.625-15.625 15.625c-8.91 0-15.496-7.102-15.496-15.754c0-8.135 5.553-15.754 15.496-15.754m63.66 19.498c10.202 0 18.466 8.264 18.466 18.466c0 10.2-8.264 18.465-18.465 18.465s-18.466-8.264-18.466-18.465s8.265-18.466 18.466-18.466m24.536-6.715H449.5L478.943 0H512z"/>
+                        </svg>
                       </button>
                     </div>
                   </div>
@@ -1720,7 +1728,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
               
               {/* LEFT COLUMN: SETUP */}
               <div onClick={e => e.stopPropagation()} style={{ overflowY: 'auto', height: '100%', padding: '32px 16px 32px 0' }}>
-                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
+                <div style={{ background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '8px', overflow: 'hidden' }}>
                   
                   {/* Layout */}
                   <div style={{ padding: '24px' }}>
@@ -1730,7 +1738,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
                       {/* Month */}
                       <div onClick={() => { setAppLayout('Month'); triggerToast('Switched layout to Month'); }} style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}>
-                        <div style={{ width: '110px', height: '70px', border: appLayout === 'Month' ? '2px solid #7d3bec' : '1px solid #e2e8f0', borderRadius: '8px', background: appLayout === 'Month' ? '#f8fafc' : '#ffffff', padding: '8px', position: 'relative' }}>
+                        <div style={{ width: '110px', height: '70px', border: appLayout === 'Month' ? '2px solid #7d3bec' : '2px solid #F5F5F5', borderRadius: '8px', background: appLayout === 'Month' ? '#f8fafc' : '#ffffff', padding: '8px', position: 'relative' }}>
                           <div style={{ width: '20px', height: '4px', background: '#7d3bec', borderRadius: '2px', marginBottom: '8px' }}></div>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
                              <div style={{ height: '4px', background: '#cbd5e1', borderRadius: '2px' }}></div>
@@ -1750,7 +1758,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
                       {/* Weekly */}
                       <div onClick={() => { setAppLayout('Weekly'); triggerToast('Switched layout to Weekly'); }} style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}>
-                        <div style={{ width: '110px', height: '70px', border: appLayout === 'Weekly' ? '2px solid #7d3bec' : '1px solid #e2e8f0', borderRadius: '8px', background: appLayout === 'Weekly' ? '#f8fafc' : '#ffffff', padding: '8px', display: 'flex', gap: '6px' }}>
+                        <div style={{ width: '110px', height: '70px', border: appLayout === 'Weekly' ? '2px solid #7d3bec' : '2px solid #F5F5F5', borderRadius: '8px', background: appLayout === 'Weekly' ? '#f8fafc' : '#ffffff', padding: '8px', display: 'flex', gap: '6px' }}>
                           <div style={{ flex: 1 }}>
                             <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: '2px solid #bfdbfe', marginBottom: '8px' }}></div>
                             <div style={{ width: '80%', height: '2px', background: '#cbd5e1', borderRadius: '2px', marginBottom: '2px' }}></div>
@@ -1769,7 +1777,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
                       {/* Column */}
                       <div onClick={() => { setAppLayout('Column'); triggerToast('Switched layout to Column'); }} style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}>
-                        <div style={{ width: '110px', height: '70px', border: appLayout === 'Column' ? '2px solid #7d3bec' : '1px solid #e2e8f0', borderRadius: '8px', background: appLayout === 'Column' ? '#f8fafc' : '#ffffff', padding: '8px', display: 'flex', gap: '8px' }}>
+                        <div style={{ width: '110px', height: '70px', border: appLayout === 'Column' ? '2px solid #7d3bec' : '2px solid #F5F5F5', borderRadius: '8px', background: appLayout === 'Column' ? '#f8fafc' : '#ffffff', padding: '8px', display: 'flex', gap: '8px' }}>
                           <div style={{ flex: 1 }}>
                             <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: '2px solid #bfdbfe', marginBottom: '8px' }}></div>
                             <div style={{ width: '80%', height: '2px', background: '#cbd5e1', borderRadius: '2px', marginBottom: '2px' }}></div>
@@ -1794,7 +1802,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   <div style={{ padding: '24px' }}>
                     <h3 style={{ margin: '0 0 12px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Default view</h3>
                     
-                    <div style={{ display: 'inline-flex', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '4px', marginBottom: '16px' }}>
+                    <div style={{ display: 'inline-flex', background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '8px', padding: '4px', marginBottom: '16px' }}>
                       <button type="button" onClick={() => { setAppLayout('Month'); triggerToast('Set default view to Month'); }} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: appLayout === 'Month' ? '#eff6ff' : 'transparent', color: appLayout === 'Month' ? '#7d3bec' : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Month</button>
                       <button type="button" onClick={() => { setAppLayout('Weekly'); triggerToast('Set default view to Weekly'); }} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: appLayout === 'Weekly' ? '#eff6ff' : 'transparent', color: appLayout === 'Weekly' ? '#7d3bec' : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Weekly</button>
                       <button type="button" onClick={() => { setAppLayout('Column'); triggerToast('Set default view to Column'); }} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: appLayout === 'Column' ? '#eff6ff' : 'transparent', color: appLayout === 'Column' ? '#7d3bec' : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Column</button>
@@ -1835,7 +1843,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       <h3 style={{ margin: '0 0 4px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Interface language</h3>
                       <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Set your preferred language for the booking interface</p>
                     </div>
-                    <select value={interfaceLang} onChange={e => { setInterfaceLang(e.target.value); triggerToast(`Set interface language to ${e.target.value}`); }} style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.9rem', color: '#0f172a', fontWeight: 500, minWidth: '120px', cursor: 'pointer' }}>
+                    <select value={interfaceLang} onChange={e => { setInterfaceLang(e.target.value); triggerToast(`Set interface language to ${e.target.value}`); }} style={{ padding: '8px 12px', borderRadius: '8px', border: '2px solid #F5F5F5', outline: 'none', fontSize: '0.9rem', color: '#0f172a', fontWeight: 500, minWidth: '120px', cursor: 'pointer' }}>
                       <option>English</option>
                       <option>French</option>
                       <option>Spanish</option>
@@ -1859,10 +1867,10 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
               {/* RIGHT COLUMN: PREVIEW */}
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', padding: '32px 0' }}>
-                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', display: 'flex', width: '100%', maxWidth: '820px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
+                <div style={{ background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '8px', display: 'flex', width: '100%', maxWidth: '820px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
                   
                   {/* Preview Left: Details */}
-                  <div style={{ width: '320px', borderRight: '1px solid #e2e8f0', padding: '32px 24px', background: '#ffffff' }}>
+                  <div style={{ width: '320px', borderRight: '2px solid #F5F5F5', padding: '32px 24px', background: '#ffffff' }}>
                     <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#7d3bec', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 700, marginBottom: '20px' }}>
                       {hostInitials}
                     </div>
@@ -1903,17 +1911,17 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>
                         {interfaceLang === 'French' ? 'Votre nom *' : interfaceLang === 'Spanish' ? 'Tu nombre *' : interfaceLang === 'German' ? 'Dein Name *' : 'Your name *'}
                       </label>
-                      <input type="text" readOnly value={hostName} style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
+                      <input type="text" readOnly value={hostName} style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
                     </div>
                     <div style={{ marginBottom: '20px' }}>
                       <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>
                         {interfaceLang === 'French' ? 'Adresse e-mail *' : interfaceLang === 'Spanish' ? 'Correo electrónico *' : interfaceLang === 'German' ? 'E-Mail-Adresse *' : 'Email address *'}
                       </label>
-                      <input type="text" readOnly value="guest@example.com" style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
+                      <input type="text" readOnly value="guest@example.com" style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
                     </div>
                     <div style={{ marginBottom: '20px' }}>
                       <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Additional notes</label>
-                      <textarea readOnly value="Please share anything that will help prepare for our meeting." style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', minHeight: '80px', resize: 'none', outline: 'none' }} />
+                      <textarea readOnly value="Please share anything that will help prepare for our meeting." style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', minHeight: '80px', resize: 'none', outline: 'none' }} />
                     </div>
 
                     <button type="button" onClick={() => triggerToast('Opening Add Guests input...')} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.85rem', fontWeight: 600, padding: 0, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginBottom: '40px' }}>
@@ -1949,7 +1957,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       Before event <Info size={14} color="#64748b" />
                     </label>
                     <div style={{ position: 'relative' }}>
-                      <select value={bufferBefore} onChange={e => { setBufferBefore(e.target.value); triggerToast(`Set buffer before event to ${e.target.value}`); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none', cursor: 'pointer' }}>
+                      <select value={bufferBefore} onChange={e => { setBufferBefore(e.target.value); triggerToast(`Set buffer before event to ${e.target.value}`); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none', cursor: 'pointer' }}>
                         <option>No buffer time</option>
                         <option>5 minutes</option>
                         <option>10 minutes</option>
@@ -1967,7 +1975,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       After event <Info size={14} color="#64748b" />
                     </label>
                     <div style={{ position: 'relative' }}>
-                      <select value={bufferAfter} onChange={e => { setBufferAfter(e.target.value); triggerToast(`Set buffer after event to ${e.target.value}`); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none', cursor: 'pointer' }}>
+                      <select value={bufferAfter} onChange={e => { setBufferAfter(e.target.value); triggerToast(`Set buffer after event to ${e.target.value}`); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none', cursor: 'pointer' }}>
                         <option>No buffer time</option>
                         <option>5 minutes</option>
                         <option>10 minutes</option>
@@ -1986,7 +1994,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     </label>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <div style={{ position: 'relative', width: '80px' }}>
-                        <select value={minNoticeVal} onChange={e => { setMinNoticeVal(e.target.value); triggerToast(`Set minimum notice to ${e.target.value} ${minNoticeUnit}`); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none', cursor: 'pointer' }}>
+                        <select value={minNoticeVal} onChange={e => { setMinNoticeVal(e.target.value); triggerToast(`Set minimum notice to ${e.target.value} ${minNoticeUnit}`); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none', cursor: 'pointer' }}>
                           <option>1</option>
                           <option>2</option>
                           <option>4</option>
@@ -1997,7 +2005,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                         <ChevronDown size={16} color="#64748b" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
                       </div>
                       <div style={{ position: 'relative', flex: 1 }}>
-                        <select value={minNoticeUnit} onChange={e => { setMinNoticeUnit(e.target.value); triggerToast(`Set minimum notice unit to ${e.target.value}`); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none', cursor: 'pointer' }}>
+                        <select value={minNoticeUnit} onChange={e => { setMinNoticeUnit(e.target.value); triggerToast(`Set minimum notice unit to ${e.target.value}`); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none', cursor: 'pointer' }}>
                           <option>Hours</option>
                           <option>Days</option>
                         </select>
@@ -2012,7 +2020,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       Time-slot intervals <Info size={14} color="#64748b" />
                     </label>
                     <div style={{ position: 'relative' }}>
-                      <select value={timeInterval} onChange={e => { setTimeInterval(e.target.value); triggerToast(`Set time-slot interval to ${e.target.value}`); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none', cursor: 'pointer' }}>
+                      <select value={timeInterval} onChange={e => { setTimeInterval(e.target.value); triggerToast(`Set time-slot interval to ${e.target.value}`); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none', cursor: 'pointer' }}>
                         <option>Use event length (default)</option>
                         <option>15 mins</option>
                         <option>30 mins</option>
@@ -2094,10 +2102,10 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
               {/* RIGHT COLUMN: PREVIEW */}
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', padding: '32px 0' }}>
-                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', width: '100%', maxWidth: '860px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
+                <div style={{ background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '12px', display: 'flex', width: '100%', maxWidth: '860px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
                   
                   {/* Calendar View Left */}
-                  <div style={{ flex: 1, padding: '32px', borderRight: '1px solid #e2e8f0' }}>
+                  <div style={{ flex: 1, padding: '32px', borderRight: '2px solid #F5F5F5' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
                       <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>July 2026</h3>
                       <div style={{ display: 'flex', gap: '16px' }}>
@@ -2152,8 +2160,8 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   <div style={{ width: '280px', padding: '32px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
                       <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#0f172a' }}>Mon 06</h3>
-                      <div style={{ display: 'flex', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-                        <button type="button" onClick={() => triggerToast('Switched slot view to 12h format')} style={{ padding: '4px 12px', background: '#eff6ff', color: '#0f172a', border: 'none', borderRight: '1px solid #e2e8f0', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>12h</button>
+                      <div style={{ display: 'flex', background: '#f8fafc', borderRadius: '8px', border: '2px solid #F5F5F5', overflow: 'hidden' }}>
+                        <button type="button" onClick={() => triggerToast('Switched slot view to 12h format')} style={{ padding: '4px 12px', background: '#eff6ff', color: '#0f172a', border: 'none', borderRight: '2px solid #F5F5F5', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>12h</button>
                         <button type="button" onClick={() => triggerToast('Switched slot view to 24h format')} style={{ padding: '4px 12px', background: 'transparent', color: '#64748b', border: 'none', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>24h</button>
                       </div>
                     </div>
@@ -2163,7 +2171,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                         ? ['9:00am'] 
                         : ['9:00am', '9:15am', '9:30am', '9:45am', '10:00am', '10:15am', '10:30am', '10:45am', '11:00am', '11:15am']
                       ).map(time => (
-                        <button key={time} type="button" onClick={() => triggerToast(`Selected slot ${time}`)} style={{ padding: '12px', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', color: '#0f172a', fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer', textAlign: 'center' }}>
+                        <button key={time} type="button" onClick={() => triggerToast(`Selected slot ${time}`)} style={{ padding: '12px', background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '8px', color: '#0f172a', fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer', textAlign: 'center' }}>
                           {time}
                         </button>
                       ))}
@@ -2180,89 +2188,11 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
               </div>
             </div>
           ) : activeTab === 'pay' ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(420px, 1fr) auto', gap: '48px', height: '100%' }}>
-              <div onClick={e => e.stopPropagation()} style={{ overflowY: 'auto', height: '100%', padding: '32px 16px 32px 0' }}>
-                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
-                  
-                  {/* Require payment */}
-                  <div style={{ padding: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9' }}>
-                    <div>
-                      <h3 style={{ margin: '0 0 6px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Require payment on booking</h3>
-                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>Collect credit card or PayPal payments when guests book this event</p>
-                    </div>
-                    <ToggleSwitch checked={requirePayment} onChange={() => { setRequirePayment(!requirePayment); triggerToast(!requirePayment ? 'Enabled payment collection' : 'Disabled payments'); }} />
-                  </div>
-
-                  {requirePayment && (
-                    <div style={{ padding: '24px', background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px', gap: '16px', marginBottom: '16px' }}>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Amount</label>
-                          <input type="number" value={paymentAmount} onChange={e => { setPaymentAmount(e.target.value); triggerToast(`Set price to ${paymentCurrency.split(' ')[1] || '$'}${e.target.value}`); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
-                        </div>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Currency</label>
-                          <select value={paymentCurrency} onChange={e => { setPaymentCurrency(e.target.value); triggerToast(`Set currency to ${e.target.value}`); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', cursor: 'pointer' }}>
-                            <option>USD ($)</option>
-                            <option>EUR (€)</option>
-                            <option>GBP (£)</option>
-                            <option>INR (₹)</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div style={{ fontSize: '0.82rem', color: '#64748b' }}>
-                        Payments will be processed via your connected Stripe account. <button type="button" onClick={() => triggerToast('Redirecting to Payment Gateway settings...')} style={{ background: 'none', border: 'none', color: '#7d3bec', fontWeight: 600, cursor: 'pointer', padding: 0 }}>Configure Stripe</button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Seat limits */}
-                  <div style={{ padding: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                    <div>
-                      <h3 style={{ margin: '0 0 6px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Limit seats per time slot</h3>
-                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>Allow multiple people to book the same time slot (group meetings, classes, webinars)</p>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '16px' }}>
-                        <span style={{ fontSize: '0.88rem', fontWeight: 600, color: '#334155' }}>Max attendees per slot:</span>
-                        <select value={maxSeats} onChange={e => { setMaxSeats(e.target.value); triggerToast(`Set seat limit to ${e.target.value} attendees per slot`); }} style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', fontWeight: 600, outline: 'none', cursor: 'pointer' }}>
-                          <option value="1">1 (1-on-1 meeting)</option>
-                          <option value="5">5 attendees</option>
-                          <option value="10">10 attendees</option>
-                          <option value="25">25 attendees</option>
-                          <option value="100">100 attendees</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-
-              {/* RIGHT COLUMN: PREVIEW */}
-              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', padding: '32px 0' }}>
-                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '32px', boxShadow: '0 8px 30px rgba(0,0,0,0.04)', width: '100%', maxWidth: '420px', textAlign: 'center' }}>
-                  <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: '#f0fdf4', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-                    <CreditCard size={28} />
-                  </div>
-                  <h3 style={{ margin: '0 0 8px', fontSize: '1.25rem', fontWeight: 700, color: '#0f172a' }}>{form.title || '15 min meeting'}</h3>
-                  <div style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '24px' }}>
-                    {maxSeats === '1' ? 'Private 1-on-1 Session' : `Group Session (Max ${maxSeats} seats)`}
-                  </div>
-                  {requirePayment ? (
-                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', marginBottom: '24px' }}>
-                      <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '4px' }}>Total Due on Booking</div>
-                      <div style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a' }}>
-                        {paymentCurrency.split(' ')[1]?.replace('(', '').replace(')', '')}{paymentAmount}
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{ background: '#f0f9ff', color: '#0369a1', padding: '12px', borderRadius: '8px', fontSize: '0.88rem', fontWeight: 600, marginBottom: '24px' }}>
-                      Free Meeting (No payment required)
-                    </div>
-                  )}
-                  <button type="button" onClick={() => triggerToast('Preview: Proceed to Checkout clicked!')} style={{ width: '100%', padding: '12px', background: '#7d3bec', color: '#ffffff', border: 'none', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer' }}>
-                    {requirePayment ? 'Proceed to Payment' : 'Confirm Booking'}
-                  </button>
-                </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', padding: '32px' }}>
+              <div style={{ textAlign: 'center', color: '#64748b' }}>
+                <CreditCard size={48} style={{ marginBottom: '16px', opacity: 0.3 }} />
+                <h3 style={{ margin: '0 0 8px', fontSize: '1.25rem', fontWeight: 700, color: '#0f172a' }}>Coming Soon</h3>
+                <p style={{ margin: 0, fontSize: '0.9rem', maxWidth: '300px' }}>Payments and advanced seating limits are currently under development.</p>
               </div>
             </div>
           ) : activeTab === 'reschedule' ? (
@@ -2275,7 +2205,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                 <div style={{ marginBottom: '32px' }}>
                   <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: '#0f172a', marginBottom: '12px' }}>Require cancellation reason</label>
                   <div style={{ position: 'relative', width: '320px' }}>
-                    <select value={cancelReasonReq} onChange={e => { setCancelReasonReq(e.target.value); triggerToast(`Set cancellation reason: ${e.target.value}`); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none', cursor: 'pointer' }}>
+                    <select value={cancelReasonReq} onChange={e => { setCancelReasonReq(e.target.value); triggerToast(`Set cancellation reason: ${e.target.value}`); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none', appearance: 'none', cursor: 'pointer' }}>
                       <option>Mandatory for host only</option>
                       <option>Mandatory for all</option>
                       <option>Optional</option>
@@ -2342,10 +2272,10 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
               {/* RIGHT COLUMN: PREVIEW */}
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', padding: '32px 0' }}>
-                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', display: 'flex', width: '100%', maxWidth: '820px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
+                <div style={{ background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '8px', display: 'flex', width: '100%', maxWidth: '820px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
                   
                   {/* Preview Left: Details */}
-                  <div style={{ width: '320px', borderRight: '1px solid #e2e8f0', padding: '32px 24px', background: '#ffffff' }}>
+                  <div style={{ width: '320px', borderRight: '2px solid #F5F5F5', padding: '32px 24px', background: '#ffffff' }}>
                     <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#7d3bec', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 700, marginBottom: '20px' }}>
                       {hostInitials}
                     </div>
@@ -2386,15 +2316,15 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   <div style={{ flex: 1, padding: '32px 40px', display: 'flex', flexDirection: 'column' }}>
                     <div style={{ marginBottom: '20px' }}>
                       <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Your name *</label>
-                      <input type="text" readOnly value="Kontham sohith" style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
+                      <input type="text" readOnly value={userName} style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
                     </div>
                     <div style={{ marginBottom: '20px' }}>
                       <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Email address *</label>
-                      <input type="text" readOnly value="sohithkontham5@gmail.com" style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
+                      <input type="text" readOnly value={userEmail} style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
                     </div>
                     <div style={{ marginBottom: '20px' }}>
                       <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Additional notes</label>
-                      <textarea readOnly value="Please share anything that will help prepare for our meeting." style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', minHeight: '80px', resize: 'none', outline: 'none' }} />
+                      <textarea readOnly value="Please share anything that will help prepare for our meeting." style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', minHeight: '80px', resize: 'none', outline: 'none' }} />
                     </div>
 
                     <button type="button" onClick={() => triggerToast('Opening Add Guests input...')} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.85rem', fontWeight: 600, padding: 0, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginBottom: '40px' }}>
@@ -2415,48 +2345,6 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                 </div>
               </div>
             </div>
-          ) : activeTab === 'apps' ? (
-            <div style={{ maxWidth: '860px', padding: '32px 0' }}>
-              <div style={{ marginBottom: '24px' }}>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>Connected Apps & Integrations</h2>
-                <p style={{ fontSize: '0.88rem', color: '#64748b', margin: 0 }}>Connect third-party tools to automate your scheduling workflows for this event type.</p>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
-                {[
-                  { id: 'gcal', name: 'Google Calendar', desc: 'Add events directly to your primary calendar and check for conflicts.', icon: Calendar, color: '#ea4335' },
-                  { id: 'zoom', name: 'Zoom Video', desc: 'Automatically generate unique Zoom meeting links for every booking.', icon: Video, color: '#2d8cff' },
-                  { id: 'stripe', name: 'Stripe Payments', desc: 'Accept credit card payments and deposit funds directly to your bank.', icon: CreditCard, color: '#635bff' },
-                  { id: 'hubspot', name: 'HubSpot CRM', desc: 'Create and update contacts and deals whenever someone schedules.', icon: Globe, color: '#ff7a59' },
-                  { id: 'slack', name: 'Slack Notifications', desc: 'Receive instant alerts in your Slack channels for new bookings or cancellations.', icon: MessageSquare, color: '#4a154b' },
-                ].map(app => {
-                  const Icon = app.icon;
-                  const isConn = appsConnected[app.id];
-                  return (
-                    <div key={app.id} style={{ background: '#ffffff', border: `1px solid ${isConn ? '#bfdbfe' : '#e2e8f0'}`, borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: `${app.color}15`, color: app.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <Icon size={22} />
-                          </div>
-                          <div>
-                            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>{app.name}</h3>
-                            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: isConn ? '#16a34a' : '#64748b' }}>{isConn ? '● Connected' : 'Not connected'}</span>
-                          </div>
-                        </div>
-                        <p style={{ margin: '0 0 20px', fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>{app.desc}</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => toggleAppConnection(app.id, app.name)}
-                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: isConn ? '1px solid #fca5a5' : '1px solid #7d3bec', background: isConn ? '#fef2f2' : '#7d3bec', color: isConn ? '#dc2626' : '#ffffff', fontSize: '0.88rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
-                      >
-                        {isConn ? 'Disconnect' : 'Connect Integration'}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
           ) : activeTab === 'workflows' ? (
             <div style={{ maxWidth: '800px', padding: '32px 0' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
@@ -2470,7 +2358,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {workflows.map(wf => (
-                  <div key={wf.id} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                  <div key={wf.id} style={{ background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '12px', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                       <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: wf.active ? '#eff6ff' : '#f1f5f9', color: wf.active ? '#7d3bec' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <Zap size={20} />
@@ -2482,47 +2370,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                       <ToggleSwitch checked={wf.active} onChange={() => toggleWorkflow(wf.id, wf.title)} />
-                      <button type="button" onClick={() => triggerToast(`Configuring workflow: "${wf.title}"`)} style={{ padding: '6px 14px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#334155', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : activeTab === 'webhooks' ? (
-            <div style={{ maxWidth: '800px', padding: '32px 0' }}>
-              <div style={{ marginBottom: '24px' }}>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>Webhooks & API Endpoints</h2>
-                <p style={{ fontSize: '0.88rem', color: '#64748b', margin: 0 }}>Receive HTTP POST payloads in real-time when scheduling events occur.</p>
-              </div>
-              <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
-                <h3 style={{ margin: '0 0 12px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Add New Webhook</h3>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <input
-                    type="text"
-                    placeholder="https://api.yourdomain.com/webhook/salemail"
-                    value={newWebhookUrl}
-                    onChange={e => setNewWebhookUrl(e.target.value)}
-                    style={{ flex: 1, padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem', outline: 'none' }}
-                  />
-                  <button type="button" onClick={handleAddWebhook} style={{ background: '#7d3bec', color: '#ffffff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                    <Plus size={16} /> Add Endpoint
-                  </button>
-                </div>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <h3 style={{ margin: '0', fontSize: '0.95rem', fontWeight: 700, color: '#475569' }}>Active Endpoints ({webhooks.length})</h3>
-                {webhooks.map(wh => (
-                  <div key={wh.id} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                        <Code size={16} color="#7d3bec" />
-                        <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a', fontFamily: 'monospace' }}>{wh.url}</span>
-                      </div>
-                      <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Events: {wh.events}</div>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <button type="button" onClick={() => triggerToast(`Sending test payload to ${wh.url}...`)} style={{ padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#f8fafc', color: '#0f172a', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer' }}>Test</button>
-                      <button type="button" onClick={() => handleDeleteWebhook(wh.id)} style={{ padding: '6px 10px', border: '1px solid #fecaca', borderRadius: '6px', background: '#fef2f2', color: '#dc2626', cursor: 'pointer' }}><Trash2 size={15} /></button>
+                      <button type="button" onClick={() => triggerToast(`Configuring workflow: "${wf.title}"`)} style={{ padding: '6px 14px', border: '2px solid #F5F5F5', borderRadius: '6px', background: '#ffffff', color: '#334155', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
                     </div>
                   </div>
                 ))}
@@ -2530,7 +2378,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
             </div>
           ) : (
             <div style={{ maxWidth: '800px' }}>
-              <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '32px' }}>
+              <div style={{ background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '12px', padding: '32px' }}>
                 <h3 style={{ margin: '0 0 12px', fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', textTransform: 'capitalize' }}>{activeTab} Settings</h3>
                 <p style={{ margin: '0', fontSize: '0.9rem', color: '#64748b' }}>Configure {activeTab} rules and options for this meeting type.</p>
               </div>
