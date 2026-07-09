@@ -46,12 +46,6 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
   const [selectedStepId, setSelectedStepId] = useState<string>('');
   const [showAIModal, setShowAIModal] = useState<boolean>(false);
 
-  useEffect(() => {
-    if (autoStartAIPrompt !== undefined) {
-      setShowAIModal(true);
-    }
-  }, [autoStartAIPrompt]);
-
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [promptState, setPromptState] = useState<{ type: 'link' | 'image', selection: Range | null } | null>(null);
   const [promptInput, setPromptInput] = useState('');
@@ -185,40 +179,15 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
 
   return (
     <div style={{ padding: 0, fontFamily: "'Geist', 'Geist Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
-      {/* AI Modal for missing notes */}
-      {showAIModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#fff', borderRadius: '16px', padding: '32px', width: '500px', maxWidth: '90vw', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
-            <h2 style={{ margin: '0 0 16px', fontSize: '18px', fontWeight: 600, color: '#111827', display: 'flex', alignItems: 'center', gap: '8px' }}><Sparkles size={18} color="#7d3bec" /> Analyze Website or Brand</h2>
-            
-            <AICampaignStudio
-              compact={true}
-              onApplySequence={(generatedSteps) => {
-                handleUpdateCamp({ steps: generatedSteps });
-                const firstEmail = generatedSteps.find(s => s.type === 'email');
-                if (firstEmail) setSelectedStepId(firstEmail.id);
-                showToast('Sequence analyzed and generated successfully!');
-                setShowAIModal(false);
-              }}
-              recipientEmail={activeCamp.recipientEmail}
-              initPrompt={autoStartAIPrompt || ''}
-              autoStart={!!autoStartAIPrompt}
-            />
-            
-            <div style={{ marginTop: '24px', textAlign: 'right' }}>
-              <button onClick={() => setShowAIModal(false)} style={{ background: 'none', border: 'none', color: '#64748b', fontWeight: 600, cursor: 'pointer', padding: '8px 16px' }}>Skip and build manually</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* AI Studio moved to the right column */ }
 
       {toastMsg && (
-        <div style={{ position: 'fixed', bottom: '40px', right: '32px', zIndex: 100, background: '#7d3bec', color: '#fff', padding: '10px 18px', borderRadius: '10px', fontWeight: 700, fontSize: '0.88rem', boxShadow: '0 8px 20px rgba(14, 97, 243, 0.35)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ position: 'fixed', bottom: '40px', right: '32px', zIndex: 100, background: '#7d3bec', color: '#fff', padding: '10px 18px', borderRadius: '10px', fontWeight: 700, fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <CheckCircle2 size={16} /> {toastMsg}
         </div>
       )}
 
-      <div style={{ position: 'sticky', top: 0, zIndex: 50, background: '#ffffff', borderBottom: '1px solid #e2e8f0', borderRadius: 0, padding: '16px 40px 16px 40px', marginBottom: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 50, background: '#ffffff', borderBottom: '1px solid #e2e8f0', borderRadius: 0, padding: '16px 40px 16px 40px', marginBottom: '24px' }}>
         <button
           onClick={onBack}
           style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: '#7d3bec', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', padding: 0, marginBottom: '8px' }}
@@ -247,7 +216,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
                    showToast('Sequence started');
                 }
               }}
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', background: activeCamp.status === 'Running' ? '#e2e8f0' : '#7d3bec', border: 'none', color: activeCamp.status === 'Running' ? '#94a3b8' : '#ffffff', fontWeight: 600, fontSize: '0.85rem', padding: '9px 16px', borderRadius: '6px', cursor: activeCamp.status === 'Running' ? 'not-allowed' : 'pointer', transition: 'all 0.15s ease', boxShadow: activeCamp.status === 'Running' ? 'none' : '0 2px 4px rgba(14, 97, 243, 0.15)' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', background: activeCamp.status === 'Running' ? '#e2e8f0' : '#7d3bec', border: 'none', color: activeCamp.status === 'Running' ? '#94a3b8' : '#ffffff', fontWeight: 600, fontSize: '0.85rem', padding: '9px 16px', borderRadius: '6px', cursor: activeCamp.status === 'Running' ? 'not-allowed' : 'pointer', transition: 'all 0.15s ease' }}
             >
               <Play size={14} fill="currentColor" /> Start Sequence
             </button>
@@ -279,9 +248,9 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
 
             <button 
               onClick={handleAddFollowUp}
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#7d3bec', border: 'none', color: '#ffffff', fontWeight: 600, fontSize: '0.85rem', padding: '9px 16px', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.15s ease', boxShadow: '0 2px 4px rgba(14, 97, 243, 0.15)' }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = '#0c52ce'; e.currentTarget.style.boxShadow = '0 4px 6px rgba(14, 97, 243, 0.25)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = '#7d3bec'; e.currentTarget.style.boxShadow = '0 2px 4px rgba(14, 97, 243, 0.15)'; }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#7d3bec', border: 'none', color: '#ffffff', fontWeight: 600, fontSize: '0.85rem', padding: '9px 16px', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.15s ease' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#6d28d9'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = '#7d3bec'; }}
             >
               <Plus size={16} strokeWidth={2.5} /> Add Step
             </button>
@@ -686,6 +655,22 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
         ) : (
           <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '48px', textAlign: 'center', color: '#64748b' }}>Select an email step on the left timeline to edit its copy and variables.</div>
         )}
+        
+        {/* Right Sidebar: AI Studio */}
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <AICampaignStudio
+            compact={false}
+            onApplySequence={(generatedSteps) => {
+              handleUpdateCamp({ steps: generatedSteps });
+              const firstEmail = generatedSteps.find(s => s.type === 'email');
+              if (firstEmail) setSelectedStepId(firstEmail.id);
+              showToast('Sequence analyzed and generated successfully!');
+            }}
+            recipientEmail={activeCamp.recipientEmail}
+            initPrompt={autoStartAIPrompt || ''}
+            autoStart={!!autoStartAIPrompt}
+          />
+        </div>
 
         </div>
       </div>

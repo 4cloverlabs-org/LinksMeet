@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Bell, ChevronDown, Edit2, CheckCircle2, Save } from 'lucide-react';
+import { ArrowLeft, Bell, ChevronDown, Edit2, CheckCircle2, Save, Loader2, Sparkles } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
 import { campaignEngine, type Campaign } from './campaignEngine';
 import { CampaignList } from './CampaignList';
@@ -55,7 +55,7 @@ export const CampaignModule: React.FC<CampaignModuleProps> = ({ initLead, onInit
     if (initLead && processedLeadId.current !== initLead.id) {
       processedLeadId.current = initLead.id;
       const newCamp: Campaign = {
-        id: 'camp_' + Date.now(),
+        id: crypto.randomUUID(),
         name: `Campaign for ${initLead.name}`,
         status: 'Draft',
         recipientEmail: initLead.email || '',
@@ -63,9 +63,6 @@ export const CampaignModule: React.FC<CampaignModuleProps> = ({ initLead, onInit
         createdAt: Date.now(),
         steps: []
       };
-      campaignEngine.saveCampaign(newCamp);
-      setCampaigns(campaignEngine.getCampaigns());
-      setActiveCampaignId(newCamp.id);
       
       let prompt = '';
       if (brandInfo && (brandInfo.url || brandInfo.desc)) {
@@ -82,15 +79,18 @@ export const CampaignModule: React.FC<CampaignModuleProps> = ({ initLead, onInit
       }
       setAutoStartPrompt(prompt);
       
+      campaignEngine.saveCampaign(newCamp);
+      setCampaigns(campaignEngine.getCampaigns());
+      setActiveCampaignId(newCamp.id);
       setTab('builder');
       
       if (onInitConsumed) onInitConsumed();
     }
-  }, [initLead]);
+  }, [initLead, brandInfo, onInitConsumed]);
 
   const handleCreateNew = () => {
     const newCamp: Campaign = {
-      id: 'camp_' + Date.now(),
+      id: crypto.randomUUID(),
       name: 'New Outbound Campaign',
       status: 'Draft',
       recipientEmail: '',
@@ -112,7 +112,6 @@ export const CampaignModule: React.FC<CampaignModuleProps> = ({ initLead, onInit
     };
     campaignEngine.saveCampaign(newCamp);
     setCampaigns(campaignEngine.getCampaigns());
-    setAutoStartPrompt(undefined);
     setActiveCampaignId(newCamp.id);
     setTab('builder');
   };
@@ -125,7 +124,6 @@ export const CampaignModule: React.FC<CampaignModuleProps> = ({ initLead, onInit
           canEdit={canEdit}
           onCreateNew={handleCreateNew}
           onSelect={(id) => {
-            setAutoStartPrompt(undefined);
             setActiveCampaignId(id);
             setTab('builder');
           }}
@@ -150,7 +148,6 @@ export const CampaignModule: React.FC<CampaignModuleProps> = ({ initLead, onInit
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem' }}>
               <button
                 onClick={() => {
-                  setAutoStartPrompt(undefined);
                   setActiveCampaignId(null);
                 }}
                 style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: '#334155', fontWeight: 600, cursor: 'pointer', padding: 0 }}
@@ -260,7 +257,6 @@ export const CampaignModule: React.FC<CampaignModuleProps> = ({ initLead, onInit
       {/* Scrollable Main Content */}
       <div style={{ flex: 1, overflow: 'auto', padding: tab === 'builder' ? '0' : '32px' }}>
         {tab === 'builder' && <CampaignBuilder userEmail={user?.email || 'lead@example.com'} campaignId={activeCampaignId} onBack={() => {
-          setAutoStartPrompt(undefined);
           setActiveCampaignId(null);
         }} autoStartAIPrompt={autoStartPrompt} onCampaignStart={() => {
           if (initLead && changeStatus) {

@@ -899,7 +899,7 @@ app.post('/api/campaigns', requireAuth, async (req, res) => {
 app.put('/api/campaigns/:id', requireAuth, async (req, res) => {
   try {
     const updates = req.body;
-    const { data, error } = await supabase.from('campaigns').update({
+    let { data, error } = await supabase.from('campaigns').update({
       name: updates.name,
       status: updates.status,
       recipient_email: updates.recipientEmail,
@@ -908,6 +908,24 @@ app.put('/api/campaigns/:id', requireAuth, async (req, res) => {
       active_step_index: updates.activeStepIndex,
       next_run_at: updates.nextRunAt !== undefined ? updates.nextRunAt : undefined
     }).eq('id', req.params.id).eq('user_id', req.userId).select().single();
+    
+    if (error && error.code === 'PGRST116') {
+      // Row not found, create it with the client-provided UUID
+      const insertRes = await supabase.from('campaigns').insert({
+        id: req.params.id,
+        user_id: req.userId,
+        name: updates.name,
+        status: updates.status || 'Draft',
+        recipient_email: updates.recipientEmail || '',
+        recipient_name: updates.recipientName || '',
+        steps: updates.steps || [],
+        active_step_index: updates.activeStepIndex || 0,
+        next_run_at: updates.nextRunAt !== undefined ? updates.nextRunAt : null
+      }).select().single();
+      data = insertRes.data;
+      error = insertRes.error;
+    }
+
     if (error) throw error;
     res.json(data);
   } catch (err) {
@@ -958,7 +976,7 @@ app.get('/api/logs', requireAuth, async (req, res) => {
 app.post('/api/logs', requireAuth, async (req, res) => {
   try {
     const log = req.body;
-    const { data, error } = await supabase.from('campaign_logs').insert({
+    const payload = {
       user_id: req.userId,
       campaign_id: log.campaignId,
       campaign_name: log.campaignName,
@@ -972,7 +990,13 @@ app.post('/api/logs', requireAuth, async (req, res) => {
       delivery_status: log.deliveryStatus,
       spam_status: log.spamStatus,
       stage: log.stage
-    }).select().single();
+    };
+    
+    if (log.id) {
+      payload.id = log.id;
+    }
+
+    const { data, error } = await supabase.from('campaign_logs').upsert(payload).select().single();
     if (error) throw error;
     res.json(data);
   } catch (err) {

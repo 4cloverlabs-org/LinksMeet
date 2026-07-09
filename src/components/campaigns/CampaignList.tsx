@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, PlayCircle, Send, CheckCircle2, Clock, CornerUpLeft, GripVertical, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { type Campaign } from './campaignEngine';
+import { campaignEngine, type Campaign } from './campaignEngine';
 
 interface CampaignListProps {
   campaigns: Campaign[];
@@ -22,17 +22,15 @@ export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, canEdit =
   const totalSequences = campaigns.length;
   const activeSequences = campaigns.filter(c => c.status === 'Running').length;
   
-  // Calculate total emails sent and replies based on steps
+  // Calculate total emails sent and replies based on logs
+  const allLogs = campaignEngine.getLogs();
   let totalSent = 0;
   let totalReplies = 0;
   
   campaigns.forEach(c => {
-    c.steps.forEach(s => {
-      if (s.type === 'email' && ['Sent', 'Opened', 'Clicked', 'Replied'].includes(s.status)) {
-        totalSent += 1;
-      }
-      totalReplies += s.replies || 0;
-    });
+    const campLogs = allLogs.filter(l => l.campaignId === c.id);
+    totalSent += campLogs.length;
+    totalReplies += campLogs.filter(l => l.replied).length;
   });
   
   const displayTotalSent = totalSent;
@@ -88,8 +86,7 @@ export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, canEdit =
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                cursor: 'pointer',
-                boxShadow: '0 2px 4px rgba(14, 97, 243, 0.2)'
+                cursor: 'pointer'
               }}
             >
               <Plus size={16} /> Create Follow-up Sequence
@@ -218,15 +215,10 @@ export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, canEdit =
                   pillColor = '#475569';
                 }
 
-                // Calculate values from actual step data
-                let rowSentCount = 0;
-                let rowReplyCount = 0;
-                camp.steps.forEach(s => {
-                  if (s.type === 'email' && ['Sent', 'Opened', 'Clicked', 'Replied'].includes(s.status)) {
-                    rowSentCount += 1;
-                  }
-                  rowReplyCount += s.replies || 0;
-                });
+                // Calculate values from actual log data
+                const campLogs = allLogs.filter(l => l.campaignId === camp.id);
+                let rowSentCount = campLogs.length;
+                let rowReplyCount = campLogs.filter(l => l.replied).length;
                 
                 // If it's a Draft or we have no data, set 0
                 if (camp.status === 'Draft') {

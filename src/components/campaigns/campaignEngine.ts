@@ -337,6 +337,14 @@ class CampaignEngine {
   }
 
   public async saveCampaign(campaign: Campaign & { nextRunAt?: string | null }) {
+    const existingIdx = this.campaigns.findIndex(c => c.id === campaign.id);
+    if (existingIdx !== -1) {
+      this.campaigns[existingIdx] = { ...this.campaigns[existingIdx], ...campaign };
+    } else {
+      this.campaigns.push(campaign);
+    }
+    this.notify('update');
+
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData.session?.access_token;
