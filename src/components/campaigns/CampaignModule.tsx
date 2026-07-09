@@ -18,9 +18,10 @@ export interface CampaignModuleProps {
   userProfile?: any;
   canEdit?: boolean;
   changeStatus?: (id: string, status: any) => void;
+  contacts?: any[];
 }
 
-export const CampaignModule: React.FC<CampaignModuleProps> = ({ initLead, onInitConsumed, userProfile, canEdit = true, changeStatus }) => {
+export const CampaignModule: React.FC<CampaignModuleProps> = ({ initLead, onInitConsumed, userProfile, canEdit = true, changeStatus, contacts }) => {
   const { user } = useAuth();
   const [activeCampaignId, setActiveCampaignId] = useState<string | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>(campaignEngine.getCampaigns());
@@ -128,6 +129,13 @@ export const CampaignModule: React.FC<CampaignModuleProps> = ({ initLead, onInit
             setTab('builder');
           }}
           onDelete={(id) => {
+            const campToDel = campaigns.find(c => c.id === id);
+            if (campToDel && changeStatus && contacts) {
+              const contact = contacts.find((c: any) => c.email === campToDel.recipientEmail);
+              if (contact) {
+                changeStatus(contact.id, 'New');
+              }
+            }
             campaignEngine.deleteCampaign(id);
             setCampaigns(campaignEngine.getCampaigns());
           }}
@@ -259,8 +267,14 @@ export const CampaignModule: React.FC<CampaignModuleProps> = ({ initLead, onInit
         {tab === 'builder' && <CampaignBuilder userEmail={user?.email || 'lead@example.com'} campaignId={activeCampaignId} onBack={() => {
           setActiveCampaignId(null);
         }} autoStartAIPrompt={autoStartPrompt} onCampaignStart={() => {
-          if (initLead && changeStatus) {
-            changeStatus(initLead.id, 'Follow up');
+          if (changeStatus && activeCampaignId && contacts) {
+            const camp = campaigns.find(c => c.id === activeCampaignId);
+            if (camp) {
+              const contact = contacts.find((c: any) => c.email === camp.recipientEmail);
+              if (contact) {
+                changeStatus(contact.id, 'Follow up');
+              }
+            }
           }
         }} />}
         {tab === 'sent' && <SentActivityFeed />}

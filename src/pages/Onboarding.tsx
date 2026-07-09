@@ -261,7 +261,7 @@ Business Goals: ${data.businessGoals || 'N/A'}`;
     <div className="onb-layout">
       {/* LinksMeet Branding */}
       <div style={{ position: 'absolute', top: '32px', left: '32px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.2rem', fontWeight: 700, color: '#0f172a', zIndex: 10 }}>
-        <img src="/logo.png" alt="LinksMeet" style={{ width: '28px', height: '28px', objectFit: 'contain', borderRadius: '6px' }} />
+        <img src="/LinksMeet-without-bg.png" alt="LinksMeet" style={{ width: '28px', height: '28px', objectFit: 'contain', borderRadius: '6px' }} />
         LinksMeet
       </div>
 

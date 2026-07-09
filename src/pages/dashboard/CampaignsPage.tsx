@@ -32,8 +32,6 @@ export default function CampaignsPage() {
   , initCampaignLead, setInitCampaignLead, canEdit } = ctx || {};
 
   return (
-    <>
-      <CampaignModule initLead={initCampaignLead} onInitConsumed={() => setInitCampaignLead(null)} userProfile={userProfile} canEdit={canEdit} changeStatus={changeStatus} />
-    </>
+      <CampaignModule initLead={initCampaignLead} onInitConsumed={() => setInitCampaignLead(null)} userProfile={userProfile} canEdit={canEdit} changeStatus={changeStatus} contacts={contacts} />
   );
 }

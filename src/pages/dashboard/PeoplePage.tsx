@@ -6,7 +6,7 @@ import {
   CheckCircle2, Menu, CalendarRange, CalendarCheck,
   Clock, Workflow, Spline, Store, CreditCard, Shield, HelpCircle,
   Sparkles, Link2, Video, Zap, BookOpen, MessageCircle, Keyboard, Check, X,
-  Copy, Rocket, Calendar, Trash2, LogOut, Loader2, EyeOff, ExternalLink, Edit2, Code, Info, ArrowLeft, Globe, Settings, Mail, Phone, ChevronRight,
+  Copy, Rocket, Calendar, Trash2, LogOut, Loader2, EyeOff, ExternalLink, Edit2, Code, Info, ArrowLeft, Globe, Settings, Mail, Phone, ChevronRight, ChevronLeft,
   Smartphone, Heart, AlertCircle, RefreshCw, Pencil, XCircle, ChevronDown
 } from 'lucide-react';
 
@@ -107,6 +107,8 @@ import EventTypeEditor from '../../components/EventTypeEditor';
 
 export default function PeoplePage() {
   const [leadToDelete, setLeadToDelete] = useState<any>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 7;
   const ctx = useOutletContext<any>();
   const { 
     user, uid, userProfile, displayName, firstName, userInitials,
@@ -122,6 +124,9 @@ export default function PeoplePage() {
     teamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember,
     editingWorkflow, setEditingWorkflow
   , filteredContacts, fileInputRef, handleUploadFile, contactsLoading, avColor, initials, CONTACT_STATUSES, setInitCampaignLead, removeContact, canEdit } = ctx || {};
+
+  const leadsList = (filteredContacts || []).filter((c: any) => c.source !== 'uploaded');
+  const paginatedLeads = leadsList.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
     <>
@@ -161,6 +166,7 @@ export default function PeoplePage() {
                       <p>Connect your booking widget so every enquiry creates one automatically.</p>
                     </div>
                   ) : (
+                    <>
                     <div className="crm-table">
                       <div className="crm-tr lead head" style={{ gridTemplateColumns: '1fr 1fr 1.5fr 1fr 240px' }}>
                         <span>Name</span>
@@ -169,7 +175,7 @@ export default function PeoplePage() {
                         <span style={{ textAlign: 'center' }}>Status</span>
                         <span />
                       </div>
-                      {filteredContacts.filter(c => c.source !== 'uploaded').map((c, i) => (
+                      {paginatedLeads.map((c: any, i: number) => (
                           <div className="crm-tr lead" key={c.id} style={{ gridTemplateColumns: '1fr 1fr 1.5fr 1fr 240px' }}>
                             <span className="crm-nm"><span className="crm-av" style={{ background: avColor(i) }}>{initials(c.name)}</span>{c.name}</span>
                             <span className="crm-hide" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -221,7 +227,43 @@ export default function PeoplePage() {
                           </div>
                         ))}
                       </div>
-                    )}
+                      
+                      {/* Pagination */}
+                      {leadsList.length > ITEMS_PER_PAGE && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', padding: '0 8px', flexShrink: 0 }}>
+                          <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>
+                            Showing {leadsList.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0} to {Math.min(currentPage * ITEMS_PER_PAGE, leadsList.length)} of {leadsList.length} leads
+                          </div>
+                          <div style={{ display: 'flex', gap: '4px' }}>
+                            <button 
+                              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                              disabled={currentPage === 1}
+                              style={{ opacity: currentPage === 1 ? 0.5 : 1, cursor: currentPage === 1 ? 'not-allowed' : 'pointer', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}
+                            >
+                              <ChevronLeft size={16} />
+                            </button>
+                            <button 
+                              style={{ 
+                                background: '#2563eb', 
+                                color: '#fff', 
+                                border: 'none', 
+                                borderRadius: '6px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'default', fontWeight: 600, fontSize: '0.85rem' 
+                              }}
+                            >
+                              {currentPage}
+                            </button>
+                            <button 
+                              onClick={() => setCurrentPage(p => Math.min(Math.ceil(leadsList.length / ITEMS_PER_PAGE) || 1, p + 1))}
+                              disabled={currentPage === (Math.ceil(leadsList.length / ITEMS_PER_PAGE) || 1)}
+                              style={{ opacity: currentPage === (Math.ceil(leadsList.length / ITEMS_PER_PAGE) || 1) ? 0.5 : 1, cursor: currentPage === (Math.ceil(leadsList.length / ITEMS_PER_PAGE) || 1) ? 'not-allowed' : 'pointer', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}
+                            >
+                              <ChevronRight size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
                   </div>
               </div>
 

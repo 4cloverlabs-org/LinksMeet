@@ -155,7 +155,7 @@ export default function Landing() {
         <nav className="lexaro-nav" style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(12px)' }}>
           <div className="lexaro-container">
             <div className="lexaro-logo">
-              <img src="/logo.png" alt="LinksMeet" style={{ width: '26px', height: '26px', objectFit: 'contain', borderRadius: '5px', marginRight: '6px' }} />
+              <img src="/LinksMeet-without-bg.png" alt="LinksMeet" style={{ width: '26px', height: '26px', objectFit: 'contain', borderRadius: '5px', marginRight: '6px' }} />
               LinksMeet
             </div>
             <div className="lexaro-nav-links">
@@ -858,7 +858,7 @@ export default function Landing() {
               <div className="lexaro-orbit-wrapper">
                 {/* Central Logo */}
                 <div className="lexaro-orbit-center">
-                  <img src="/logo.png" alt="LinksMeet" style={{ width: '56px', height: '56px', objectFit: 'contain' }} />
+                  <img src="/LinksMeet-without-bg.png" alt="LinksMeet" style={{ width: '56px', height: '56px', objectFit: 'contain' }} />
                 </div>
 
                 {/* Ring 1 (Inner): CRM + sending domains */}
@@ -1065,7 +1065,7 @@ export default function Landing() {
           <div className="lexaro-footer-grid">
             <div className="lexaro-footer-col">
               <div className="lexaro-footer-logo">
-                <img src="/logo.png" alt="LinksMeet" style={{ width: '26px', height: '26px', objectFit: 'contain', borderRadius: '5px', marginRight: '6px' }} />
+                <img src="/LinksMeet-without-bg.png" alt="LinksMeet" style={{ width: '26px', height: '26px', objectFit: 'contain', borderRadius: '5px', marginRight: '6px' }} />
                 LinksMeet
               </div>
               <p style={{ color: '#888', fontSize: '0.95rem', lineHeight: 1.6, maxWidth: '240px' }}>

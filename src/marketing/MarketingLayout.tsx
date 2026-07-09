@@ -34,7 +34,7 @@ export default function MarketingLayout() {
       <nav className="cc-nav">
         <div className="cc-nav-inner">
           <Link to="/" className="cc-logo">
-            <img src="/logo.png" alt="LinksMeet" style={{ width: 26, height: 26, objectFit: 'contain', borderRadius: 5 }} />
+            <img src="/LinksMeet-without-bg.png" alt="LinksMeet" style={{ width: 26, height: 26, objectFit: 'contain', borderRadius: 5 }} />
             <span>LinksMeet</span>
           </Link>
           <div className="cc-nav-links">

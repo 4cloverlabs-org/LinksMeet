@@ -1265,7 +1265,7 @@ export default function DashboardLayout() {
         <aside className={`crm-side${sideOpen ? ' open' : ''}${sidebarCollapsed ? ' collapsed' : ''}`}>
           <div className="crm-brand" style={{ color: '#111', display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', position: 'relative' }}>
             <div className="crm-brand-logo-container" style={{ display: 'flex', alignItems: 'center', gap: '10px', overflow: 'hidden' }}>
-              <img src="/logo.png" alt="LinksMeet" className="crm-brand-logo" style={{ width: '32px', height: '32px', objectFit: 'contain', borderRadius: '6px', flexShrink: 0, transition: 'opacity 0.2s' }} />
+              <img src="/LinksMeet-without-bg.png" alt="LinksMeet" className="crm-brand-logo" style={{ width: '32px', height: '32px', objectFit: 'contain', borderRadius: '6px', flexShrink: 0, transition: 'opacity 0.2s' }} />
               {!sidebarCollapsed && <span style={{ whiteSpace: 'nowrap', fontSize: '1.15rem', fontWeight: 600, letterSpacing: '-0.01em', marginTop: '6px' }}>LinksMeet</span>}
             </div>
             <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="collapse-btn" style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#6B7280', padding: 0, flexShrink: 0, transition: 'opacity 0.2s' }} title="Toggle Sidebar">
