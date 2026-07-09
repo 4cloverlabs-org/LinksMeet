@@ -33,8 +33,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const configured = !!import.meta.env.VITE_SUPABASE_URL;
 
-  const [activeWorkspaceId, setActiveWorkspaceIdState] = useState<string | null>(null);
-  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [activeWorkspaceId, setActiveWorkspaceIdState] = useState<string | null>(() => localStorage.getItem('sm_active_workspace'));
+  const [workspaces, setWorkspacesState] = useState<Workspace[]>(() => {
+    const cached = localStorage.getItem('sm_cached_workspaces');
+    return cached ? JSON.parse(cached) : [];
+  });
+  
+  const setWorkspaces = (ws: Workspace[]) => {
+    setWorkspacesState(ws);
+    localStorage.setItem('sm_cached_workspaces', JSON.stringify(ws));
+  };
   const [needsWorkspaceSelection, setNeedsWorkspaceSelection] = useState(false);
 
   const setActiveWorkspaceId = (id: string) => {
@@ -212,7 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const keysToClear = [
       'sm_campaigns', 'sm_sent_logs', 'sm_threads', 'sm_campaign_settings',
       'linksmeet_settings', 'linksmeet_event_types', 'linksmeet_availability', 'linksmeet_bookings',
-      'sm_gmail_email', 'sm_last_uid'
+      'sm_gmail_email', 'sm_last_uid', 'sm_cached_workspaces', 'sm_active_workspace'
     ];
     keysToClear.forEach(key => localStorage.removeItem(key));
     
@@ -220,7 +228,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, configured, activeWorkspaceId, setActiveWorkspaceId, workspaces, signUp, logIn, signInWithGoogle, logOut }}>
+    <AuthContext.Provider value={{ user, loading, configured, activeWorkspaceId, setActiveWorkspaceId, workspaces, needsWorkspaceSelection, setNeedsWorkspaceSelection, signUp, logIn, signInWithGoogle, logOut }}>
       {children}
     </AuthContext.Provider>
   );

@@ -2,7 +2,6 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { type ReactNode, useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { supabase } from './supabase';
-import WorkspaceSelectorModal from '../components/WorkspaceSelectorModal';
 
 export default function RequireAuth({ children }: { children: ReactNode }) {
   const { user, loading, configured, needsWorkspaceSelection } = useAuth();
@@ -62,7 +61,6 @@ export default function RequireAuth({ children }: { children: ReactNode }) {
   }
   return (
     <>
-      {needsWorkspaceSelection && <WorkspaceSelectorModal />}
       {children}
     </>
   );

@@ -391,6 +391,7 @@ export default function DashboardLayout() {
       method: 'POST',
       headers: { 
         'Authorization': `Bearer ${user?.access_token || ''}`,
+        'x-workspace-id': activeWorkspaceId || '',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(draft)
@@ -458,6 +459,17 @@ export default function DashboardLayout() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('Member');
+  const [workspaceOwnerProfile, setWorkspaceOwnerProfile] = useState<any>(null);
+
+  useEffect(() => {
+    if (activeWorkspaceId && user && activeWorkspaceId !== user.id) {
+      supabase.from('users').select('*').eq('id', activeWorkspaceId).single().then(({ data }) => {
+        setWorkspaceOwnerProfile(data);
+      });
+    } else {
+      setWorkspaceOwnerProfile(null);
+    }
+  }, [activeWorkspaceId, user?.id]);
 
   useEffect(() => {
     if (!uid) return;
@@ -482,20 +494,43 @@ export default function DashboardLayout() {
 
   // The UI displays the Owner + fetched team members
   const allTeamMembers = useMemo(() => {
+    const isOwnWorkspace = !activeWorkspaceId || activeWorkspaceId === user?.id;
+    
+    let ownerName = displayName + ' (You)';
+    let ownerEmail = user?.email || 'admin@linksmeet.com';
+    let ownerAvatar = userProfile?.profile_picture || user?.user_metadata?.avatar_url || null;
+
+    if (!isOwnWorkspace && workspaceOwnerProfile) {
+      ownerName = (workspaceOwnerProfile.first_name || 'Owner') + ' (Owner)';
+      ownerEmail = workspaceOwnerProfile.email || 'owner@linksmeet.com';
+      ownerAvatar = workspaceOwnerProfile.profile_picture || null;
+    } else if (!isOwnWorkspace && !workspaceOwnerProfile) {
+      ownerName = 'Workspace Owner';
+      ownerEmail = 'owner@linksmeet.com';
+    }
+
     const ownerMember = {
       id: 'owner',
-      name: displayName + ' (You)',
-      email: user?.email || 'admin@linksmeet.com',
+      name: ownerName,
+      email: ownerEmail,
       role: 'Owner',
       status: 'Active',
       department: 'Management',
       phone: '+1 (555) 000-0000',
       workflow_progress: 100,
       created_at: new Date().toISOString(),
-      avatar_url: userProfile?.profile_picture || user?.user_metadata?.avatar_url || null
+      avatar_url: ownerAvatar
     };
-    return [ownerMember, ...teamMembers];
-  }, [displayName, user, userProfile, teamMembers]);
+    
+    const mappedMembers = teamMembers.map(m => {
+      if (m.email === user?.email) {
+        return { ...m, name: `${m.name} (You)` };
+      }
+      return m;
+    });
+
+    return [ownerMember, ...mappedMembers];
+  }, [displayName, user, userProfile, teamMembers, activeWorkspaceId, workspaceOwnerProfile]);
 
   const [isInviting, setIsInviting] = useState(false);
 
@@ -661,7 +696,10 @@ export default function DashboardLayout() {
         const token = sessionData?.session?.access_token || '';
         if (token) {
           const res = await fetch(`${API_BASE_URL}/api/user/profile`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 
+              'Authorization': `Bearer ${token}`,
+              'x-workspace-id': activeWorkspaceId || ''
+            }
           });
           if (res.ok) {
             const data = await res.json();
@@ -684,7 +722,10 @@ export default function DashboardLayout() {
     fetchProfile();
 
     fetch(`${API_BASE_URL}/api/workflows`, {
-      headers: { 'Authorization': `Bearer ${user?.access_token || ''}` }
+      headers: { 
+        'Authorization': `Bearer ${user?.access_token || ''}`,
+        'x-workspace-id': activeWorkspaceId || ''
+      }
     })
     .then(res => res.json())
     .then(data => {
