@@ -17,7 +17,7 @@ export const CampaignSettings: React.FC = () => {
         width: '44px',
         height: '24px',
         borderRadius: '12px',
-        background: checked ? '#3b82f6' : '#cbd5e1',
+        background: checked ? '#7d3bec' : '#cbd5e1',
         border: 'none',
         position: 'relative',
         cursor: 'pointer',
@@ -106,7 +106,7 @@ export const CampaignSettings: React.FC = () => {
                   Live Connected Mailbox
                 </span>
               </div>
-              <button style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#eff6ff', color: '#3b82f6', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }}>
+              <button style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#eff6ff', color: '#7d3bec', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }}>
                 <RefreshCw size={14} /> Auto Sent-Folder Sync
               </button>
             </div>
@@ -130,7 +130,7 @@ export const CampaignSettings: React.FC = () => {
 
               <div style={{ background: '#f8fafc', padding: '20px 24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
                 <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Lightbulb size={20} color="#3b82f6" />
+                  <Lightbulb size={20} color="#7d3bec" />
                 </div>
                 <p style={{ margin: 0, fontSize: '0.9rem', color: '#64748b', lineHeight: 1.6 }}>
                   <strong style={{ color: '#0f172a' }}>Why Gmail API?</strong> Outbound sequences are sent authenticated natively through Google's REST infrastructure. Copies are automatically indexed inside your Gmail Sent folder!
@@ -148,7 +148,7 @@ export const CampaignSettings: React.FC = () => {
                </div>
             </div>
             {/* Some floating particles to mimic the image */}
-            <div style={{ position: 'absolute', top: '20px', left: '20px', width: '8px', height: '8px', background: '#3b82f6', borderRadius: '50%', opacity: 0.6 }}></div>
+            <div style={{ position: 'absolute', top: '20px', left: '20px', width: '8px', height: '8px', background: '#7d3bec', borderRadius: '50%', opacity: 0.6 }}></div>
             <div style={{ position: 'absolute', top: '80px', left: '10px', width: '4px', height: '4px', background: '#e2e8f0', borderRadius: '50%' }}></div>
           </div>
         </div>
@@ -159,7 +159,7 @@ export const CampaignSettings: React.FC = () => {
           {/* Sending Cadence & Limits */}
           <div style={{ border: '1px solid #e2e8f0', background: '#ffffff', borderRadius: '12px', padding: '32px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', gap: '20px', marginBottom: '40px' }}>
-              <HeaderIcon icon={BarChart2} color="#3b82f6" bg="#eff6ff" />
+              <HeaderIcon icon={BarChart2} color="#7d3bec" bg="#eff6ff" />
               <div>
                 <h4 style={{ margin: '0 0 6px', fontSize: '1.2rem', fontWeight: 800, color: '#0f172a' }}>Sending Cadence & Limits</h4>
                 <p style={{ margin: 0, fontSize: '0.95rem', color: '#64748b' }}>Control how many emails are sent and when.</p>
@@ -180,7 +180,7 @@ export const CampaignSettings: React.FC = () => {
                     value={settings.dailyLimit}
                     onChange={(e) => handleUpdate({ dailyLimit: parseInt(e.target.value) || 50 })}
                     style={{ width: '120px', padding: '12px 16px', fontSize: '1rem', fontWeight: 600, border: '1px solid #e2e8f0', borderRadius: '8px', color: '#0f172a', outline: 'none' }}
-                    onFocus={(e) => (e.target.style.borderColor = '#3b82f6')}
+                    onFocus={(e) => (e.target.style.borderColor = '#7d3bec')}
                     onBlur={(e) => (e.target.style.borderColor = '#e2e8f0')}
                   />
                 </div>
@@ -202,7 +202,7 @@ export const CampaignSettings: React.FC = () => {
           {/* Working Hours Window */}
           <div style={{ border: '1px solid #e2e8f0', background: '#ffffff', borderRadius: '12px', padding: '32px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', gap: '20px', marginBottom: '32px' }}>
-              <HeaderIcon icon={Clock} color="#3b82f6" bg="#eff6ff" />
+              <HeaderIcon icon={Clock} color="#7d3bec" bg="#eff6ff" />
               <div>
                 <h4 style={{ margin: '0 0 6px', fontSize: '1.2rem', fontWeight: 800, color: '#0f172a' }}>Working Hours Window</h4>
                 <p style={{ margin: 0, fontSize: '0.95rem', color: '#64748b' }}>Set the time window when emails can be sent.</p>
@@ -386,7 +386,7 @@ export const CampaignSettings: React.FC = () => {
             <Info size={20} />
             <span><strong style={{ fontWeight: 800 }}>Best Practice:</strong> Keep daily limits realistic and ensure your content provides value to maintain high deliverability.</span>
           </div>
-          <button style={{ background: 'none', border: 'none', color: '#3b82f6', fontSize: '0.95rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+          <button style={{ background: 'none', border: 'none', color: '#7d3bec', fontSize: '0.95rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
             Learn more about deliverability <ArrowRight size={16} />
           </button>
         </div>

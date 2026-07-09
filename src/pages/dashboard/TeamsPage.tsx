@@ -190,7 +190,7 @@ export default function TeamsPage() {
 
                   let statusBg = '#EFF8FF';
                   let statusColor = '#2563EB';
-                  let dotColor = '#3B82F6';
+                  let dotColor = '#7d3bec';
                   if (member.status === 'Pending') {
                     statusBg = '#FEF9C3';
                     statusColor = '#CA8A04';

@@ -374,11 +374,13 @@ class CampaignEngine {
   }
 
   public async deleteCampaign(id: string) {
+    // Optimistically remove from local state for immediate UI update
+    this.campaigns = this.campaigns.filter(c => c.id !== id);
+    this.notify('update');
+
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
     if (!isUUID) {
       // It was a local dummy campaign that never hit backend
-      this.campaigns = this.campaigns.filter(c => c.id !== id);
-      this.notify('update');
       return;
     }
 

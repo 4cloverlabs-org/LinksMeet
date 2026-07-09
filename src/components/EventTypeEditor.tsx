@@ -1731,7 +1731,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       {/* Month */}
                       <div onClick={() => { setAppLayout('Month'); triggerToast('Switched layout to Month'); }} style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}>
                         <div style={{ width: '110px', height: '70px', border: appLayout === 'Month' ? '2px solid #7d3bec' : '1px solid #e2e8f0', borderRadius: '8px', background: appLayout === 'Month' ? '#f8fafc' : '#ffffff', padding: '8px', position: 'relative' }}>
-                          <div style={{ width: '20px', height: '4px', background: '#3b82f6', borderRadius: '2px', marginBottom: '8px' }}></div>
+                          <div style={{ width: '20px', height: '4px', background: '#7d3bec', borderRadius: '2px', marginBottom: '8px' }}></div>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
                              <div style={{ height: '4px', background: '#cbd5e1', borderRadius: '2px' }}></div>
                              <div style={{ height: '4px', background: '#cbd5e1', borderRadius: '2px' }}></div>

@@ -133,9 +133,9 @@ export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, canEdit =
           <div style={{ display: 'flex', gap: '24px', paddingBottom: '16px', alignItems: 'center' }}>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Send size={14} color="#3B82F6" />
+              <Send size={14} color="#7d3bec" />
               <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
-                <span style={{ fontWeight: 700, color: '#0f172a' }}>{totalSequences || 12}</span> Sequences
+                <span style={{ fontWeight: 700, color: '#0f172a' }}>{totalSequences}</span> Sequences
               </div>
             </div>
 
@@ -144,7 +144,7 @@ export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, canEdit =
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <CheckCircle2 size={14} color="#22C55E" />
               <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
-                <span style={{ fontWeight: 700, color: '#0f172a' }}>{activeSequences || 8}</span> Active
+                <span style={{ fontWeight: 700, color: '#0f172a' }}>{activeSequences}</span> Active
               </div>
             </div>
 
@@ -160,7 +160,7 @@ export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, canEdit =
             <div style={{ width: '1px', height: '16px', background: '#e2e8f0' }}></div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CornerUpLeft size={14} color="#3B82F6" />
+              <CornerUpLeft size={14} color="#7d3bec" />
               <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
                 <span style={{ fontWeight: 700, color: '#0f172a' }}>{displayReplyRate}%</span> Replies <span style={{ fontSize: '0.75rem', opacity: 0.8, marginLeft: '4px' }}>({periodText})</span>
               </div>
@@ -275,7 +275,7 @@ export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, canEdit =
                     <td style={{ padding: '12px 24px' }}>
                       <div style={{ display: 'flex', gap: '4px' }}>
                         {camp.steps.map((_s, i) => (
-                          <div key={i} style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3B82F6' }} />
+                          <div key={i} style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#7d3bec' }} />
                         ))}
                       </div>
                     </td>
