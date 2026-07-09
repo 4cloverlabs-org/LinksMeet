@@ -12,7 +12,7 @@ interface Props {
   uid: string;
   initialData: Partial<EventType> | null;
   onClose: () => void;
-  onSaved: () => void;
+  onSaved: (id?: string) => void;
 }
 
 const LOCATION_OPTIONS = [
@@ -104,8 +104,30 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
   // Real-time Settings States for UI previews
   const [requirePhone, setRequirePhone] = useState(false);
-  const [confRedirect, setConfRedirect] = useState(false);
-  const [appLayout, setAppLayout] = useState<'Month' | 'Weekly' | 'Column'>('Month');
+  const [confRedirect, setConfRedirect] = useState(!!initialData?.redirectUrl);
+  const [redirectUrl, setRedirectUrl] = useState(initialData?.redirectUrl || '');
+  const [allowedLayouts, setAllowedLayouts] = useState<string[]>(initialData?.allowedLayouts || ['Month']);
+  const [defaultLayout, setDefaultLayout] = useState<string>(initialData?.defaultLayout || 'Month');
+
+  const toggleLayout = (layout: string) => {
+    setAllowedLayouts(prev => {
+      if (prev.includes(layout)) {
+        if (prev.length === 1) {
+           triggerToast('At least one layout must be allowed.');
+           return prev; // must have at least one
+        }
+        const next = prev.filter(l => l !== layout);
+        if (defaultLayout === layout) {
+           setDefaultLayout(next[0]);
+        }
+        triggerToast(`Removed ${layout} layout`);
+        return next;
+      } else {
+        triggerToast(`Allowed ${layout} layout`);
+        return [...prev, layout];
+      }
+    });
+  };
   const [showOnlyFirstSlot, setShowOnlyFirstSlot] = useState(false);
   const [disableCancelling, setDisableCancelling] = useState(false);
   const [disableRescheduling, setDisableRescheduling] = useState(false);
@@ -129,7 +151,8 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
   // Confirmation state
   const [confChannel, setConfChannel] = useState<'email' | 'phone'>('email');
   const [calEventName, setCalEventName] = useState(`${form.title || '15 min meeting'} between ${userName} and {Scheduler}`);
-  const [customReplyTo, setCustomReplyTo] = useState(false);
+  const [customReplyTo, setCustomReplyTo] = useState(!!initialData?.replyToEmail);
+  const [replyToEmail, setReplyToEmail] = useState(initialData?.replyToEmail || '');
   const [sendTranscription, setSendTranscription] = useState(true);
 
   // Limits & buffers state
@@ -449,17 +472,30 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
   const handleSave = async () => {
     if (!form.title || !form.slug) return;
     setSaving(true);
+    
+    const eventId = form.id || Math.random().toString(36).substring(2, 9);
+    
+    const savePayload = { 
+      ...form, 
+      id: eventId,
+      redirectUrl: confRedirect ? redirectUrl : null,
+      replyToEmail: customReplyTo ? replyToEmail : null,
+      allowedLayouts,
+      defaultLayout
+    };
+
     try {
-      localStorage.setItem('sm_avail_schedule_' + (form.slug || form.id || 'default'), JSON.stringify(schedule));
+      localStorage.setItem('sm_avail_schedule_' + (form.slug || eventId || 'default'), JSON.stringify(schedule));
       localStorage.setItem('sm_avail_schedule', JSON.stringify(schedule));
       if (form.id) {
-        await updateEventType(uid, form.id, form as EventType);
+        await updateEventType(uid, form.id, savePayload as any);
       } else {
-        await addEventType(uid, form as Omit<EventType, 'id' | 'createdAt'>);
+        await addEventType(uid, savePayload as any);
+        setForm(prev => ({...prev, id: eventId}));
       }
       setSaving(false);
       triggerToast('Event type saved successfully.');
-      onSaved();
+      onSaved(eventId);
     } catch (e: any) {
       console.error('Error saving event type:', e);
       setSaving(false);
@@ -519,7 +555,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
     }
     triggerToast('Event type deleted.');
     setShowDeleteModal(false);
-    onSaved();
+    onClose();
   };
 
   const NavItem = ({ icon: Icon, label, id }: { icon: any, label: string, id: string }) => {
@@ -1573,42 +1609,43 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       <button type="button" onClick={handleEditCalEventName} style={{ padding: '0 16px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
                     </div>
                   </div>
-
                   <div style={{ height: '1px', background: '#e2e8f0' }} />
 
                   {/* Redirect on booking */}
-                  <div style={{ padding: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                        <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 600, color: '#0f172a' }}>Redirect on booking</h3>
+                  <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', borderBottom: '1px solid #f1f5f9' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                          <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 600, color: '#0f172a' }}>Redirect on booking</h3>
+                        </div>
+                        <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>Redirect to a custom URL after a successful booking</p>
                       </div>
-                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>Redirect to a custom URL after a successful booking</p>
+                      <ToggleSwitch checked={confRedirect} onChange={() => { setConfRedirect(!confRedirect); triggerToast(!confRedirect ? 'Enabled post-booking redirect' : 'Disabled redirect'); }} />
                     </div>
-                    <ToggleSwitch checked={confRedirect} onChange={() => { setConfRedirect(!confRedirect); triggerToast(!confRedirect ? 'Enabled post-booking redirect' : 'Disabled redirect'); }} />
+                    {confRedirect && (
+                      <div style={{ marginTop: '16px' }}>
+                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>Redirect URL</label>
+                        <input type="url" placeholder="https://example.com/thank-you" value={redirectUrl} onChange={(e) => setRedirectUrl(e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#f8fafc', color: '#334155', fontSize: '0.9rem', outline: 'none' }} />
+                      </div>
+                    )}
                   </div>
-
-                  <div style={{ height: '1px', background: '#e2e8f0' }} />
 
                   {/* Custom 'Reply-To' email */}
-                  <div style={{ padding: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                    <div style={{ paddingRight: '24px' }}>
-                      <h3 style={{ margin: '0 0 8px', fontSize: '0.95rem', fontWeight: 600, color: '#0f172a' }}>Custom 'Reply-To' email</h3>
-                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Use a different email address as the replyTo for confirmation emails instead of the organizer's email</p>
+                  <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', borderBottom: '1px solid #f1f5f9' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                      <div style={{ paddingRight: '24px' }}>
+                        <h3 style={{ margin: '0 0 8px', fontSize: '0.95rem', fontWeight: 600, color: '#0f172a' }}>Custom 'Reply-To' email</h3>
+                        <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Use a different email address as the replyTo for confirmation emails instead of the organizer's email</p>
+                      </div>
+                      <ToggleSwitch checked={customReplyTo} onChange={() => { setCustomReplyTo(!customReplyTo); triggerToast(!customReplyTo ? 'Enabled Custom Reply-To' : 'Disabled Custom Reply-To'); }} />
                     </div>
-                    <ToggleSwitch checked={customReplyTo} onChange={() => { setCustomReplyTo(!customReplyTo); triggerToast(!customReplyTo ? 'Enabled Custom Reply-To' : 'Disabled Custom Reply-To'); }} />
+                    {customReplyTo && (
+                      <div style={{ marginTop: '16px' }}>
+                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>Reply-To Email</label>
+                        <input type="email" placeholder="support@yourcompany.com" value={replyToEmail} onChange={(e) => setReplyToEmail(e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#f8fafc', color: '#334155', fontSize: '0.9rem', outline: 'none' }} />
+                      </div>
+                    )}
                   </div>
-
-                  <div style={{ height: '1px', background: '#e2e8f0' }} />
-
-                  {/* Send LinksMeet Video transcription emails */}
-                  <div style={{ padding: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9' }}>
-                    <div style={{ paddingRight: '24px' }}>
-                      <h3 style={{ margin: '0 0 8px', fontSize: '0.95rem', fontWeight: 600, color: '#0f172a' }}>Send LinksMeet Video transcription emails</h3>
-                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Send emails with the transcription of the LinksMeet Video after the meeting ends.</p>
-                    </div>
-                    <ToggleSwitch checked={sendTranscription} onChange={() => { setSendTranscription(!sendTranscription); triggerToast(!sendTranscription ? 'Enabled transcription emails' : 'Disabled transcription emails'); }} />
-                  </div>
-
                 </div>
               </div>
 
@@ -1737,8 +1774,8 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     
                     <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
                       {/* Month */}
-                      <div onClick={() => { setAppLayout('Month'); triggerToast('Switched layout to Month'); }} style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}>
-                        <div style={{ width: '110px', height: '70px', border: appLayout === 'Month' ? '2px solid #7d3bec' : '2px solid #F5F5F5', borderRadius: '8px', background: appLayout === 'Month' ? '#f8fafc' : '#ffffff', padding: '8px', position: 'relative' }}>
+                      <div onClick={() => toggleLayout('Month')} style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}>
+                        <div style={{ width: '110px', height: '70px', border: allowedLayouts.includes('Month') ? '2px solid #7d3bec' : '2px solid #F5F5F5', borderRadius: '8px', background: allowedLayouts.includes('Month') ? '#f8fafc' : '#ffffff', padding: '8px', position: 'relative' }}>
                           <div style={{ width: '20px', height: '4px', background: '#7d3bec', borderRadius: '2px', marginBottom: '8px' }}></div>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
                              <div style={{ height: '4px', background: '#cbd5e1', borderRadius: '2px' }}></div>
@@ -1752,13 +1789,13 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                           </div>
                         </div>
                         <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}>
-                          <input type="checkbox" checked={appLayout === 'Month'} readOnly style={{ accentColor: '#7d3bec', cursor: 'pointer' }} /> Month <span style={{ color: '#64748b', fontWeight: 400 }}>(Default)</span>
+                          <input type="checkbox" checked={allowedLayouts.includes('Month')} readOnly style={{ accentColor: '#7d3bec', cursor: 'pointer' }} /> Month {defaultLayout === 'Month' && <span style={{ color: '#64748b', fontWeight: 400 }}>(Default)</span>}
                         </label>
                       </div>
 
                       {/* Weekly */}
-                      <div onClick={() => { setAppLayout('Weekly'); triggerToast('Switched layout to Weekly'); }} style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}>
-                        <div style={{ width: '110px', height: '70px', border: appLayout === 'Weekly' ? '2px solid #7d3bec' : '2px solid #F5F5F5', borderRadius: '8px', background: appLayout === 'Weekly' ? '#f8fafc' : '#ffffff', padding: '8px', display: 'flex', gap: '6px' }}>
+                      <div onClick={() => toggleLayout('Weekly')} style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}>
+                        <div style={{ width: '110px', height: '70px', border: allowedLayouts.includes('Weekly') ? '2px solid #7d3bec' : '2px solid #F5F5F5', borderRadius: '8px', background: allowedLayouts.includes('Weekly') ? '#f8fafc' : '#ffffff', padding: '8px', display: 'flex', gap: '6px' }}>
                           <div style={{ flex: 1 }}>
                             <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: '2px solid #bfdbfe', marginBottom: '8px' }}></div>
                             <div style={{ width: '80%', height: '2px', background: '#cbd5e1', borderRadius: '2px', marginBottom: '2px' }}></div>
@@ -1771,13 +1808,13 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                           </div>
                         </div>
                         <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}>
-                          <input type="checkbox" checked={appLayout === 'Weekly'} readOnly style={{ accentColor: '#7d3bec', cursor: 'pointer' }} /> Weekly
+                          <input type="checkbox" checked={allowedLayouts.includes('Weekly')} readOnly style={{ accentColor: '#7d3bec', cursor: 'pointer' }} /> Weekly {defaultLayout === 'Weekly' && <span style={{ color: '#64748b', fontWeight: 400 }}>(Default)</span>}
                         </label>
                       </div>
 
                       {/* Column */}
-                      <div onClick={() => { setAppLayout('Column'); triggerToast('Switched layout to Column'); }} style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}>
-                        <div style={{ width: '110px', height: '70px', border: appLayout === 'Column' ? '2px solid #7d3bec' : '2px solid #F5F5F5', borderRadius: '8px', background: appLayout === 'Column' ? '#f8fafc' : '#ffffff', padding: '8px', display: 'flex', gap: '8px' }}>
+                      <div onClick={() => toggleLayout('Column')} style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}>
+                        <div style={{ width: '110px', height: '70px', border: allowedLayouts.includes('Column') ? '2px solid #7d3bec' : '2px solid #F5F5F5', borderRadius: '8px', background: allowedLayouts.includes('Column') ? '#f8fafc' : '#ffffff', padding: '8px', display: 'flex', gap: '8px' }}>
                           <div style={{ flex: 1 }}>
                             <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: '2px solid #bfdbfe', marginBottom: '8px' }}></div>
                             <div style={{ width: '80%', height: '2px', background: '#cbd5e1', borderRadius: '2px', marginBottom: '2px' }}></div>
@@ -1790,7 +1827,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                           </div>
                         </div>
                         <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}>
-                          <input type="checkbox" checked={appLayout === 'Column'} readOnly style={{ accentColor: '#7d3bec', cursor: 'pointer' }} /> Column
+                          <input type="checkbox" checked={allowedLayouts.includes('Column')} readOnly style={{ accentColor: '#7d3bec', cursor: 'pointer' }} /> Column {defaultLayout === 'Column' && <span style={{ color: '#64748b', fontWeight: 400 }}>(Default)</span>}
                         </label>
                       </div>
                     </div>
@@ -1803,9 +1840,9 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     <h3 style={{ margin: '0 0 12px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Default view</h3>
                     
                     <div style={{ display: 'inline-flex', background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '8px', padding: '4px', marginBottom: '16px' }}>
-                      <button type="button" onClick={() => { setAppLayout('Month'); triggerToast('Set default view to Month'); }} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: appLayout === 'Month' ? '#eff6ff' : 'transparent', color: appLayout === 'Month' ? '#7d3bec' : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Month</button>
-                      <button type="button" onClick={() => { setAppLayout('Weekly'); triggerToast('Set default view to Weekly'); }} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: appLayout === 'Weekly' ? '#eff6ff' : 'transparent', color: appLayout === 'Weekly' ? '#7d3bec' : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Weekly</button>
-                      <button type="button" onClick={() => { setAppLayout('Column'); triggerToast('Set default view to Column'); }} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: appLayout === 'Column' ? '#eff6ff' : 'transparent', color: appLayout === 'Column' ? '#7d3bec' : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Column</button>
+                      {allowedLayouts.includes('Month') && <button type="button" onClick={() => { setDefaultLayout('Month'); triggerToast('Set default view to Month'); }} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: defaultLayout === 'Month' ? '#eff6ff' : 'transparent', color: defaultLayout === 'Month' ? '#7d3bec' : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Month</button>}
+                      {allowedLayouts.includes('Weekly') && <button type="button" onClick={() => { setDefaultLayout('Weekly'); triggerToast('Set default view to Weekly'); }} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: defaultLayout === 'Weekly' ? '#eff6ff' : 'transparent', color: defaultLayout === 'Weekly' ? '#7d3bec' : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Weekly</button>}
+                      {allowedLayouts.includes('Column') && <button type="button" onClick={() => { setDefaultLayout('Column'); triggerToast('Set default view to Column'); }} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: defaultLayout === 'Column' ? '#eff6ff' : 'transparent', color: defaultLayout === 'Column' ? '#7d3bec' : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Column</button>}
                     </div>
 
                     <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>
@@ -1876,7 +1913,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     </div>
                     <div style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600, marginBottom: '4px' }}>{hostName}</div>
                     <h2 style={{ margin: '0 0 24px', fontSize: '1.4rem', fontWeight: 700, color: '#0f172a' }}>
-                      {appLayout === 'Month' ? (form.title || '15 min meeting') : `${form.title || '15 min meeting'} (${appLayout} View)`}
+                      {defaultLayout === 'Month' ? (form.title || '15 min meeting') : `${form.title || '15 min meeting'} (${defaultLayout} View)`}
                       {autoTranslate && <span style={{ fontSize: '0.65rem', background: '#fef3c7', color: '#b45309', padding: '2px 6px', borderRadius: '4px', marginLeft: '8px', verticalAlign: 'middle', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Translated</span>}
                     </h2>
 

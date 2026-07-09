@@ -99,19 +99,24 @@ const oauth2Client = new google.auth.OAuth2(
 );
 
 // Helper to encode emails for Gmail API
-const makeBody = (to, from, subject, message) => {
+const makeBody = (to, from, subject, message, replyTo = null) => {
   const cleanSubject = sanitizeHeader(subject);
   // Encode subject correctly for email headers to support emojis/special chars
   const encodedSubject = `=?utf-8?B?${Buffer.from(cleanSubject).toString('base64')}?=`;
 
-  const str = ["Content-Type: text/html; charset=\"UTF-8\"\n",
+  const headers = [
+    "Content-Type: text/html; charset=\"UTF-8\"\n",
     "MIME-Version: 1.0\n",
     "Content-Transfer-Encoding: 8bit\n",
     "to: ", sanitizeHeader(to), "\n",
     "from: ", sanitizeHeader(from), "\n",
-    "subject: ", encodedSubject, "\n\n",
-    message
-  ].join('');
+  ];
+  if (replyTo) {
+    headers.push("reply-to: ", sanitizeHeader(replyTo), "\n");
+  }
+  headers.push("subject: ", encodedSubject, "\n\n", message);
+  
+  const str = headers.join('');
 
   return Buffer.from(str).toString("base64").replace(/\+/g, '-').replace(/\//g, '_');
 };
@@ -513,7 +518,7 @@ app.put('/api/workflows/:id', requireAuth, async (req, res) => {
 // ----------------------------------------------------
 app.post('/api/bookings', async (req, res) => {
   try {
-    const { ownerUid, bookerName, bookerEmail, bookerNotes, startTime, endTime, eventTitle, eventTypeSlug } = req.body;
+    const { ownerUid, bookerName, bookerEmail, bookerNotes, startTime, endTime, eventTitle, eventTypeSlug, replyToEmail } = req.body;
 
     if (!supabase) {
       return res.status(500).json({ error: "Database not connected" });
@@ -616,7 +621,7 @@ app.post('/api/bookings', async (req, res) => {
             </div>
           </div>
         `;
-        const bookerRaw = makeBody(bookerEmail, ownerEmail, `Confirmed: ${eventTitle} with ${ownerName}`, bookerHtml);
+        const bookerRaw = makeBody(bookerEmail, ownerEmail, `Confirmed: ${eventTitle} with ${ownerName}`, bookerHtml, replyToEmail);
         await gmail.users.messages.send({ userId: 'me', requestBody: { raw: bookerRaw } });
 
         // Premium Email to Owner

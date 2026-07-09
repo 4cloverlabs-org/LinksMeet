@@ -70,6 +70,10 @@ export interface EventType {
   slug: string;
   desc: string;
   active: boolean;
+  redirectUrl?: string;
+  replyToEmail?: string;
+  allowedLayouts?: string[];
+  defaultLayout?: string;
   createdAt?: number;
 }
 export async function listEventTypes(uid: string): Promise<EventType[]> {
@@ -81,6 +85,10 @@ export async function listEventTypes(uid: string): Promise<EventType[]> {
         ...d,
         dur: d.duration || d.dur || '15 Minutes',
         desc: d.description || d.desc || '',
+        redirectUrl: d.redirect_url,
+        replyToEmail: d.reply_to_email,
+        allowedLayouts: d.allowed_layouts ? (typeof d.allowed_layouts === 'string' ? d.allowed_layouts.split(',') : d.allowed_layouts) : ['Month'],
+        defaultLayout: d.default_layout || 'Month',
         createdAt: new Date(d.created_at || Date.now()).getTime()
       }));
     }
@@ -134,6 +142,10 @@ export async function addEventType(uid: string, data: any): Promise<void> {
     description: newEv.desc,
     active: newEv.active
   };
+  if (data.redirectUrl !== undefined) dbRecord.redirect_url = data.redirectUrl;
+  if (data.replyToEmail !== undefined) dbRecord.reply_to_email = data.replyToEmail;
+  if (data.allowedLayouts !== undefined) dbRecord.allowed_layouts = Array.isArray(data.allowedLayouts) ? data.allowedLayouts.join(',') : data.allowedLayouts;
+  if (data.defaultLayout !== undefined) dbRecord.default_layout = data.defaultLayout;
   if (newEv.location !== undefined) {
     dbRecord.location = newEv.location;
   }
@@ -171,6 +183,10 @@ export async function updateEventType(uid: string, id: string, data: any): Promi
   if (data.desc !== undefined || data.description !== undefined) dbData.description = data.desc !== undefined ? data.desc : data.description;
   if (data.active !== undefined) dbData.active = data.active;
   if (data.location !== undefined) dbData.location = data.location;
+  if (data.redirectUrl !== undefined) dbData.redirect_url = data.redirectUrl;
+  if (data.replyToEmail !== undefined) dbData.reply_to_email = data.replyToEmail;
+  if (data.allowedLayouts !== undefined) dbData.allowed_layouts = Array.isArray(data.allowedLayouts) ? data.allowedLayouts.join(',') : data.allowedLayouts;
+  if (data.defaultLayout !== undefined) dbData.default_layout = data.defaultLayout;
 
   try {
     const { error } = await supabase.from('event_types').update(dbData).eq('id', id).eq('user_id', uid);

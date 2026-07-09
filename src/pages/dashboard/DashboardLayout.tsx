@@ -1438,8 +1438,7 @@ export default function DashboardLayout() {
             uid={uid}
             initialData={editingEvent === 'new' ? null : editingEvent}
             onClose={() => setEditingEvent(null)}
-            onSaved={async () => {
-              setEditingEvent(null);
+            onSaved={async (savedId?: string) => {
               const { data: fresh } = await supabase.from('event_types').select('*').eq('user_id', uid).order('created_at', { ascending: false });
               if (fresh && fresh.length > 0) {
                 setEventTypes(fresh.map(d => ({
@@ -1451,9 +1450,21 @@ export default function DashboardLayout() {
                   active: d.active,
                   createdAt: new Date(d.created_at).getTime()
                 })));
+                
+                if (editingEvent === 'new' && savedId) {
+                  const newEventObj = fresh.find(e => e.id === savedId) || fresh[0];
+                  setEditingEvent(newEventObj);
+                }
               } else {
                 const raw = localStorage.getItem('sm_event_types') || localStorage.getItem('linksmeet_event_types');
                 if (raw) setEventTypes(JSON.parse(raw));
+                
+                // Fallback for local storage save
+                if (editingEvent === 'new' && savedId && raw) {
+                  const parsed = JSON.parse(raw);
+                  const newEventObj = parsed.find((e: any) => e.id === savedId) || parsed[0];
+                  setEditingEvent(newEventObj);
+                }
               }
             }}
           />

@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import React, { useState, useEffect, type FormEvent } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { API_BASE_URL } from '../lib/config';
@@ -53,6 +53,7 @@ export default function BookingPage() {
   const [selectedDayTab, setSelectedDayTab] = useState<number>(now.getDate());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [timeFormat, setTimeFormat] = useState<'12h' | '24h'>('12h');
+  const [currentLayout, setCurrentLayout] = useState<'Month' | 'Weekly' | 'Column'>('Month');
   const [bookings, setBookings] = useState<any[]>([]);
 
   const [name, setName] = useState('');
@@ -120,7 +121,18 @@ export default function BookingPage() {
 
           if (etData) {
             if (!etData.active) return setError('This event type is currently paused.');
-            setEventType({ ...etData, desc: etData.description || etData.desc });
+            
+            const allowed = etData.allowed_layouts ? (typeof etData.allowed_layouts === 'string' ? etData.allowed_layouts.split(',') : etData.allowed_layouts) : ['Month'];
+            const defLayout = etData.default_layout || 'Month';
+            
+            setEventType({ 
+              ...etData, 
+              desc: etData.description || etData.desc,
+              allowedLayouts: allowed,
+              defaultLayout: defLayout
+            });
+            setCurrentLayout(defLayout as any);
+            
             // Fetch bookings
             // We fall back to fetching 'slot' if start_time is missing since bookings table didn't have start_time originally
             const { data: bData } = await supabase.from('bookings')
@@ -217,7 +229,8 @@ export default function BookingPage() {
             startTime,
             endTime,
             eventTitle: eventType.title,
-            eventTypeSlug: slug
+            eventTypeSlug: slug,
+            replyToEmail: eventType.replyToEmail
           })
         });
 
@@ -260,6 +273,11 @@ export default function BookingPage() {
         });
       }
       
+      if (eventType.redirectUrl) {
+        window.location.href = eventType.redirectUrl;
+        return;
+      }
+
       setMeetLink(meetLink);
       setBookingStatus('success');
     } catch (err) {
@@ -273,20 +291,20 @@ export default function BookingPage() {
   const daysInCurrentMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const currentMonthName = new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' });
 
-  const generateTimeSlots = () => {
+  const generateTimeSlotsForDate = (targetDate: Date) => {
     const slots = [];
     const durMinutes = parseInt(eventType?.dur || '30');
     let startHr = 9;
     let endHr = 17;
     
     const now = new Date();
-    const isToday = currentYear === now.getFullYear() && currentMonth === now.getMonth() && selectedDate === now.getDate();
+    const isToday = targetDate.getFullYear() === now.getFullYear() && targetDate.getMonth() === now.getMonth() && targetDate.getDate() === now.getDate();
     
     let currentMin = 0;
     let hr = startHr;
     
     while (hr < endHr) {
-      const slotStart = new Date(currentYear, currentMonth, selectedDate, hr, currentMin);
+      const slotStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), hr, currentMin);
       const slotEnd = new Date(slotStart.getTime() + durMinutes * 60000);
       
       if (!(isToday && slotStart < now)) {
@@ -315,7 +333,7 @@ export default function BookingPage() {
     return slots;
   };
 
-  const availableSlots = generateTimeSlots();
+  const availableSlots = generateTimeSlotsForDate(new Date(currentYear, currentMonth, selectedDate));
   if (loading) return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}><Loader2 size={24} className="crm-spin-ic" /></div>;
   if (error) return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text)' }}>{error}</div>;
 
@@ -450,10 +468,83 @@ export default function BookingPage() {
     );
   }
 
+  const renderMiniCalendar = () => (
+    <div style={{ marginTop: '24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
+        <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a' }}>{currentMonthName} {currentYear}</span>
+        <div style={{ display: 'flex', gap: '4px' }}>
+          <button
+            type="button"
+            onClick={() => {
+              if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear(y => y - 1); }
+              else { setCurrentMonth(m => m - 1); }
+            }}
+            style={{ width: '24px', height: '24px', background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem' }}
+          >&lt;</button>
+          <button
+            type="button"
+            onClick={() => {
+              if (currentMonth === 11) { setCurrentMonth(0); setCurrentYear(y => y + 1); }
+              else { setCurrentMonth(m => m + 1); }
+            }}
+            style={{ width: '24px', height: '24px', background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem' }}
+          >&gt;</button>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', fontSize: '0.65rem', fontWeight: 700, marginBottom: '8px' }}>
+        <div style={{ color: '#0f172a' }}>SUN</div>
+        <div style={{ color: '#0f172a' }}>MON</div>
+        <div style={{ color: '#0f172a' }}>TUE</div>
+        <div style={{ color: '#0f172a' }}>WED</div>
+        <div style={{ color: '#0f172a' }}>THU</div>
+        <div style={{ color: '#0f172a' }}>FRI</div>
+        <div style={{ color: '#0f172a' }}>SAT</div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', fontSize: '0.8rem', fontWeight: 500, color: '#475569' }}>
+        <div style={{ padding: '4px 0', opacity: 0 }}>-</div>
+        <div style={{ padding: '4px 0', opacity: 0 }}>-</div>
+        <div style={{ padding: '4px 0', opacity: 0 }}>-</div>
+        {Array.from({ length: daysInCurrentMonth }, (_, i) => i + 1).map(d => {
+          const dateObj = new Date(currentYear, currentMonth, d);
+          const isPast = dateObj < new Date(new Date().setHours(0,0,0,0));
+          if (isPast) return <div key={d} style={{ padding: '4px 0', opacity: 0.3, textAlign: 'center' }}>{d}</div>;
+
+          const isSel = d === selectedDate;
+          return (
+            <div
+              key={d}
+              onClick={() => { setSelectedDate(d); setSelectedDayTab(d); }}
+              style={{
+                width: '32px',
+                height: '32px',
+                margin: '0 auto',
+                borderRadius: '8px',
+                background: isSel ? '#1e293b' : '#f1f5f9',
+                color: isSel ? '#ffffff' : '#0f172a',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: isSel ? 700 : 500,
+                cursor: 'pointer',
+                position: 'relative'
+              }}
+            >
+              <span>{d}</span>
+              {isSel && <div style={{ width: '3px', height: '3px', borderRadius: '50%', background: '#ffffff', position: 'absolute', bottom: '4px' }} />}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
   return (
     <div className={`bk-widget-page ${isEmbedded ? 'is-embedded' : ''}`} style={customStyles}>
       {step === 1 ? (
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '32px', boxShadow: '0 8px 30px rgba(0,0,0,0.04)', maxWidth: '1060px', margin: '40px auto', display: 'grid', gridTemplateColumns: '1fr 1.45fr 1.15fr', gap: '32px' }}>
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '32px', boxShadow: '0 8px 30px rgba(0,0,0,0.04)', maxWidth: '1060px', margin: '40px auto', display: 'grid', gridTemplateColumns: currentLayout === 'Month' ? '1fr 1.45fr 1.15fr' : '1fr 2.6fr', gap: '32px' }}>
 
           {/* Column 1: Left Info Pane */}
           <div>
@@ -485,200 +576,397 @@ export default function BookingPage() {
                 <Globe size={18} color="#64748b" /> Asia/Kolkata
               </div>
             </div>
+
+            {currentLayout !== 'Month' && renderMiniCalendar()}
           </div>
 
-          {/* Column 2: Center Interactive Calendar Pane */}
-          <div style={{ borderLeft: '1px solid #f1f5f9', borderRight: '1px solid #f1f5f9', padding: '0 24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
-              <span style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a' }}>{currentMonthName} {currentYear}</span>
-              <div style={{ display: 'flex', gap: '6px' }}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear(y => y - 1); }
-                    else { setCurrentMonth(m => m - 1); }
-                  }}
-                  style={{ width: '30px', height: '30px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem' }}
-                >&lt;</button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (currentMonth === 11) { setCurrentMonth(0); setCurrentYear(y => y + 1); }
-                    else { setCurrentMonth(m => m + 1); }
-                  }}
-                  style={{ width: '30px', height: '30px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem' }}
-                >&gt;</button>
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', fontSize: '0.72rem', fontWeight: 700, marginBottom: '10px' }}>
-              <div style={{ color: '#7d3bec' }}>SUN</div>
-              <div style={{ color: '#64748b' }}>MON</div>
-              <div style={{ color: '#64748b' }}>TUE</div>
-              <div style={{ color: '#64748b' }}>WED</div>
-              <div style={{ color: '#64748b' }}>THU</div>
-              <div style={{ color: '#64748b' }}>FRI</div>
-              <div style={{ color: '#64748b' }}>SAT</div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px', textAlign: 'center', fontSize: '0.85rem', fontWeight: 500, color: '#0f172a', marginBottom: '20px' }}>
-              <div style={{ padding: '6px 0', opacity: 0 }}>-</div>
-              <div style={{ padding: '6px 0', opacity: 0 }}>-</div>
-              <div style={{ padding: '6px 0', opacity: 0 }}>-</div>
-              {Array.from({ length: daysInCurrentMonth }, (_, i) => i + 1).map(d => {
-                const dateObj = new Date(currentYear, currentMonth, d);
-                const isPast = dateObj < new Date(new Date().setHours(0,0,0,0));
-                if (isPast) return <div key={d} style={{ padding: '8px 0', opacity: 0.3, textAlign: 'center' }}>{d}</div>;
-
-                const isSel = d === selectedDate;
-                return (
-                  <div
-                    key={d}
-                    onClick={() => { setSelectedDate(d); setSelectedDayTab(d); }}
-                    style={{
-                      width: '30px',
-                      height: '30px',
-                      margin: '0 auto',
-                      borderRadius: '50%',
-                      background: isSel ? '#7d3bec' : 'transparent',
-                      color: isSel ? '#ffffff' : '#0f172a',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: isSel ? 700 : 500,
-                      cursor: 'pointer',
-                      position: 'relative',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    <span>{d}</span>
-                    {isSel && <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#ffffff', position: 'absolute', bottom: '4px' }} />}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Dynamic Day Selection Tabs around selected date */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '6px', marginBottom: '14px' }}>
-              {[Math.max(1, selectedDayTab - 1), selectedDayTab, Math.min(30, selectedDayTab + 1), Math.min(30, selectedDayTab + 2), Math.min(30, selectedDayTab + 3), Math.min(30, selectedDayTab + 4)].map(dayNum => {
-                const activeDay = selectedDayTab === dayNum;
-                return (
-                  <button
-                    key={dayNum}
-                    type="button"
-                    onClick={() => setSelectedDayTab(dayNum)}
-                    style={{
-                      padding: '8px 0',
-                      background: activeDay ? '#7d3bec' : '#ffffff',
-                      color: activeDay ? '#ffffff' : '#7d3bec',
-                      border: activeDay ? 'none' : '1px solid #bfdbfe',
-                      borderRadius: '8px',
-                      fontWeight: 700,
-                      fontSize: '0.85rem',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {dayNum}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Real-time Dynamic Time Slots */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px' }}>
-              {['9:00 AM', '9:15 AM', '9:30 AM', '9:45 AM', '10:00 AM'].map(t => {
-                const activeTime = selectedTime === t;
-                return (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setSelectedTime(t)}
-                    style={{
-                      padding: '8px 2px',
-                      background: activeTime ? '#7d3bec' : '#eff6ff',
-                      color: activeTime ? '#ffffff' : '#7d3bec',
-                      border: 'none',
-                      borderRadius: '8px',
-                      fontWeight: 600,
-                      fontSize: '0.72rem',
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                      textAlign: 'center'
-                    }}
-                  >
-                    {t}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Column 3: Right Time Slots Pane matching Screenshot */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
-              <span style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a' }}>
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate % 7]} {selectedDate}
-              </span>
-              <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '8px', padding: '2px' }}>
-                <button
-                  type="button"
-                  onClick={() => setTimeFormat('12h')}
-                  style={{ padding: '4px 10px', borderRadius: '6px', border: 'none', background: timeFormat === '12h' ? '#ffffff' : 'transparent', color: timeFormat === '12h' ? '#7d3bec' : '#64748b', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', boxShadow: timeFormat === '12h' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none' }}
-                >12h</button>
-                <button
-                  type="button"
-                  onClick={() => setTimeFormat('24h')}
-                  style={{ padding: '4px 10px', borderRadius: '6px', border: 'none', background: timeFormat === '24h' ? '#ffffff' : 'transparent', color: timeFormat === '24h' ? '#7d3bec' : '#64748b', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', boxShadow: timeFormat === '24h' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none' }}
-                >24h</button>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {availableSlots.length === 0 && <div style={{ color: '#64748b', fontSize: '0.9rem', textAlign: 'center', marginTop: '20px' }}>No available times on this date.</div>}
-              {availableSlots.map(slot => {
-                const timeStr = timeFormat === '12h' ? slot.time12 : slot.time24;
-                return (
-                <div key={slot.time24} style={{ display: 'flex', gap: '8px' }}>
-                  <div
-                    onClick={() => setSelectedTime(slot.time12)}
-                    style={{
-                      flex: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      background: selectedTime === slot.time12 ? '#eff6ff' : '#ffffff',
-                      border: selectedTime === slot.time12 ? '1px solid #7d3bec' : '1px solid #e2e8f0',
-                      borderRadius: '10px',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#7d3bec', flexShrink: 0 }} />
-                    <span style={{ fontSize: '0.92rem', fontWeight: 600, color: '#0f172a' }}>{timeStr}</span>
-                  </div>
-                  {selectedTime === slot.time12 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', gridColumn: currentLayout === 'Month' ? 'span 2' : 'span 1' }}>
+            {eventType?.allowedLayouts && eventType.allowedLayouts.length > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <div style={{ display: 'inline-flex', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '4px' }}>
+                  {eventType.allowedLayouts.map(layout => (
                     <button
-                      onClick={() => setStep(2)}
-                      style={{
-                        padding: '0 20px',
-                        borderRadius: '10px',
-                        border: 'none',
-                        background: '#7d3bec',
-                        color: '#ffffff',
-                        fontWeight: 700,
-                        fontSize: '0.92rem',
-                        cursor: 'pointer',
-                        boxShadow: '0 4px 12px rgba(14, 97, 243, 0.2)'
-                      }}
+                      key={layout}
+                      type="button"
+                      onClick={() => setCurrentLayout(layout as any)}
+                      style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: currentLayout === layout ? '#ffffff' : 'transparent', color: currentLayout === layout ? '#0f172a' : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', boxShadow: currentLayout === layout ? '0 1px 2px rgba(0,0,0,0.05)' : 'none' }}
                     >
-                      Next
+                      {layout}
                     </button>
-                  )}
+                  ))}
                 </div>
-              )})}
-            </div>
+              </div>
+            )}
+
+            {currentLayout === 'Month' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1.45fr 1.15fr', gap: '32px' }}>
+                {/* Column 2: Center Interactive Calendar Pane */}
+                <div style={{ borderRight: '1px solid #f1f5f9', paddingRight: '24px', borderLeft: '1px solid #f1f5f9', paddingLeft: '24px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
+                    <span style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a' }}>{currentMonthName} {currentYear}</span>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear(y => y - 1); }
+                          else { setCurrentMonth(m => m - 1); }
+                        }}
+                        style={{ width: '30px', height: '30px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem' }}
+                      >&lt;</button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (currentMonth === 11) { setCurrentMonth(0); setCurrentYear(y => y + 1); }
+                          else { setCurrentMonth(m => m + 1); }
+                        }}
+                        style={{ width: '30px', height: '30px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem' }}
+                      >&gt;</button>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', fontSize: '0.72rem', fontWeight: 700, marginBottom: '10px' }}>
+                    <div style={{ color: '#7d3bec' }}>SUN</div>
+                    <div style={{ color: '#64748b' }}>MON</div>
+                    <div style={{ color: '#64748b' }}>TUE</div>
+                    <div style={{ color: '#64748b' }}>WED</div>
+                    <div style={{ color: '#64748b' }}>THU</div>
+                    <div style={{ color: '#64748b' }}>FRI</div>
+                    <div style={{ color: '#64748b' }}>SAT</div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px', textAlign: 'center', fontSize: '0.85rem', fontWeight: 500, color: '#0f172a', marginBottom: '20px' }}>
+                    <div style={{ padding: '6px 0', opacity: 0 }}>-</div>
+                    <div style={{ padding: '6px 0', opacity: 0 }}>-</div>
+                    <div style={{ padding: '6px 0', opacity: 0 }}>-</div>
+                    {Array.from({ length: daysInCurrentMonth }, (_, i) => i + 1).map(d => {
+                      const dateObj = new Date(currentYear, currentMonth, d);
+                      const isPast = dateObj < new Date(new Date().setHours(0,0,0,0));
+                      if (isPast) return <div key={d} style={{ padding: '8px 0', opacity: 0.3, textAlign: 'center' }}>{d}</div>;
+
+                      const isSel = d === selectedDate;
+                      return (
+                        <div
+                          key={d}
+                          onClick={() => { setSelectedDate(d); setSelectedDayTab(d); }}
+                          style={{
+                            width: '30px',
+                            height: '30px',
+                            margin: '0 auto',
+                            borderRadius: '50%',
+                            background: isSel ? '#7d3bec' : 'transparent',
+                            color: isSel ? '#ffffff' : '#0f172a',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: isSel ? 700 : 500,
+                            cursor: 'pointer',
+                            position: 'relative',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          <span>{d}</span>
+                          {isSel && <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#ffffff', position: 'absolute', bottom: '4px' }} />}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Dynamic Day Selection Tabs around selected date */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '6px', marginBottom: '14px' }}>
+                    {[Math.max(1, selectedDayTab - 1), selectedDayTab, Math.min(30, selectedDayTab + 1), Math.min(30, selectedDayTab + 2), Math.min(30, selectedDayTab + 3), Math.min(30, selectedDayTab + 4)].map(dayNum => {
+                      const activeDay = selectedDayTab === dayNum;
+                      return (
+                        <button
+                          key={dayNum}
+                          type="button"
+                          onClick={() => setSelectedDayTab(dayNum)}
+                          style={{
+                            padding: '8px 0',
+                            background: activeDay ? '#7d3bec' : '#ffffff',
+                            color: activeDay ? '#ffffff' : '#7d3bec',
+                            border: activeDay ? 'none' : '1px solid #bfdbfe',
+                            borderRadius: '8px',
+                            fontWeight: 700,
+                            fontSize: '0.85rem',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {dayNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Real-time Dynamic Time Slots */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px' }}>
+                    {['9:00 AM', '9:15 AM', '9:30 AM', '9:45 AM', '10:00 AM'].map(t => {
+                      const activeTime = selectedTime === t;
+                      return (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => setSelectedTime(t)}
+                          style={{
+                            padding: '8px 2px',
+                            background: activeTime ? '#7d3bec' : '#eff6ff',
+                            color: activeTime ? '#ffffff' : '#7d3bec',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontWeight: 600,
+                            fontSize: '0.72rem',
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                            textAlign: 'center'
+                          }}
+                        >
+                          {t}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Column 3: Right Time Slots Pane matching Screenshot */}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
+                    <span style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a' }}>
+                      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate % 7]} {selectedDate}
+                    </span>
+                    <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '8px', padding: '2px' }}>
+                      <button
+                        type="button"
+                        onClick={() => setTimeFormat('12h')}
+                        style={{ padding: '4px 10px', borderRadius: '6px', border: 'none', background: timeFormat === '12h' ? '#ffffff' : 'transparent', color: timeFormat === '12h' ? '#7d3bec' : '#64748b', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', boxShadow: timeFormat === '12h' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none' }}
+                      >12h</button>
+                      <button
+                        type="button"
+                        onClick={() => setTimeFormat('24h')}
+                        style={{ padding: '4px 10px', borderRadius: '6px', border: 'none', background: timeFormat === '24h' ? '#ffffff' : 'transparent', color: timeFormat === '24h' ? '#7d3bec' : '#64748b', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', boxShadow: timeFormat === '24h' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none' }}
+                      >24h</button>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {availableSlots.length === 0 && <div style={{ color: '#64748b', fontSize: '0.9rem', textAlign: 'center', marginTop: '20px' }}>No available times on this date.</div>}
+                    {availableSlots.map(slot => {
+                      const timeStr = timeFormat === '12h' ? slot.time12 : slot.time24;
+                      return (
+                      <div key={slot.time24} style={{ display: 'flex', gap: '8px' }}>
+                        <div
+                          onClick={() => setSelectedTime(slot.time12)}
+                          style={{
+                            flex: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            padding: '14px 16px',
+                            background: selectedTime === slot.time12 ? '#eff6ff' : '#ffffff',
+                            border: selectedTime === slot.time12 ? '1px solid #7d3bec' : '1px solid #e2e8f0',
+                            borderRadius: '10px',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#7d3bec', flexShrink: 0 }} />
+                          <span style={{ fontSize: '0.92rem', fontWeight: 600, color: '#0f172a' }}>{timeStr}</span>
+                        </div>
+                        {selectedTime === slot.time12 && (
+                          <button
+                            onClick={() => setStep(2)}
+                            style={{
+                              padding: '0 20px',
+                              borderRadius: '10px',
+                              border: 'none',
+                              background: '#7d3bec',
+                              color: '#ffffff',
+                              fontWeight: 700,
+                              fontSize: '0.92rem',
+                              cursor: 'pointer',
+                              boxShadow: '0 4px 12px rgba(14, 97, 243, 0.2)'
+                            }}
+                          >
+                            Next
+                          </button>
+                        )}
+                      </div>
+                    )})}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {currentLayout === 'Weekly' && (
+              <div style={{ borderLeft: '1px solid #f1f5f9', paddingLeft: '24px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <span style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a' }}>
+                      {currentMonthName.substring(0, 3)} {selectedDate}-{Math.min(daysInCurrentMonth, selectedDate + 6)}, {currentYear}
+                    </span>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <button style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&lt;</button>
+                      <button style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&gt;</button>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}>
+                      <div style={{ width: '36px', height: '20px', background: '#e2e8f0', borderRadius: '10px', position: 'relative' }}>
+                         <div style={{ width: '16px', height: '16px', background: '#fff', borderRadius: '50%', position: 'absolute', top: '2px', left: '2px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }} />
+                      </div>
+                      Overlay my calendar
+                    </label>
+                    <div style={{ display: 'flex', background: '#f8fafc', borderRadius: '8px', padding: '2px', border: '1px solid #e2e8f0' }}>
+                      <button onClick={() => setTimeFormat('12h')} style={{ padding: '4px 10px', borderRadius: '6px', border: 'none', background: timeFormat === '12h' ? '#ffffff' : 'transparent', color: timeFormat === '12h' ? '#0f172a' : '#64748b', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', boxShadow: timeFormat === '12h' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none' }}>12h</button>
+                      <button onClick={() => setTimeFormat('24h')} style={{ padding: '4px 10px', borderRadius: '6px', border: 'none', background: timeFormat === '24h' ? '#ffffff' : 'transparent', color: timeFormat === '24h' ? '#0f172a' : '#64748b', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', boxShadow: timeFormat === '24h' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none' }}>24h</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ position: 'relative' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '60px repeat(7, 1fr)', borderTop: '1px solid #e2e8f0', borderLeft: '1px solid #e2e8f0', background: '#f8fafc' }}>
+                     {/* Headers */}
+                     <div style={{ borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', background: '#fff', height: '48px' }}></div>
+                     {Array.from({ length: 7 }).map((_, i) => {
+                        const d = new Date(currentYear, currentMonth, selectedDate);
+                        d.setDate(d.getDate() + i);
+                        const dayStr = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][d.getDay()];
+                        const isSel = i === 0;
+                        return (
+                           <div key={i} style={{ borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', padding: '12px 0', textAlign: 'center', background: '#fff', height: '48px', boxSizing: 'border-box' }}>
+                              <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', lineHeight: 1 }}>
+                                 {dayStr} 
+                                 <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '22px', height: '22px', borderRadius: '50%', background: isSel ? '#0f172a' : 'transparent', color: isSel ? '#fff' : '#0f172a', fontSize: '0.8rem' }}>{d.getDate()}</span>
+                              </div>
+                           </div>
+                        );
+                     })}
+                     
+                     {/* Time Rows Background */}
+                     {['8:00am', '9:00am', '10:00am', '11:00am', '12:00pm', '1:00pm', '2:00pm', '3:00pm', '4:00pm', '5:00pm', '6:00pm'].map((t) => (
+                        <React.Fragment key={t}>
+                          <div style={{ borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', padding: '12px 8px', fontSize: '0.7rem', color: '#94a3b8', textAlign: 'right', background: '#fff', height: '40px', boxSizing: 'border-box' }}>
+                             {t}
+                          </div>
+                          {Array.from({ length: 7 }).map((_, colIdx) => (
+                            <div key={colIdx} style={{ borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', height: '40px', background: 'transparent', boxSizing: 'border-box' }}>
+                            </div>
+                          ))}
+                        </React.Fragment>
+                     ))}
+                  </div>
+
+                  {/* Absolute positioning overlay for actual slots */}
+                  <div style={{ position: 'absolute', top: '48px', left: '60px', right: 0, bottom: 0, display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', pointerEvents: 'none' }}>
+                     {Array.from({ length: 7 }).map((_, colIdx) => {
+                        const d = new Date(currentYear, currentMonth, selectedDate);
+                        d.setDate(d.getDate() + colIdx);
+                        const daySlots = generateTimeSlotsForDate(d);
+                        return (
+                          <div key={colIdx} style={{ position: 'relative', height: '100%' }}>
+                            {daySlots.map(slot => {
+                               let [hStr, mStr] = slot.time24.split(':');
+                               let hr = parseInt(hStr, 10);
+                               let min = parseInt(mStr, 10);
+                               
+                               // Convert time to Y offset. Grid starts at 8:00am (row 0), 40px per hour
+                               if (hr < 8 || hr > 18) return null; // Outside our grid view
+                               const topPx = (hr - 8) * 40 + (min / 60) * 40;
+                               const durMins = parseInt(eventType?.dur || '30');
+                               const heightPx = (durMins / 60) * 40;
+                               
+                               const isActive = selectedTime === slot.time12 && selectedDate === d.getDate() && currentMonth === d.getMonth();
+                               return (
+                                 <div 
+                                   key={slot.time12} 
+                                   onClick={() => { setCurrentMonth(d.getMonth()); setSelectedDate(d.getDate()); setSelectedTime(slot.time12); setStep(2); }}
+                                   style={{ position: 'absolute', top: `${topPx}px`, left: '4px', right: '4px', height: `${heightPx - 2}px`, background: isActive ? '#0f172a' : '#ffffff', border: isActive ? '1px solid #0f172a' : '1px solid #e2e8f0', borderRadius: '4px', pointerEvents: 'auto', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 600, color: isActive ? '#ffffff' : '#0f172a', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', transition: 'all 0.15s', zIndex: isActive ? 10 : 1 }}
+                                 >
+                                   {timeFormat === '12h' ? slot.time12 : slot.time24}
+                                 </div>
+                               );
+                            })}
+                          </div>
+                        );
+                     })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {currentLayout === 'Column' && (
+              <div style={{ borderLeft: '1px solid #f1f5f9', paddingLeft: '24px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <span style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a' }}>
+                      {currentMonthName.substring(0, 3)} {selectedDate}-{Math.min(daysInCurrentMonth, selectedDate + 6)}, {currentYear}
+                    </span>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <button style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&lt;</button>
+                      <button style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&gt;</button>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}>
+                      <div style={{ width: '36px', height: '20px', background: '#e2e8f0', borderRadius: '10px', position: 'relative' }}>
+                         <div style={{ width: '16px', height: '16px', background: '#fff', borderRadius: '50%', position: 'absolute', top: '2px', left: '2px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }} />
+                      </div>
+                      Overlay my calendar
+                    </label>
+                    <div style={{ display: 'flex', background: '#f8fafc', borderRadius: '8px', padding: '2px', border: '1px solid #e2e8f0' }}>
+                      <button onClick={() => setTimeFormat('12h')} style={{ padding: '4px 10px', borderRadius: '6px', border: 'none', background: timeFormat === '12h' ? '#ffffff' : 'transparent', color: timeFormat === '12h' ? '#0f172a' : '#64748b', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', boxShadow: timeFormat === '12h' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none' }}>12h</button>
+                      <button onClick={() => setTimeFormat('24h')} style={{ padding: '4px 10px', borderRadius: '6px', border: 'none', background: timeFormat === '24h' ? '#ffffff' : 'transparent', color: timeFormat === '24h' ? '#0f172a' : '#64748b', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', boxShadow: timeFormat === '24h' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none' }}>24h</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px' }}>
+                  {Array.from({ length: 5 }).map((_, i) => {
+                     const d = new Date(currentYear, currentMonth, selectedDate);
+                     d.setDate(d.getDate() + i);
+                     const dayStr = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][d.getDay()];
+                     const isSel = i === 0; // First column is the active date
+                     
+                     const daySlots = generateTimeSlotsForDate(d);
+                     
+                     return (
+                       <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                         <div style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                            {dayStr} 
+                            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '22px', height: '22px', borderRadius: '50%', background: isSel ? '#0f172a' : 'transparent', color: isSel ? '#fff' : '#0f172a', fontSize: '0.8rem' }}>{d.getDate()}</span>
+                         </div>
+                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                           {daySlots.length === 0 && <div style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center', padding: '10px' }}>No times</div>}
+                           {daySlots.map(slot => {
+                             const t = timeFormat === '12h' ? slot.time12 : slot.time24;
+                             const isActive = selectedTime === slot.time12 && selectedDate === d.getDate() && currentMonth === d.getMonth();
+                             return (
+                               <div key={t} style={{ display: 'flex', gap: '4px' }}>
+                                 <button
+                                   type="button"
+                                   onClick={() => { setCurrentMonth(d.getMonth()); setSelectedDate(d.getDate()); setSelectedTime(slot.time12); }}
+                                   style={{ flex: 1, padding: '10px', background: isActive ? '#0f172a' : '#ffffff', border: isActive ? '1px solid #0f172a' : '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.8rem', fontWeight: isActive ? 600 : 500, color: isActive ? '#ffffff' : '#0f172a', cursor: 'pointer', transition: 'all 0.15s ease', boxShadow: isActive ? '0 4px 6px rgba(0,0,0,0.1)' : 'none' }}
+                                 >
+                                   {t}
+                                 </button>
+                                 {isActive && (
+                                   <button
+                                     type="button"
+                                     onClick={() => setStep(2)}
+                                     style={{ padding: '0 12px', background: '#0f172a', border: '1px solid #0f172a', borderRadius: '8px', color: '#ffffff', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}
+                                   >
+                                     Next
+                                   </button>
+                                 )}
+                               </div>
+                             );
+                           })}
+                         </div>
+                       </div>
+                     );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
         </div>
