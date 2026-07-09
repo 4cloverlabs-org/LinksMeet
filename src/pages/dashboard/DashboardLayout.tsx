@@ -1332,6 +1332,8 @@ export default function DashboardLayout() {
                         <button
                           key={w.id}
                           onClick={() => {
+                            const keysToWipe = ['sm_event_types', 'linksmeet_event_types', 'sm_bookings', 'linksmeet_bookings', 'sm_campaigns', 'sm_campaign_settings', 'sm_threads', 'sm_sent_logs', 'sm_contacts'];
+                            keysToWipe.forEach(k => localStorage.removeItem(k));
                             setActiveWorkspaceId(w.id);
                             setWsDropdownOpen(false);
                             window.location.reload();
