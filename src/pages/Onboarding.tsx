@@ -232,7 +232,7 @@ Business Goals: ${data.businessGoals || 'N/A'}`;
             onClick={handleAnalyze}
             disabled={isAnalyzing}
           >
-            {isAnalyzing ? <Loader2 size={14} className="crm-spin" /> : <Sparkles size={14} color="#0E61F3" />}
+            {isAnalyzing ? <Loader2 size={14} className="crm-spin" /> : <Sparkles size={14} color="#7d3bec" />}
             {isAnalyzing ? 'Analyzing...' : 'Analyze'}
           </button>
         </div>
@@ -331,7 +331,7 @@ Business Goals: ${data.businessGoals || 'N/A'}`;
         )}
         {step === 4 && (
           <div className="onb-graphic ai-graphic">
-             <Sparkles size={48} color="#0E61F3" />
+             <Sparkles size={48} color="#7d3bec" />
              <h3>AI Powered CRM</h3>
              <p>Your brand details will perfectly tailor automatic email sequences for your inbound leads.</p>
           </div>

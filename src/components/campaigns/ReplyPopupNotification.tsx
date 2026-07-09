@@ -35,7 +35,7 @@ export const ReplyPopupNotification: React.FC<ReplyPopupNotificationProps> = ({ 
           className="camp-reply-popup"
         >
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#0E61F3', fontWeight: 700, fontSize: '0.9rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#7d3bec', fontWeight: 700, fontSize: '0.9rem' }}>
               <MessageSquare size={16} /> New Reply Received
             </div>
             <button
@@ -47,7 +47,7 @@ export const ReplyPopupNotification: React.FC<ReplyPopupNotificationProps> = ({ 
           </div>
 
           <div style={{ fontSize: '0.9rem', color: '#334155', lineHeight: 1.4 }}>
-            <strong style={{ color: '#0f172a' }}>{popupData.name}</strong> replied to your campaign <strong style={{ color: '#0E61F3' }}>"{popupData.campaign}"</strong>.
+            <strong style={{ color: '#0f172a' }}>{popupData.name}</strong> replied to your campaign <strong style={{ color: '#7d3bec' }}>"{popupData.campaign}"</strong>.
           </div>
 
           <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>

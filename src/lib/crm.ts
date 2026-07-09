@@ -2,7 +2,7 @@ import { supabase } from './supabase';
 import { createNotification } from './db';
 
 // ---- Types ----
-export type ContactStatus = 'New' | 'Contacted' | 'Follow-up' | 'Won' | 'Lost';
+export type ContactStatus = 'New' | 'Contacted' | 'Follow up' | 'Converted' | 'Lost';
 export interface Contact {
   id: string;
   name: string;

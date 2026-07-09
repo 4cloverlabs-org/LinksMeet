@@ -77,7 +77,7 @@ export default function TeamsPage() {
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
               {canManageTeam && (
-                <button className="crm-btn" style={{ background: '#2563EB', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '0 16px', height: '40px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => setShowInviteModal(true)}>
+                <button className="crm-btn" style={{ background: '#7d3bec', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '0 16px', height: '40px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => setShowInviteModal(true)}>
                   <Plus size={16} /> Invite Member
                 </button>
               )}

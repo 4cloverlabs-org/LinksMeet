@@ -34,13 +34,13 @@ type View =
   | 'admin' | 'help';
 
 /* ---------------- mock data ---------------- */
-// Indigo palette — avatars use shades of the single accent
-const AV_COLORS = ['#0E61F3', '#3B82F6', '#0849C2', '#60A5FA', '#1D4ED8', '#2563EB', '#93C5FD'];
+// Purple palette — avatars use shades of the single accent
+const AV_COLORS = ['#7d3bec', '#9333ea', '#a855f7', '#c084fc', '#d8b4fe', '#e9d5ff', '#6b21a8'];
 const avColor = (i: number) => AV_COLORS[i % AV_COLORS.length];
-// Light → dark indigo ramp for chart segments that need to be distinguished
-const RAMP = ['#C9DBFF', '#9BBDFD', '#6A98F9', '#0E61F3', '#0849C2'];
-const ACCENT = '#0E61F3';
-const ACCENT_SOFT = '#EAF2FF';
+// Light → dark purple ramp for chart segments that need to be distinguished
+const RAMP = ['#f3e8ff', '#d8b4fe', '#c084fc', '#7d3bec', '#581c87'];
+const ACCENT = '#7d3bec';
+const ACCENT_SOFT = '#f3e8ff';
 const initials = (n?: string) => {
   if (!n) return '?';
   const words = n.trim().split(' ').filter(Boolean);
@@ -52,13 +52,13 @@ const initials = (n?: string) => {
 const STATUS_META: Record<{ tag: string; color: string }> = {
   New: { tag: 'violet', color: RAMP[1] },
   Contacted: { tag: 'amber', color: RAMP[2] },
-  'Follow-up': { tag: 'amber', color: RAMP[3] },
-  Won: { tag: 'green', color: RAMP[4] },
+  'Follow up': { tag: 'amber', color: RAMP[3] },
+  Converted: { tag: 'green', color: RAMP[4] },
   Lost: { tag: 'rose', color: RAMP[0] },
 };
-const CONTACT_STATUSES: ContactStatus[] = ['New', 'Contacted', 'Follow-up', 'Won', 'Lost'];
+const CONTACT_STATUSES: ContactStatus[] = ['New', 'Contacted', 'Follow up', 'Converted', 'Lost'];
 // Statuses that still need attention from the user
-const OPEN_STATUSES: ContactStatus[] = ['New', 'Follow-up', 'Contacted'];
+const OPEN_STATUSES: ContactStatus[] = ['New', 'Follow up', 'Contacted'];
 
 const DEFAULT_EVENT_TYPES = [
   { title: '15 Min Meeting', dur: '15m', slug: '15min', desc: 'A quick intro or sync call.' },
@@ -1237,7 +1237,7 @@ export default function DashboardLayout() {
 
   // Real metrics derived from the user's contacts
   const statusCounts = useMemo(() => {
-    const m: Record<number> = { New: 0, Contacted: 0, 'Follow-up': 0, Won: 0, Lost: 0 };
+    const m: Record<string, number> = { New: 0, Contacted: 0, 'Follow up': 0, Converted: 0, Lost: 0 };
     contacts.forEach(c => { m[c.status] = (m[c.status] || 0) + 1; });
     return m;
   }, [contacts]);

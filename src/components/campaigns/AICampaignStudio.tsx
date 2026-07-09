@@ -79,8 +79,8 @@ export const AICampaignStudio: React.FC<AICampaignStudioProps> = ({ onApplySeque
         minWidth: compact ? '100%' : '500px'
       }}>
         <div style={{ marginBottom: '16px', position: 'relative' }}>
-          <Loader2 size={32} color="#0E61F3" className="crm-spin" />
-          <Sparkles size={16} color="#0E61F3" style={{ position: 'absolute', top: -5, right: -10 }} />
+          <Loader2 size={32} color="#7d3bec" className="crm-spin" />
+          <Sparkles size={16} color="#7d3bec" style={{ position: 'absolute', top: -5, right: -10 }} />
         </div>
         <h3 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', color: '#0f172a' }}>Generating AI Campaign...</h3>
         <p style={{ margin: 0, fontSize: '0.9rem', color: '#64748b' }}>Using your brand context to craft the perfect follow-ups.</p>
@@ -104,7 +104,7 @@ export const AICampaignStudio: React.FC<AICampaignStudioProps> = ({ onApplySeque
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
           <div>
             <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#0f172a', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Sparkles size={20} color="#0E61F3" />
+              <Sparkles size={20} color="#7d3bec" />
               AI Analyzer
               <span style={{ fontSize: '0.65rem', background: '#e0e7ff', color: '#4338ca', padding: '2px 8px', borderRadius: '100px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Beta</span>
             </h2>
@@ -120,13 +120,13 @@ export const AICampaignStudio: React.FC<AICampaignStudioProps> = ({ onApplySeque
         <div style={{ display: 'flex', gap: '24px', borderBottom: '1px solid #e2e8f0', marginBottom: '24px' }}>
           <button
             onClick={() => setActiveTab('Analyze')}
-            style={{ padding: '8px 0', background: 'none', border: 'none', borderBottom: activeTab === 'Analyze' ? '2px solid #0E61F3' : '2px solid transparent', color: activeTab === 'Analyze' ? '#0E61F3' : '#64748b', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer' }}
+            style={{ padding: '8px 0', background: 'none', border: 'none', borderBottom: activeTab === 'Analyze' ? '2px solid #7d3bec' : '2px solid transparent', color: activeTab === 'Analyze' ? '#7d3bec' : '#64748b', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer' }}
           >
             Analyze
           </button>
           <button
             onClick={() => setActiveTab('Results')}
-            style={{ padding: '8px 0', background: 'none', border: 'none', borderBottom: activeTab === 'Results' ? '2px solid #0E61F3' : '2px solid transparent', color: activeTab === 'Results' ? '#0E61F3' : '#64748b', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer' }}
+            style={{ padding: '8px 0', background: 'none', border: 'none', borderBottom: activeTab === 'Results' ? '2px solid #7d3bec' : '2px solid transparent', color: activeTab === 'Results' ? '#7d3bec' : '#64748b', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer' }}
           >
             Results
           </button>
@@ -143,13 +143,13 @@ export const AICampaignStudio: React.FC<AICampaignStudioProps> = ({ onApplySeque
             <div style={{ display: 'flex', background: '#f8fafc', padding: '4px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '16px' }}>
               <div 
                 onClick={() => setInputType('url')}
-                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', borderRadius: '6px', background: inputType === 'url' ? '#ffffff' : 'transparent', color: inputType === 'url' ? '#0E61F3' : '#64748b', border: inputType === 'url' ? '1px solid #bfdbfe' : '1px solid transparent', boxShadow: inputType === 'url' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.15s ease' }}
+                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', borderRadius: '6px', background: inputType === 'url' ? '#ffffff' : 'transparent', color: inputType === 'url' ? '#7d3bec' : '#64748b', border: inputType === 'url' ? '1px solid #bfdbfe' : '1px solid transparent', boxShadow: inputType === 'url' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.15s ease' }}
               >
                 <Globe size={14} /> Website URL
               </div>
               <div 
                 onClick={() => setInputType('brand')}
-                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', borderRadius: '6px', background: inputType === 'brand' ? '#ffffff' : 'transparent', color: inputType === 'brand' ? '#0E61F3' : '#64748b', border: inputType === 'brand' ? '1px solid #bfdbfe' : '1px solid transparent', boxShadow: inputType === 'brand' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.15s ease' }}
+                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', borderRadius: '6px', background: inputType === 'brand' ? '#ffffff' : 'transparent', color: inputType === 'brand' ? '#7d3bec' : '#64748b', border: inputType === 'brand' ? '1px solid #bfdbfe' : '1px solid transparent', boxShadow: inputType === 'brand' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.15s ease' }}
               >
                 <Sparkles size={14} /> Brand Description
               </div>
@@ -182,7 +182,7 @@ export const AICampaignStudio: React.FC<AICampaignStudioProps> = ({ onApplySeque
               onClick={handleGenerate}
               disabled={isScraping || isGenerating || (inputType === 'url' ? !urlInput.trim() : !descInput.trim())}
               style={{
-                width: '100%', padding: '10px', fontSize: '0.88rem', fontWeight: 600, background: '#0E61F3', color: '#ffffff', border: 'none', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: (isScraping || isGenerating) ? 'not-allowed' : 'pointer', transition: 'all 0.15s ease', marginBottom: '24px'
+                width: '100%', padding: '10px', fontSize: '0.88rem', fontWeight: 600, background: '#7d3bec', color: '#ffffff', border: 'none', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: (isScraping || isGenerating) ? 'not-allowed' : 'pointer', transition: 'all 0.15s ease', marginBottom: '24px'
               }}
             >
               {isScraping ? <><Loader2 size={16} className="crm-spin-ic" /> Analyzing...</> : isGenerating ? <><Loader2 size={16} className="crm-spin-ic" /> Generating...</> : <><Sparkles size={16} /> Analyze</>}

@@ -17,9 +17,10 @@ export interface CampaignModuleProps {
   onInitConsumed?: () => void;
   userProfile?: any;
   canEdit?: boolean;
+  changeStatus?: (id: string, status: any) => void;
 }
 
-export const CampaignModule: React.FC<CampaignModuleProps> = ({ initLead, onInitConsumed, userProfile, canEdit = true }) => {
+export const CampaignModule: React.FC<CampaignModuleProps> = ({ initLead, onInitConsumed, userProfile, canEdit = true, changeStatus }) => {
   const { user } = useAuth();
   const [activeCampaignId, setActiveCampaignId] = useState<string | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>(campaignEngine.getCampaigns());
@@ -48,9 +49,11 @@ export const CampaignModule: React.FC<CampaignModuleProps> = ({ initLead, onInit
   }, []);
 
   const [autoStartPrompt, setAutoStartPrompt] = useState<string | undefined>();
+  const processedLeadId = React.useRef<string | null>(null);
 
   useEffect(() => {
-    if (initLead) {
+    if (initLead && processedLeadId.current !== initLead.id) {
+      processedLeadId.current = initLead.id;
       const newCamp: Campaign = {
         id: 'camp_' + Date.now(),
         name: `Campaign for ${initLead.name}`,
@@ -164,12 +167,12 @@ export const CampaignModule: React.FC<CampaignModuleProps> = ({ initLead, onInit
               <div style={{ position: 'relative' }}>
                 <button style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                   <Bell size={18} />
-                  <span style={{ position: 'absolute', top: '-4px', right: '-6px', background: '#0E61F3', color: '#fff', fontSize: '0.68rem', fontWeight: 700, width: '16px', height: '16px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>3</span>
+                  <span style={{ position: 'absolute', top: '-4px', right: '-6px', background: '#7d3bec', color: '#fff', fontSize: '0.68rem', fontWeight: 700, width: '16px', height: '16px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>3</span>
                 </button>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '100px', padding: '4px 12px 4px 4px', cursor: 'pointer' }}>
-                <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: '#0E61F3', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.78rem' }}>
+                <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: '#7d3bec', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.78rem' }}>
                   {user?.email?.[0]?.toUpperCase() || 'K'}
                 </div>
                 <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#0f172a' }}>
@@ -220,32 +223,32 @@ export const CampaignModule: React.FC<CampaignModuleProps> = ({ initLead, onInit
             <div style={{ display: 'flex', gap: '32px', borderTop: 'none' }}>
               <button
                 onClick={() => setTab('builder')}
-                style={{ padding: '12px 0', background: 'none', border: 'none', borderBottom: (tab as string) === 'builder' ? '2px solid #0E61F3' : '2px solid transparent', color: (tab as string) === 'builder' ? '#0E61F3' : '#64748b', fontWeight: 700, fontSize: '0.92rem', cursor: 'pointer' }}
+                style={{ padding: '12px 0', background: 'none', border: 'none', borderBottom: (tab as string) === 'builder' ? '2px solid #7d3bec' : '2px solid transparent', color: (tab as string) === 'builder' ? '#7d3bec' : '#64748b', fontWeight: 700, fontSize: '0.92rem', cursor: 'pointer' }}
               >
                 Builder
               </button>
               <button
                 onClick={() => setTab('sent')}
-                style={{ padding: '12px 0', background: 'none', border: 'none', borderBottom: tab === 'sent' ? '2px solid #0E61F3' : '2px solid transparent', color: tab === 'sent' ? '#0E61F3' : '#64748b', fontWeight: 600, fontSize: '0.92rem', cursor: 'pointer' }}
+                style={{ padding: '12px 0', background: 'none', border: 'none', borderBottom: tab === 'sent' ? '2px solid #7d3bec' : '2px solid transparent', color: tab === 'sent' ? '#7d3bec' : '#64748b', fontWeight: 600, fontSize: '0.92rem', cursor: 'pointer' }}
               >
                 Activity
               </button>
               <button
                 onClick={() => setTab('conversations')}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 0', background: 'none', border: 'none', borderBottom: tab === 'conversations' ? '2px solid #0E61F3' : '2px solid transparent', color: tab === 'conversations' ? '#0E61F3' : '#64748b', fontWeight: 600, fontSize: '0.92rem', cursor: 'pointer' }}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 0', background: 'none', border: 'none', borderBottom: tab === 'conversations' ? '2px solid #7d3bec' : '2px solid transparent', color: tab === 'conversations' ? '#7d3bec' : '#64748b', fontWeight: 600, fontSize: '0.92rem', cursor: 'pointer' }}
               >
                 Inbox & Replies
-                <span style={{ background: '#EAF2FF', color: '#0E61F3', padding: '2px 8px', borderRadius: '100px', fontSize: '0.72rem', fontWeight: 700 }}>12</span>
+                <span style={{ background: '#EAF2FF', color: '#7d3bec', padding: '2px 8px', borderRadius: '100px', fontSize: '0.72rem', fontWeight: 700 }}>12</span>
               </button>
               <button
                 onClick={() => setTab('analytics')}
-                style={{ padding: '12px 0', background: 'none', border: 'none', borderBottom: tab === 'analytics' ? '2px solid #0E61F3' : '2px solid transparent', color: tab === 'analytics' ? '#0E61F3' : '#64748b', fontWeight: 600, fontSize: '0.92rem', cursor: 'pointer' }}
+                style={{ padding: '12px 0', background: 'none', border: 'none', borderBottom: tab === 'analytics' ? '2px solid #7d3bec' : '2px solid transparent', color: tab === 'analytics' ? '#7d3bec' : '#64748b', fontWeight: 600, fontSize: '0.92rem', cursor: 'pointer' }}
               >
                 Analytics
               </button>
               <button
                 onClick={() => setTab('settings')}
-                style={{ padding: '12px 0', background: 'none', border: 'none', borderBottom: tab === 'settings' ? '2px solid #0E61F3' : '2px solid transparent', color: tab === 'settings' ? '#0E61F3' : '#64748b', fontWeight: 600, fontSize: '0.92rem', cursor: 'pointer' }}
+                style={{ padding: '12px 0', background: 'none', border: 'none', borderBottom: tab === 'settings' ? '2px solid #7d3bec' : '2px solid transparent', color: tab === 'settings' ? '#7d3bec' : '#64748b', fontWeight: 600, fontSize: '0.92rem', cursor: 'pointer' }}
               >
                 Settings
               </button>
@@ -259,7 +262,11 @@ export const CampaignModule: React.FC<CampaignModuleProps> = ({ initLead, onInit
         {tab === 'builder' && <CampaignBuilder userEmail={user?.email || 'lead@example.com'} campaignId={activeCampaignId} onBack={() => {
           setAutoStartPrompt(undefined);
           setActiveCampaignId(null);
-        }} autoStartAIPrompt={autoStartPrompt} />}
+        }} autoStartAIPrompt={autoStartPrompt} onCampaignStart={() => {
+          if (initLead && changeStatus) {
+            changeStatus(initLead.id, 'Follow up');
+          }
+        }} />}
         {tab === 'sent' && <SentActivityFeed />}
         {tab === 'conversations' && <ConversationThreadView />}
         {tab === 'analytics' && <CampaignAnalytics />}

@@ -35,7 +35,7 @@ export const CampaignAnalytics: React.FC = () => {
         <div className="camp-stat-card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'var(--camp-text-muted)', fontSize: '0.85rem', fontWeight: 600 }}>
             <span>Open Rate</span>
-            <Mail size={16} style={{ color: '#0E61F3' }} />
+            <Mail size={16} style={{ color: '#7d3bec' }} />
           </div>
           <div className="camp-stat-val">{openRate}</div>
           <div style={{ fontSize: '0.78rem', color: '#16a34a', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -116,7 +116,7 @@ export const CampaignAnalytics: React.FC = () => {
               const height = (d.v / 100) * 140;
               return (
                 <div key={d.h} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                  <div style={{ width: '100%', background: d.v > 75 ? '#0E61F3' : '#C9DBFF', height: `${height}px`, borderRadius: '6px 6px 0 0', transition: 'all 0.3s ease' }} title={`${d.v}% opens at ${d.h}`} />
+                  <div style={{ width: '100%', background: d.v > 75 ? '#7d3bec' : '#C9DBFF', height: `${height}px`, borderRadius: '6px 6px 0 0', transition: 'all 0.3s ease' }} title={`${d.v}% opens at ${d.h}`} />
                   <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>{d.h}</span>
                 </div>
               );
@@ -129,7 +129,7 @@ export const CampaignAnalytics: React.FC = () => {
           <h4 style={{ margin: '0 0 16px', fontSize: '1rem', fontWeight: 700 }}>Campaign Conversion Comparison</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingTop: '8px' }}>
             {[
-              { name: 'SaaS Founders Outbound Q3', open: 64, reply: 22, color: '#0E61F3' },
+              { name: 'SaaS Founders Outbound Q3', open: 64, reply: 22, color: '#7d3bec' },
               { name: 'Healthcare Agency Outreach', open: 52, reply: 18, color: '#8b5cf6' },
               { name: 'Fintech Series A Intro', open: 48, reply: 14, color: '#ec4899' },
             ].map(c => (
@@ -152,7 +152,7 @@ export const CampaignAnalytics: React.FC = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
         <div className="camp-stat-card">
           <h4 style={{ margin: '0 0 16px', fontSize: '0.95rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Monitor size={16} style={{ color: '#0E61F3' }} /> Opens by Device
+            <Monitor size={16} style={{ color: '#7d3bec' }} /> Opens by Device
           </h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>

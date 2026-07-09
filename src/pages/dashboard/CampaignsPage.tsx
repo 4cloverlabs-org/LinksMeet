@@ -33,7 +33,7 @@ export default function CampaignsPage() {
 
   return (
     <>
-      <CampaignModule initLead={initCampaignLead} onInitConsumed={() => setInitCampaignLead(null)} userProfile={userProfile} canEdit={canEdit} />
+      <CampaignModule initLead={initCampaignLead} onInitConsumed={() => setInitCampaignLead(null)} userProfile={userProfile} canEdit={canEdit} changeStatus={changeStatus} />
     </>
   );
 }

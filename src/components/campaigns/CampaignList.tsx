@@ -72,13 +72,13 @@ export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, canEdit =
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <button style={{ background: 'none', border: 'none', color: '#0E61F3', fontSize: '0.88rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+            <button style={{ background: 'none', border: 'none', color: '#7d3bec', fontSize: '0.88rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
               <PlayCircle size={16} /> How it works
             </button>
             {canEdit && (<button
               onClick={onCreateNew}
               style={{
-                background: '#0E61F3',
+                background: '#7d3bec',
                 color: '#fff',
                 padding: '10px 18px',
                 borderRadius: '8px',
@@ -117,8 +117,8 @@ export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, canEdit =
                     padding: '0 0 16px 0',
                     fontSize: '0.92rem',
                     fontWeight: isActive ? 600 : 500,
-                    color: isActive ? '#0E61F3' : '#64748b',
-                    borderBottom: isActive ? '2px solid #0E61F3' : '2px solid transparent',
+                    color: isActive ? '#7d3bec' : '#64748b',
+                    borderBottom: isActive ? '2px solid #7d3bec' : '2px solid transparent',
                     cursor: 'pointer',
                     marginBottom: '-1px'
                   }}
@@ -288,7 +288,7 @@ export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, canEdit =
                       </div>
                       {camp.status !== 'Draft' && (
                         <div style={{ width: '100%', height: '4px', background: '#f1f5f9', borderRadius: '2px', overflow: 'hidden' }}>
-                          <div style={{ width: `${rowReplyRate}%`, height: '100%', background: '#0E61F3', borderRadius: '2px' }} />
+                          <div style={{ width: `${rowReplyRate}%`, height: '100%', background: '#7d3bec', borderRadius: '2px' }} />
                         </div>
                       )}
                     </td>
@@ -328,7 +328,7 @@ export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, canEdit =
           </button>
           <button 
             style={{ 
-              background: '#0E61F3', 
+              background: '#7d3bec', 
               color: '#fff', 
               border: 'none', 
               borderRadius: '6px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'default', fontWeight: 600, fontSize: '0.85rem' 

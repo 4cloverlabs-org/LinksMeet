@@ -53,7 +53,7 @@ export const ConversationThreadView: React.FC = () => {
             Live thread view with automated campaign pausing and AI-powered reply rewriting.
           </p>
         </div>
-        <button onClick={simulateIncoming} className="camp-btn camp-btn-ghost" style={{ fontSize: '0.82rem', borderColor: '#60A5FA', color: '#0E61F3' }}>
+        <button onClick={simulateIncoming} className="camp-btn camp-btn-ghost" style={{ fontSize: '0.82rem', borderColor: '#60A5FA', color: '#7d3bec' }}>
           💬 Simulate Incoming Lead Reply
         </button>
       </div>
@@ -81,7 +81,7 @@ export const ConversationThreadView: React.FC = () => {
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                   <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--camp-text)' }}>{t.leadName}</span>
-                  {t.unread && <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#0E61F3' }} />}
+                  {t.unread && <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#7d3bec' }} />}
                 </div>
                 <div style={{ fontSize: '0.8rem', color: '#334155', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: '4px' }}>
                   {t.subject}
@@ -110,7 +110,7 @@ export const ConversationThreadView: React.FC = () => {
 
             {/* AI Summary Banner */}
             <div style={{ background: '#f8fafc', padding: '12px 20px', borderBottom: '1px solid #e0e7ff', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Sparkles size={16} style={{ color: '#0E61F3', flexShrink: 0 }} />
+              <Sparkles size={16} style={{ color: '#7d3bec', flexShrink: 0 }} />
               <div style={{ fontSize: '0.82rem', color: '#3730a3', lineHeight: 1.4 }}>
                 <strong>AI Conversation Summary:</strong> {activeThread.summary}
               </div>
@@ -140,10 +140,10 @@ export const ConversationThreadView: React.FC = () => {
             {/* AI Reply Assistant Box */}
             <div style={{ padding: '16px 20px', background: '#f8fafc', borderTop: '1px solid var(--camp-border)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0E61F3', display: 'flex', alignItems: 'center', gap: '4px', marginRight: '6px' }}>
+                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#7d3bec', display: 'flex', alignItems: 'center', gap: '4px', marginRight: '6px' }}>
                   <Sparkles size={14} /> AI Reply Assistant:
                 </span>
-                <button disabled={isAiWorking} onClick={() => handleAiAction('suggest')} className="camp-rte-btn" style={{ background: '#EAF2FF', color: '#0E61F3', fontWeight: 600 }}>
+                <button disabled={isAiWorking} onClick={() => handleAiAction('suggest')} className="camp-rte-btn" style={{ background: '#EAF2FF', color: '#7d3bec', fontWeight: 600 }}>
                   ✨ Suggest Reply
                 </button>
                 <button disabled={isAiWorking} onClick={() => handleAiAction('professional')} className="camp-rte-btn">

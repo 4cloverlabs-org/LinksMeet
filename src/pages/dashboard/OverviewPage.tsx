@@ -38,7 +38,7 @@ export default function OverviewPage() {
                   {[
                     { icon: Users, val: contacts.length, lab: 'Total leads' },
                     { icon: CalendarCheck, val: followUps.length, lab: 'Needs follow-up' },
-                    { icon: Trophy, val: statusCounts.Won, lab: 'Won' },
+                    { icon: Trophy, val: statusCounts.Converted, lab: 'Converted' },
                     { icon: UserPlus, val: addedThisWeek, lab: 'New this week', up: true },
                   ].map(k => {
                     const Icon = k.icon;
@@ -83,7 +83,7 @@ export default function OverviewPage() {
                           </div>
                           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
                             <span className={`crm-tag ${STATUS_META[c.status].tag}`}>{c.status}</span>
-                            <button className="crm-btn crm-btn-ghost" onClick={() => changeStatus(c.id, 'Won')}>Mark won</button>
+                            <button className="crm-btn crm-btn-ghost" onClick={() => changeStatus(c.id, 'Converted')}>Mark converted</button>
                           </div>
                         </div>
                       ))

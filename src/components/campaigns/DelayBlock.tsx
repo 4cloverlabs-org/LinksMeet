@@ -38,7 +38,7 @@ export const DelayBlock: React.FC<DelayBlockProps> = ({
       style={{ position: 'relative', margin: '32px 0', paddingLeft: '0' }}
     >
       <div className="camp-timeline-node">
-        <div style={{ width: '8px', height: '8px', background: '#0E61F3', borderRadius: '50%' }} />
+        <div style={{ width: '8px', height: '8px', background: '#7d3bec', borderRadius: '50%' }} />
         {/* Local vertical line going down to the next node */}
         <div style={{ position: 'absolute', top: '24px', bottom: '-150px', left: '9px', width: '2px', background: '#e2e8f0', zIndex: -1 }} />
       </div>
@@ -91,7 +91,7 @@ export const DelayBlock: React.FC<DelayBlockProps> = ({
         {isWaiting && (
           <div style={{ marginLeft: '12px' }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#ffffff', border: '1px solid #e2e8f0', padding: '4px 12px 4px 6px', borderRadius: '100px', fontSize: '0.8rem', fontWeight: 600, color: '#334155' }}>
-              <div style={{ background: '#0E61F3', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+              <div style={{ background: '#7d3bec', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
                 <Clock size={12} strokeWidth={2.5} />
               </div>
               Waiting: {formatCountdown(step.remainingSeconds || 0)}

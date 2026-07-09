@@ -37,16 +37,17 @@ interface CampaignBuilderProps {
   campaignId: string;
   onBack?: () => void;
   autoStartAIPrompt?: string;
+  onCampaignStart?: () => void;
 }
 
-export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, campaignId, onBack, autoStartAIPrompt }) => {
+export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, campaignId, onBack, autoStartAIPrompt, onCampaignStart }) => {
   const { } = useAuth();
   const [campaigns, setCampaigns] = useState<Campaign[]>(campaignEngine.getCampaigns());
   const [selectedStepId, setSelectedStepId] = useState<string>('');
   const [showAIModal, setShowAIModal] = useState<boolean>(false);
 
   useEffect(() => {
-    if (autoStartAIPrompt === '') {
+    if (autoStartAIPrompt !== undefined) {
       setShowAIModal(true);
     }
   }, [autoStartAIPrompt]);
@@ -188,7 +189,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
       {showAIModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#fff', borderRadius: '16px', padding: '32px', width: '500px', maxWidth: '90vw', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
-            <h2 style={{ margin: '0 0 16px', fontSize: '18px', fontWeight: 600, color: '#111827', display: 'flex', alignItems: 'center', gap: '8px' }}><Sparkles size={18} color="#0E61F3" /> Analyze Website or Brand</h2>
+            <h2 style={{ margin: '0 0 16px', fontSize: '18px', fontWeight: 600, color: '#111827', display: 'flex', alignItems: 'center', gap: '8px' }}><Sparkles size={18} color="#7d3bec" /> Analyze Website or Brand</h2>
             
             <AICampaignStudio
               compact={true}
@@ -200,6 +201,8 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
                 setShowAIModal(false);
               }}
               recipientEmail={activeCamp.recipientEmail}
+              initPrompt={autoStartAIPrompt || ''}
+              autoStart={!!autoStartAIPrompt}
             />
             
             <div style={{ marginTop: '24px', textAlign: 'right' }}>
@@ -210,7 +213,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
       )}
 
       {toastMsg && (
-        <div style={{ position: 'fixed', bottom: '40px', right: '32px', zIndex: 100, background: '#0E61F3', color: '#fff', padding: '10px 18px', borderRadius: '10px', fontWeight: 700, fontSize: '0.88rem', boxShadow: '0 8px 20px rgba(14, 97, 243, 0.35)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ position: 'fixed', bottom: '40px', right: '32px', zIndex: 100, background: '#7d3bec', color: '#fff', padding: '10px 18px', borderRadius: '10px', fontWeight: 700, fontSize: '0.88rem', boxShadow: '0 8px 20px rgba(14, 97, 243, 0.35)', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <CheckCircle2 size={16} /> {toastMsg}
         </div>
       )}
@@ -218,7 +221,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
       <div style={{ position: 'sticky', top: 0, zIndex: 50, background: '#ffffff', borderBottom: '1px solid #e2e8f0', borderRadius: 0, padding: '16px 40px 16px 40px', marginBottom: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
         <button
           onClick={onBack}
-          style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: '#0E61F3', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', padding: 0, marginBottom: '8px' }}
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: '#7d3bec', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', padding: 0, marginBottom: '8px' }}
         >
           <ArrowLeft size={16} /> Back to all sequences
         </button>
@@ -240,10 +243,11 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
               onClick={() => {
                 if (activeCamp.status !== 'Running') {
                    campaignEngine.startCampaign(activeCamp.id);
+                   if (onCampaignStart) onCampaignStart();
                    showToast('Sequence started');
                 }
               }}
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', background: activeCamp.status === 'Running' ? '#e2e8f0' : '#0E61F3', border: 'none', color: activeCamp.status === 'Running' ? '#94a3b8' : '#ffffff', fontWeight: 600, fontSize: '0.85rem', padding: '9px 16px', borderRadius: '6px', cursor: activeCamp.status === 'Running' ? 'not-allowed' : 'pointer', transition: 'all 0.15s ease', boxShadow: activeCamp.status === 'Running' ? 'none' : '0 2px 4px rgba(14, 97, 243, 0.15)' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', background: activeCamp.status === 'Running' ? '#e2e8f0' : '#7d3bec', border: 'none', color: activeCamp.status === 'Running' ? '#94a3b8' : '#ffffff', fontWeight: 600, fontSize: '0.85rem', padding: '9px 16px', borderRadius: '6px', cursor: activeCamp.status === 'Running' ? 'not-allowed' : 'pointer', transition: 'all 0.15s ease', boxShadow: activeCamp.status === 'Running' ? 'none' : '0 2px 4px rgba(14, 97, 243, 0.15)' }}
             >
               <Play size={14} fill="currentColor" /> Start Sequence
             </button>
@@ -266,7 +270,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
                   showToast('Sequence name updated');
                 }
               }}
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#ffffff', border: '1px solid #e2e8f0', color: '#0E61F3', fontWeight: 600, fontSize: '0.85rem', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.15s ease' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#ffffff', border: '1px solid #e2e8f0', color: '#7d3bec', fontWeight: 600, fontSize: '0.85rem', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.15s ease' }}
               onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
               onMouseLeave={(e) => e.currentTarget.style.background = '#ffffff'}
             >
@@ -275,9 +279,9 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
 
             <button 
               onClick={handleAddFollowUp}
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#0E61F3', border: 'none', color: '#ffffff', fontWeight: 600, fontSize: '0.85rem', padding: '9px 16px', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.15s ease', boxShadow: '0 2px 4px rgba(14, 97, 243, 0.15)' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#7d3bec', border: 'none', color: '#ffffff', fontWeight: 600, fontSize: '0.85rem', padding: '9px 16px', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.15s ease', boxShadow: '0 2px 4px rgba(14, 97, 243, 0.15)' }}
               onMouseEnter={(e) => { e.currentTarget.style.background = '#0c52ce'; e.currentTarget.style.boxShadow = '0 4px 6px rgba(14, 97, 243, 0.25)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = '#0E61F3'; e.currentTarget.style.boxShadow = '0 2px 4px rgba(14, 97, 243, 0.15)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = '#7d3bec'; e.currentTarget.style.boxShadow = '0 2px 4px rgba(14, 97, 243, 0.15)'; }}
             >
               <Plus size={16} strokeWidth={2.5} /> Add Step
             </button>
@@ -290,7 +294,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#f1f5f9', color: '#0E61F3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#f1f5f9', color: '#7d3bec', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Mail size={18} />
             </div>
             <div>
@@ -308,16 +312,16 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
                 const curNum = emailCounter;
                 return (
                   <div key={step.id} style={{ position: 'relative', marginBottom: '20px' }}>
-                    <div style={{ position: 'absolute', left: '0', top: '24px', width: '26px', height: '26px', borderRadius: '50%', background: '#0E61F3', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.8rem', zIndex: 2, border: '2px solid #ffffff' }}>
+                    <div style={{ position: 'absolute', left: '0', top: '24px', width: '26px', height: '26px', borderRadius: '50%', background: '#7d3bec', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.8rem', zIndex: 2, border: '2px solid #ffffff' }}>
                       {curNum}
                     </div>
                     <div
                       onClick={() => setSelectedStepId(step.id)}
-                      style={{ marginLeft: '40px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', cursor: 'pointer', transition: 'all 0.15s ease', boxShadow: isSel ? '0 0 0 2px #0E61F3, 0 4px 12px rgba(14, 97, 243, 0.1)' : '0 1px 2px rgba(0,0,0,0.02)' }}
+                      style={{ marginLeft: '40px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', cursor: 'pointer', transition: 'all 0.15s ease', boxShadow: isSel ? '0 0 0 2px #7d3bec, 0 4px 12px rgba(14, 97, 243, 0.1)' : '0 1px 2px rgba(0,0,0,0.02)' }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#eff6ff', color: '#0E61F3', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#eff6ff', color: '#7d3bec', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                             <Mail size={16} />
                           </div>
                           <div>
@@ -326,7 +330,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
                           </div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <span style={{ background: '#eff6ff', color: '#0E61F3', fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: '4px' }}>Email</span>
+                          <span style={{ background: '#eff6ff', color: '#7d3bec', fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: '4px' }}>Email</span>
                           {idx > 0 && (
                             <div
                               onClick={(e) => { e.stopPropagation(); handleDeleteStep(idx); }}
@@ -350,7 +354,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
                     <div style={{ position: 'absolute', left: '9px', top: '24px', width: '8px', height: '8px', borderRadius: '50%', background: '#94a3b8', zIndex: 2 }} />
                     <div style={{ marginLeft: '40px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <Hourglass size={18} color="#0E61F3" />
+                        <Hourglass size={18} color="#7d3bec" />
                         <div>
                           <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>Wait for</div>
                           <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
@@ -375,7 +379,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
                               }}
                               onMouseOver={(e) => e.currentTarget.style.border = '1px solid #cbd5e1'}
                               onMouseOut={(e) => e.currentTarget.style.border = '1px solid transparent'}
-                              onFocus={(e) => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.border = '1px solid #0E61F3'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(14,97,243,0.1)' }}
+                              onFocus={(e) => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.border = '1px solid #7d3bec'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(14,97,243,0.1)' }}
                               onBlur={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.border = '1px solid transparent'; e.currentTarget.style.boxShadow = 'none' }}
                             />
                             <DelayUnitSelect
@@ -402,7 +406,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
             })}
 
             <button onClick={handleAddFollowUp} style={{ marginLeft: '40px', display: 'flex', alignItems: 'center', gap: '12px', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0', marginTop: '10px' }}>
-              <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: '#ffffff', border: '1px dashed #cbd5e1', color: '#0E61F3', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', left: '-40px' }}><Plus size={14} /></div>
+              <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: '#ffffff', border: '1px dashed #cbd5e1', color: '#7d3bec', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', left: '-40px' }}><Plus size={14} /></div>
               <div style={{ marginLeft: '-28px', textAlign: 'left' }}>
                 <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '0.88rem' }}>Add Step</div>
                 <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Add Email or SMS step</div>
@@ -413,10 +417,10 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
           <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', marginTop: '16px' }}>
             <div style={{ fontWeight: 600, color: '#334155', fontSize: '0.85rem', marginBottom: '16px' }}>Sequence Performance <span style={{ color: '#94a3b8', fontWeight: 400 }}>(Last 30 days)</span></div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}><span style={{ color: '#475569', display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle2 size={14} color="#0E61F3" /> Total enrolled</span><span style={{ fontWeight: 700, color: '#0f172a' }}>{totalEnrolled}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}><span style={{ color: '#475569', display: 'flex', alignItems: 'center', gap: '8px' }}><Mail size={14} color="#0E61F3" /> Emails sent</span><span style={{ fontWeight: 700, color: '#0f172a' }}>{emailsSent}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}><span style={{ color: '#475569', display: 'flex', alignItems: 'center', gap: '8px' }}><Eye size={14} color="#0E61F3" /> Open rate</span><span style={{ fontWeight: 700, color: '#0f172a' }}>{openRate}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}><span style={{ color: '#475569', display: 'flex', alignItems: 'center', gap: '8px' }}><Send size={14} color="#0E61F3" /> Reply rate</span><span style={{ fontWeight: 700, color: '#0f172a' }}>{replyRate}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}><span style={{ color: '#475569', display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle2 size={14} color="#7d3bec" /> Total enrolled</span><span style={{ fontWeight: 700, color: '#0f172a' }}>{totalEnrolled}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}><span style={{ color: '#475569', display: 'flex', alignItems: 'center', gap: '8px' }}><Mail size={14} color="#7d3bec" /> Emails sent</span><span style={{ fontWeight: 700, color: '#0f172a' }}>{emailsSent}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}><span style={{ color: '#475569', display: 'flex', alignItems: 'center', gap: '8px' }}><Eye size={14} color="#7d3bec" /> Open rate</span><span style={{ fontWeight: 700, color: '#0f172a' }}>{openRate}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}><span style={{ color: '#475569', display: 'flex', alignItems: 'center', gap: '8px' }}><Send size={14} color="#7d3bec" /> Reply rate</span><span style={{ fontWeight: 700, color: '#0f172a' }}>{replyRate}</span></div>
             </div>
           </div>
         </div>
@@ -425,7 +429,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
           <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
             <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#eff6ff', color: '#0E61F3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Mail size={16} /></div>
+                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#eff6ff', color: '#7d3bec', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Mail size={16} /></div>
                 <span style={{ fontWeight: 700, fontSize: '1.05rem', color: '#0f172a' }}>Step {emailSteps.findIndex(s => s.id === selectedStep.id) + 1}: {selectedStep.title || 'Reminder - Upcoming Meeting'}</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -459,7 +463,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flex: 1, marginRight: '16px', flexWrap: 'wrap' }}>
                     <div style={{ fontSize: '0.85rem', color: '#64748b', width: '40px', flexShrink: 0 }}>To</div>
                     {((activeCamp.recipientEmail || '').split(',').map(e => e.trim()).filter(Boolean)).map((email, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#eff6ff', border: '1px solid #bfdbfe', color: '#0E61F3', fontSize: '0.8rem', fontWeight: 500, padding: '2px 8px', borderRadius: '6px' }}>
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#eff6ff', border: '1px solid #bfdbfe', color: '#7d3bec', fontSize: '0.8rem', fontWeight: 500, padding: '2px 8px', borderRadius: '6px' }}>
                         {email}
                         <button 
                           onClick={() => {
@@ -547,7 +551,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
                     </div>
                     <span 
                       onClick={() => setShowSubjectTokens(!showSubjectTokens)}
-                      style={{ color: '#0E61F3', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}
+                      style={{ color: '#7d3bec', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}
                     >
                       Insert <ChevronDown size={14} />
                     </span>
@@ -578,7 +582,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#0f172a' }}>Email Content</div>
-                  <button onClick={() => showToast('Preview mode')} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', color: '#0E61F3', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', padding: 0 }}><Eye size={14} /> Preview Email</button>
+                  <button onClick={() => showToast('Preview mode')} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', color: '#7d3bec', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', padding: 0 }}><Eye size={14} /> Preview Email</button>
                 </div>
                 <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
                   <div style={{ background: '#ffffff', borderBottom: '1px solid #e2e8f0', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -606,7 +610,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
                         onKeyDown={e => { if (e.key === 'Enter') handlePromptSubmit(); else if (e.key === 'Escape') setPromptState(null); }}
                         style={{ flex: 1, border: '1px solid #cbd5e1', borderRadius: '6px', padding: '6px 10px', fontSize: '0.85rem', outline: 'none' }}
                       />
-                      <button onClick={handlePromptSubmit} style={{ background: '#0E61F3', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Apply</button>
+                      <button onClick={handlePromptSubmit} style={{ background: '#7d3bec', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Apply</button>
                       <button onClick={() => setPromptState(null)} style={{ background: '#ffffff', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '6px 12px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
                     </div>
                   )}
@@ -629,7 +633,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
               <div style={{ marginTop: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                   <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>Personalization Tokens</div>
-                  <span style={{ fontSize: '0.8rem', color: '#0E61F3', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>View all tokens <ChevronDown size={14} /></span>
+                  <span style={{ fontSize: '0.8rem', color: '#7d3bec', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>View all tokens <ChevronDown size={14} /></span>
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                   {tokens.map(t => (
@@ -645,7 +649,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
                         }
                       }}
                       onMouseDown={(e) => e.preventDefault()}
-                      style={{ border: '1px solid #bfdbfe', background: '#ffffff', color: '#0E61F3', fontSize: '0.75rem', fontWeight: 600, padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.15s ease' }}
+                      style={{ border: '1px solid #bfdbfe', background: '#ffffff', color: '#7d3bec', fontSize: '0.75rem', fontWeight: 600, padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.15s ease' }}
                       onMouseOver={(e) => e.currentTarget.style.background = '#eff6ff'}
                       onMouseOut={(e) => e.currentTarget.style.background = '#ffffff'}
                       title={`Click to insert ${t} into email`}
@@ -672,7 +676,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
                       showToast('Saved (Last Step)');
                     }
                   }} 
-                  style={{ background: '#0E61F3', border: 'none', color: '#ffffff', fontWeight: 600, fontSize: '0.88rem', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(14, 97, 243, 0.2)' }}
+                  style={{ background: '#7d3bec', border: 'none', color: '#ffffff', fontWeight: 600, fontSize: '0.88rem', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(14, 97, 243, 0.2)' }}
                 >
                   Save & Next
                 </button>
@@ -683,19 +687,6 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
           <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '48px', textAlign: 'center', color: '#64748b' }}>Select an email step on the left timeline to edit its copy and variables.</div>
         )}
 
-        <div id="ai-analyzer-container">
-          <AICampaignStudio
-            onApplySequence={(generatedSteps) => {
-              handleUpdateCamp({ steps: generatedSteps });
-              const firstEmail = generatedSteps.find(s => s.type === 'email');
-              if (firstEmail) setSelectedStepId(firstEmail.id);
-              showToast('Sequence analyzed and generated successfully!');
-            }}
-            recipientEmail={activeCamp.recipientEmail}
-            initPrompt={autoStartAIPrompt}
-            autoStart={!!autoStartAIPrompt}
-          />
-        </div>
         </div>
       </div>
     </div>
