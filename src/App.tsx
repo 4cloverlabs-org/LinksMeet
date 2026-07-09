@@ -16,6 +16,7 @@ import NotFound from './marketing/NotFound';
 import Login from './marketing/Login';
 import Signup from './marketing/Signup';
 import VisitorHome from './pages/VisitorHome';
+import AcceptInvite from './pages/AcceptInvite';
 import BookingFlow from './pages/BookingFlow';
 import SuccessPage from './pages/SuccessPage';
 import Dashboard from './pages/Dashboard';
@@ -58,6 +59,7 @@ function App() {
           {/* ---- Auth ---- */}
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/accept-invite" element={<AcceptInvite />} />
 
           {/* ---- App (requires a logged-in user) ---- */}
           <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />

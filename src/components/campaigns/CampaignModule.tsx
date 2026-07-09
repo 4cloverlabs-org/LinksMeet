@@ -16,9 +16,10 @@ export interface CampaignModuleProps {
   initLead?: any;
   onInitConsumed?: () => void;
   userProfile?: any;
+  canEdit?: boolean;
 }
 
-export const CampaignModule: React.FC<CampaignModuleProps> = ({ initLead, onInitConsumed, userProfile }) => {
+export const CampaignModule: React.FC<CampaignModuleProps> = ({ initLead, onInitConsumed, userProfile, canEdit = true }) => {
   const { user } = useAuth();
   const [activeCampaignId, setActiveCampaignId] = useState<string | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>(campaignEngine.getCampaigns());
@@ -118,6 +119,7 @@ export const CampaignModule: React.FC<CampaignModuleProps> = ({ initLead, onInit
       <div className="camp-module-wrap" style={{ padding: 0, flex: 1, overflow: 'hidden' }}>
         <CampaignList 
           campaigns={campaigns} 
+          canEdit={canEdit}
           onCreateNew={handleCreateNew}
           onSelect={(id) => {
             setAutoStartPrompt(undefined);

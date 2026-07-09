@@ -163,7 +163,10 @@ class CampaignEngine {
       const accessToken = sessionData.session?.access_token;
       if (!accessToken) return;
 
-      const headers = { "Authorization": `Bearer ${accessToken}` };
+      const ws = localStorage.getItem('sm_active_workspace');
+      const headers: Record<string, string> = { "Authorization": `Bearer ${accessToken}` };
+      if (ws) headers['x-workspace-id'] = ws;
+      
       const [campRes, logRes, threadRes, setRes] = await Promise.all([
         fetch(`${API_BASE_URL}/api/campaigns`, { headers }),
         fetch(`${API_BASE_URL}/api/logs`, { headers }),
@@ -228,12 +231,16 @@ class CampaignEngine {
         return { success: false, message: msg };
       }
 
+      const ws = localStorage.getItem('sm_active_workspace');
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${accessToken}`
+      };
+      if (ws) headers['x-workspace-id'] = ws;
+
       const res = await fetch(`${API_BASE_URL}/api/send-email`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`
-        },
+        headers: headers,
         body: JSON.stringify({
           to: recipient,
           subject: subject || 'LinksMeet Outreach',
@@ -499,7 +506,7 @@ class CampaignEngine {
       
       try {
         const { data: sessionData } = await supabase.auth.getSession();
-        const uid = sessionData.session?.user?.id;
+        const uid = localStorage.getItem('sm_active_workspace') || sessionData.session?.user?.id;
         if (uid) {
           const { data: profile } = await supabase.from('users').select('first_name, email').eq('id', uid).single();
           if (profile) {
@@ -610,7 +617,7 @@ class CampaignEngine {
     let derivedSender = 'Sales Professional';
     try {
       const { data: sessionData } = await supabase.auth.getSession();
-      const uid = sessionData.session?.user?.id;
+      const uid = localStorage.getItem('sm_active_workspace') || sessionData.session?.user?.id;
       if (uid) {
         const { data: profile } = await supabase.from('users').select('first_name').eq('id', uid).single();
         if (profile && profile.first_name) {

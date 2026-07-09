@@ -29,11 +29,11 @@ export default function CampaignsPage() {
     appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp,
     teamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember,
     editingWorkflow, setEditingWorkflow
-  , initCampaignLead, setInitCampaignLead } = ctx || {};
+  , initCampaignLead, setInitCampaignLead, canEdit } = ctx || {};
 
   return (
     <>
-      <CampaignModule initLead={initCampaignLead} onInitConsumed={() => setInitCampaignLead(null)} userProfile={userProfile} />
+      <CampaignModule initLead={initCampaignLead} onInitConsumed={() => setInitCampaignLead(null)} userProfile={userProfile} canEdit={canEdit} />
     </>
   );
 }

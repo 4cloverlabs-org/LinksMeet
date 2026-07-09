@@ -4,6 +4,7 @@ import { type Campaign } from './campaignEngine';
 
 interface CampaignListProps {
   campaigns: Campaign[];
+  canEdit?: boolean;
   onCreateNew: () => void;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
@@ -11,7 +12,7 @@ interface CampaignListProps {
 
 type FilterType = 'All' | 'Active' | 'Paused' | 'Completed' | 'Drafts';
 
-export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, onCreateNew, onSelect, onDelete }) => {
+export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, canEdit = true, onCreateNew, onSelect, onDelete }) => {
   const [filter, setFilter] = useState<FilterType>('All');
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -74,7 +75,7 @@ export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, onCreateN
             <button style={{ background: 'none', border: 'none', color: '#0E61F3', fontSize: '0.88rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
               <PlayCircle size={16} /> How it works
             </button>
-            <button
+            {canEdit && (<button
               onClick={onCreateNew}
               style={{
                 background: '#0E61F3',
@@ -92,7 +93,7 @@ export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, onCreateN
               }}
             >
               <Plus size={16} /> Create Follow-up Sequence
-            </button>
+            </button>)}
           </div>
         </div>
 

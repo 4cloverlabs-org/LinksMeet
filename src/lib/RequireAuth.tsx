@@ -2,9 +2,10 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { type ReactNode, useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { supabase } from './supabase';
+import WorkspaceSelectorModal from '../components/WorkspaceSelectorModal';
 
 export default function RequireAuth({ children }: { children: ReactNode }) {
-  const { user, loading, configured } = useAuth();
+  const { user, loading, configured, needsWorkspaceSelection } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -59,6 +60,10 @@ export default function RequireAuth({ children }: { children: ReactNode }) {
     }
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
-  
-  return <>{children}</>;
+  return (
+    <>
+      {needsWorkspaceSelection && <WorkspaceSelectorModal />}
+      {children}
+    </>
+  );
 }

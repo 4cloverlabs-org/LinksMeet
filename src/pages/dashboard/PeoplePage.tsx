@@ -29,7 +29,7 @@ export default function PeoplePage() {
     appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp,
     teamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember,
     editingWorkflow, setEditingWorkflow
-  , filteredContacts, fileInputRef, handleUploadFile, contactsLoading, avColor, initials, CONTACT_STATUSES, setInitCampaignLead, removeContact } = ctx || {};
+  , filteredContacts, fileInputRef, handleUploadFile, contactsLoading, avColor, initials, CONTACT_STATUSES, setInitCampaignLead, removeContact, canEdit } = ctx || {};
 
   return (
     <>
@@ -48,13 +48,15 @@ export default function PeoplePage() {
                       <button className="crm-btn crm-btn-ghost" onClick={exportContactsCSV} disabled={contacts.length === 0}><FileText size={15} /> Export</button>
                       {leadsTab === 'uploaded' ? (
                         <>
-                          <input type="file" accept=".csv, .xlsx, .xls" ref={fileInputRef} style={{ display: 'none' }} onChange={handleUploadFile} />
-                          <button className="crm-btn crm-btn-primary" onClick={() => fileInputRef.current?.click()} disabled={savingContact}>
-                            {savingContact ? <Loader2 size={15} className="crm-spin-ic" /> : <Plus size={15} />} Upload CSV/Excel
-                          </button>
+                          <input type="file" accept=".csv, .xlsx, .xls" ref={fileInputRef} style={{ display: 'none' }} onChange={handleUploadFile} disabled={!canEdit} />
+                          {canEdit && (
+                            <button className="crm-btn crm-btn-primary" onClick={() => fileInputRef.current?.click()} disabled={savingContact}>
+                              {savingContact ? <Loader2 size={15} className="crm-spin-ic" /> : <Plus size={15} />} Upload CSV/Excel
+                            </button>
+                          )}
                         </>
                       ) : (
-                        <button className="crm-btn crm-btn-primary" onClick={() => { setCForm(blankContact); setContactErr(''); setShowContactForm(true); }}><Plus size={15} /> Add lead</button>
+                        canEdit && <button className="crm-btn crm-btn-primary" onClick={() => { setCForm(blankContact); setContactErr(''); setShowContactForm(true); }}><Plus size={15} /> Add lead</button>
                       )}
                     </div>
                   </div>
@@ -91,21 +93,24 @@ export default function PeoplePage() {
                               className="crm-status-select"
                               value={c.status}
                               onChange={e => changeStatus(c.id, e.target.value as any)}
+                              disabled={!canEdit}
                             >
                               {CONTACT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'flex-end' }}>
-                              <button 
-                                style={{ background: '#eff6ff', border: 'none', color: '#0E61F3', padding: '6px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                title="Start AI Campaign" 
-                                onClick={() => {
-                                  setInitCampaignLead(c);
-                                  setView('campaigns');
-                                }}
-                              >
-                                <Sparkles size={16} />
-                              </button>
-                              <button className="crm-row-act" title="Delete lead" onClick={() => removeContact(c.id, c.name)}><Trash2 size={16} /></button>
+                              {canEdit && (
+                                <button 
+                                  style={{ background: '#eff6ff', border: 'none', color: '#0E61F3', padding: '6px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                  title="Start AI Campaign" 
+                                  onClick={() => {
+                                    setInitCampaignLead(c);
+                                    setView('campaigns');
+                                  }}
+                                >
+                                  <Sparkles size={16} />
+                                </button>
+                              )}
+                              {canEdit && <button className="crm-row-act" title="Delete lead" onClick={() => removeContact(c.id, c.name)}><Trash2 size={16} /></button>}
                             </div>
                           </div>
                         ))}

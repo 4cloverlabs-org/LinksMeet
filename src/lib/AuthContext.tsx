@@ -2,12 +2,24 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import { type User } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 import { setGmailToken, markGmailConnected, clearGmail } from './gmailToken';
+import { API_BASE_URL } from './config';
 // import { campaignEngine } from '../components/campaigns/campaignEngine';
+
+export type Workspace = {
+  id: string;
+  name: string;
+  role: string;
+};
 
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
   configured: boolean;
+  activeWorkspaceId: string | null;
+  setActiveWorkspaceId: (id: string) => void;
+  workspaces: Workspace[];
+  needsWorkspaceSelection: boolean;
+  setNeedsWorkspaceSelection: (val: boolean) => void;
   signUp: (name: string, email: string, password: string) => Promise<void>;
   logIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: (idToken: string) => Promise<void>;
@@ -20,6 +32,75 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const configured = !!import.meta.env.VITE_SUPABASE_URL;
+
+  const [activeWorkspaceId, setActiveWorkspaceIdState] = useState<string | null>(null);
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [needsWorkspaceSelection, setNeedsWorkspaceSelection] = useState(false);
+
+  const setActiveWorkspaceId = (id: string) => {
+    setActiveWorkspaceIdState(id);
+    localStorage.setItem('sm_active_workspace', id);
+  };
+
+  const fetchWorkspaces = async (currentUser: User, event?: string) => {
+    const ownWorkspace: Workspace = {
+      id: currentUser.id,
+      name: 'Personal Workspace',
+      role: 'Owner'
+    };
+    
+    const { data: userData } = await supabase.from('users').select('first_name').eq('id', currentUser.id).single();
+    if (userData?.first_name) {
+      ownWorkspace.name = `${userData.first_name}'s Workspace`;
+    }
+
+    const wsList = [ownWorkspace];
+
+    if (currentUser.email) {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData?.session?.access_token;
+        if (token) {
+          const res = await fetch(`${API_BASE_URL}/api/team/workspaces`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const result = await res.json();
+            if (result.workspaces) {
+              result.workspaces.forEach((tm: any) => {
+                wsList.push({
+                  id: tm.user_id,
+                  name: tm.users?.first_name ? `${tm.users.first_name}'s Team` : 'Team Workspace',
+                  role: tm.role
+                });
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch team workspaces", err);
+      }
+    }
+    
+    setWorkspaces(wsList);
+    
+    const savedWs = localStorage.getItem('sm_active_workspace');
+    if (savedWs && wsList.some(w => w.id === savedWs)) {
+      setActiveWorkspaceIdState(savedWs);
+    } else {
+      setActiveWorkspaceIdState(currentUser.id);
+      localStorage.setItem('sm_active_workspace', currentUser.id);
+    }
+
+    if (event === 'SIGNED_IN' && wsList.length > 1) {
+      const justAccepted = localStorage.getItem('sm_just_accepted_invite');
+      if (!justAccepted) {
+        setNeedsWorkspaceSelection(true);
+      } else {
+        localStorage.removeItem('sm_just_accepted_invite');
+      }
+    }
+  };
 
   useEffect(() => {
     if (!configured) {
@@ -51,6 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (mounted) {
         checkAndClearData(session?.user ?? null);
         setUser(session?.user ?? null);
+        if (session?.user) fetchWorkspaces(session.user);
         if (session?.provider_token) {
           // Keep the live token in memory only (never localStorage).
           setGmailToken(session.provider_token);
@@ -65,6 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (mounted) {
         checkAndClearData(session?.user ?? null);
         setUser(session?.user ?? null);
+        if (session?.user) fetchWorkspaces(session.user, event);
         if (session?.provider_token) {
           // Keep the live token in memory only (never localStorage).
           setGmailToken(session.provider_token);
@@ -137,7 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, configured, signUp, logIn, signInWithGoogle, logOut }}>
+    <AuthContext.Provider value={{ user, loading, configured, activeWorkspaceId, setActiveWorkspaceId, workspaces, signUp, logIn, signInWithGoogle, logOut }}>
       {children}
     </AuthContext.Provider>
   );

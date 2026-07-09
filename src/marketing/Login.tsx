@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth, authErrorMessage } from '../lib/AuthContext';
 import { GoogleLogin } from '@react-oauth/google';
 import './Auth.css';
@@ -8,6 +8,7 @@ export default function Login() {
   const { logIn, signInWithGoogle, configured, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || '/dashboard';
 
   useEffect(() => {
@@ -16,7 +17,8 @@ export default function Login() {
     }
   }, [user, navigate, from]);
 
-  const [form, setForm] = useState({ email: '', password: '' });
+  const initialEmail = searchParams.get('email') || '';
+  const [form, setForm] = useState({ email: initialEmail, password: '' });
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
 

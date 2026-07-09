@@ -9,7 +9,7 @@ import {
   Clock, Workflow, Spline, Store, CreditCard, Shield, HelpCircle,
   Sparkles, Link2, Video, Zap, BookOpen, MessageCircle, Keyboard, Check, X,
   Copy, Rocket, Calendar, Trash2, LogOut, Loader2, EyeOff, ExternalLink, Edit2, Code, Info, ArrowLeft, ArrowRight, Globe, Settings, Mail, Phone, ChevronRight, ChevronDown,
-  Smartphone, Heart, AlertCircle, RefreshCw, Pencil, XCircle, ChevronsUpDown, User, PanelLeftClose, PanelLeftOpen
+  Smartphone, Heart, AlertCircle, RefreshCw, Pencil, XCircle, ChevronsUpDown, User, PanelLeftClose, PanelLeftOpen, Briefcase
 } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -229,8 +229,8 @@ const PAGE_META: Record<View, { title: string; sub: string }> = {
 /* ---------------- main component ---------------- */
 export default function DashboardLayout() {
   const navigate = useNavigate();
-  const { user, logOut } = useAuth();
-  const uid = user?.id || 'anon';
+  const { user, logOut, activeWorkspaceId, setActiveWorkspaceId, workspaces } = useAuth();
+  const uid = activeWorkspaceId || user?.id || 'anon';
   const displayName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'there';
   const firstName = displayName.split(' ')[0];
   const userInitials = displayName.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
@@ -468,6 +468,16 @@ export default function DashboardLayout() {
       }
     };
     fetchTeam();
+
+    const tmSub = supabase.channel(`realtime_team_${uid}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'team_members', filter: `user_id=eq.${uid}` }, () => {
+        fetchTeam();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(tmSub);
+    };
   }, [uid]);
 
   // The UI displays the Owner + fetched team members
@@ -487,17 +497,25 @@ export default function DashboardLayout() {
     return [ownerMember, ...teamMembers];
   }, [displayName, user, userProfile, teamMembers]);
 
+  const [isInviting, setIsInviting] = useState(false);
+
   const handleInviteSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!inviteEmail || !uid) return;
     
-    // Auto-active for now as requested
+    if (teamMembers.some(m => m.email.toLowerCase() === inviteEmail.toLowerCase())) {
+      setToast('This user is already in your team.');
+      return;
+    }
+    
+    setIsInviting(true);
+    
     const newMember = {
       user_id: uid,
       name: inviteEmail.split('@')[0],
       email: inviteEmail,
       role: inviteRole,
-      status: 'Active',
+      status: 'Pending',
       department: 'Unassigned',
       phone: '',
       workflow_progress: 0
@@ -508,9 +526,38 @@ export default function DashboardLayout() {
       setToast('Error adding member');
     } else if (data) {
       setTeamMembers(prev => [...prev, data]);
-      setToast('Member added');
+      setToast('Member invited. Sending email...');
+      
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData?.session?.access_token || '';
+        
+        const res = await fetch(`${API_BASE_URL}/api/team/send-invite`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            'x-workspace-id': activeWorkspaceId || ''
+          },
+          body: JSON.stringify({
+            email: inviteEmail,
+            role: inviteRole,
+            teamMemberId: data.id,
+            ownerName: displayName
+          })
+        });
+        const json = await res.json();
+        if (!res.ok) {
+           setToast(`Invite created, but email failed: ${json.error}`);
+        } else {
+           setToast('Invitation email sent!');
+        }
+      } catch (err) {
+        setToast('Invite created, but failed to send email.');
+      }
     }
     
+    setIsInviting(false);
     setShowInviteModal(false);
     setInviteEmail('');
     setInviteRole('Member');
@@ -541,6 +588,10 @@ export default function DashboardLayout() {
   };
 
   // Availability State
+  const currentWorkspace = workspaces.find(w => w.id === (activeWorkspaceId || user?.id));
+  const activeRole = currentWorkspace?.role || 'Owner';
+  const canEdit = activeRole === 'Owner' || activeRole === 'Admin' || activeRole === 'Editor';
+
   const [availSchedule, setAvailSchedule] = useState(() => {
     const saved = localStorage.getItem('sm_avail_schedule');
     return saved ? JSON.parse(saved) : DEFAULT_WEEK;
@@ -578,6 +629,10 @@ export default function DashboardLayout() {
         const googleAvatar = meta.avatar_url || meta.picture || meta.avatar || '';
         const googleName = meta.full_name || meta.name || '';
 
+        const justAccepted = localStorage.getItem('sm_just_accepted_invite');
+        const isTeamWorkspace = activeWorkspaceId && user?.id && activeWorkspaceId !== user.id;
+        const shouldSkipOnboarding = justAccepted || isTeamWorkspace;
+
         if (supaProfile) {
           setUserProfile({
             ...supaProfile,
@@ -585,11 +640,11 @@ export default function DashboardLayout() {
             avatar_url: supaProfile.avatar_url || supaProfile.profile_picture || googleAvatar,
             full_name: supaProfile.full_name || supaProfile.first_name || supaProfile.name || googleName
           });
-          if (supaProfile.onboarding_completed !== true) {
+          if (supaProfile.onboarding_completed !== true && !shouldSkipOnboarding) {
             setIsOnboardingModalOpen(true);
           }
         } else if (supaErr && (supaErr.code === 'PGRST116' || !supaProfile)) {
-          // Brand new user whose DB row hasn't finished generating yet -> open onboarding modal immediately!
+          // Brand new user whose DB row hasn't finished generating yet
           const defaultProfile = { 
             onboarding_completed: false,
             profile_picture: googleAvatar,
@@ -598,7 +653,7 @@ export default function DashboardLayout() {
             name: googleName
           };
           setUserProfile(defaultProfile);
-          setIsOnboardingModalOpen(true);
+          if (!shouldSkipOnboarding) setIsOnboardingModalOpen(true);
         }
 
         // 2. Also fetch from Express API to keep backend synchronized
@@ -613,7 +668,10 @@ export default function DashboardLayout() {
             const profileData = data.user || data;
             if (profileData) {
               setUserProfile(prev => ({ ...prev, ...profileData }));
-              if (profileData.onboarding_completed !== true) {
+              
+              const justAccepted = localStorage.getItem('sm_just_accepted_invite');
+              const isTeamWorkspace = activeWorkspaceId && user?.id && activeWorkspaceId !== user.id;
+              if (profileData.onboarding_completed !== true && !justAccepted && !isTeamWorkspace) {
                 setIsOnboardingModalOpen(true);
               }
             }
@@ -654,12 +712,12 @@ export default function DashboardLayout() {
     };
   }, [uid, user]);
   
-  // Real-time Notifications
+  // Real-time Notifications & Data Sync
   useEffect(() => {
-    if (!user) return;
+    if (!user || !uid) return;
     
-    const bookingsSub = supabase.channel('realtime_bookings')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'bookings', filter: `user_id=eq.${user.id}` }, (payload) => {
+    const bookingsSub = supabase.channel(`realtime_bookings_${uid}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'bookings', filter: `user_id=eq.${uid}` }, (payload) => {
         const newBooking = payload.new;
         setNotifs(prev => [
           {
@@ -676,21 +734,26 @@ export default function DashboardLayout() {
       })
       .subscribe();
 
-    const contactsSub = supabase.channel('realtime_contacts')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'contacts', filter: `user_id=eq.${user.id}` }, (payload) => {
-        const newContact = payload.new;
-        setNotifs(prev => [
-          {
-            id: Date.now() + 1,
-            icon: UserPlus,
-            title: 'New contact added',
-            desc: `${newContact.name} joined your list`,
-            time: 'Just now',
-            read: false,
-            target: 'people'
-          },
-          ...prev
-        ]);
+    const contactsSub = supabase.channel(`realtime_contacts_${uid}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'contacts', filter: `user_id=eq.${uid}` }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          const newContact = payload.new;
+          setNotifs(prev => [
+            {
+              id: Date.now() + 1,
+              icon: UserPlus,
+              title: 'New contact added',
+              desc: `${newContact.name} joined your list`,
+              time: 'Just now',
+              read: false,
+              target: 'people'
+            },
+            ...prev
+          ]);
+        }
+        
+        // Refresh contacts data for all team members
+        loadData();
       })
       .subscribe();
 
@@ -698,7 +761,8 @@ export default function DashboardLayout() {
       supabase.removeChannel(bookingsSub);
       supabase.removeChannel(contactsSub);
     };
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, uid]);
 
   // Google Integration State
   const [googleConnected, setGoogleConnected] = useState(false);
@@ -1022,6 +1086,19 @@ export default function DashboardLayout() {
   const [notifs, setNotifs] = useState<Notification[]>([]);
   const [notifOpen, setNotifOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [wsDropdownOpen, setWsDropdownOpen] = useState(false);
+
+  // Close dropdowns if clicked outside (a simple effect to close the workspace dropdown)
+  useEffect(() => {
+    const handleGlobalClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.crm-workspace-dropdown-container')) {
+        setWsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleGlobalClick);
+    return () => document.removeEventListener('mousedown', handleGlobalClick);
+  }, []);
 
   useEffect(() => {
     if (!uid) return;
@@ -1155,7 +1232,105 @@ export default function DashboardLayout() {
             </button>
           </div>
 
+
           <div className="crm-nav-scroll">
+            {!sidebarCollapsed && workspaces && workspaces.length > 0 && (
+              <div style={{ marginBottom: '16px', marginTop: '8px', padding: '0 6px' }}>
+                <div className="crm-nav-label" style={{ paddingLeft: '6px' }}>Workspace</div>
+                <div className="crm-workspace-dropdown-container" style={{ position: 'relative', width: '100%' }}>
+                  <button 
+                    onClick={() => workspaces.length > 1 && setWsDropdownOpen(!wsDropdownOpen)}
+                    disabled={workspaces.length === 1}
+                    className="crm-nav-item"
+                    style={{ 
+                      width: '100%', 
+                      paddingLeft: '36px',
+                      paddingRight: '30px',
+                      background: workspaces.length > 1 ? '#F3F4F6' : 'transparent',
+                      cursor: workspaces.length > 1 ? 'pointer' : 'default',
+                      color: workspaces.length > 1 ? '#111827' : '#4f4f4f',
+                      marginBottom: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      border: 'none',
+                      textAlign: 'left'
+                    }}
+                  >
+                    <Briefcase size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6B7280' }} />
+                    <span style={{ 
+                      whiteSpace: 'nowrap', 
+                      overflow: 'hidden', 
+                      textOverflow: 'ellipsis', 
+                      flex: 1, 
+                      marginRight: workspaces.length > 1 ? '16px' : '0' 
+                    }}>
+                      {workspaces.find(w => w.id === activeWorkspaceId)?.name} 
+                      {workspaces.find(w => w.id === activeWorkspaceId)?.role === 'Owner' ? '' : ` (${workspaces.find(w => w.id === activeWorkspaceId)?.role})`}
+                    </span>
+                    {workspaces.length > 1 && (
+                      <ChevronsUpDown size={14} style={{ color: '#6B7280', flexShrink: 0 }} />
+                    )}
+                  </button>
+                  
+                  {wsDropdownOpen && workspaces.length > 1 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 4px)',
+                      left: 0,
+                      right: 0,
+                      background: '#FFFFFF',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                      zIndex: 1000,
+                      maxHeight: '250px',
+                      overflowY: 'auto'
+                    }}>
+                      {workspaces.map(w => (
+                        <button
+                          key={w.id}
+                          onClick={() => {
+                            setActiveWorkspaceId(w.id);
+                            setWsDropdownOpen(false);
+                            window.location.reload();
+                          }}
+                          style={{
+                            width: '100%',
+                            padding: '10px 12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            background: activeWorkspaceId === w.id ? '#F3F4F6' : 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            color: activeWorkspaceId === w.id ? '#111827' : '#4B5563',
+                            fontSize: '14px',
+                            fontWeight: activeWorkspaceId === w.id ? 500 : 400
+                          }}
+                          onMouseEnter={(e) => {
+                            if (activeWorkspaceId !== w.id) e.currentTarget.style.background = '#F9FAFB';
+                          }}
+                          onMouseLeave={(e) => {
+                            if (activeWorkspaceId !== w.id) e.currentTarget.style.background = 'transparent';
+                          }}
+                        >
+                          <div style={{ 
+                            flex: 1, 
+                            whiteSpace: 'nowrap', 
+                            overflow: 'hidden', 
+                            textOverflow: 'ellipsis' 
+                          }}>
+                            {w.name} {w.role === 'Owner' ? '' : `(${w.role})`}
+                          </div>
+                          {activeWorkspaceId === w.id && <Check size={14} style={{ marginLeft: '8px', flexShrink: 0, color: '#2563EB' }} />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
             {NAV_GROUPS.map(group => (
               <div key={group.label}>
                 <div className="crm-nav-label">{group.label}</div>
@@ -1327,7 +1502,7 @@ export default function DashboardLayout() {
           
         <div className="crm-content" style={view === 'campaigns' ? { display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', background: '#FFFFFF', padding: 0 } : { display: 'flex', flexDirection: 'column', flex: 1, background: '#FFFFFF' }}>
           <Outlet context={{
-            user, uid, userProfile, displayName, firstName, userInitials, toast, setToast, sideOpen, setSideOpen, search, setSearch, notif, setNotif, setView, setIsOnboardingModalOpen, setUserProfile, contacts, eventTypes, bookings, myWorkflows, installedApps, handleCreateWorkflow, logoutAndGo, exportContactsCSV, showContactForm, setShowContactForm, cForm, setCForm, blankContact, contactErr, setContactErr, submitContact, savingContact, changeStatus, setEditingEvent, editingEvent, etTab, setEtTab, googleConnected, handleConnectGoogle, bookingTab, setBookingTab, joinMeeting, cancelBooking, leadsTab, setLeadsTab, peopleTab: 'contacts', setPeopleTab: () => {}, appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp, teamMembers: allTeamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember, updateMember, editingWorkflow, setEditingWorkflow, setAvailIsDefault, availIsDefault, saveAvailability, availSchedule, setAvailSchedule, tzOpen, tzSearch, TIMEZONES, availPrefs, setTzOpen, setTzSearch, setAvailPrefs, followUps, statusCounts, addedThisWeek, ACCENT_SOFT, ACCENT, contactsLoading, STATUS_META, statusStages, filteredContacts, Donut, avColor, initials, removeContact, fileInputRef, handleUploadFile, CONTACT_STATUSES, setInitCampaignLead, EmptyState, handleSaveWorkflow, setMyWorkflows, API_BASE_URL, showWorkflowTypeModal, setShowWorkflowTypeModal, handleSelectType, appCats, filteredApps, connectingApps, filteredBookings, toggleEventType, etDropdown, setEtDropdown, addEventType: handleAddEventType, deleteEventType: handleDeleteEventType, initCampaignLead
+            user, uid, activeRole, canEdit, userProfile, displayName, firstName, userInitials, toast, setToast, sideOpen, setSideOpen, search, setSearch, notif, setNotif, setView, setIsOnboardingModalOpen, setUserProfile, contacts, eventTypes, bookings, myWorkflows, installedApps, handleCreateWorkflow, logoutAndGo, exportContactsCSV, showContactForm, setShowContactForm, cForm, setCForm, blankContact, contactErr, setContactErr, submitContact, savingContact, changeStatus, setEditingEvent, editingEvent, etTab, setEtTab, googleConnected, handleConnectGoogle, bookingTab, setBookingTab, joinMeeting, cancelBooking, leadsTab, setLeadsTab, peopleTab: 'contacts', setPeopleTab: () => {}, appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp, teamMembers: allTeamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember, updateMember, editingWorkflow, setEditingWorkflow, setAvailIsDefault, availIsDefault, saveAvailability, availSchedule, setAvailSchedule, tzOpen, tzSearch, TIMEZONES, availPrefs, setTzOpen, setTzSearch, setAvailPrefs, followUps, statusCounts, addedThisWeek, ACCENT_SOFT, ACCENT, contactsLoading, STATUS_META, statusStages, filteredContacts, Donut, avColor, initials, removeContact, fileInputRef, handleUploadFile, CONTACT_STATUSES, setInitCampaignLead, EmptyState, handleSaveWorkflow, setMyWorkflows, API_BASE_URL, showWorkflowTypeModal, setShowWorkflowTypeModal, handleSelectType, appCats, filteredApps, connectingApps, filteredBookings, toggleEventType, etDropdown, setEtDropdown, addEventType: handleAddEventType, deleteEventType: handleDeleteEventType, initCampaignLead
           }} />
         </div>
         </div>
@@ -1423,8 +1598,8 @@ export default function DashboardLayout() {
                 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '32px' }}>
                   <button type="button" className="crm-btn" style={{ background: '#FFFFFF', color: '#4B5563', border: '1px solid #D1D5DB', borderRadius: '10px', padding: '0 20px', height: '44px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }} onClick={() => setShowInviteModal(false)}>Cancel</button>
-                  <button type="submit" className="crm-btn" style={{ background: '#2563EB', color: '#FFFFFF', border: 'none', borderRadius: '10px', padding: '0 20px', height: '44px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)', transition: 'all 0.2s' }}>
-                    Send Invite <ArrowRight size={16} />
+                  <button type="submit" disabled={isInviting} className="crm-btn" style={{ opacity: isInviting ? 0.7 : 1, pointerEvents: isInviting ? 'none' : 'auto', background: '#2563EB', color: '#FFFFFF', border: 'none', borderRadius: '10px', padding: '0 20px', height: '44px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)', transition: 'all 0.2s' }}>
+                    {isInviting ? 'Sending...' : <>Send Invite <ArrowRight size={16} /></>}
                   </button>
                 </div>
               </form>

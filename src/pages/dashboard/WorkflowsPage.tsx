@@ -29,7 +29,7 @@ export default function WorkflowsPage() {
     appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp,
     teamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember,
     editingWorkflow, setEditingWorkflow
-  , handleSaveWorkflow, setMyWorkflows, API_BASE_URL, showWorkflowTypeModal, setShowWorkflowTypeModal, handleSelectType } = ctx || {};
+  , handleSaveWorkflow, setMyWorkflows, API_BASE_URL, showWorkflowTypeModal, setShowWorkflowTypeModal, handleSelectType, canEdit } = ctx || {};
 
   return (
     <>
@@ -51,9 +51,11 @@ export default function WorkflowsPage() {
                       <p style={{ color: '#6B7280', fontSize: '14px', maxWidth: 400, margin: '0 0 24px', lineHeight: 1.5 }}>
                         Workflows automate notifications and reminders, helping you build processes around your events.
                       </p>
-                      <button className="crm-btn" style={{ background: '#2563EB', color: '#fff', border: 'none', borderRadius: '6px', padding: '0 20px', height: '40px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => handleCreateWorkflow(null)}>
-                        <Plus size={16} /> Create
-                      </button>
+                      {canEdit && (
+                        <button className="crm-btn" style={{ background: '#2563EB', color: '#fff', border: 'none', borderRadius: '6px', padding: '0 20px', height: '40px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => handleCreateWorkflow(null)}>
+                          <Plus size={16} /> Create
+                        </button>
+                      )}
                     </div>
                   ) : (
                   <div style={{ marginBottom: 32 }}>
@@ -69,10 +71,10 @@ export default function WorkflowsPage() {
                             <div className="fl" style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>Triggers on {w.trigger_event}</div>
                           </div>
                           <span className="runs" style={{ fontSize: 13, color: '#64748b', marginRight: 16 }}>{w.runs} runs</span>
-                          <button className="crm-btn crm-btn-ghost" style={{ padding: '6px 10px', marginRight: 8 }} onClick={() => setEditingWorkflow(w)}>
+                          <button className="crm-btn crm-btn-ghost" style={{ padding: '6px 10px', marginRight: 8 }} onClick={() => setEditingWorkflow(w)} disabled={!canEdit}>
                             <Edit2 size={14} />
                           </button>
-                          <button className="crm-btn crm-btn-ghost" style={{ padding: '6px 10px', marginRight: 16, color: '#DC2626' }} onClick={() => {
+                          {canEdit && <button className="crm-btn crm-btn-ghost" style={{ padding: '6px 10px', marginRight: 16, color: '#DC2626' }} onClick={() => {
                             if (window.confirm('Delete this workflow?')) {
                               setMyWorkflows((prev: any[]) => prev.filter(old => old.id !== w.id));
                               setToast('Workflow deleted.');
@@ -80,9 +82,10 @@ export default function WorkflowsPage() {
                             }
                           }}>
                             <Trash2 size={14} />
-                          </button>
+                          </button>}
                           <button 
                             className={`crm-switch${w.is_active ? ' on' : ''}`} 
+                            disabled={!canEdit}
                             onClick={() => {
                               const newActive = !w.is_active;
                               setMyWorkflows(prev => prev.map(old => old.id === w.id ? { ...old, is_active: newActive } : old));

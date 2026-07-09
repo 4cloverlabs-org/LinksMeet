@@ -63,7 +63,28 @@ async function requireAuth(req, res, next) {
     if (!token) return res.status(401).json({ error: 'Unauthorized' });
     const { data, error } = await supabase.auth.getUser(token);
     if (error || !data?.user) return res.status(401).json({ error: 'Unauthorized' });
-    req.userId = data.user.id;
+    
+    let activeUserId = data.user.id;
+    const workspaceId = req.headers['x-workspace-id'];
+    
+    if (workspaceId && workspaceId !== data.user.id) {
+      const { data: tm } = await supabase.from('team_members')
+        .select('id')
+        .eq('user_id', workspaceId)
+        .eq('email', data.user.email)
+        .eq('status', 'Active')
+        .single();
+        
+      if (tm) {
+        activeUserId = workspaceId;
+      } else {
+        return res.status(403).json({ error: 'Forbidden: You do not have access to this workspace.' });
+      }
+    }
+    
+    req.userId = activeUserId;
+    req.realUserId = data.user.id;
+    req.userEmail = data.user.email;
     next();
   } catch (e) {
     return res.status(401).json({ error: 'Unauthorized' });
@@ -760,8 +781,91 @@ app.post('/api/send-email', requireAuth, async (req, res) => {
 });
 
 // ----------------------------------------------------
+// 4.5 Team Management API
+// ----------------------------------------------------
+app.post('/api/team/send-invite', requireAuth, async (req, res) => {
+  try {
+    const { email, role, teamMemberId, ownerName } = req.body;
+    
+    const frontendUrl = process.env.FRONTEND_URL || (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',')[0] : 'http://localhost:5173');
+    const acceptLink = `${frontendUrl}/accept-invite?id=${teamMemberId}&action=accept`;
+    const declineLink = `${frontendUrl}/accept-invite?id=${teamMemberId}&action=decline`;
+    
+    const subject = `You've been invited to join ${ownerName}'s team on LinksMeet`;
+    const htmlBody = `
+      <div style="font-family: 'Inter', Helvetica, sans-serif; max-width: 550px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #ffffff;">
+        <div style="background: #0E61F3; padding: 24px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 600;">Team Invitation</h1>
+        </div>
+        <div style="padding: 32px 24px;">
+          <p style="color: #334155; font-size: 16px; margin-top: 0;">Hi,</p>
+          <p style="color: #475569; font-size: 15px; line-height: 1.5;"><strong>${escapeHtml(ownerName)}</strong> has invited you to join their team on LinksMeet as a <strong>${escapeHtml(role)}</strong>.</p>
+          
+          <div style="text-align: center; margin-top: 32px; margin-bottom: 16px; display: flex; justify-content: center; gap: 16px;">
+            <a href="${acceptLink}" style="background: #0E61F3; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 15px; display: inline-block;">Accept Invitation</a>
+            <a href="${declineLink}" style="background: #ffffff; color: #475569; border: 1px solid #cbd5e1; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 15px; display: inline-block;">Decline</a>
+          </div>
+        </div>
+        <div style="background: #f1f5f9; padding: 16px; text-align: center; border-top: 1px solid #e2e8f0;">
+          <p style="margin: 0; color: #64748b; font-size: 12px;">Powered by <strong>LinksMeet</strong></p>
+        </div>
+      </div>
+    `;
+    
+    await sendEmailForUser(req.userId, email, subject, htmlBody);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Invite Email Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/team/accept-invite', async (req, res) => {
+  try {
+    const { id, action } = req.body;
+    if (!id) return res.status(400).json({ error: "Missing ID" });
+    
+    if (!supabase) return res.status(500).json({ error: "Database not connected" });
+    
+    const newStatus = action === 'decline' ? 'Declined' : 'Active';
+    const { data, error } = await supabase.from('team_members').update({ status: newStatus }).eq('id', id).select().single();
+    if (error) throw error;
+    
+    // Check if the user already has an account
+    let isExistingUser = false;
+    if (data && data.email) {
+      const { data: userRow } = await supabase.from('users').select('id').eq('email', data.email).single();
+      if (userRow) isExistingUser = true;
+    }
+    
+    res.json({ success: true, member: data, isExistingUser });
+  } catch (error) {
+    console.error("Accept Invite Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ----------------------------------------------------
 // 5. Campaigns API
 // ----------------------------------------------------
+app.get('/api/team/workspaces', requireAuth, async (req, res) => {
+  try {
+    const { data: teamData, error: teamErr } = await supabase.from('team_members')
+      .select('user_id, role, users!team_members_user_id_fkey(first_name)')
+      .eq('email', req.userEmail)
+      .eq('status', 'Active');
+      
+    if (teamErr) throw teamErr;
+    
+    // We want the owner's first name, not the invitee's first name. 
+    // Wait, users!team_members_user_id_fkey joins on user_id, which is the owner.
+    res.json({ workspaces: teamData || [] });
+  } catch (error) {
+    console.error("Fetch Workspaces Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get('/api/campaigns', requireAuth, async (req, res) => {
   try {
     const { data, error } = await supabase.from('campaigns').select('*').eq('user_id', req.userId).order('created_at', { ascending: false });

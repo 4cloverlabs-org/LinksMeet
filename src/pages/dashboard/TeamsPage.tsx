@@ -28,8 +28,10 @@ export default function TeamsPage() {
     bookingTab, setBookingTab, joinMeeting, cancelBooking, leadsTab, setLeadsTab, peopleTab, setPeopleTab,
     appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp,
     teamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember, updateMember,
-    editingWorkflow, setEditingWorkflow
+    editingWorkflow, setEditingWorkflow, activeRole
   } = ctx || {};
+  
+  const canManageTeam = activeRole === 'Owner' || activeRole === 'Admin';
 
   const [activeTab, setActiveTab] = useState('members');
   const [searchQuery, setSearchQuery] = useState('');
@@ -74,9 +76,11 @@ export default function TeamsPage() {
               <p style={{ margin: 0, fontSize: '14px', color: '#6B7280' }}>Manage who has access to your workspace.</p>
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
-              <button className="crm-btn" style={{ background: '#2563EB', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '0 16px', height: '40px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => setShowInviteModal(true)}>
-                <Plus size={16} /> Invite Member
-              </button>
+              {canManageTeam && (
+                <button className="crm-btn" style={{ background: '#2563EB', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '0 16px', height: '40px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => setShowInviteModal(true)}>
+                  <Plus size={16} /> Invite Member
+                </button>
+              )}
             </div>
           </div>
 
@@ -148,6 +152,7 @@ export default function TeamsPage() {
               <option>All Status</option>
               <option>Active</option>
               <option>Pending</option>
+              <option>Declined</option>
               <option>Offline</option>
             </select>
             
@@ -190,6 +195,10 @@ export default function TeamsPage() {
                     statusBg = '#FEF9C3';
                     statusColor = '#CA8A04';
                     dotColor = '#EAB308';
+                  } else if (member.status === 'Declined') {
+                    statusBg = '#FEF2F2';
+                    statusColor = '#DC2626';
+                    dotColor = '#EF4444';
                   } else if (member.status === 'Offline') {
                     statusBg = '#F3F4F6';
                     statusColor = '#4B5563';
@@ -234,7 +243,7 @@ export default function TeamsPage() {
                       
                       {/* Action */}
                       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', color: '#6B7280' }}>
-                        {member.id !== 'owner' && (
+                        {(member.id !== 'owner' && canManageTeam) && (
                           <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#9CA3AF', display: 'flex', alignItems: 'center', borderRadius: '4px', transition: 'background 0.2s' }} onClick={(e) => {
                             if (dropdownOpenId === member.id) {
                               setDropdownOpenId(null);

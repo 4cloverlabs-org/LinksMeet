@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import { useAuth, authErrorMessage } from '../lib/AuthContext';
 import { GoogleLogin } from '@react-oauth/google';
@@ -8,7 +8,9 @@ import './Auth.css';
 export default function Signup() {
   const { signUp, signInWithGoogle, configured } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [searchParams] = useSearchParams();
+  const initialEmail = searchParams.get('email') || '';
+  const [form, setForm] = useState({ name: '', email: initialEmail, password: '' });
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
 

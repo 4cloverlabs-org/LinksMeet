@@ -30,7 +30,7 @@ export default function EventTypesPage() {
     appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp,
     teamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember,
     editingWorkflow, setEditingWorkflow
-  , setAvailIsDefault, availIsDefault, saveAvailability, availSchedule, setAvailSchedule, tzOpen, tzSearch, TIMEZONES, availPrefs, setTzOpen, setTzSearch, setAvailPrefs , toggleEventType, etDropdown, setEtDropdown, addEventType, deleteEventType } = ctx || {};
+  , setAvailIsDefault, availIsDefault, saveAvailability, availSchedule, setAvailSchedule, tzOpen, tzSearch, TIMEZONES, availPrefs, setTzOpen, setTzSearch, setAvailPrefs , toggleEventType, etDropdown, setEtDropdown, addEventType, deleteEventType, canEdit } = ctx || {};
 
   return (
     <>
@@ -40,9 +40,11 @@ export default function EventTypesPage() {
             <h2 className="ttl">Event Types</h2>
             <p className="sub">Create scheduling links people can book.</p>
           </div>
-          <button className="crm-btn crm-btn-primary" onClick={() => setEditingEvent('new')}>
-            <Plus size={15} /> New Event Type
-          </button>
+          {canEdit && (
+            <button className="crm-btn crm-btn-primary" onClick={() => setEditingEvent('new')}>
+              <Plus size={15} /> New Event Type
+            </button>
+          )}
         </div>
         <div className="crm-card">
                 <div style={{
@@ -144,10 +146,10 @@ export default function EventTypesPage() {
                                 <button className="et-dd-btn" onClick={() => { 
                                   setEtDropdown(null); 
                                   setEditingEvent(e);
-                                }}>
+                                }} disabled={!canEdit}>
                                   <Edit2 size={14} /> Edit
                                 </button>
-                                <button className="et-dd-btn" onClick={async () => { 
+                                <button className="et-dd-btn" disabled={!canEdit} onClick={async () => { 
                                   setEtDropdown(null); 
                                   try {
                                     const { id, createdAt, ...rest } = e as any;
@@ -171,7 +173,7 @@ export default function EventTypesPage() {
                                   <CalendarCheck size={14} /> Troubleshoot
                                 </button>
                                 <div style={{ height: '1px', background: '#e2e8f0', margin: '4px 0' }} />
-                                <button className="et-dd-btn" style={{ color: '#ef4444' }} onClick={async () => {
+                                <button className="et-dd-btn" style={{ color: '#ef4444' }} disabled={!canEdit} onClick={async () => {
                                   setEtDropdown(null);
                                   setDeleteModalEvent(e);
                                   /*
