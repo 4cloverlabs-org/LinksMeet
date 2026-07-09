@@ -68,7 +68,14 @@ export default function EventTypesPage() {
                         onClick={() => setEditingEvent(e)}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>{e.title}</span>
+                          <span style={{ 
+                            fontFamily: 'Geist, "Geist Sans", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                            fontStyle: 'normal',
+                            fontWeight: 600,
+                            color: 'rgb(15, 23, 42)',
+                            fontSize: '15px',
+                            lineHeight: '26px'
+                          }}>{e.title}</span>
                           <span style={{ fontSize: '0.85rem', color: '#64748b' }}>/{uid}/{e.slug}</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
