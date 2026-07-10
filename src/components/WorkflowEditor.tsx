@@ -63,7 +63,7 @@ export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTy
   const [body, setBody] = useState(draft.action_payload?.body || defaultBody);
 
   const [applyToAll, setApplyToAll] = useState(draft.action_payload?.applyToAll !== false);
-  const [targetEventType, setTargetEventType] = useState(draft.action_payload?.targetEventType || '');
+  const [targetEventTypes, setTargetEventTypes] = useState<string[]>(Array.isArray(draft.action_payload?.targetEventTypes) ? draft.action_payload.targetEventTypes : (draft.action_payload?.targetEventType ? [draft.action_payload.targetEventType] : []));
 
   const handleSave = (overrideActive?: boolean) => {
     const finalActive = overrideActive !== undefined ? overrideActive : isActive;
@@ -90,7 +90,7 @@ export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTy
         subject,
         body,
         applyToAll,
-        targetEventType
+        targetEventTypes
       }
     });
   };
@@ -152,17 +152,26 @@ export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTy
 
             <div className="wf-form-group">
               <label>Which event type will this apply to?</label>
-              <div className="wf-select-wrapper">
-                <select className="wf-input" value={targetEventType} onChange={e => { setTargetEventType(e.target.value); setApplyToAll(false); }} disabled={applyToAll}>
-                  <option value="">Select...</option>
-                  {eventTypes?.map(et => (
-                    <option key={et.id || et.slug} value={et.slug || et.title}>{et.title}</option>
-                  ))}
-                </select>
-                <ChevronDown size={14} className="wf-select-icon" />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', opacity: applyToAll ? 0.5 : 1, pointerEvents: applyToAll ? 'none' : 'auto' }}>
+                {eventTypes?.map(et => {
+                  const val = et.slug || et.title;
+                  return (
+                    <label key={val} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#111827', cursor: 'pointer' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={targetEventTypes.includes(val)} 
+                        onChange={e => {
+                          if (e.target.checked) setTargetEventTypes([...targetEventTypes, val]);
+                          else setTargetEventTypes(targetEventTypes.filter(t => t !== val));
+                        }}
+                        disabled={applyToAll}
+                      /> {et.title}
+                    </label>
+                  );
+                })}
               </div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px', fontSize: '13px', color: '#374151', cursor: 'pointer' }}>
-                <input type="checkbox" checked={applyToAll} onChange={e => setApplyToAll(e.target.checked)} /> Apply to all, including future event types
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '16px', fontSize: '13px', color: '#374151', cursor: 'pointer', borderTop: '1px solid #E5E7EB', paddingTop: '16px' }}>
+                <input type="checkbox" checked={applyToAll} onChange={e => { setApplyToAll(e.target.checked); if (e.target.checked) setTargetEventTypes([]); }} /> Apply to all, including future event types
               </label>
             </div>
           </div>

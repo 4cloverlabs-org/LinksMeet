@@ -1168,14 +1168,14 @@ if (process.env.NODE_ENV !== 'test') {
       const { data: activeWorkflows } = await supabase.from('workflows').select('*').eq('is_active', true);
       if (!activeWorkflows || activeWorkflows.length === 0) return;
 
-      // 2. Fetch upcoming and recent bookings (past 24h to future 30 days)
+      // 2. Fetch upcoming and recent bookings (start_time past 7 days to future)
       const nowMs = Date.now();
-      const minDate = new Date(nowMs - 24 * 60 * 60 * 1000).toISOString();
+      const minDate = new Date(nowMs - 7 * 24 * 60 * 60 * 1000).toISOString();
       const { data: bookings } = await supabase
         .from('bookings')
         .select('*, event_types(*), users(*)')
         .in('status', ['New', 'Rescheduled'])
-        .gte('created_at', minDate);
+        .gte('start_time', minDate);
       
       if (!bookings || bookings.length === 0) return;
 
@@ -1193,8 +1193,8 @@ if (process.env.NODE_ENV !== 'test') {
           
           // Must match event type if filter is applied
           if (wf.action_payload?.applyToAll === false) {
-             const targetSlug = wf.action_payload?.targetEventType;
-             if (targetSlug && targetSlug !== eventTypeSlug && targetSlug !== eventTitle) {
+             const targetSlugs = wf.action_payload?.targetEventTypes || (wf.action_payload?.targetEventType ? [wf.action_payload.targetEventType] : []);
+             if (targetSlugs.length > 0 && !targetSlugs.includes(eventTypeSlug) && !targetSlugs.includes(eventTitle)) {
                continue;
              }
           }
@@ -1249,7 +1249,7 @@ if (process.env.NODE_ENV !== 'test') {
     } catch (err) {
       console.error("Workflow Engine Error:", err);
     }
-  }, 30000); // Check every 30 seconds
+  }, 5000); // Check every 5 seconds for real-time responsiveness
   console.log("Background Workflow Engine started...");
 }
 

@@ -33,12 +33,17 @@ export default function WorkflowsPage() {
 
   const [wfTab, setWfTab] = useState<'create' | 'active' | 'drafts'>(myWorkflows.length > 0 ? 'active' : 'create');
 
+  const localHandleSave = (draft: any) => {
+    handleSaveWorkflow(draft);
+    setWfTab(draft.is_active ? 'active' : 'drafts');
+  };
+
   return (
     <>
       {editingWorkflow ? (
                 <WorkflowEditor 
                   initialDraft={editingWorkflow} 
-                  onSave={handleSaveWorkflow} 
+                  onSave={localHandleSave} 
                   onCancel={() => setEditingWorkflow(null)} 
                   eventTypes={eventTypes}
                 />
@@ -189,6 +194,7 @@ export default function WorkflowsPage() {
                                   onClick={() => {
                                     const newActive = !w.is_active;
                                     setMyWorkflows(prev => prev.map(old => old.id === w.id ? { ...old, is_active: newActive } : old));
+                                    setWfTab(newActive ? 'active' : 'drafts');
                                     fetch(`${API_BASE_URL}/api/workflows/${w.id}`, {
                                       method: 'PUT',
                                       headers: { 'Authorization': `Bearer ${user?.access_token || ''}`, 'Content-Type': 'application/json' },
@@ -238,6 +244,7 @@ export default function WorkflowsPage() {
                                   onClick={() => {
                                     const newActive = !w.is_active;
                                     setMyWorkflows(prev => prev.map(old => old.id === w.id ? { ...old, is_active: newActive } : old));
+                                    setWfTab(newActive ? 'active' : 'drafts');
                                     fetch(`${API_BASE_URL}/api/workflows/${w.id}`, {
                                       method: 'PUT',
                                       headers: { 'Authorization': `Bearer ${user?.access_token || ''}`, 'Content-Type': 'application/json' },
