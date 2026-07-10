@@ -16,9 +16,7 @@ interface Props {
 }
 
 const LOCATION_OPTIONS = [
-  { id: 'linksmeet', label: 'LinksMeet Video (Default)', icon: Video },
   { id: 'gmeet', label: 'Google Meet', icon: Video },
-  { id: 'zoom', label: 'Zoom Video', icon: Video },
   { id: 'phone', label: 'Phone Call', icon: Phone },
   { id: 'inperson', label: 'In-Person Meeting', icon: MapPin }
 ];
@@ -55,12 +53,12 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
   const userEmail = user?.email || 'you@example.com';
 
   const [form, setForm] = useState<Partial<EventType> & { location?: string }>({
-    title: '15 min meeting',
+    title: '15 Minute Meeting',
     slug: '15min',
     dur: '15 Minutes',
-    desc: 'A quick video meeting.',
+    location: 'Google Meet',
+    desc: 'Schedule a direct video conference session with our team.',
     active: true,
-    location: 'LinksMeet Video (Default)',
     ...(initialData || {})
   });
 
@@ -138,15 +136,20 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
   const [lockTimezone, setLockTimezone] = useState(false);
 
   // Booking Form questions state
-  const [questions, setQuestions] = useState([
-    { id: 'name', label: 'Your name', type: 'Name', required: true, active: true },
-    { id: 'email', label: 'Email address', type: 'Email', required: true, active: true },
-    { id: 'phone', label: 'Phone number', type: 'Phone', required: requirePhone, active: requirePhone },
-    { id: 'about', label: 'What is this meeting about?', type: 'Short text', required: false, active: false },
-    { id: 'notes', label: 'Additional notes', type: 'Long text', required: false, active: true },
-    { id: 'guests', label: 'Add guests', type: 'Multiple Emails', required: false, active: true },
-    { id: 'reschedule', label: 'Reason for reschedule', type: 'Long text', required: false, active: true },
-  ]);
+  const [questions, setQuestions] = useState(() => {
+    if (initialData?.formSettings?.questions) {
+      return initialData.formSettings.questions;
+    }
+    return [
+      { id: 'name', label: 'Your name', type: 'Name', required: true, active: true },
+      { id: 'email', label: 'Email address', type: 'Email', required: true, active: true },
+      { id: 'phone', label: 'Phone number', type: 'Phone', required: requirePhone, active: requirePhone },
+      { id: 'about', label: 'What is this meeting about?', type: 'Short text', required: false, active: false },
+      { id: 'notes', label: 'Additional notes', type: 'Long text', required: false, active: true },
+      { id: 'guests', label: 'Add guests', type: 'Multiple Emails', required: false, active: true },
+      { id: 'reschedule', label: 'Reason for reschedule', type: 'Long text', required: false, active: true },
+    ];
+  });
 
   // Confirmation state
   const [confChannel, setConfChannel] = useState<'email' | 'phone'>('email');
@@ -481,7 +484,10 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
       redirectUrl: confRedirect ? redirectUrl : null,
       replyToEmail: customReplyTo ? replyToEmail : null,
       allowedLayouts,
-      defaultLayout
+      defaultLayout,
+      formSettings: {
+        questions
+      }
     };
 
     try {
@@ -744,10 +750,18 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <ToggleSwitch
               checked={form.active ?? true}
-              onChange={() => {
+              onChange={async () => {
                 const nextState = !form.active;
                 setForm(prev => ({ ...prev, active: nextState }));
                 triggerToast(nextState ? 'Event type marked as active.' : 'Event type paused.');
+                if (form.id) {
+                  try {
+                    await updateEventType(uid, form.id, { active: nextState } as any);
+                    if (onSaved) onSaved(form.id);
+                  } catch (e) {
+                    console.error('Failed to quick-save active state:', e);
+                  }
+                }
               }}
             />
 
@@ -931,17 +945,19 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
                 {/* Location */}
                 <div style={{ position: 'relative' }}>
-                  <label style={{ display: 'block', fontSize: '0.88rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Location</label>
+                  <label style={{ display: 'block', fontSize: '0.88rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Conference / Meeting Tool</label>
                   <div
                     onClick={() => setShowLocMenu(!showLocMenu)}
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px', cursor: 'pointer' }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem', fontWeight: 600, color: '#0f172a' }}>
-                      <LocIcon size={16} color="#7d3bec" /> {form.location || 'Select a location...'}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 500, fontSize: '0.9rem', color: '#0f172a' }}>
+                      <LocIcon size={16} color="#7d3bec" /> {form.location || 'Select a tool...'}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#64748b' }}>
                       <ChevronDown size={16} />
-                      <X size={16} onClick={(e) => { e.stopPropagation(); setForm({ ...form, location: 'Select a location...' }); }} />
+                      {form.location && <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#64748b', cursor: 'pointer', padding: '4px', borderRadius: '4px' }} className="hover:bg-slate-100">
+                      <X size={16} onClick={(e) => { e.stopPropagation(); setForm({ ...form, location: 'Select a tool...' }); }} />
+                    </div>}
                     </div>
                   </div>
 
@@ -997,8 +1013,8 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   {showLocAdvanced && (
                     <div style={{ background: '#f8fafc', border: '2px solid #F5F5F5', borderRadius: '8px', padding: '14px', marginBottom: '14px', display: 'flex', flexDirection: 'column', gap: '12px', animation: 'fadeIn 0.15s ease' }}>
                       <div>
-                        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Location instructions for guests</label>
-                        <input
+                        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Meeting instructions for guests</label>
+                        <textarea
                           value={locInstructions}
                           onChange={e => setLocInstructions(e.target.value)}
                           placeholder="e.g. Please dial extension 402 or meet at Room 3B"
@@ -1018,17 +1034,13 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   )}
 
                   <div style={{ position: 'relative' }}>
-                    <button
-                      type="button"
-                      onClick={() => setShowAddLocMenu(!showAddLocMenu)}
-                      style={{ width: '100%', padding: '10px', background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '8px', color: '#7d3bec', fontWeight: 600, fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginBottom: '10px' }}
-                    >
-                      <Plus size={16} /> Add a location
+                    <button type="button" onClick={() => setShowAddLocMenu(!showAddLocMenu)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', color: '#7d3bec', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', padding: 0 }}>
+                      <Plus size={16} /> Add a secondary tool
                     </button>
 
                     {showAddLocMenu && (
-                      <div style={{ position: 'absolute', top: '44px', left: 0, right: 0, background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '8px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 50, overflow: 'hidden' }}>
-                        <div style={{ padding: '8px 12px', fontSize: '0.75rem', fontWeight: 700, color: '#64748b', background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>SELECT SECONDARY LOCATION CHOICE</div>
+                      <div className="crm-shadow" style={{ position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', width: '320px', zIndex: 10, overflow: 'hidden' }}>
+                        <div style={{ padding: '8px 12px', fontSize: '0.75rem', fontWeight: 700, color: '#64748b', background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>SELECT SECONDARY MEETING TOOL</div>
                         {LOCATION_OPTIONS.filter(o => o.label !== form.location && !additionalLocations.includes(o.label)).map(opt => {
                           const OptIcon = opt.icon;
                           return (
@@ -1077,7 +1089,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                         <Clock size={16} color="#64748b" /> {durMinutes}m
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <LocIcon size={16} color="#64748b" /> {form.location?.replace(' (Default)', '') || 'LinksMeet Video'}
+                        <LocIcon size={16} color="#64748b" /> {form.location?.replace(' (Default)', '') || 'Google Meet'}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                         <Globe size={16} color="#64748b" /> Asia/Kolkata <ChevronDown size={14} />
@@ -1556,18 +1568,27 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
                   {/* Preview Right: Form */}
                   <div style={{ flex: 1, padding: '32px 40px', display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ marginBottom: '16px' }}>
-                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Your name *</label>
-                      <input type="text" readOnly value={userName} style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
-                    </div>
-                    <div style={{ marginBottom: '16px' }}>
-                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Email address *</label>
-                      <input type="text" readOnly value={userEmail} style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
-                    </div>
-                    <div style={{ marginBottom: '20px' }}>
-                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Additional notes</label>
-                      <textarea readOnly value="Please share anything that will help prepare for our meeting." style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', minHeight: '80px', resize: 'none', outline: 'none' }} />
-                    </div>
+                    {questions.filter(q => q.active && q.id !== 'guests' && q.id !== 'reschedule').map(q => (
+                      <div key={q.id} style={{ marginBottom: q.type === 'Long text' ? '20px' : '16px' }}>
+                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>
+                          {q.label} {q.required ? '*' : ''}
+                        </label>
+                        {q.type === 'Long text' ? (
+                          <textarea 
+                            readOnly 
+                            value={q.id === 'notes' ? "Please share anything that will help prepare for our meeting." : ""} 
+                            style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', minHeight: '80px', resize: 'none', outline: 'none' }} 
+                          />
+                        ) : (
+                          <input 
+                            type={q.type === 'Phone' ? 'tel' : 'text'} 
+                            readOnly 
+                            value={q.id === 'name' ? userName : q.id === 'email' ? userEmail : ''} 
+                            style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} 
+                          />
+                        )}
+                      </div>
+                    ))}
 
                     {questions.some(q => q.id === 'guests' && q.active) && (
                       <button type="button" onClick={() => triggerToast('Opening Add Guests input...')} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.85rem', fontWeight: 600, padding: 0, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginBottom: '30px' }}>
@@ -1706,7 +1727,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     {/* Where */}
                     <div style={{ display: 'flex' }}>
                       <div style={{ width: '100px', fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>Where</div>
-                      <div style={{ flex: 1, fontSize: '0.9rem', color: '#334155' }}>LinksMeet Video</div>
+                      <div style={{ flex: 1, fontSize: '0.9rem', color: '#334155' }}>{form.location || 'Google Meet'}</div>
                     </div>
                   </div>
 
@@ -1931,7 +1952,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       </div>
                       <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
                         <Video size={18} />
-                        LinksMeet Video
+                        {form.location || 'Google Meet'}
                       </div>
                       <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500, alignItems: 'center' }}>
                         <Globe size={18} />
@@ -2340,7 +2361,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       </div>
                       <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
                         <Video size={18} />
-                        LinksMeet Video
+                        {form.location || 'Google Meet'}
                       </div>
                       <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
                         <Globe size={18} />

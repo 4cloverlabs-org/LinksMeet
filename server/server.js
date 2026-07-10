@@ -518,7 +518,7 @@ app.put('/api/workflows/:id', requireAuth, async (req, res) => {
 // ----------------------------------------------------
 app.post('/api/bookings', async (req, res) => {
   try {
-    const { ownerUid, bookerName, bookerEmail, bookerNotes, startTime, endTime, eventTitle, eventTypeSlug, replyToEmail } = req.body;
+    const { ownerUid, bookerName, bookerEmail, bookerPhone, bookerNotes, startTime, endTime, eventTitle, eventTypeSlug, replyToEmail } = req.body;
 
     if (!supabase) {
       return res.status(500).json({ error: "Database not connected" });
@@ -690,6 +690,7 @@ app.post('/api/bookings', async (req, res) => {
       user_id: ownerUid,
       name: bookerName,
       email: bookerEmail,
+      phone: bookerPhone || '',
       company: bookerNotes || '',
       source: `Booking: ${eventTitle}`,
       status: 'New'

@@ -74,6 +74,8 @@ export interface EventType {
   replyToEmail?: string;
   allowedLayouts?: string[];
   defaultLayout?: string;
+  formSettings?: any;
+  location?: string;
   createdAt?: number;
 }
 export async function listEventTypes(uid: string): Promise<EventType[]> {
@@ -89,6 +91,7 @@ export async function listEventTypes(uid: string): Promise<EventType[]> {
         replyToEmail: d.reply_to_email,
         allowedLayouts: d.allowed_layouts ? (typeof d.allowed_layouts === 'string' ? d.allowed_layouts.split(',') : d.allowed_layouts) : ['Month'],
         defaultLayout: d.default_layout || 'Month',
+        formSettings: d.form_settings,
         createdAt: new Date(d.created_at || Date.now()).getTime()
       }));
     }
@@ -140,12 +143,13 @@ export async function addEventType(uid: string, data: any): Promise<void> {
     slug: newEv.slug,
     dur: newEv.dur,
     description: newEv.desc,
-    active: newEv.active
+    active: newEv.active,
+    reply_to_email: newEv.replyToEmail,
+    allowed_layouts: newEv.allowedLayouts ? newEv.allowedLayouts.join(',') : undefined,
+    default_layout: newEv.defaultLayout,
+    form_settings: data.formSettings
   };
   if (data.redirectUrl !== undefined) dbRecord.redirect_url = data.redirectUrl;
-  if (data.replyToEmail !== undefined) dbRecord.reply_to_email = data.replyToEmail;
-  if (data.allowedLayouts !== undefined) dbRecord.allowed_layouts = Array.isArray(data.allowedLayouts) ? data.allowedLayouts.join(',') : data.allowedLayouts;
-  if (data.defaultLayout !== undefined) dbRecord.default_layout = data.defaultLayout;
   if (newEv.location !== undefined) {
     dbRecord.location = newEv.location;
   }
@@ -187,6 +191,7 @@ export async function updateEventType(uid: string, id: string, data: any): Promi
   if (data.replyToEmail !== undefined) dbData.reply_to_email = data.replyToEmail;
   if (data.allowedLayouts !== undefined) dbData.allowed_layouts = Array.isArray(data.allowedLayouts) ? data.allowedLayouts.join(',') : data.allowedLayouts;
   if (data.defaultLayout !== undefined) dbData.default_layout = data.defaultLayout;
+  if (data.formSettings !== undefined) dbData.form_settings = data.formSettings;
 
   try {
     const { error } = await supabase.from('event_types').update(dbData).eq('id', id).eq('user_id', uid);

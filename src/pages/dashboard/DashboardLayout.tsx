@@ -1451,19 +1451,19 @@ export default function DashboardLayout() {
                   createdAt: new Date(d.created_at).getTime()
                 })));
                 
-                if (editingEvent === 'new' && savedId) {
+                if (savedId) {
                   const newEventObj = fresh.find(e => e.id === savedId) || fresh[0];
-                  setEditingEvent(newEventObj);
+                  if (newEventObj) setEditingEvent(newEventObj);
                 }
               } else {
                 const raw = localStorage.getItem('sm_event_types') || localStorage.getItem('linksmeet_event_types');
                 if (raw) setEventTypes(JSON.parse(raw));
                 
                 // Fallback for local storage save
-                if (editingEvent === 'new' && savedId && raw) {
+                if (savedId && raw) {
                   const parsed = JSON.parse(raw);
                   const newEventObj = parsed.find((e: any) => e.id === savedId) || parsed[0];
-                  setEditingEvent(newEventObj);
+                  if (newEventObj) setEditingEvent(newEventObj);
                 }
               }
             }}

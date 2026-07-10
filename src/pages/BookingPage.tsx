@@ -58,6 +58,7 @@ export default function BookingPage() {
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
   
   const [bookingStatus, setBookingStatus] = useState<'idle' | 'booking' | 'success'>('idle');
@@ -129,7 +130,8 @@ export default function BookingPage() {
               ...etData, 
               desc: etData.description || etData.desc,
               allowedLayouts: allowed,
-              defaultLayout: defLayout
+              defaultLayout: defLayout,
+              formSettings: etData.form_settings
             });
             setCurrentLayout(defLayout as any);
             
@@ -225,6 +227,7 @@ export default function BookingPage() {
             ownerUid: uid,
             bookerName: name,
             bookerEmail: email,
+            bookerPhone: phone,
             bookerNotes: notes,
             startTime,
             endTime,
@@ -267,6 +270,7 @@ export default function BookingPage() {
           user_id: uid,
           name: name,
           email: email,
+          phone: phone,
           company: notes || '',
           source: `Booking: ${eventType.title}`,
           status: 'New'
@@ -385,8 +389,9 @@ export default function BookingPage() {
               </div>
 
               <div style={{ fontWeight: 700, color: '#0f172a' }}>Where</div>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <span style={{ color: '#0f172a', fontWeight: 500 }}>LinksMeet Video</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Video size={16} color="#64748b" />
+                <span style={{ color: '#0f172a', fontWeight: 500 }}>{eventType?.location || 'Google Meet'}</span>
                 <ExternalLink
                   size={16}
                   color="#7d3bec"
@@ -569,8 +574,8 @@ export default function BookingPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 600 }}>
                 <Clock size={18} color="#64748b" /> {eventType?.dur || '15m'}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 600 }}>
-                <Video size={18} color="#64748b" /> LinksMeet Video
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Video size={18} color="#64748b" /> {eventType?.location || 'Google Meet'}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 600, cursor: 'pointer' }}>
                 <Globe size={18} color="#64748b" /> Asia/Kolkata
@@ -1000,7 +1005,7 @@ export default function BookingPage() {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 500 }}>
-                <Video size={20} color="#7d3bec" style={{ flexShrink: 0 }} /> LinksMeet Video
+                <Video size={20} color="#7d3bec" style={{ flexShrink: 0 }} /> {eventType?.location || 'Google Meet'}
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 500 }}>
@@ -1012,49 +1017,52 @@ export default function BookingPage() {
           {/* Right Column: Enter Details Form */}
           <div style={{ borderLeft: '1px solid #f1f5f9', paddingLeft: '40px' }}>
             <form onSubmit={handleBook} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Your name *</label>
-                <input
-                  required
-                  placeholder="John Doe"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  style={{ width: '100%', padding: '12px 16px', border: '1px solid #e2e8f0', background: '#ffffff', color: '#0f172a', borderRadius: '10px', outline: 'none', fontSize: '0.95rem', boxSizing: 'border-box' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Email address *</label>
-                <input
-                  required
-                  type="email"
-                  placeholder="user@example.com"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  style={{ width: '100%', padding: '12px 16px', border: '1px solid #e2e8f0', background: '#ffffff', color: '#0f172a', borderRadius: '10px', outline: 'none', fontSize: '0.95rem', boxSizing: 'border-box' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Additional notes</label>
-                <textarea
-                  rows={3}
-                  placeholder="Please share anything that will help prepare for our meeting."
-                  value={notes}
-                  onChange={e => setNotes(e.target.value)}
-                  style={{ width: '100%', padding: '12px 16px', border: '1px solid #e2e8f0', background: '#ffffff', color: '#0f172a', borderRadius: '10px', outline: 'none', fontSize: '0.92rem', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
-                />
-              </div>
-
-              <div>
-                <button
-                  type="button"
-                  onClick={() => alert('Add guests feature coming soon')}
-                  style={{ background: 'none', border: 'none', color: '#7d3bec', fontWeight: 600, fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: 0 }}
-                >
-                  <UserPlus size={18} /> Add guests
-                </button>
-              </div>
+              {(eventType?.formSettings?.questions || [
+                { id: 'name', label: 'Your name', type: 'Name', required: true, active: true },
+                { id: 'email', label: 'Email address', type: 'Email', required: true, active: true },
+                { id: 'notes', label: 'Additional notes', type: 'Long text', required: false, active: true }
+              ]).filter((q: any) => q.active && q.id !== 'guests' && q.id !== 'reschedule').map((q: any) => (
+                <div key={q.id}>
+                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>
+                    {q.label} {q.required ? '*' : ''}
+                  </label>
+                  {q.type === 'Long text' ? (
+                    <textarea
+                      required={q.required}
+                      rows={3}
+                      placeholder={q.id === 'notes' ? "Please share anything that will help prepare for our meeting." : ""}
+                      value={q.id === 'notes' ? notes : ''}
+                      onChange={e => { if (q.id === 'notes') setNotes(e.target.value); }}
+                      style={{ width: '100%', padding: '12px 16px', border: '1px solid #e2e8f0', background: '#ffffff', color: '#0f172a', borderRadius: '10px', outline: 'none', fontSize: '0.92rem', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
+                    />
+                  ) : (
+                    <input
+                      required={q.required}
+                      type={q.type === 'Email' ? 'email' : q.type === 'Phone' ? 'tel' : 'text'}
+                      placeholder={q.id === 'name' ? 'John Doe' : q.id === 'email' ? 'user@example.com' : q.id === 'phone' ? '+1 (555) 123-4567' : ''}
+                      value={q.id === 'name' ? name : q.id === 'email' ? email : q.id === 'phone' ? phone : ''}
+                      onChange={e => {
+                        if (q.id === 'name') setName(e.target.value);
+                        else if (q.id === 'email') setEmail(e.target.value);
+                        else if (q.id === 'phone') setPhone(e.target.value);
+                      }}
+                      style={{ width: '100%', padding: '12px 16px', border: '1px solid #e2e8f0', background: '#ffffff', color: '#0f172a', borderRadius: '10px', outline: 'none', fontSize: '0.95rem', boxSizing: 'border-box' }}
+                    />
+                  )}
+                </div>
+              ))}
+              
+              {(eventType?.formSettings?.questions || []).some((q: any) => q.id === 'guests' && q.active) && (
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => alert('Add guests feature coming soon')}
+                    style={{ background: 'none', border: 'none', color: '#7d3bec', fontWeight: 600, fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: 0 }}
+                  >
+                    <UserPlus size={18} /> Add guests
+                  </button>
+                </div>
+              )}
 
               <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '8px 0 0', lineHeight: 1.5 }}>
                 By proceeding, you agree to LinksMeet's <span style={{ color: '#7d3bec', cursor: 'pointer' }}>Terms</span> and <span style={{ color: '#7d3bec', cursor: 'pointer' }}>Privacy Policy</span>.
