@@ -144,9 +144,9 @@ export async function addEventType(uid: string, data: any): Promise<void> {
     dur: newEv.dur,
     description: newEv.desc,
     active: newEv.active,
-    reply_to_email: newEv.replyToEmail,
-    allowed_layouts: newEv.allowedLayouts ? newEv.allowedLayouts.join(',') : undefined,
-    default_layout: newEv.defaultLayout,
+    reply_to_email: data.replyToEmail,
+    allowed_layouts: data.allowedLayouts ? data.allowedLayouts.join(',') : undefined,
+    default_layout: data.defaultLayout,
     form_settings: data.formSettings
   };
   if (data.redirectUrl !== undefined) dbRecord.redirect_url = data.redirectUrl;
