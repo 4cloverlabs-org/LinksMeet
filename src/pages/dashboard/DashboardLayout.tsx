@@ -398,10 +398,17 @@ export default function DashboardLayout() {
     })
     .then(res => res.json())
     .then(data => {
+      if (data.error) throw new Error(data.error);
       setMyWorkflows(prev => [data, ...prev]);
       setEditingWorkflow(null);
+      setToast('Workflow saved successfully!');
+      setTimeout(() => setToast(null), 3000);
     })
-    .catch(console.error);
+    .catch(err => {
+      console.error(err);
+      setToast('Failed to save workflow.');
+      setTimeout(() => setToast(null), 3000);
+    });
   };
 
   const [manageApp, setManageApp] = useState<typeof APPS[0] | null>(null);

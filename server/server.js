@@ -544,6 +544,7 @@ app.post('/api/bookings', async (req, res) => {
     const tokens = ownerData.google_tokens;
     let meetLink = null;
     let calendarSuccess = false;
+    let gmailClient = null;
 
     // 2. Try Google API if connected
     if (tokens && (tokens.refresh_token || tokens.access_token)) {
@@ -553,7 +554,7 @@ app.post('/api/bookings', async (req, res) => {
           access_token: tokens.access_token 
         });
         const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
-        const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+        gmailClient = google.gmail({ version: 'v1', auth: oauth2Client });
 
         const event = {
           summary: `Meeting: ${bookerName} & ${ownerData.first_name || 'LinksMeet'}`,
@@ -714,10 +715,22 @@ app.post('/api/bookings', async (req, res) => {
           
           if (wf.delay_ms === 0 && wf.action_type === 'email') {
              // Immediate email example
-             const customHtml = `<div style="font-family: sans-serif; padding: 20px;"><h2>Workflow Triggered!</h2><p>${wf.template_name}</p></div>`;
-             const rawEmail = makeBody(bookerEmail, ownerData.email, `Workflow: ${wf.template_name}`, customHtml);
-             // Fire and forget
-             gmail.users.messages.send({ userId: 'me', requestBody: { raw: rawEmail } }).catch(e => console.error(e));
+             if (gmailClient) {
+               let subject = wf.action_payload?.subject || `Workflow: ${wf.template_name}`;
+               let bodyTxt = wf.action_payload?.body || `Hello,\n\nThis is a notification for ${eventTitle}.`;
+               
+               // Replace variables
+               subject = subject.replace(/\{EVENT_NAME\}/g, eventTitle).replace(/\{ATTENDEE\}/g, bookerName).replace(/\{ORGANIZER\}/g, ownerData.first_name || 'Organizer');
+               bodyTxt = bodyTxt.replace(/\{EVENT_NAME\}/g, eventTitle).replace(/\{ATTENDEE\}/g, bookerName).replace(/\{ORGANIZER\}/g, ownerData.first_name || 'Organizer');
+               
+               const customHtml = `<div style="font-family: sans-serif; padding: 20px; white-space: pre-wrap;">${bodyTxt}</div>`;
+               const rawEmail = makeBody(bookerEmail, ownerData.email, subject, customHtml);
+               
+               // Fire and forget
+               gmailClient.users.messages.send({ userId: 'me', requestBody: { raw: rawEmail } }).catch(e => console.error(e));
+             } else {
+               console.error("Workflow triggered but Gmail is not connected.");
+             }
           } else {
              console.log(`[WORKFLOW ENGINE] Scheduled '${wf.template_name}' for ${wf.delay_ms}ms later (Action: ${wf.action_type})`);
           }
