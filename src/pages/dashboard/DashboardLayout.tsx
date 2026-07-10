@@ -387,8 +387,11 @@ export default function DashboardLayout() {
   };
 
   const handleSaveWorkflow = (draft: WorkflowDraft) => {
-    fetch(`${API_BASE_URL}/api/workflows`, {
-      method: 'POST',
+    const isUpdate = !!draft.id;
+    const url = isUpdate ? `${API_BASE_URL}/api/workflows/${draft.id}` : `${API_BASE_URL}/api/workflows`;
+    
+    fetch(url, {
+      method: isUpdate ? 'PUT' : 'POST',
       headers: { 
         'Authorization': `Bearer ${user?.access_token || ''}`,
         'x-workspace-id': activeWorkspaceId || '',
@@ -399,9 +402,12 @@ export default function DashboardLayout() {
     .then(res => res.json())
     .then(data => {
       if (data.error) throw new Error(data.error);
-      setMyWorkflows(prev => [data, ...prev]);
+      setMyWorkflows(prev => {
+        if (isUpdate) return prev.map(w => w.id === data.id ? data : w);
+        return [data, ...prev];
+      });
       setEditingWorkflow(null);
-      setToast('Workflow saved successfully!');
+      setToast(draft.is_active ? 'Workflow saved and activated!' : 'Workflow saved successfully!');
       setTimeout(() => setToast(null), 3000);
     })
     .catch(err => {

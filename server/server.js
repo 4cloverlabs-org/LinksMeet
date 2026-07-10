@@ -485,7 +485,7 @@ app.get('/api/workflows', requireAuth, async (req, res) => {
 
 app.post('/api/workflows', requireAuth, async (req, res) => {
   try {
-    const { template_name, trigger_event, delay_ms, action_type, action_payload } = req.body;
+    const { template_name, trigger_event, delay_ms, action_type, action_payload, is_active } = req.body;
     const { data, error } = await supabase.from('workflows').insert({
       user_id: req.userId,
       template_name,
@@ -493,7 +493,7 @@ app.post('/api/workflows', requireAuth, async (req, res) => {
       delay_ms,
       action_type,
       action_payload,
-      is_active: true
+      is_active: is_active !== undefined ? is_active : true
     }).select().single();
     if (error) return res.status(500).json({ error: error.message });
     res.json(data);
@@ -504,8 +504,16 @@ app.post('/api/workflows', requireAuth, async (req, res) => {
 
 app.put('/api/workflows/:id', requireAuth, async (req, res) => {
   try {
-    const { is_active } = req.body;
-    const { data, error } = await supabase.from('workflows').update({ is_active }).eq('id', req.params.id).eq('user_id', req.userId).select().single();
+    const { template_name, trigger_event, delay_ms, action_type, action_payload, is_active } = req.body;
+    const updatePayload = {};
+    if (is_active !== undefined) updatePayload.is_active = is_active;
+    if (template_name !== undefined) updatePayload.template_name = template_name;
+    if (trigger_event !== undefined) updatePayload.trigger_event = trigger_event;
+    if (delay_ms !== undefined) updatePayload.delay_ms = delay_ms;
+    if (action_type !== undefined) updatePayload.action_type = action_type;
+    if (action_payload !== undefined) updatePayload.action_payload = action_payload;
+
+    const { data, error } = await supabase.from('workflows').update(updatePayload).eq('id', req.params.id).eq('user_id', req.userId).select().single();
     if (error) return res.status(500).json({ error: error.message });
     res.json(data);
   } catch (err) {
@@ -699,46 +707,7 @@ app.post('/api/bookings', async (req, res) => {
 
     if (contactError) console.error("Supabase Contact Insert Error:", contactError);
 
-    // Trigger Workflows
-    try {
-      const { data: activeWorkflows } = await supabase
-        .from('workflows')
-        .select('*')
-        .eq('user_id', ownerUid)
-        .eq('is_active', true);
-        
-      if (activeWorkflows && activeWorkflows.length > 0) {
-        for (const wf of activeWorkflows) {
-          // Trigger event is generic for now, we just increment runs and pretend to queue it
-          // Real execution of scheduled items would happen in a background CRON / interval
-          await supabase.from('workflows').update({ runs: wf.runs + 1 }).eq('id', wf.id);
-          
-          if (wf.delay_ms === 0 && wf.action_type === 'email') {
-             // Immediate email example
-             if (gmailClient) {
-               let subject = wf.action_payload?.subject || `Workflow: ${wf.template_name}`;
-               let bodyTxt = wf.action_payload?.body || `Hello,\n\nThis is a notification for ${eventTitle}.`;
-               
-               // Replace variables
-               subject = subject.replace(/\{EVENT_NAME\}/g, eventTitle).replace(/\{ATTENDEE\}/g, bookerName).replace(/\{ORGANIZER\}/g, ownerData.first_name || 'Organizer');
-               bodyTxt = bodyTxt.replace(/\{EVENT_NAME\}/g, eventTitle).replace(/\{ATTENDEE\}/g, bookerName).replace(/\{ORGANIZER\}/g, ownerData.first_name || 'Organizer');
-               
-               const customHtml = `<div style="font-family: sans-serif; padding: 20px; white-space: pre-wrap;">${bodyTxt}</div>`;
-               const rawEmail = makeBody(bookerEmail, ownerData.email, subject, customHtml);
-               
-               // Fire and forget
-               gmailClient.users.messages.send({ userId: 'me', requestBody: { raw: rawEmail } }).catch(e => console.error(e));
-             } else {
-               console.error("Workflow triggered but Gmail is not connected.");
-             }
-          } else {
-             console.log(`[WORKFLOW ENGINE] Scheduled '${wf.template_name}' for ${wf.delay_ms}ms later (Action: ${wf.action_type})`);
-          }
-        }
-      }
-    } catch (err) {
-      console.error("Workflow triggering error:", err);
-    }
+    // Workflows are now handled perfectly by the real-time background engine.
 
     res.json({ success: true, booking: newBooking, calendarSuccess });
 
@@ -1187,6 +1156,101 @@ if (supabase) {
     }
   }, 2000); // Check every 2 seconds for near-instant email sending
   console.log("Background Campaign Engine started...");
+}
+
+// ----------------------------------------------------
+// Perfect Background Workflow Engine
+// ----------------------------------------------------
+if (process.env.NODE_ENV !== 'test') {
+  setInterval(async () => {
+    try {
+      // 1. Fetch active workflows
+      const { data: activeWorkflows } = await supabase.from('workflows').select('*').eq('is_active', true);
+      if (!activeWorkflows || activeWorkflows.length === 0) return;
+
+      // 2. Fetch upcoming and recent bookings (past 24h to future 30 days)
+      const nowMs = Date.now();
+      const minDate = new Date(nowMs - 24 * 60 * 60 * 1000).toISOString();
+      const { data: bookings } = await supabase
+        .from('bookings')
+        .select('*, event_types(*), users(*)')
+        .in('status', ['New', 'Rescheduled'])
+        .gte('created_at', minDate);
+      
+      if (!bookings || bookings.length === 0) return;
+
+      for (const booking of bookings) {
+        const executedWfs = booking.executed_workflows || [];
+        const eventTitle = booking.event_types?.title || 'Event';
+        const eventTypeSlug = booking.event_types?.slug || '';
+        const ownerData = booking.users || {};
+        
+        for (const wf of activeWorkflows) {
+          // Must belong to same user
+          if (wf.user_id !== booking.user_id && wf.user_id !== ownerData.id) continue;
+          // Must not have already executed
+          if (executedWfs.includes(wf.id)) continue;
+          
+          // Must match event type if filter is applied
+          if (wf.action_payload?.applyToAll === false) {
+             const targetSlug = wf.action_payload?.targetEventType;
+             if (targetSlug && targetSlug !== eventTypeSlug && targetSlug !== eventTitle) {
+               continue;
+             }
+          }
+
+          // Calculate fire time
+          let fireTimeMs = null;
+          if (wf.trigger_event === 'event_starts_before') {
+            fireTimeMs = new Date(booking.start_time).getTime() - wf.delay_ms;
+          } else if (wf.trigger_event === 'event_ends_after') {
+            fireTimeMs = new Date(booking.end_time).getTime() + wf.delay_ms;
+          } else if (wf.trigger_event === 'booking_created') {
+            fireTimeMs = new Date(booking.created_at).getTime() + wf.delay_ms;
+          }
+
+          // If it's time to fire (or past due within reason, but we already filter by minDate)
+          if (fireTimeMs && nowMs >= fireTimeMs) {
+            console.log(`[WORKFLOW ENGINE] Firing workflow '${wf.template_name}' for booking ${booking.id}`);
+            
+            const eventDateObj = new Date(booking.start_time);
+            const eventDateFull = eventDateObj.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+            const eventDateShort = eventDateObj.toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit', hour12: true });
+            
+            let subject = wf.action_payload?.subject || `Workflow: ${wf.template_name}`;
+            let bodyTxt = wf.action_payload?.body || `Hello,\n\nThis is a notification for ${eventTitle}.`;
+            
+            subject = subject.replace(/\{EVENT_NAME\}/g, eventTitle).replace(/\{ATTENDEE\}/g, booking.name).replace(/\{ORGANIZER\}/g, ownerData.first_name || 'Organizer').replace(/\{EVENT_DATE_ddd, MMM D, YYYY h:mma\}/g, eventDateFull).replace(/\{EVENT_DATE_ddd, h:mma\}/g, eventDateShort);
+            bodyTxt = bodyTxt.replace(/\{EVENT_NAME\}/g, eventTitle).replace(/\{ATTENDEE\}/g, booking.name).replace(/\{ORGANIZER\}/g, ownerData.first_name || 'Organizer').replace(/\{EVENT_DATE_ddd, MMM D, YYYY h:mma\}/g, eventDateFull).replace(/\{EVENT_DATE_ddd, h:mma\}/g, eventDateShort);
+            
+            if (wf.action_type === 'email') {
+               const customHtml = `<div style="font-family: sans-serif; padding: 20px; white-space: pre-wrap;">${bodyTxt}</div>`;
+               try {
+                 // Try to send email
+                 await sendEmailForUser(wf.user_id, booking.email, subject, customHtml);
+                 
+                 // Mark as executed
+                 const newExecuted = [...executedWfs, wf.id];
+                 await supabase.from('bookings').update({ executed_workflows: newExecuted }).eq('id', booking.id);
+                 await supabase.from('workflows').update({ runs: wf.runs + 1 }).eq('id', wf.id);
+               } catch (e) {
+                 console.error(`Failed to send email for workflow ${wf.id}:`, e.message);
+                 // We don't mark as executed if it failed due to disconnect, we can retry later or it will just fail again
+               }
+            } else {
+               // non-email flows just mark as executed
+               const newExecuted = [...executedWfs, wf.id];
+               await supabase.from('bookings').update({ executed_workflows: newExecuted }).eq('id', booking.id);
+               await supabase.from('workflows').update({ runs: wf.runs + 1 }).eq('id', wf.id);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Workflow Engine Error:", err);
+    }
+  }, 30000); // Check every 30 seconds
+  console.log("Background Workflow Engine started...");
 }
 
 const PORT = process.env.PORT || 3001;

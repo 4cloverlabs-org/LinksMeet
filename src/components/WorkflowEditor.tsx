@@ -3,11 +3,13 @@ import { ArrowLeft, Zap, ArrowRight, Trash2, ChevronDown } from 'lucide-react';
 import './WorkflowEditor.css';
 
 export interface WorkflowDraft {
+  id?: string;
   template_name: string;
   trigger_event: string;
   delay_ms: number;
   action_type: string;
   action_payload: any;
+  is_active?: boolean;
 }
 
 interface WorkflowEditorProps {
@@ -19,6 +21,7 @@ interface WorkflowEditorProps {
 
 export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTypes }: WorkflowEditorProps) {
   const [draft, setDraft] = useState<WorkflowDraft>(initialDraft);
+  const [isActive, setIsActive] = useState(!!initialDraft.is_active);
   
   // Parse delay_ms into unit and value
   let initialDelayValue = 24;
@@ -59,7 +62,12 @@ export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTy
   const [subject, setSubject] = useState(draft.action_payload?.subject || (draft.action_type === 'email' ? 'Reminder: {EVENT_NAME} - {EVENT_DATE_ddd, MMM D, YYYY h:mma}' : ''));
   const [body, setBody] = useState(draft.action_payload?.body || defaultBody);
 
-  const handleSave = () => {
+  const [applyToAll, setApplyToAll] = useState(draft.action_payload?.applyToAll !== false);
+  const [targetEventType, setTargetEventType] = useState(draft.action_payload?.targetEventType || '');
+
+  const handleSave = (overrideActive?: boolean) => {
+    const finalActive = overrideActive !== undefined ? overrideActive : isActive;
+    setIsActive(finalActive);
     // Calculate new delay_ms
     let ms = 0;
     if (when.includes('Before event starts') || when.includes('After event ends')) {
@@ -76,10 +84,13 @@ export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTy
       ...draft,
       trigger_event,
       delay_ms: ms,
+      is_active: finalActive,
       action_payload: {
         senderName,
         subject,
-        body
+        body,
+        applyToAll,
+        targetEventType
       }
     });
   };
@@ -94,7 +105,10 @@ export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTy
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
           <button className="wf-btn-outline"><Trash2 size={15} color="#EF4444" /></button>
-          <button className="wf-btn-primary" onClick={handleSave}>Save</button>
+          {!isActive && (
+            <button className="wf-btn-primary" style={{ background: '#10B981' }} onClick={() => handleSave(true)}>Activate</button>
+          )}
+          <button className="wf-btn-primary" onClick={() => handleSave()}>{isActive ? 'Save Workflow' : 'Save as Draft'}</button>
         </div>
       </div>
 
@@ -139,16 +153,16 @@ export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTy
             <div className="wf-form-group">
               <label>Which event type will this apply to?</label>
               <div className="wf-select-wrapper">
-                <select className="wf-input">
-                  <option>Select...</option>
+                <select className="wf-input" value={targetEventType} onChange={e => { setTargetEventType(e.target.value); setApplyToAll(false); }} disabled={applyToAll}>
+                  <option value="">Select...</option>
                   {eventTypes?.map(et => (
-                    <option key={et.id || et.slug}>{et.title}</option>
+                    <option key={et.id || et.slug} value={et.slug || et.title}>{et.title}</option>
                   ))}
                 </select>
                 <ChevronDown size={14} className="wf-select-icon" />
               </div>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px', fontSize: '13px', color: '#374151', cursor: 'pointer' }}>
-                <input type="checkbox" defaultChecked /> Apply to all, including future event types
+                <input type="checkbox" checked={applyToAll} onChange={e => setApplyToAll(e.target.checked)} /> Apply to all, including future event types
               </label>
             </div>
           </div>
