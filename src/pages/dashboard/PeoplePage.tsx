@@ -195,7 +195,7 @@ export default function PeoplePage() {
                                   padding: '4px 10px', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 600
                                 }}>
                                   <Globe size={13} color="#475569" />
-                                  {c.source || 'Website Form'}
+                                  {c.source || 'Booking'}
                                 </span>
                               )}
                             </span>
