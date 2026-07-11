@@ -101,7 +101,7 @@
 }
 
 .onb-btn-primary {
-  background: #0f172a;
+  background: #7d3bec;
   color: #fff;
   border: none;
   padding: 10px 24px;
@@ -160,8 +160,8 @@
   transition: all 0.2s;
 }
 .onb-plan-card.active {
-  border-color: #0f172a;
-  box-shadow: 0 0 0 1px #0f172a;
+  border-color: #7d3bec;
+  box-shadow: 0 0 0 1px #7d3bec;
 }
 .onb-plan-header {
   display: flex;
@@ -191,12 +191,12 @@
   justify-content: center;
 }
 .onb-plan-card.active .onb-radio {
-  border-color: #0f172a;
+  border-color: #7d3bec;
 }
 .onb-radio-dot {
   width: 10px;
   height: 10px;
-  background: #0f172a;
+  background: #7d3bec;
   border-radius: 50%;
 }
 
