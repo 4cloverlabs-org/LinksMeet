@@ -16,8 +16,8 @@ import { supabase } from '../../lib/supabase';
 import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '../../lib/db';
 import type { Notification } from '../../lib/db';
 import { API_BASE_URL } from '../../lib/config';
-import { 
-  listContacts, addContact, updateContact, deleteContact,
+import {
+  listContacts, addContact, updateContact, deleteContact, listenContacts,
   listenEventTypes, addEventType, updateEventType, deleteEventType,
   listenBookings, updateBooking, type Contact, type EventType, type Booking 
 } from '../../lib/crm';
@@ -966,9 +966,15 @@ export default function DashboardLayout() {
       setBookings(data);
     });
 
+    // Listen to real-time Contacts (Leads)
+    const unsubContacts = listenContacts(uid, (data) => {
+      setContacts(data);
+    });
+
     return () => {
       unsubET();
       unsubBookings();
+      unsubContacts();
     };
   }, [uid]);
 

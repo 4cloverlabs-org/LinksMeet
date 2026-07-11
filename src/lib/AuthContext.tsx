@@ -243,8 +243,8 @@ export function useAuth() {
 // Map Supabase auth error codes to friendly messages.
 export function authErrorMessage(e: unknown): string {
   const msg = (e as { message?: string })?.message || '';
-  if (msg.includes('User already registered')) return 'That email is already registered. Try logging in.';
-  if (msg.includes('Invalid login credentials')) return 'Incorrect email or password.';
+  if (msg.includes('User already registered')) return 'An account with this email already exists. Please log in using the method you originally signed up with (Email or Google).';
+  if (msg.includes('Invalid login credentials')) return 'Incorrect email or password. If you signed up with Google, please click "Continue with Google".';
   if (msg.includes('Password should be at least')) return 'Password should be at least 6 characters.';
   return msg || 'Something went wrong. Please try again.';
 }

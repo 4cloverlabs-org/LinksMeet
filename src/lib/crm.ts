@@ -31,6 +31,17 @@ export async function listContacts(uid: string): Promise<Contact[]> {
   if (error) throw error;
   return data.map(d => ({ ...d, createdAt: new Date(d.created_at).getTime() }));
 }
+export function listenContacts(uid: string, cb: (data: Contact[]) => void) {
+  listContacts(uid).then(cb).catch(console.error);
+
+  const channel = supabase.channel(`contacts_${uid}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'contacts', filter: `user_id=eq.${uid}` }, () => {
+      listContacts(uid).then(cb).catch(console.error);
+    })
+    .subscribe();
+
+  return () => { supabase.removeChannel(channel); };
+}
 export async function addContact(uid: string, data: Omit<Contact, 'id' | 'createdAt'>): Promise<void> {
   const { error } = await supabase.from('contacts').insert({ ...data, user_id: uid });
   if (error) throw error;

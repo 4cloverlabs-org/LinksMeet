@@ -557,12 +557,17 @@ app.post('/api/bookings', async (req, res) => {
     // 2. Try Google API if connected
     if (tokens && (tokens.refresh_token || tokens.access_token)) {
       try {
-        oauth2Client.setCredentials({ 
+        const localOauth2Client = new google.auth.OAuth2(
+          process.env.GOOGLE_CLIENT_ID,
+          process.env.GOOGLE_CLIENT_SECRET,
+          process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3001/auth/google/callback'
+        );
+        localOauth2Client.setCredentials({ 
           refresh_token: tokens.refresh_token,
           access_token: tokens.access_token 
         });
-        const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
-        gmailClient = google.gmail({ version: 'v1', auth: oauth2Client });
+        const calendar = google.calendar({ version: 'v3', auth: localOauth2Client });
+        gmailClient = google.gmail({ version: 'v1', auth: localOauth2Client });
 
         const event = {
           summary: `Meeting: ${bookerName} & ${ownerData.first_name || 'LinksMeet'}`,
@@ -631,7 +636,7 @@ app.post('/api/bookings', async (req, res) => {
           </div>
         `;
         const bookerRaw = makeBody(bookerEmail, ownerEmail, `Confirmed: ${eventTitle} with ${ownerName}`, bookerHtml, replyToEmail);
-        await gmail.users.messages.send({ userId: 'me', requestBody: { raw: bookerRaw } });
+        await gmailClient.users.messages.send({ userId: 'me', requestBody: { raw: bookerRaw } });
 
         // Premium Email to Owner
         const ownerHtml = `
@@ -661,13 +666,14 @@ app.post('/api/bookings', async (req, res) => {
             </div>
           </div>
         `;
-        const ownerRaw = makeBody(ownerEmail, ownerEmail, `New Lead: ${bookerName} booked ${eventTitle}`, ownerHtml);
-        await gmail.users.messages.send({ userId: 'me', requestBody: { raw: ownerRaw } });
+        const ownerFrom = `"LinksMeet Booking" <${ownerEmail}>`;
+        const ownerRaw = makeBody(ownerEmail, ownerFrom, `New Lead: ${bookerName} booked ${eventTitle}`, ownerHtml, bookerEmail);
+        await gmailClient.users.messages.send({ userId: 'me', requestBody: { raw: ownerRaw } });
         
         if (selectedMember) {
           const tmHtml = ownerHtml.replace(eOwnerName, escapeHtml(selectedMember.name));
-          const tmRaw = makeBody(selectedMember.email, ownerEmail, `New Lead: ${bookerName} booked ${eventTitle}`, tmHtml);
-          await gmail.users.messages.send({ userId: 'me', requestBody: { raw: tmRaw } });
+          const tmRaw = makeBody(selectedMember.email, ownerFrom, `New Lead: ${bookerName} booked ${eventTitle}`, tmHtml, bookerEmail);
+          await gmailClient.users.messages.send({ userId: 'me', requestBody: { raw: tmRaw } });
         }
         
         calendarSuccess = true;
