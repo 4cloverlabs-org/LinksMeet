@@ -35,6 +35,7 @@ import AppsPage from './pages/dashboard/AppsPage';
 import PaymentsPage from './pages/dashboard/PaymentsPage';
 import AdminPage from './pages/dashboard/AdminPage';
 import HelpPage from './pages/dashboard/HelpPage';
+import InboxPage from './pages/dashboard/InboxPage';
 
 function App() {
   return (
@@ -77,6 +78,7 @@ function App() {
             <Route path="/payments" element={<PaymentsPage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/help" element={<HelpPage />} />
+            <Route path="/inbox" element={<InboxPage />} />
           </Route>
 
           {/* ---- Public Booking Page & Aliases ---- */}
