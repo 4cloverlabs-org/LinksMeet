@@ -8,17 +8,8 @@ dotenv.config();
 
 const app = express();
 
-// Restrict CORS to an explicit allowlist of browser origins.
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173')
-  .split(',')
-  .map((o) => o.trim())
-  .filter(Boolean);
 app.use(cors({
-  origin: (origin, cb) => {
-    // Allow same-origin / non-browser clients (no Origin header) and allowlisted origins.
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-    return cb(new Error('Not allowed by CORS'));
-  }
+  origin: '*' // Allow all origins for the embedded widget
 }));
 app.use(express.json({ limit: '100kb' }));
 
@@ -529,7 +520,18 @@ app.put('/api/workflows/:id', requireAuth, async (req, res) => {
 // ----------------------------------------------------
 app.post('/api/bookings', async (req, res) => {
   try {
+    console.log("[POST /api/bookings] Request received:", req.body);
     const { ownerUid, bookerName, bookerEmail, bookerPhone, bookerNotes, startTime, endTime, eventTitle, eventTypeSlug, replyToEmail } = req.body;
+
+    if (ownerUid === 'demo') {
+      console.log("Demo booking, simulating success.");
+      return res.json({ success: true, booking: { event_slug: eventTypeSlug, booker_name: bookerName, booker_email: bookerEmail, status: 'upcoming', slot: 'Demo Slot' }, calendarSuccess: false });
+    }
+
+    if (!ownerUid) {
+      console.error("Missing ownerUid in request body.");
+      throw new Error("Missing ownerUid");
+    }
 
     if (!supabase) {
       return res.status(500).json({ error: "Database not connected" });

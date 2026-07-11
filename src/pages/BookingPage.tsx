@@ -266,7 +266,7 @@ export default function BookingPage() {
         if (insertError) throw insertError;
         
         // 2. Auto-create Contact directly
-        await supabase.from('contacts').insert({
+        const { error: contactError } = await supabase.from('contacts').insert({
           user_id: uid,
           name: name,
           email: email,
@@ -275,6 +275,7 @@ export default function BookingPage() {
           source: `Booking: ${eventType.title}`,
           status: 'New'
         });
+        if (contactError) console.error("Fallback contact insert failed:", contactError);
       }
       
       if (eventType.redirectUrl) {
