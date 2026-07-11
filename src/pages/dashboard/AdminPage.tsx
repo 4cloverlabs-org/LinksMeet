@@ -475,7 +475,7 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
             </div>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '28px' }}>
-              <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'linear-gradient(135deg, var(--ac) 0%, var(--ac2) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: '0 8px 20px rgba(14, 97, 243, 0.2)' }}>
+              <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'linear-gradient(135deg, var(--ac) 0%, var(--ac2) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: '0 8px 20px rgba(125, 59, 236, 0.2)' }}>
                 <Sparkles size={32} />
               </div>
               <div>

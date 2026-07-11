@@ -789,7 +789,7 @@ export default function BookingPage() {
                               fontWeight: 700,
                               fontSize: '0.92rem',
                               cursor: 'pointer',
-                              boxShadow: '0 4px 12px rgba(14, 97, 243, 0.2)'
+                              boxShadow: '0 4px 12px rgba(125, 59, 236, 0.2)'
                             }}
                           >
                             Next
@@ -1080,7 +1080,7 @@ export default function BookingPage() {
                 <button
                   type="submit"
                   disabled={bookingStatus === 'booking'}
-                  style={{ padding: '12px 32px', background: '#7d3bec', color: '#ffffff', border: 'none', borderRadius: '12px', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(14, 97, 243, 0.25)' }}
+                  style={{ padding: '12px 32px', background: '#7d3bec', color: '#ffffff', border: 'none', borderRadius: '12px', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(125, 59, 236, 0.25)' }}
                 >
                   {bookingStatus === 'booking' ? <Loader2 size={18} className="crm-spin-ic" /> : 'Confirm'}
                 </button>

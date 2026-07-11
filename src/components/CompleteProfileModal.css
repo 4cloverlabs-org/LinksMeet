@@ -179,7 +179,7 @@
 
 .cpm-input-card:focus-within {
   border-color: #7d3bec;
-  box-shadow: 0 0 0 3px rgba(14, 97, 243, 0.12);
+  box-shadow: 0 0 0 3px rgba(125, 59, 236, 0.12);
 }
 
 .cpm-input-card input {
@@ -210,7 +210,7 @@
 
 .cpm-url-card:focus-within {
   border-color: #7d3bec;
-  box-shadow: 0 0 0 3px rgba(14, 97, 243, 0.12);
+  box-shadow: 0 0 0 3px rgba(125, 59, 236, 0.12);
 }
 
 .cpm-url-prefix {
@@ -309,7 +309,7 @@
 
 .cpm-bio-box:focus-within {
   border-color: #7d3bec;
-  box-shadow: 0 0 0 3px rgba(14, 97, 243, 0.12);
+  box-shadow: 0 0 0 3px rgba(125, 59, 236, 0.12);
 }
 
 .cpm-bio-box textarea {
@@ -445,13 +445,13 @@
   align-items: center;
   gap: 8px;
   transition: all 0.15s ease;
-  box-shadow: 0 4px 14px rgba(14, 97, 243, 0.25);
+  box-shadow: 0 4px 14px rgba(125, 59, 236, 0.25);
 }
 
 .cpm-btn-primary:hover:not(:disabled) {
   background: #0A54DB;
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(14, 97, 243, 0.35);
+  box-shadow: 0 6px 18px rgba(125, 59, 236, 0.35);
 }
 
 .cpm-btn-primary:disabled {

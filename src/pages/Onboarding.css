@@ -69,7 +69,7 @@
 .onb-form-group textarea:focus {
   outline: none;
   border-color: #7d3bec;
-  box-shadow: 0 0 0 3px rgba(14, 97, 243, 0.1);
+  box-shadow: 0 0 0 3px rgba(125, 59, 236, 0.1);
 }
 
 .onb-input-prefix {

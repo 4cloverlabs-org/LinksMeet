@@ -286,7 +286,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
                     </div>
                     <div
                       onClick={() => setSelectedStepId(step.id)}
-                      style={{ marginLeft: '40px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', cursor: 'pointer', transition: 'all 0.15s ease', boxShadow: isSel ? '0 0 0 2px #7d3bec, 0 4px 12px rgba(14, 97, 243, 0.1)' : '0 1px 2px rgba(0,0,0,0.02)' }}
+                      style={{ marginLeft: '40px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', cursor: 'pointer', transition: 'all 0.15s ease', boxShadow: isSel ? '0 0 0 2px #7d3bec, 0 4px 12px rgba(125, 59, 236, 0.1)' : '0 1px 2px rgba(0,0,0,0.02)' }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
@@ -645,7 +645,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
                       showToast('Saved (Last Step)');
                     }
                   }} 
-                  style={{ background: '#7d3bec', border: 'none', color: '#ffffff', fontWeight: 600, fontSize: '0.88rem', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(14, 97, 243, 0.2)' }}
+                  style={{ background: '#7d3bec', border: 'none', color: '#ffffff', fontWeight: 600, fontSize: '0.88rem', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(125, 59, 236, 0.2)' }}
                 >
                   Save & Next
                 </button>

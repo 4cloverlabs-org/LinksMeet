@@ -91,7 +91,7 @@ function StatusDropdown({ status, onChange, disabled, options }: { status: strin
                   <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: colors.color }} />
                   {opt}
                 </div>
-                {status === opt && <Check size={14} color="#6366f1" />}
+                {status === opt && <Check size={14} color="#7d3bec" />}
               </button>
             );
           })}

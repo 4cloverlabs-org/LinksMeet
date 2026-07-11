@@ -803,7 +803,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
             <button
               onClick={handleSave}
-              style={{ background: '#7d3bec', color: '#ffffff', border: 'none', padding: '8px 20px', borderRadius: '8px', fontSize: '0.88rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginLeft: '6px', boxShadow: '0 2px 4px rgba(14, 97, 243, 0.2)' }}
+              style={{ background: '#7d3bec', color: '#ffffff', border: 'none', padding: '8px 20px', borderRadius: '8px', fontSize: '0.88rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginLeft: '6px', boxShadow: '0 2px 4px rgba(125, 59, 236, 0.2)' }}
             >
               {saving ? 'Saving...' : 'Save'}
             </button>
@@ -1170,7 +1170,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
                 {/* Banner Pill below Preview Card */}
                 <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
-                  <div style={{ background: '#eff6ff', border: '1px solid #dbeafe', color: '#7d3bec', padding: '10px 20px', borderRadius: '9999px', fontSize: '0.84rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 2px 8px rgba(14, 97, 243, 0.08)' }}>
+                  <div style={{ background: '#eff6ff', border: '1px solid #dbeafe', color: '#7d3bec', padding: '10px 20px', borderRadius: '9999px', fontSize: '0.84rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 2px 8px rgba(125, 59, 236, 0.08)' }}>
                     <Info size={16} /> Save changes to preview all updates.
                   </div>
                 </div>
@@ -2444,7 +2444,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
           )}
 
           {/* Floating Blue Chat Bubble Widget in bottom right */}
-          <div style={{ position: 'fixed', bottom: '24px', right: '24px', width: '48px', height: '48px', borderRadius: '50%', background: '#7d3bec', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 16px rgba(14, 97, 243, 0.35)', cursor: 'pointer', zIndex: 100 }}>
+          <div style={{ position: 'fixed', bottom: '24px', right: '24px', width: '48px', height: '48px', borderRadius: '50%', background: '#7d3bec', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 16px rgba(125, 59, 236, 0.35)', cursor: 'pointer', zIndex: 100 }}>
             <MessageSquare size={22} />
           </div>
 

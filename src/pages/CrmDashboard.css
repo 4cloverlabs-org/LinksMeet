@@ -679,7 +679,7 @@
   background-color: #F3F4F6; border-color: #D1D5DB;
 }
 .crm-status-select:focus { 
-  border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); 
+  border-color: #7d3bec; box-shadow: 0 0 0 3px rgba(125, 59, 236, 0.15); 
 }
 
 .crm-ai-btn {
