@@ -93,23 +93,25 @@ export default function WorkflowsPage() {
                             { title: "Follow up with no shows", desc: "30m after event ends", Icon: Mail, Badge: XCircle, badgeColor: "#EF4444" },
                             { title: "Remind attendees to bring ID", desc: "1 day before event starts", Icon: Mail, Badge: AlertCircle, badgeColor: "#F59E0B" }
                           ].map(t => (
-                            <div key={t.title} onClick={() => handleCreateWorkflow(t)} style={{ display: 'flex', flexDirection: 'column', padding: '24px', border: '1px solid #E5E7EB', borderRadius: '8px', background: '#FFFFFF', cursor: 'pointer', transition: 'box-shadow 0.2s', minHeight: '200px' }} className="crm-wf-card-new">
-                              <div style={{ position: 'relative', width: '48px', height: '48px', marginBottom: '16px' }}>
-                                <div style={{ width: '100%', height: '100%', background: '#F3E8FF', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                  <t.Icon size={24} color="#7d3bec" strokeWidth={2} />
-                                </div>
-                                <div style={{ position: 'absolute', top: '-4px', right: '-4px', background: '#fff', borderRadius: '50%', padding: '2px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
-                                  <div style={{ background: t.badgeColor, borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <t.Badge size={10} color="#fff" strokeWidth={3} />
+                            <div key={t.title} onClick={() => handleCreateWorkflow(t)} style={{ background: '#fff', border: '2px solid #F5F5F5', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', cursor: 'pointer', display: 'flex', flexDirection: 'column', height: '100%', minHeight: '180px' }}>
+                              <div className="crm-kpi-top" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '16px' }}>
+                                <div className="crm-kpi-lab" style={{ fontSize: '1.05rem', color: '#111', fontWeight: 600, margin: 0, lineHeight: 1.3 }}>{t.title}</div>
+                                <div style={{ position: 'relative', width: '40px', height: '40px', flexShrink: 0 }}>
+                                  <div style={{ width: '100%', height: '100%', background: '#F3E8FF', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <t.Icon size={20} color="#7d3bec" strokeWidth={2} />
+                                  </div>
+                                  <div style={{ position: 'absolute', top: '-4px', right: '-4px', background: '#fff', borderRadius: '50%', padding: '2px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                                    <div style={{ background: t.badgeColor, borderRadius: '50%', width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                      <t.Badge size={10} color="#fff" strokeWidth={3} />
+                                    </div>
                                   </div>
                                 </div>
                               </div>
-                              <div style={{ flex: 1 }}>
-                                <div style={{ fontSize: '16px', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>{t.title}</div>
-                                <div style={{ fontSize: '14px', color: '#6B7280', lineHeight: 1.4 }}>{t.desc}</div>
+                              <div style={{ flex: 1, fontSize: '0.95rem', color: '#4B5563', lineHeight: 1.5 }}>
+                                {t.desc}
                               </div>
-                              <div style={{ alignSelf: 'flex-end', marginTop: '24px' }}>
-                                <button className="crm-btn crm-btn-primary" style={{ padding: '8px 16px', fontSize: '14px', fontWeight: 600 }}>Add workflow</button>
+                              <div style={{ fontSize: '0.85rem', color: '#7d3bec', fontWeight: 600, marginTop: '24px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <Plus size={14} /> Add workflow
                               </div>
                             </div>
                           ))}
@@ -138,23 +140,25 @@ export default function WorkflowsPage() {
                             { title: "Email invitee to reconfirm", desc: "Reduce no-shows by asking your invitees to reconfirm they will attend your event", Icon: Mail, Badge: HelpCircle, badgeColor: "#F59E0B" },
                             { title: "Text invitee to reconfirm", desc: "Reduce no-shows by asking your invitees to reconfirm they will attend your event", Icon: Smartphone, Badge: HelpCircle, badgeColor: "#F59E0B" }
                           ].map((t, i) => (
-                            <div key={i} onClick={() => handleCreateWorkflow(t)} style={{ display: 'flex', flexDirection: 'column', padding: '24px', border: '1px solid #E5E7EB', borderRadius: '8px', background: '#FFFFFF', cursor: 'pointer', transition: 'box-shadow 0.2s', minHeight: '200px' }} className="crm-wf-card-new">
-                              <div style={{ position: 'relative', width: '48px', height: '48px', marginBottom: '16px' }}>
-                                <div style={{ width: '100%', height: '100%', background: '#F3E8FF', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                  <t.Icon size={24} color="#7d3bec" strokeWidth={2} />
-                                </div>
-                                <div style={{ position: 'absolute', top: '-4px', right: '-4px', background: '#fff', borderRadius: '50%', padding: '2px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
-                                  <div style={{ background: t.badgeColor, borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <t.Badge size={10} color="#fff" strokeWidth={3} />
+                            <div key={i} onClick={() => handleCreateWorkflow(t)} style={{ background: '#fff', border: '2px solid #F5F5F5', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', cursor: 'pointer', display: 'flex', flexDirection: 'column', height: '100%', minHeight: '180px' }}>
+                              <div className="crm-kpi-top" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '16px' }}>
+                                <div className="crm-kpi-lab" style={{ fontSize: '1.05rem', color: '#111', fontWeight: 600, margin: 0, lineHeight: 1.3 }}>{t.title}</div>
+                                <div style={{ position: 'relative', width: '40px', height: '40px', flexShrink: 0 }}>
+                                  <div style={{ width: '100%', height: '100%', background: '#F3E8FF', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <t.Icon size={20} color="#7d3bec" strokeWidth={2} />
+                                  </div>
+                                  <div style={{ position: 'absolute', top: '-4px', right: '-4px', background: '#fff', borderRadius: '50%', padding: '2px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                                    <div style={{ background: t.badgeColor, borderRadius: '50%', width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                      <t.Badge size={10} color="#fff" strokeWidth={3} />
+                                    </div>
                                   </div>
                                 </div>
                               </div>
-                              <div style={{ flex: 1 }}>
-                                <div style={{ fontSize: '16px', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>{t.title}</div>
-                                <div style={{ fontSize: '14px', color: '#6B7280', lineHeight: 1.4 }}>{t.desc}</div>
+                              <div style={{ flex: 1, fontSize: '0.95rem', color: '#4B5563', lineHeight: 1.5 }}>
+                                {t.desc}
                               </div>
-                              <div style={{ alignSelf: 'flex-end', marginTop: '24px' }}>
-                                <button className="crm-btn crm-btn-primary" style={{ padding: '8px 16px', fontSize: '14px', fontWeight: 600 }}>Add workflow</button>
+                              <div style={{ fontSize: '0.85rem', color: '#7d3bec', fontWeight: 600, marginTop: '24px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <Plus size={14} /> Add workflow
                               </div>
                             </div>
                           ))}

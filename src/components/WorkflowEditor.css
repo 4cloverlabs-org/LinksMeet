@@ -1,7 +1,6 @@
 .wf-editor {
   background: transparent;
   min-height: 100vh;
-  padding: 32px;
   box-sizing: border-box;
 }
 
@@ -10,9 +9,6 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 32px;
-  max-width: 800px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .wf-btn-icon {
@@ -32,8 +28,8 @@
 
 .wf-btn-outline {
   background: none;
-  border: 1px solid #E5E7EB;
-  border-radius: 6px;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
   padding: 0 16px;
   height: 36px;
   display: flex;
@@ -44,11 +40,13 @@
   font-weight: 500;
   cursor: pointer;
   background: #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  transition: all 0.2s;
 }
-.wf-btn-outline:hover { background: #F3F4F6; }
+.wf-btn-outline:hover { background: #F8FAFC; border-color: #CBD5E1; }
 
 .wf-btn-primary {
-  background: #111827;
+  background: #7d3bec;
   border: none;
   border-radius: 6px;
   padding: 0 16px;
@@ -60,25 +58,26 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
+  transition: background 0.2s;
 }
-.wf-btn-primary:hover { background: #1F2937; }
+.wf-btn-primary:hover { background: #6830c4; }
 
 .wf-editor-body {
-  max-width: 800px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 .wf-block {
   background: #FFFFFF;
-  border: 1px solid #E5E7EB;
-  border-radius: 12px;
+  border: 2px solid #F5F5F5;
+  border-radius: 16px;
   overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.02);
 }
 
 .wf-block-header {
   padding: 16px 24px;
   background: #FFFFFF;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 2px solid #F5F5F5;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -105,7 +104,7 @@
 
 .wf-input {
   width: 100%;
-  border: 1px solid #D1D5DB;
+  border: 1px solid #E2E8F0;
   border-radius: 8px;
   padding: 10px 12px;
   font-size: 14px;
@@ -113,11 +112,13 @@
   background: #fff;
   outline: none;
   font-family: inherit;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
   box-sizing: border-box;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 .wf-input:focus {
-  border-color: #2563EB;
+  border-color: #7d3bec;
+  box-shadow: 0 0 0 3px rgba(125, 59, 236, 0.1);
 }
 
 .wf-select-wrapper {
@@ -137,15 +138,16 @@
 }
 
 .wf-email-editor {
-  border: 1px solid #D1D5DB;
-  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
   overflow: hidden;
   margin-top: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .wf-email-section {
   padding: 16px;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 1px solid #E2E8F0;
 }
 
 .wf-email-section label {

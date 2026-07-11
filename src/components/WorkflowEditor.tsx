@@ -106,9 +106,11 @@ export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTy
         <div style={{ display: 'flex', gap: '12px' }}>
           <button className="wf-btn-outline"><Trash2 size={15} color="#EF4444" /></button>
           {!isActive && (
-            <button className="wf-btn-primary" style={{ background: '#10B981' }} onClick={() => handleSave(true)}>Activate</button>
+            <button className="wf-btn-outline" onClick={() => handleSave()}>{isActive ? 'Save Workflow' : 'Save as Draft'}</button>
           )}
-          <button className="wf-btn-primary" onClick={() => handleSave()}>{isActive ? 'Save Workflow' : 'Save as Draft'}</button>
+          <button className="wf-btn-primary" onClick={() => isActive ? handleSave() : handleSave(true)}>
+            {isActive ? 'Save Workflow' : 'Activate'}
+          </button>
         </div>
       </div>
 
