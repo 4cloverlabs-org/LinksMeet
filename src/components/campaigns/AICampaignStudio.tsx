@@ -76,7 +76,9 @@ export const AICampaignStudio: React.FC<AICampaignStudioProps> = ({ onApplySeque
         alignItems: 'center',
         justifyContent: 'center',
         textAlign: 'center',
-        minWidth: compact ? '100%' : '500px'
+        width: '100%',
+        boxSizing: 'border-box',
+        overflow: 'hidden'
       }}>
         <div style={{ marginBottom: '16px', position: 'relative' }}>
           <Loader2 size={32} color="#7d3bec" className="crm-spin" />
@@ -96,7 +98,10 @@ export const AICampaignStudio: React.FC<AICampaignStudioProps> = ({ onApplySeque
         padding: compact ? '0' : '24px',
         border: compact ? 'none' : '1px solid #e2e8f0',
         boxShadow: compact ? 'none' : '0 4px 20px rgba(0,0,0,0.02)',
-        fontFamily: "'Geist', 'Geist Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+        fontFamily: "'Geist', 'Geist Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        boxSizing: 'border-box',
+        width: '100%',
+        overflow: 'hidden'
       }}
     >
       {/* Header Section */}
