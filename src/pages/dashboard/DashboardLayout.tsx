@@ -26,11 +26,10 @@ import CampaignModule from '../../components/campaigns/CampaignModule';
 import WorkflowEditor, { type WorkflowDraft } from '../../components/WorkflowEditor';
 import EventTypeEditor from '../../components/EventTypeEditor';
 import CompleteProfileModal from '../../components/CompleteProfileModal';
-import InboxPage from './InboxPage';
 
 type View =
   | 'dashboard' | 'eventTypes' | 'bookings' | 'people' | 'teams'
-  | 'workflows' | 'campaigns' | 'routing' | 'inbox'
+  | 'workflows' | 'campaigns' | 'routing'
   | 'apps' | 'payments'
   | 'admin' | 'help';
 
@@ -201,7 +200,6 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   { label: 'Automate', items: [
     { id: 'workflows', label: 'Workflows', icon: Workflow },
     { id: 'campaigns', label: 'Campaigns', icon: MessageCircle, badge: 'New', badgeNew: true },
-    { id: 'inbox', label: 'Inbox', icon: Mail },
     { id: 'routing', label: 'Routing', icon: Spline },
 
   ]},
@@ -220,7 +218,6 @@ const PAGE_META: Record<View, { title: string; sub: string }> = {
   teams: { title: 'Team', sub: 'Manage your organization and team members.' },
   workflows: { title: 'Workflows', sub: 'Create workflows to automate notifications and reminders' },
   campaigns: { title: 'Campaigns', sub: 'Create and orchestrate outbound email sequences.' },
-  inbox: { title: 'Inbox', sub: 'Read and manage your email replies directly.' },
   routing: { title: 'Routing', sub: 'Send bookers to the right person with forms.' },
 
   apps: { title: 'Apps', sub: 'Browse the App Store and manage your installed apps.' },

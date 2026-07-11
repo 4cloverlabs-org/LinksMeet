@@ -33,7 +33,6 @@ export default function TeamsPage() {
   
   const canManageTeam = activeRole === 'Owner' || activeRole === 'Admin';
 
-  const [activeTab, setActiveTab] = useState('members');
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('All Roles');
   const [deptFilter, setDeptFilter] = useState('All Depts');
@@ -84,26 +83,6 @@ export default function TeamsPage() {
             </div>
           </div>
 
-          {/* Nav Tabs */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-             <div style={{ display: 'flex', gap: '4px', background: '#FFFFFF', padding: '4px', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
-                <button 
-                  onClick={() => setActiveTab('members')}
-                  style={{ padding: '8px 16px', background: activeTab === 'members' ? '#F3F4F6' : 'transparent', color: activeTab === 'members' ? '#111827' : '#6B7280', border: activeTab === 'members' ? '1px solid #E5E7EB' : 'none', borderRadius: '6px', fontSize: '14px', fontWeight: 500, cursor: 'pointer' }}
-                >
-                  Team Members
-                </button>
-                <button 
-                  onClick={() => setActiveTab('details')}
-                  style={{ padding: '8px 16px', background: activeTab === 'details' ? '#F3F4F6' : 'transparent', color: activeTab === 'details' ? '#111827' : '#6B7280', border: activeTab === 'details' ? '1px solid #E5E7EB' : 'none', borderRadius: '6px', fontSize: '14px', fontWeight: 500, cursor: 'pointer' }}
-                >
-                  Team Details
-                </button>
-             </div>
-          </div>
-
-          {activeTab === 'members' ? (
-            <>
               {/* Cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
              {[
@@ -295,19 +274,6 @@ export default function TeamsPage() {
               </div>
             </div>
           </div>
-            </>
-          ) : (
-            <div style={{ padding: '64px 40px', textAlign: 'center', background: '#F9FAFB', border: '1px dashed #E5E7EB', borderRadius: '12px' }}>
-              <div style={{ width: 48, height: 48, background: '#EFF6FF', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: '#2563EB' }}>
-                <Settings size={24} />
-              </div>
-              <h3 style={{ margin: '0 0 8px', fontSize: '18px', fontWeight: 600, color: '#111827' }}>Team Details Settings</h3>
-              <p style={{ margin: 0, fontSize: '14px', color: '#6B7280' }}>Configure workspace name, billing, and global permissions here.</p>
-              <button className="crm-btn" style={{ marginTop: '24px', background: '#2563EB', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '0 16px', height: '36px', fontSize: '14px', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                Save Settings
-              </button>
-            </div>
-          )}
           
         </div>
       </div>
