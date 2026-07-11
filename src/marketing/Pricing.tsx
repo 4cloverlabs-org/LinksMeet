@@ -78,7 +78,7 @@ export default function Pricing() {
               <div className={`cc-faq-item${isOpen ? ' open' : ''}`} key={i}>
                 <button className="cc-faq-q" onClick={() => setOpen(isOpen ? null : i)} aria-expanded={isOpen}>
                   <span>{f.q}</span>
-                  <span className="cc-faq-sign">{isOpen ? '–' : '+'}</span>
+                  <span className="cc-faq-sign">{isOpen ? '-' : '+'}</span>
                 </button>
                 {isOpen && <div className="cc-faq-a">{f.a}</div>}
               </div>

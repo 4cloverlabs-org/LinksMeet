@@ -665,6 +665,7 @@ Instructions:
 6. Sign off directly with "${derivedSender}".
 7. Make the text highly readable, structured into concise paragraphs, and professional.
 8. Use professional emojis strategically without clutter.
+9. CRITICAL: Do NOT use the en-dash character "–" anywhere in the subject or body. Use a standard hyphen "-" instead.
 
 Return ONLY a valid JSON array of objects representing the email steps. Each object must have keys:
 - title (string, e.g. "Initial Email", "Strategic Follow-up", "Value-add Follow-up", "Final Breakup")
@@ -790,6 +791,7 @@ Instructions for action:
 - 'longer': Expand the reply with more helpful details and clarity.
 - 'translate': Translate the reply into Spanish (or French if already Spanish).
 
+CRITICAL: Do NOT use the en-dash character "–" anywhere in your response. Use a standard hyphen "-" instead.
 Return ONLY the plain email reply body text (with appropriate line breaks/paragraphs). Do not include pleasantries explaining your action.`;
 
       return await callGroqAI("You are an expert sales communication assistant.", prompt);

@@ -373,7 +373,7 @@ export default function BookingPage() {
                   {new Date(currentYear, currentMonth, selectedDate).toLocaleString('default', { weekday: 'long' })}, {currentMonthName} {selectedDate}, {currentYear}
                 </div>
                 <div style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '2px' }}>
-                  {selectedTime || '9:00 AM'} – {calcEndTime(selectedTime || '9:00am', eventType?.dur || '15m')} (India Standard Time)
+                  {selectedTime || '9:00 AM'} - {calcEndTime(selectedTime || '9:00am', eventType?.dur || '15m')} (India Standard Time)
                 </div>
               </div>
 
@@ -997,7 +997,7 @@ export default function BookingPage() {
                 <CalendarIcon size={20} color="#7d3bec" style={{ flexShrink: 0, marginTop: '2px' }} />
                 <div style={{ lineHeight: 1.4, fontWeight: 500 }}>
                   <div>{new Date(currentYear, currentMonth, selectedDate).toLocaleString('default', { weekday: 'long' })}, {currentMonthName} {selectedDate}, {currentYear}</div>
-                  <div style={{ color: '#475569', fontSize: '0.85rem' }}>{selectedTime || '4:45 pm'} – {calcEndTime(selectedTime || '4:45pm', eventType?.dur || '15m')}</div>
+                  <div style={{ color: '#475569', fontSize: '0.85rem' }}>{selectedTime || '4:45 pm'} - {calcEndTime(selectedTime || '4:45pm', eventType?.dur || '15m')}</div>
                 </div>
               </div>
 

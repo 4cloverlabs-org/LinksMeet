@@ -380,7 +380,7 @@ export default function VisitorHome() {
               </div>
               <h3 style={{ fontSize: '1.15rem', fontWeight: 650 }}>Auto Meeting Links</h3>
               <p style={{ color: 'hsl(var(--text-secondary))', fontSize: '0.85rem', lineHeight: 1.6, fontWeight: 300 }}>
-                Every confirmed booking ships with a Google Meet–style room link embedded in emails and the dashboard.
+                Every confirmed booking ships with a Google Meet-style room link embedded in emails and the dashboard.
               </p>
             </div>
           </div>

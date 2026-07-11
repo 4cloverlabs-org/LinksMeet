@@ -318,7 +318,7 @@ Business Goals: ${data.businessGoals || 'N/A'}`;
         {step === 3 && (
           <div className="onb-preview calendar-preview">
              <div className="onb-cal-header">
-               <span>Jun 28 – Jul 4, 2026</span>
+               <span>Jun 28 - Jul 4, 2026</span>
              </div>
              <div className="onb-cal-grid-lines">
                <div className="onb-cal-col"></div>
