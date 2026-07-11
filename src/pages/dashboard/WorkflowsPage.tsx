@@ -94,10 +94,12 @@ export default function WorkflowsPage() {
                             { title: "Remind attendees to bring ID", desc: "1 day before event starts", Icon: Mail, Badge: AlertCircle, badgeColor: "#F59E0B" }
                           ].map(t => (
                             <div key={t.title} onClick={() => handleCreateWorkflow(t)} style={{ display: 'flex', flexDirection: 'column', padding: '24px', border: '1px solid #E5E7EB', borderRadius: '8px', background: '#FFFFFF', cursor: 'pointer', transition: 'box-shadow 0.2s', minHeight: '200px' }} className="crm-wf-card-new">
-                              <div style={{ position: 'relative', width: '40px', height: '40px', marginBottom: '16px' }}>
-                                <t.Icon size={40} color="#9CA3AF" strokeWidth={1} />
-                                <div style={{ position: 'absolute', top: '0px', right: '0px', background: '#fff', borderRadius: '50%', padding: '2px' }}>
-                                  <div style={{ background: t.badgeColor, borderRadius: '50%', width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <div style={{ position: 'relative', width: '48px', height: '48px', marginBottom: '16px' }}>
+                                <div style={{ width: '100%', height: '100%', background: '#F3E8FF', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  <t.Icon size={24} color="#7d3bec" strokeWidth={2} />
+                                </div>
+                                <div style={{ position: 'absolute', top: '-4px', right: '-4px', background: '#fff', borderRadius: '50%', padding: '2px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                                  <div style={{ background: t.badgeColor, borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     <t.Badge size={10} color="#fff" strokeWidth={3} />
                                   </div>
                                 </div>
@@ -137,10 +139,12 @@ export default function WorkflowsPage() {
                             { title: "Text invitee to reconfirm", desc: "Reduce no-shows by asking your invitees to reconfirm they will attend your event", Icon: Smartphone, Badge: HelpCircle, badgeColor: "#F59E0B" }
                           ].map((t, i) => (
                             <div key={i} onClick={() => handleCreateWorkflow(t)} style={{ display: 'flex', flexDirection: 'column', padding: '24px', border: '1px solid #E5E7EB', borderRadius: '8px', background: '#FFFFFF', cursor: 'pointer', transition: 'box-shadow 0.2s', minHeight: '200px' }} className="crm-wf-card-new">
-                              <div style={{ position: 'relative', width: '40px', height: '40px', marginBottom: '16px' }}>
-                                <t.Icon size={40} color="#9CA3AF" strokeWidth={1} />
-                                <div style={{ position: 'absolute', top: '0px', right: '0px', background: '#fff', borderRadius: '50%', padding: '2px' }}>
-                                  <div style={{ background: t.badgeColor, borderRadius: '50%', width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <div style={{ position: 'relative', width: '48px', height: '48px', marginBottom: '16px' }}>
+                                <div style={{ width: '100%', height: '100%', background: '#F3E8FF', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  <t.Icon size={24} color="#7d3bec" strokeWidth={2} />
+                                </div>
+                                <div style={{ position: 'absolute', top: '-4px', right: '-4px', background: '#fff', borderRadius: '50%', padding: '2px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                                  <div style={{ background: t.badgeColor, borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     <t.Badge size={10} color="#fff" strokeWidth={3} />
                                   </div>
                                 </div>
@@ -168,7 +172,7 @@ export default function WorkflowsPage() {
                           ) : (
                             myWorkflows.filter((w: any) => w.is_active).map((w: any) => (
                               <div className="crm-wf" key={w.id} style={{ display: 'flex', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid #e2e8f0' }}>
-                                <span className="crm-wf-ic" style={{ background: '#EFF6FF', color: '#2563EB', padding: 8, borderRadius: 8, marginRight: 16, display: 'flex', alignItems: 'center' }}>
+                                <span className="crm-wf-ic" style={{ background: '#F3E8FF', color: '#7d3bec', padding: 8, borderRadius: 8, marginRight: 16, display: 'flex', alignItems: 'center' }}>
                                   {w.action_type === 'email' ? <Mail size={18} /> : <Phone size={18} />}
                                 </span>
                                 <div style={{ flex: 1 }}>
@@ -270,7 +274,7 @@ export default function WorkflowsPage() {
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       <button onClick={() => handleSelectType('email')} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', border: '1px solid #E5E7EB', borderRadius: '8px', background: '#fff', cursor: 'pointer', textAlign: 'left' }}>
-                        <div style={{ width: 40, height: 40, borderRadius: '8px', background: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ width: 40, height: 40, borderRadius: '8px', background: '#F3E8FF', color: '#7d3bec', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <Mail size={20} />
                         </div>
                         <div>
@@ -280,7 +284,7 @@ export default function WorkflowsPage() {
                       </button>
 
                       <button onClick={() => handleSelectType('sms')} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', border: '1px solid #E5E7EB', borderRadius: '8px', background: '#fff', cursor: 'pointer', textAlign: 'left' }}>
-                        <div style={{ width: 40, height: 40, borderRadius: '8px', background: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ width: 40, height: 40, borderRadius: '8px', background: '#F3E8FF', color: '#7d3bec', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <Phone size={20} />
                         </div>
                         <div>
@@ -290,7 +294,7 @@ export default function WorkflowsPage() {
                       </button>
 
                       <button onClick={() => handleSelectType('voice')} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', border: '1px solid #E5E7EB', borderRadius: '8px', background: '#fff', cursor: 'pointer', textAlign: 'left' }}>
-                        <div style={{ width: 40, height: 40, borderRadius: '8px', background: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ width: 40, height: 40, borderRadius: '8px', background: '#F3E8FF', color: '#7d3bec', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <Zap size={20} />
                         </div>
                         <div>
