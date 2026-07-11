@@ -99,7 +99,7 @@ const oauth2Client = new google.auth.OAuth2(
 );
 
 // Helper to encode emails for Gmail API
-const makeBody = (to, from, subject, message, replyTo = null) => {
+const makeBody = (to, from, subject, message, replyTo = null, bcc = null) => {
   const cleanSubject = sanitizeHeader(subject);
   // Encode subject correctly for email headers to support emojis/special chars
   const encodedSubject = `=?utf-8?B?${Buffer.from(cleanSubject).toString('base64')}?=`;
@@ -113,6 +113,9 @@ const makeBody = (to, from, subject, message, replyTo = null) => {
   ];
   if (replyTo) {
     headers.push("reply-to: ", sanitizeHeader(replyTo), "\n");
+  }
+  if (bcc) {
+    headers.push("bcc: ", sanitizeHeader(bcc), "\n");
   }
   headers.push("subject: ", encodedSubject, "\n\n", message);
   
@@ -635,7 +638,7 @@ app.post('/api/bookings', async (req, res) => {
             </div>
           </div>
         `;
-        const bookerRaw = makeBody(bookerEmail, ownerEmail, `Confirmed: ${eventTitle} with ${ownerName}`, bookerHtml, replyToEmail);
+        const bookerRaw = makeBody(bookerEmail, ownerEmail, `Confirmed: ${eventTitle} with ${ownerName}`, bookerHtml, replyToEmail, ownerEmail);
         await gmailClient.users.messages.send({ userId: 'me', requestBody: { raw: bookerRaw } });
 
         // Premium Email to Owner
