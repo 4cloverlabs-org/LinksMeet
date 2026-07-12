@@ -875,8 +875,9 @@ app.post('/api/team/accept-invite', async (req, res) => {
     if (!supabase) return res.status(500).json({ error: "Database not connected" });
     
     const newStatus = action === 'decline' ? 'Declined' : 'Active';
-    const { data, error } = await supabase.from('team_members').update({ status: newStatus }).eq('id', id).select().single();
+    const { data, error } = await supabase.from('team_members').update({ status: newStatus }).eq('id', id).select().maybeSingle();
     if (error) throw error;
+    if (!data) return res.status(404).json({ error: "Invitation not found or has expired." });
     
     // Check if the user already has an account
     let isExistingUser = false;
