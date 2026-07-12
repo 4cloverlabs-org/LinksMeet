@@ -832,9 +832,9 @@ app.post('/api/send-email', requireAuth, async (req, res) => {
 // ----------------------------------------------------
 app.post('/api/team/send-invite', requireAuth, async (req, res) => {
   try {
-    const { email, role, teamMemberId, ownerName } = req.body;
+    const { email, role, teamMemberId, ownerName, frontendUrl: clientUrl } = req.body;
     
-    const frontendUrl = process.env.FRONTEND_URL || (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',')[0] : 'http://localhost:5173');
+    const frontendUrl = clientUrl || process.env.FRONTEND_URL || (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',')[0] : 'http://localhost:5173');
     const acceptLink = `${frontendUrl}/accept-invite?id=${teamMemberId}&action=accept`;
     const declineLink = `${frontendUrl}/accept-invite?id=${teamMemberId}&action=decline`;
     
