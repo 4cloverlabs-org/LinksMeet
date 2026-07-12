@@ -420,6 +420,54 @@ app.get('/api/gmail-token/:uid', requireAuth, async (req, res) => {
 });
 
 // ----------------------------------------------------
+// 2.2 Delete Account Endpoint
+// ----------------------------------------------------
+app.delete('/api/users/me', requireAuth, async (req, res) => {
+  try {
+    const uid = req.userId;
+    if (!supabase) return res.status(500).json({ error: "No db connection" });
+
+    console.log(`Starting account deletion for user: ${uid}`);
+
+    // Delete dependent records first to avoid orphaned data
+    await supabase.from('campaign_logs').delete().eq('user_id', uid);
+    await supabase.from('campaign_threads').delete().eq('user_id', uid);
+    await supabase.from('campaign_settings').delete().eq('user_id', uid);
+    await supabase.from('campaigns').delete().eq('user_id', uid);
+    await supabase.from('workflows').delete().eq('user_id', uid);
+    await supabase.from('bookings').delete().eq('user_id', uid);
+    await supabase.from('contacts').delete().eq('user_id', uid);
+    await supabase.from('team_members').delete().eq('user_id', uid);
+    
+    // In our DB event_types usually uses owner_id, but we'll try user_id just in case
+    await supabase.from('event_types').delete().eq('user_id', uid);
+
+    // Delete from public.users
+    const { error: userError } = await supabase.from('users').delete().eq('id', uid);
+    if (userError) {
+      console.error("Error deleting from public.users:", userError);
+      return res.status(500).json({ error: "Failed to delete user profile data" });
+    }
+
+    // Finally delete from Supabase Auth
+    if (supabase.auth && supabase.auth.admin) {
+      const { error: authError } = await supabase.auth.admin.deleteUser(uid);
+      if (authError) {
+        console.warn("Failed to delete auth user via admin API:", authError);
+      }
+    } else {
+      console.warn("supabase.auth.admin is not available to delete auth user.");
+    }
+
+    console.log(`Account deletion completed for user: ${uid}`);
+    res.json({ success: true, message: "Account completely deleted" });
+  } catch (error) {
+    console.error("Delete account error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ----------------------------------------------------
 // 2.5 AI Generation Endpoint (Hides GROQ_API_KEY)
 // ----------------------------------------------------
 app.post('/api/ai/generate', requireAuth, async (req, res) => {
@@ -1065,40 +1113,6 @@ app.put('/api/settings', requireAuth, async (req, res) => {
     if (error) throw error;
     res.json(data.settings);
   } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ----------------------------------------------------
-// 6.5 Delete User Account
-// ----------------------------------------------------
-app.delete('/api/users/me', requireAuth, async (req, res) => {
-  if (!supabase) return res.status(500).json({ error: "Database not connected" });
-  try {
-    const uid = req.userId;
-    console.log(`Deleting account for user: ${uid}`);
-    
-    // Explicitly delete user data from standard tables to prevent orphans
-    const tables = [
-      'campaign_logs', 'campaign_threads', 'campaign_settings', 'campaign_steps', 'campaigns',
-      'workflows', 'event_types', 'bookings', 'contacts', 
-      'team_members', 'mail_accounts', 'mail_credentials', 'users'
-    ];
-    
-    for (const table of tables) {
-      const column = table === 'users' ? 'id' : 'user_id';
-      // Suppress errors if a table doesn't exist or has no rows
-      await supabase.from(table).delete().eq(column, uid).catch(() => {});
-    }
-    
-    // Delete from Supabase Auth (This is the most critical step)
-    const { error: authError } = await supabase.auth.admin.deleteUser(uid);
-    if (authError) throw authError;
-
-    console.log(`Successfully deleted account: ${uid}`);
-    res.json({ success: true });
-  } catch (err) {
-    console.error("Delete user error:", err);
     res.status(500).json({ error: err.message });
   }
 });
