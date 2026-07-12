@@ -838,6 +838,13 @@ app.post('/api/team/send-invite', requireAuth, async (req, res) => {
     const acceptLink = `${frontendUrl}/accept-invite?id=${teamMemberId}&action=accept`;
     const declineLink = `${frontendUrl}/accept-invite?id=${teamMemberId}&action=decline`;
     
+    // Log the invite link to the console for local testing to bypass Gmail blocks
+    console.log('\n==================================================');
+    console.log('✅ TEAM INVITE GENERATED');
+    console.log(`To: ${email}`);
+    console.log(`Accept Link: ${acceptLink}`);
+    console.log('==================================================\n');
+    
     const subject = `You've been invited to join ${ownerName}'s team on LinksMeet`;
     const htmlBody = `
       <div style="font-family: 'Inter', Helvetica, sans-serif; max-width: 550px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #ffffff;">
