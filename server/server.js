@@ -845,12 +845,12 @@ app.post('/api/team/send-invite', requireAuth, async (req, res) => {
     console.log(`Accept Link: ${acceptLink}`);
     console.log('==================================================\n');
     
-    // To prevent Gmail from bouncing the email because it contains 'localhost', we use a dummy domain in the email body during local dev
+    // To prevent Gmail from bouncing the email because it contains 'localhost', we use the actual production Vercel URL during local dev
     const safeEmailLink = frontendUrl.includes('localhost') || frontendUrl.includes('127.0.0.1') 
-      ? `https://salemail-local.test/accept-invite?id=${teamMemberId}&action=accept` 
+      ? `https://salemail-test.vercel.app/accept-invite?id=${teamMemberId}&action=accept` 
       : acceptLink;
     const safeDeclineLink = frontendUrl.includes('localhost') || frontendUrl.includes('127.0.0.1') 
-      ? `https://salemail-local.test/accept-invite?id=${teamMemberId}&action=decline` 
+      ? `https://salemail-test.vercel.app/accept-invite?id=${teamMemberId}&action=decline` 
       : declineLink;
     
     const subject = `You've been invited to join ${ownerName}'s team on LinksMeet`;
