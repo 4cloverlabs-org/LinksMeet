@@ -579,7 +579,6 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
             </div>
           </div>
         </div>
-        </div>
       )}
 
       {/* Delete Account Confirmation Modal */}
