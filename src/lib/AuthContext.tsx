@@ -205,7 +205,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       provider: 'google',
       token: idToken,
     });
-    if (error) throw error;
+    if (error) {
+      if (error.message && error.message.includes('Unacceptable audience in id_token')) {
+        throw new Error('Login failed.');
+      }
+      throw error;
+    }
     if (data.user) setUser(data.user);
   };
 
