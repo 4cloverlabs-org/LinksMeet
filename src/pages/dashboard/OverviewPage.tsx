@@ -82,7 +82,7 @@ export default function OverviewPage() {
                             <div style={{ fontSize: '0.76rem', color: 'var(--muted)' }}>{c.source || c.email}</div>
                           </div>
                           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <span className={`crm-tag ${STATUS_META[c.status].tag}`}>{c.status}</span>
+                            <span className={`crm-tag ${STATUS_META[c.status]?.tag || 'violet'}`}>{c.status}</span>
                             <button className="crm-btn crm-btn-ghost" onClick={() => changeStatus(c.id, 'Converted')}>Mark converted</button>
                           </div>
                         </div>
@@ -140,7 +140,7 @@ export default function OverviewPage() {
                           <span className="crm-muted crm-hide">{c.source || 'Manual'}</span>
                           <span className="crm-muted">{c.email}</span>
                           <span className="crm-muted crm-hide">{c.phone || '—'}</span>
-                          <span className={`crm-tag ${STATUS_META[c.status].tag}`}>{c.status}</span>
+                          <span className={`crm-tag ${STATUS_META[c.status]?.tag || 'violet'}`}>{c.status}</span>
                           <button className="crm-row-act" title="Delete" onClick={() => removeContact(c.id, c.name)}><Trash2 size={15} /></button>
                         </div>
                       ))}
