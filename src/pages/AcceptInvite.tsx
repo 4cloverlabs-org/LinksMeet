@@ -23,7 +23,9 @@ export default function AcceptInvite() {
 
     const accept = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/team/accept-invite`, {
+        const fetchUrl = import.meta.env.DEV ? '/api/team/accept-invite' : `${API_BASE_URL}/api/team/accept-invite`;
+        console.log("Accepting invite at URL:", fetchUrl);
+        const res = await fetch(fetchUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id, action })
