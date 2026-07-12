@@ -99,16 +99,19 @@ const makeBody = (to, from, subject, message, replyTo = null, bcc = null) => {
     "Content-Type: text/html; charset=\"UTF-8\"\n",
     "MIME-Version: 1.0\n",
     "Content-Transfer-Encoding: 8bit\n",
-    "to: ", sanitizeHeader(to), "\n",
-    "from: ", sanitizeHeader(from), "\n",
+    "To: ", sanitizeHeader(to), "\n",
+    "From: ", sanitizeHeader(from), "\n",
+    "Date: ", new Date().toUTCString(), "\n",
+    "Message-ID: <", Date.now(), "-", Math.random().toString(36).substring(2), "@linksmeet.com>\n",
   ];
+  
   if (replyTo) {
-    headers.push("reply-to: ", sanitizeHeader(replyTo), "\n");
+    headers.push("Reply-To: ", sanitizeHeader(replyTo), "\n");
   }
   if (bcc) {
-    headers.push("bcc: ", sanitizeHeader(bcc), "\n");
+    headers.push("Bcc: ", sanitizeHeader(bcc), "\n");
   }
-  headers.push("subject: ", encodedSubject, "\n\n", message);
+  headers.push("Subject: ", encodedSubject, "\n\n", message);
   
   const str = headers.join('');
 
@@ -834,24 +837,40 @@ app.post('/api/team/send-invite', requireAuth, async (req, res) => {
   try {
     const { email, role, teamMemberId, ownerName, frontendUrl: clientUrl } = req.body;
     
-    const frontendUrl = clientUrl || process.env.FRONTEND_URL || (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',')[0] : 'http://localhost:5173');
-    const acceptLink = `${frontendUrl}/accept-invite?id=${teamMemberId}&action=accept`;
+    const frontendUrl = clientUrl || process.env.FRONTEND_URL || (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',')[0] : 'http://localhost:5173');    const acceptLink = `${frontendUrl}/accept-invite?id=${teamMemberId}&action=accept`;
     const declineLink = `${frontendUrl}/accept-invite?id=${teamMemberId}&action=decline`;
     
+    let finalAcceptLink = acceptLink;
+    let finalDeclineLink = declineLink;
+    
+    // Helper to shorten URL with detailed logging
+    const shortenUrl = async (originalUrl) => {
+      try {
+        const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(originalUrl)}`);
+        if (res.ok) {
+          return await res.text();
+        } else {
+          console.error(`TinyURL error: ${res.status} ${res.statusText}`);
+        }
+      } catch (e) {
+        console.error(`TinyURL fetch exception:`, e.message);
+      }
+      // Fallback for localhost to make it clickable in Gmail
+      if (originalUrl.includes('localhost') || originalUrl.includes('127.0.0.1')) {
+        return originalUrl.replace('localhost', 'lvh.me').replace('127.0.0.1', 'lvh.me');
+      }
+      return originalUrl;
+    };
+
+    finalAcceptLink = await shortenUrl(acceptLink);
+    finalDeclineLink = await shortenUrl(declineLink);
+
     // Log the invite link to the console for local testing to bypass Gmail blocks
     console.log('\n==================================================');
     console.log('✅ TEAM INVITE GENERATED');
     console.log(`To: ${email}`);
-    console.log(`Accept Link: ${acceptLink}`);
+    console.log(`Accept Link: ${finalAcceptLink}`);
     console.log('==================================================\n');
-    
-    // To prevent Gmail from bouncing the email because it contains 'localhost', we use the actual production Vercel URL during local dev
-    const safeEmailLink = frontendUrl.includes('localhost') || frontendUrl.includes('127.0.0.1') 
-      ? `https://salemail-test.vercel.app/accept-invite?id=${teamMemberId}&action=accept` 
-      : acceptLink;
-    const safeDeclineLink = frontendUrl.includes('localhost') || frontendUrl.includes('127.0.0.1') 
-      ? `https://salemail-test.vercel.app/accept-invite?id=${teamMemberId}&action=decline` 
-      : declineLink;
     
     const subject = `You've been invited to join ${ownerName}'s team on LinksMeet`;
     const htmlBody = `
@@ -864,8 +883,8 @@ app.post('/api/team/send-invite', requireAuth, async (req, res) => {
           <p style="color: #475569; font-size: 15px; line-height: 1.5;"><strong>${escapeHtml(ownerName)}</strong> has invited you to join their team on LinksMeet as a <strong>${escapeHtml(role)}</strong>.</p>
           
           <div style="text-align: center; margin-top: 32px; margin-bottom: 16px; display: flex; justify-content: center; gap: 16px;">
-            <a href="${safeEmailLink}" style="background: #0E61F3; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 15px; display: inline-block;">Accept Invitation</a>
-            <a href="${safeDeclineLink}" style="background: #ffffff; color: #475569; border: 1px solid #cbd5e1; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 15px; display: inline-block;">Decline</a>
+            <a href="${finalAcceptLink}" style="background: #0E61F3; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 15px; display: inline-block;">Accept Invitation</a>
+            <a href="${finalDeclineLink}" style="background: #ffffff; color: #475569; border: 1px solid #cbd5e1; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 15px; display: inline-block;">Decline</a>
           </div>
         </div>
         <div style="background: #f1f5f9; padding: 16px; text-align: center; border-top: 1px solid #e2e8f0;">
