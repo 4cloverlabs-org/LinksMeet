@@ -843,31 +843,6 @@ app.post('/api/team/send-invite', requireAuth, async (req, res) => {
     let finalAcceptLink = acceptLink;
     let finalDeclineLink = declineLink;
     
-    // Helper to mask the Vercel domain with a clean shortener (cleanuri.com)
-    // This bypasses the spam filter AND auto-redirects instantly (unlike Google's Redirect Notice)
-    // while completely avoiding TinyURL.
-    const shortenUrl = async (originalUrl) => {
-      try {
-        const res = await fetch(`https://cleanuri.com/api/v1/shorten`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: `url=${encodeURIComponent(originalUrl)}`
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.result_url) return data.result_url;
-        }
-      } catch (e) {
-        console.error(`CleanURI fetch exception:`, e.message);
-      }
-      return originalUrl;
-    };
-
-    if (finalAcceptLink.includes('vercel.app')) {
-      finalAcceptLink = await shortenUrl(finalAcceptLink);
-      finalDeclineLink = await shortenUrl(finalDeclineLink);
-    }
-
     // Fallback for localhost to make it clickable in Gmail
     if (finalAcceptLink.includes('localhost') || finalAcceptLink.includes('127.0.0.1')) {
       finalAcceptLink = finalAcceptLink.replace('localhost', 'lvh.me').replace('127.0.0.1', 'lvh.me');
