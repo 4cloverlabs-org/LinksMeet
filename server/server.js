@@ -843,6 +843,13 @@ app.post('/api/team/send-invite', requireAuth, async (req, res) => {
     let finalAcceptLink = acceptLink;
     let finalDeclineLink = declineLink;
     
+    // Mask the Vercel domain using Google's official redirector to bypass Gmail's spam filter
+    // This avoids using ANY third-party URL shorteners like TinyURL.
+    if (finalAcceptLink.includes('vercel.app')) {
+      finalAcceptLink = `https://www.google.com/url?q=${encodeURIComponent(finalAcceptLink)}`;
+      finalDeclineLink = `https://www.google.com/url?q=${encodeURIComponent(finalDeclineLink)}`;
+    }
+
     // Fallback for localhost to make it clickable in Gmail
     if (finalAcceptLink.includes('localhost') || finalAcceptLink.includes('127.0.0.1')) {
       finalAcceptLink = finalAcceptLink.replace('localhost', 'lvh.me').replace('127.0.0.1', 'lvh.me');
