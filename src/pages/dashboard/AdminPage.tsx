@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, useNavigate } from 'react-router-dom';
 import {
   Sparkles, LogOut, Loader2, Globe, User, Check, AlertCircle, RefreshCw, Edit2, ChevronDown
 } from 'lucide-react';
@@ -86,6 +86,38 @@ export default function AdminPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('Profile Settings');
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const navigate = useNavigate();
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      if (!token) throw new Error("Not authenticated");
+
+      const res = await fetch(`${API_BASE_URL}/api/users/me`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error || 'Failed to delete account');
+      }
+
+      await supabase.auth.signOut();
+      if (setToast) setToast('Account successfully deleted. 😢');
+      navigate('/');
+    } catch (err: any) {
+      console.error(err);
+      if (setToast) setToast('Error deleting account: ' + err.message);
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
 
   const [isEditingPersonal, setIsEditingPersonal] = useState(false);
   const [isEditingBrand, setIsEditingBrand] = useState(false);
@@ -541,6 +573,51 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
               <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#111827' }}>Authenticator App</div>
               <button className="admin-btn" style={{ padding: '8px 16px' }} onClick={() => { if (setToast) { setToast('2FA setup instructions sent to your email! 🛡️'); setTimeout(() => setToast(null), 3000); } }}>
                 Enable 2FA
+              </button>
+            </div>
+          </div>
+
+          <div className="admin-card" style={{ borderColor: '#fca5a5' }}>
+            <div className="admin-card-head">
+              <h3 style={{ color: '#ef4444' }}>Danger Zone</h3>
+            </div>
+            <p style={{ fontSize: '0.95rem', color: '#6B7280', lineHeight: 1.6, marginBottom: '28px' }}>
+              Once you delete your account, there is no going back. Please be certain.
+            </p>
+            <button 
+              className="admin-btn" 
+              style={{ background: '#fef2f2', color: '#ef4444', borderColor: '#fca5a5', padding: '10px 20px' }}
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              Delete Account
+            </button>
+          </div>
+        </div>
+      )}
+      {showDeleteConfirm && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', padding: '32px', borderRadius: '12px', width: '400px', maxWidth: '90%', textAlign: 'center' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '24px', background: '#fef2f2', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <AlertCircle size={24} />
+            </div>
+            <h3 style={{ margin: '0 0 12px', fontSize: '1.2rem', color: '#111827' }}>Delete Account</h3>
+            <p style={{ margin: '0 0 24px', color: '#4b5563', fontSize: '0.95rem', lineHeight: 1.5 }}>
+              Are you sure you want to permanently delete your account? All of your data, campaigns, contacts, and settings will be completely removed from the database. This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button 
+                onClick={() => setShowDeleteConfirm(false)}
+                style={{ padding: '10px 20px', background: '#fff', border: '1px solid #d1d5db', borderRadius: '8px', fontWeight: 600, color: '#374151', cursor: 'pointer', flex: 1 }}
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleDeleteAccount}
+                style={{ padding: '10px 20px', background: '#ef4444', border: 'none', borderRadius: '8px', fontWeight: 600, color: '#fff', cursor: 'pointer', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                disabled={isDeleting}
+              >
+                {isDeleting ? <Loader2 size={18} className="crm-spin" /> : 'Yes, Delete'}
               </button>
             </div>
           </div>

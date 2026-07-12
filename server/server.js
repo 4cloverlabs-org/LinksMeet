@@ -1070,6 +1070,40 @@ app.put('/api/settings', requireAuth, async (req, res) => {
 });
 
 // ----------------------------------------------------
+// 6.5 Delete User Account
+// ----------------------------------------------------
+app.delete('/api/users/me', requireAuth, async (req, res) => {
+  if (!supabase) return res.status(500).json({ error: "Database not connected" });
+  try {
+    const uid = req.userId;
+    console.log(`Deleting account for user: ${uid}`);
+    
+    // Explicitly delete user data from standard tables to prevent orphans
+    const tables = [
+      'campaign_logs', 'campaign_threads', 'campaign_settings', 'campaign_steps', 'campaigns',
+      'workflows', 'event_types', 'bookings', 'contacts', 
+      'team_members', 'mail_accounts', 'mail_credentials', 'users'
+    ];
+    
+    for (const table of tables) {
+      const column = table === 'users' ? 'id' : 'user_id';
+      // Suppress errors if a table doesn't exist or has no rows
+      await supabase.from(table).delete().eq(column, uid).catch(() => {});
+    }
+    
+    // Delete from Supabase Auth (This is the most critical step)
+    const { error: authError } = await supabase.auth.admin.deleteUser(uid);
+    if (authError) throw authError;
+
+    console.log(`Successfully deleted account: ${uid}`);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Delete user error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ----------------------------------------------------
 // 7. Background Campaign Engine
 // ----------------------------------------------------
 if (supabase) {
