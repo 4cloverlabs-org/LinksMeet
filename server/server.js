@@ -881,7 +881,7 @@ app.post('/api/team/accept-invite', async (req, res) => {
     // Check if the user already has an account
     let isExistingUser = false;
     if (data && data.email) {
-      const { data: userRow } = await supabase.from('users').select('id').eq('email', data.email).single();
+      const { data: userRow } = await supabase.from('users').select('id').eq('email', data.email).maybeSingle();
       if (userRow) isExistingUser = true;
     }
     
