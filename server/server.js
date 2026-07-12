@@ -845,6 +845,14 @@ app.post('/api/team/send-invite', requireAuth, async (req, res) => {
     console.log(`Accept Link: ${acceptLink}`);
     console.log('==================================================\n');
     
+    // To prevent Gmail from bouncing the email because it contains 'localhost', we use a dummy domain in the email body during local dev
+    const safeEmailLink = frontendUrl.includes('localhost') || frontendUrl.includes('127.0.0.1') 
+      ? `https://salemail-local.test/accept-invite?id=${teamMemberId}&action=accept` 
+      : acceptLink;
+    const safeDeclineLink = frontendUrl.includes('localhost') || frontendUrl.includes('127.0.0.1') 
+      ? `https://salemail-local.test/accept-invite?id=${teamMemberId}&action=decline` 
+      : declineLink;
+    
     const subject = `You've been invited to join ${ownerName}'s team on LinksMeet`;
     const htmlBody = `
       <div style="font-family: 'Inter', Helvetica, sans-serif; max-width: 550px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #ffffff;">
@@ -856,8 +864,8 @@ app.post('/api/team/send-invite', requireAuth, async (req, res) => {
           <p style="color: #475569; font-size: 15px; line-height: 1.5;"><strong>${escapeHtml(ownerName)}</strong> has invited you to join their team on LinksMeet as a <strong>${escapeHtml(role)}</strong>.</p>
           
           <div style="text-align: center; margin-top: 32px; margin-bottom: 16px; display: flex; justify-content: center; gap: 16px;">
-            <a href="${acceptLink}" style="background: #0E61F3; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 15px; display: inline-block;">Accept Invitation</a>
-            <a href="${declineLink}" style="background: #ffffff; color: #475569; border: 1px solid #cbd5e1; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 15px; display: inline-block;">Decline</a>
+            <a href="${safeEmailLink}" style="background: #0E61F3; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 15px; display: inline-block;">Accept Invitation</a>
+            <a href="${safeDeclineLink}" style="background: #ffffff; color: #475569; border: 1px solid #cbd5e1; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 15px; display: inline-block;">Decline</a>
           </div>
         </div>
         <div style="background: #f1f5f9; padding: 16px; text-align: center; border-top: 1px solid #e2e8f0;">
