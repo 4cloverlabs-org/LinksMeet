@@ -843,27 +843,13 @@ app.post('/api/team/send-invite', requireAuth, async (req, res) => {
     let finalAcceptLink = acceptLink;
     let finalDeclineLink = declineLink;
     
-    // Helper to shorten URL with detailed logging
-    const shortenUrl = async (originalUrl) => {
-      try {
-        const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(originalUrl)}`);
-        if (res.ok) {
-          return await res.text();
-        } else {
-          console.error(`TinyURL error: ${res.status} ${res.statusText}`);
-        }
-      } catch (e) {
-        console.error(`TinyURL fetch exception:`, e.message);
-      }
-      // Fallback for localhost to make it clickable in Gmail
-      if (originalUrl.includes('localhost') || originalUrl.includes('127.0.0.1')) {
-        return originalUrl.replace('localhost', 'lvh.me').replace('127.0.0.1', 'lvh.me');
-      }
-      return originalUrl;
-    };
-
-    finalAcceptLink = await shortenUrl(acceptLink);
-    finalDeclineLink = await shortenUrl(declineLink);
+    // Fallback for localhost to make it clickable in Gmail
+    if (finalAcceptLink.includes('localhost') || finalAcceptLink.includes('127.0.0.1')) {
+      finalAcceptLink = finalAcceptLink.replace('localhost', 'lvh.me').replace('127.0.0.1', 'lvh.me');
+    }
+    if (finalDeclineLink.includes('localhost') || finalDeclineLink.includes('127.0.0.1')) {
+      finalDeclineLink = finalDeclineLink.replace('localhost', 'lvh.me').replace('127.0.0.1', 'lvh.me');
+    }
 
     // Log the invite link to the console for local testing to bypass Gmail blocks
     console.log('\n==================================================');
