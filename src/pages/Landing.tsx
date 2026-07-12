@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
 import { motion } from 'framer-motion';
-import { Check, Target, Github, Twitter, Linkedin, CheckCircle2, FileText, GitMerge, BarChart3, Sparkles, Wand2, AlignLeft, Database, ChevronDown, Search, Filter, Calendar, Link } from 'lucide-react';
+import { Check, Target, Github, Twitter, Linkedin, CheckCircle2, FileText, GitMerge, BarChart3, Sparkles, Wand2, AlignLeft, Database, ChevronDown, Search, Filter, Calendar, Link, ArrowUpRight, ChevronRight, Shield, Info } from 'lucide-react';
 import './Landing.css';
 
 const FadeUp = ({ children, delay = 0, className = "" }: { children: React.ReactNode, delay?: number, className?: string }) => (
@@ -136,6 +136,7 @@ export default function Landing() {
   const goSignup = () => navigate('/signup');
 
   const { user } = useAuth();
+  const [isAnnual, setIsAnnual] = useState(true);
 
   useEffect(() => {
     // We intentionally removed the auto-redirect so logged-in users can still view the landing page.
@@ -679,169 +680,6 @@ export default function Landing() {
         </section>
 
 
-        {/* ============ HOW IT WORKS (Image Match) ============ */}
-        <section className="lexaro-steps-section" id="how-it-works">
-          <div className="lexaro-container">
-            <FadeUp>
-              <div className="lexaro-steps-header">
-                <h2>How your outreach becomes<br />a revenue machine</h2>
-                <p>Connect your data once. LinksMeet automates your pipeline generation automatically.</p>
-              </div>
-            </FadeUp>
-
-            <div className="lexaro-steps-grid">
-              {/* Step 1 */}
-              <FadeUp delay={0.1} className="lexaro-full-height">
-                <div className="lexaro-step-card" style={{ height: '100%' }}>
-                  <div className="lexaro-step-label">01</div>
-                  <h3>Discover high-quality prospects</h3>
-                  <p style={{ marginBottom: '32px' }}>Define your ICP. LinksMeet finds and verifies decision-makers automatically.</p>
-
-                  <div className="lexaro-step-visual">
-                    {/* SVG Lines Removed for cleaner look */}
-
-                    <div style={{ position: 'absolute', top: 30, left: 30, right: 30, bottom: 120, background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 8px 32px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', overflow: 'hidden', zIndex: 2 }}>
-                      <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: '10px', background: '#fafafa' }}>
-                        <Search size={14} color="#666" />
-                        <span style={{ fontSize: '0.75rem', color: '#666', fontWeight: 500 }}>Lead Search</span>
-                      </div>
-                      <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <div style={{ background: '#f3f4f6', padding: '4px 10px', borderRadius: '6px', fontSize: '0.65rem', color: '#4b5563', display: 'flex', alignItems: 'center', gap: '6px', border: '1px solid #e5e7eb' }}>
-                            <Filter size={10} /> Filtering
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#fff' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{ width: 28, height: 28, background: '#eff6ff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <Database size={14} color="#2563eb" />
-                            </div>
-                            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#111' }}>Data Enrichment</span>
-                          </div>
-                          <Check size={14} color="#16a34a" />
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#fff' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{ width: 28, height: 28, background: '#f0fdf4', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <Target size={14} color="#16a34a" />
-                            </div>
-                            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#111' }}>Verification</span>
-                          </div>
-                          <Check size={14} color="#16a34a" />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Receiver */}
-                    <div style={{ position: 'absolute', bottom: 30, left: '50%', transform: 'translateX(-50%)', background: '#fff', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '16px', padding: '16px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', zIndex: 2, boxShadow: '0 8px 24px -8px rgba(0,0,0,0.08)' }}>
-                      <div style={{ width: 32, height: 32, background: '#111', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Target size={16} color="#fff" />
-                      </div>
-                      <div style={{ fontSize: '0.8rem', fontWeight: 600, whiteSpace: 'nowrap' }}>Target Audience</div>
-                      <div style={{ fontSize: '0.6rem', color: '#888', whiteSpace: 'nowrap' }}>1,250 Verified Leads</div>
-                    </div>
-                  </div>
-                </div>
-              </FadeUp>
-
-              {/* Step 2 */}
-              <FadeUp delay={0.2} className="lexaro-full-height">
-                <div className="lexaro-step-card" style={{ height: '100%' }}>
-                  <div className="lexaro-step-label">02</div>
-                  <h3>Personalize at scale</h3>
-                  <p style={{ marginBottom: '32px' }}>LinksMeet uses lead data to generate highly relevant cold outreach campaigns.</p>
-
-                  <div className="lexaro-step-visual">
-                    {/* SVG Lines Removed for cleaner look */}
-                    <div style={{ position: 'absolute', top: 30, left: 30, right: 30, bottom: 120, background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 8px 32px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', overflow: 'hidden', zIndex: 2 }}>
-                      <div style={{ padding: '10px 16px', borderBottom: '1px solid rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: '6px', background: '#fafafa' }}>
-                        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444' }} />
-                        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#f59e0b' }} />
-                        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#10b981' }} />
-                        <span style={{ marginLeft: '12px', fontSize: '0.7rem', color: '#888', fontWeight: 500 }}>New Campaign</span>
-                      </div>
-                      <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                        <div style={{ fontSize: '0.75rem', color: '#666', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          To: <span style={{ background: '#eff6ff', padding: '4px 8px', borderRadius: '6px', color: '#2563eb', fontWeight: 500, border: '1px solid #bfdbfe' }}>Variables</span>
-                        </div>
-                        <div style={{ fontSize: '0.75rem', color: '#666', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          Tone: <span style={{ background: '#fdf4ff', padding: '4px 8px', borderRadius: '6px', color: '#c026d3', fontWeight: 500, border: '1px solid #fbcfe8' }}>Tone</span>
-                        </div>
-                        <div style={{ height: '1px', background: '#f0f0f0', margin: '4px 0' }} />
-                        <div style={{ fontSize: '0.75rem', color: '#333', lineHeight: 1.6 }}>
-                          <span style={{ fontWeight: 600 }}>Subject: Quick question</span><br />
-                          Hi {"{{firstName}}"},<br />
-                          <span style={{ background: '#fef08a', padding: '2px 4px', borderRadius: '4px' }}>Content</span> auto-generated using mapped data points...
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Receiver */}
-                    <div style={{ position: 'absolute', bottom: 30, left: '50%', transform: 'translateX(-50%)', background: '#fff', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '16px', padding: '16px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', zIndex: 2, boxShadow: '0 8px 24px -8px rgba(0,0,0,0.08)' }}>
-                      <div style={{ width: 32, height: 32, background: '#2563eb', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Sparkles size={16} color="#fff" />
-                      </div>
-                      <div style={{ fontSize: '0.8rem', fontWeight: 600, whiteSpace: 'nowrap' }}>Email Sequence</div>
-                      <div style={{ fontSize: '0.6rem', color: '#888', whiteSpace: 'nowrap' }}>Highly Personalized</div>
-                    </div>
-                  </div>
-                </div>
-              </FadeUp>
-
-              {/* Step 3 */}
-              <FadeUp delay={0.3} className="lexaro-full-height">
-                <div className="lexaro-step-card" style={{ height: '100%' }}>
-                  <div className="lexaro-step-label">03</div>
-                  <h3>Schedule more qualified meetings</h3>
-                  <p style={{ marginBottom: '32px' }}>Built-in scheduling and AI categorization ensures every opportunity is captured.</p>
-
-                  <div className="lexaro-step-visual">
-                    {/* SVG Lines Removed for cleaner look */}
-                    <div style={{ position: 'absolute', top: 30, left: 30, right: 30, bottom: 120, background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 8px 32px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', overflow: 'hidden', zIndex: 2 }}>
-                      <div style={{ padding: '24px 16px', borderBottom: '1px solid rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', background: '#f8fafc' }}>
-                        <div style={{ width: 40, height: 40, background: '#dbeafe', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Calendar size={20} color="#2563eb" />
-                        </div>
-                        <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#111' }}>Meeting Booked</span>
-                        <span style={{ fontSize: '0.65rem', color: '#0369a1', background: '#e0f2fe', padding: '4px 10px', borderRadius: '12px', fontWeight: 500 }}>Automated Reminder</span>
-                      </div>
-                      <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <div style={{ width: 28, height: 28, background: '#f1f5f9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <CheckCircle2 size={14} color="#64748b" />
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#111' }}>Calendar Checker</span>
-                            <span style={{ fontSize: '0.65rem', color: '#64748b' }}>Cross-referencing</span>
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <div style={{ width: 28, height: 28, background: '#f1f5f9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <Link size={14} color="#64748b" />
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#111' }}>Link Customized</span>
-                            <span style={{ fontSize: '0.65rem', color: '#64748b' }}>Easy to remember</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Receiver */}
-                    <div style={{ position: 'absolute', bottom: 30, left: '50%', transform: 'translateX(-50%)', background: '#fff', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '16px', padding: '16px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', zIndex: 2, boxShadow: '0 8px 24px -8px rgba(0,0,0,0.08)' }}>
-                      <div style={{ width: 32, height: 32, background: '#16a34a', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <CheckCircle2 size={16} color="#fff" />
-                      </div>
-                      <div style={{ fontSize: '0.8rem', fontWeight: 600, whiteSpace: 'nowrap' }}>Meeting Booked</div>
-                      <div style={{ fontSize: '0.6rem', color: '#888', whiteSpace: 'nowrap' }}>Added to calendar</div>
-                    </div>
-                  </div>
-                </div>
-              </FadeUp>
-            </div>
-          </div>
-          <SectionGridLine />
-        </section>
 
 
         {/* ============ INTEGRATIONS (Exact Image Match) ============ */}
@@ -886,8 +724,15 @@ export default function Landing() {
         <section className="lexaro-pricing-section" id="pricing">
           <div className="lexaro-container">
             <FadeUp>
-              <div className="lexaro-pricing-header">
-                <h2>Simple, transparent pricing</h2>
+              <div className="lexaro-pricing-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <h2 className="lexaro-title" style={{ marginBottom: '16px' }}>Simple pricing for every team</h2>
+                <p className="lexaro-subtitle" style={{ marginBottom: '32px' }}>Choose a plan that supports your workflow and scales as you grow.</p>
+                <div className="lexaro-pricing-toggle-container" onClick={() => setIsAnnual(!isAnnual)}>
+                  <span className={`lexaro-pricing-toggle-text ${!isAnnual ? 'active' : 'inactive'}`}>Monthly</span>
+                  <div className={`lexaro-pricing-toggle ${isAnnual ? 'annual' : 'monthly'}`} />
+                  <span className={`lexaro-pricing-toggle-text ${isAnnual ? 'active' : 'inactive'}`}>Annually</span>
+                  <span className="lexaro-pricing-discount">- 25%</span>
+                </div>
               </div>
             </FadeUp>
 
@@ -895,34 +740,25 @@ export default function Landing() {
               {/* Starter */}
               <FadeUp delay={0.1} className="lexaro-full-height">
                 <div className="lexaro-pricing-box">
-                  {/* Corner Markers */}
-                  <div className="lexaro-pricing-marker lexaro-pricing-marker-tl" />
-                  <div className="lexaro-pricing-marker lexaro-pricing-marker-tr" />
-                  <div className="lexaro-pricing-marker lexaro-pricing-marker-bl" />
-                  <div className="lexaro-pricing-marker lexaro-pricing-marker-br" />
-
-                  <div className="lexaro-pricing-top">
-                    <div className="lexaro-pricing-top-tier">Starter</div>
-                    <div className="lexaro-pricing-top-price">$29<span>/ month</span></div>
+                  <div className="lexaro-pricing-top-tier">Starter</div>
+                  <div className="lexaro-pricing-top-price">${isAnnual ? '22' : '29'}<span>/ month{isAnnual ? ', billed annually' : ''}</span></div>
+                  <div className="lexaro-pricing-desc">
+                    Ideal for small teams just getting started with structured workflows
                   </div>
 
                   <div className="lexaro-pricing-features">
-                    <h4>What's Included:</h4>
+                    <h4>Features:</h4>
                     <ul>
-                      <li><CheckCircle2 size={16} strokeWidth={1.5} /> Up to 5 team members</li>
-                      <li><CheckCircle2 size={16} strokeWidth={1.5} /> 5,000 active contacts</li>
-                      <li><CheckCircle2 size={16} strokeWidth={1.5} /> Basic lead enrichment</li>
-                      <li><CheckCircle2 size={16} strokeWidth={1.5} /> Email & Calendar Sync</li>
-                      <li><CheckCircle2 size={16} strokeWidth={1.5} /> Core integrations</li>
+                      <li><Check size={16} strokeWidth={1.5} /> Up to 5 team members</li>
+                      <li><Check size={16} strokeWidth={1.5} /> 5,000 active contacts</li>
+                      <li><Check size={16} strokeWidth={1.5} /> Basic lead enrichment <Info size={14} style={{ color: '#9ca3af', marginLeft: 'auto' }} /></li>
+                      <li><Check size={16} strokeWidth={1.5} /> Email & Calendar Sync <Info size={14} style={{ color: '#9ca3af', marginLeft: 'auto' }} /></li>
+                      <li><Check size={16} strokeWidth={1.5} /> Core integrations</li>
                     </ul>
                   </div>
 
-                  <button className="lexaro-pricing-btn lexaro-pricing-btn-ghost">
-                    <div style={{ position: 'absolute', top: 0, left: 0, width: 5, height: 5, borderLeft: '1px solid #111', borderTop: '1px solid #111' }} />
-                    <div style={{ position: 'absolute', top: 0, right: 0, width: 5, height: 5, borderRight: '1px solid #111', borderTop: '1px solid #111' }} />
-                    <div style={{ position: 'absolute', bottom: 0, left: 0, width: 5, height: 5, borderLeft: '1px solid #111', borderBottom: '1px solid #111' }} />
-                    <div style={{ position: 'absolute', bottom: 0, right: 0, width: 5, height: 5, borderRight: '1px solid #111', borderBottom: '1px solid #111' }} />
-                    Start free trial
+                  <button className="lexaro-pricing-btn">
+                    Get Started <ArrowUpRight size={16} />
                   </button>
                 </div>
               </FadeUp>
@@ -930,72 +766,66 @@ export default function Landing() {
               {/* Team */}
               <FadeUp delay={0.2} className="lexaro-full-height">
                 <div className="lexaro-pricing-box premium">
-                  {/* Corner Markers */}
-                  <div className="lexaro-pricing-marker lexaro-pricing-marker-tl" />
-                  <div className="lexaro-pricing-marker lexaro-pricing-marker-tr" />
-                  <div className="lexaro-pricing-marker lexaro-pricing-marker-bl" />
-                  <div className="lexaro-pricing-marker lexaro-pricing-marker-br" />
-
-                  <div className="lexaro-pricing-top">
-                    <div className="lexaro-pricing-top-tier">Team</div>
-                    <div className="lexaro-pricing-top-price">$159<span>/ month</span></div>
+                  <div className="lexaro-pricing-popular">Most Popular</div>
+                  <div className="lexaro-pricing-top-tier">Team</div>
+                  <div className="lexaro-pricing-top-price">${isAnnual ? '119' : '159'}<span>/ month{isAnnual ? ', billed annually' : ''}</span></div>
+                  <div className="lexaro-pricing-desc">
+                    Tailored for growing teams scaling projects and automations confidently
                   </div>
 
                   <div className="lexaro-pricing-features">
-                    <h4>What's Included:</h4>
+                    <h4>Features:</h4>
                     <ul>
-                      <li><CheckCircle2 size={16} strokeWidth={1.5} /> Up to 25 team members</li>
-                      <li><CheckCircle2 size={16} strokeWidth={1.5} /> 50,000 active contacts</li>
-                      <li><CheckCircle2 size={16} strokeWidth={1.5} /> Advanced AI personalization</li>
-                      <li><CheckCircle2 size={16} strokeWidth={1.5} /> Built-in meeting scheduling</li>
-                      <li><CheckCircle2 size={16} strokeWidth={1.5} /> Dedicated sending IPs</li>
-                      <li><CheckCircle2 size={16} strokeWidth={1.5} /> All integrations</li>
-                      <li><CheckCircle2 size={16} strokeWidth={1.5} /> AI sequence generator</li>
+                      <li><Check size={16} strokeWidth={1.5} /> Up to 25 team members</li>
+                      <li><Check size={16} strokeWidth={1.5} /> 50,000 active contacts</li>
+                      <li><Check size={16} strokeWidth={1.5} /> Advanced AI personalization <Info size={14} style={{ color: '#9ca3af', marginLeft: 'auto' }} /></li>
+                      <li><Check size={16} strokeWidth={1.5} /> Built-in meeting scheduling <Info size={14} style={{ color: '#9ca3af', marginLeft: 'auto' }} /></li>
+                      <li><Check size={16} strokeWidth={1.5} /> Dedicated sending IPs <Info size={14} style={{ color: '#9ca3af', marginLeft: 'auto' }} /></li>
+                      <li><Check size={16} strokeWidth={1.5} /> All integrations</li>
+                      <li><Check size={16} strokeWidth={1.5} /> AI sequence generator</li>
                     </ul>
                   </div>
 
                   <button className="lexaro-pricing-btn lexaro-pricing-btn-solid">
-                    Start free trial
+                    Start Free Trial <ArrowUpRight size={16} />
                   </button>
+                  <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '0.8rem', color: 'var(--lx-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 500 }}>
+                    $0 today · Cancel anytime
+                  </div>
                 </div>
               </FadeUp>
 
               {/* Organization */}
               <FadeUp delay={0.3} className="lexaro-full-height">
                 <div className="lexaro-pricing-box">
-                  {/* Corner Markers */}
-                  <div className="lexaro-pricing-marker lexaro-pricing-marker-tl" />
-                  <div className="lexaro-pricing-marker lexaro-pricing-marker-tr" />
-                  <div className="lexaro-pricing-marker lexaro-pricing-marker-bl" />
-                  <div className="lexaro-pricing-marker lexaro-pricing-marker-br" />
-
-                  <div className="lexaro-pricing-top">
-                    <div className="lexaro-pricing-top-tier">Organization</div>
-                    <div className="lexaro-pricing-top-price">Custom</div>
+                  <div className="lexaro-pricing-top-tier">Organization</div>
+                  <div className="lexaro-pricing-top-price">Custom<span>{isAnnual ? '/ annually' : '/ monthly'}</span></div>
+                  <div className="lexaro-pricing-desc">
+                    Perfect for large organizations and startups requiring advanced control
                   </div>
 
                   <div className="lexaro-pricing-features">
-                    <h4>What's Included:</h4>
+                    <h4>Features:</h4>
                     <ul>
-                      <li><CheckCircle2 size={16} strokeWidth={1.5} /> Unlimited team members</li>
-                      <li><CheckCircle2 size={16} strokeWidth={1.5} /> Unlimited active contacts</li>
-                      <li><CheckCircle2 size={16} strokeWidth={1.5} /> Dedicated account manager</li>
-                      <li><CheckCircle2 size={16} strokeWidth={1.5} /> Custom integrations</li>
-                      <li><CheckCircle2 size={16} strokeWidth={1.5} /> SLA guarantee</li>
-                      <li><CheckCircle2 size={16} strokeWidth={1.5} /> SSO & advanced security</li>
-                      <li><CheckCircle2 size={16} strokeWidth={1.5} /> Custom contract terms</li>
+                      <li><Check size={16} strokeWidth={1.5} /> Unlimited team members</li>
+                      <li><Check size={16} strokeWidth={1.5} /> Unlimited active contacts</li>
+                      <li><Check size={16} strokeWidth={1.5} /> Dedicated account manager <Info size={14} style={{ color: '#9ca3af', marginLeft: 'auto' }} /></li>
+                      <li><Check size={16} strokeWidth={1.5} /> Custom integrations <Info size={14} style={{ color: '#9ca3af', marginLeft: 'auto' }} /></li>
+                      <li><Check size={16} strokeWidth={1.5} /> SLA guarantee <Info size={14} style={{ color: '#9ca3af', marginLeft: 'auto' }} /></li>
+                      <li><Check size={16} strokeWidth={1.5} /> SSO & advanced security</li>
+                      <li><Check size={16} strokeWidth={1.5} /> Custom contract terms</li>
                     </ul>
                   </div>
 
-                  <button className="lexaro-pricing-btn lexaro-pricing-btn-ghost">
-                    <div style={{ position: 'absolute', top: 0, left: 0, width: 5, height: 5, borderLeft: '1px solid #111', borderTop: '1px solid #111' }} />
-                    <div style={{ position: 'absolute', top: 0, right: 0, width: 5, height: 5, borderRight: '1px solid #111', borderTop: '1px solid #111' }} />
-                    <div style={{ position: 'absolute', bottom: 0, left: 0, width: 5, height: 5, borderLeft: '1px solid #111', borderBottom: '1px solid #111' }} />
-                    <div style={{ position: 'absolute', bottom: 0, right: 0, width: 5, height: 5, borderRight: '1px solid #111', borderBottom: '1px solid #111' }} />
-                    Contact sales
+                  <button className="lexaro-pricing-btn">
+                    Contact Sales <ChevronRight size={16} />
                   </button>
                 </div>
               </FadeUp>
+            </div>
+            
+            <div className="lexaro-pricing-guarantee">
+              Each plan includes a 14-day, no-questions-asked full refund policy.
             </div>
           </div>
         </section>

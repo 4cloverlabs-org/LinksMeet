@@ -1,0 +1,22 @@
+# robots.txt for LinksMeet
+User-agent: *
+Allow: /
+
+# Keep the private app + auth surfaces out of the index
+Disallow: /dashboard
+Disallow: /onboarding
+Disallow: /admin
+Disallow: /eventTypes
+Disallow: /bookings
+Disallow: /people
+Disallow: /teams
+Disallow: /workflows
+Disallow: /campaigns
+Disallow: /routing
+Disallow: /apps
+Disallow: /payments
+Disallow: /help
+Disallow: /accept-invite
+Disallow: /success
+
+Sitemap: https://linksmeet.com/sitemap.xml

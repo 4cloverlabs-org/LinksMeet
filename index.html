@@ -3,13 +3,176 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/png" href="/LinksMeet-favicon.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LinksMeet — Standalone Scheduling Platform</title>
+
+  <!-- ============ PRIMARY META ============ -->
+  <title>LinksMeet</title>
+  <meta name="description"
+    content="LinksMeet is an intelligent scheduling app that combines lead discovery, personalized cold outreach, email deliverability, and meeting scheduling in one workspace. Share a link, sync calendars, route leads, and book more qualified meetings — automatically." />
+  <meta name="keywords"
+    content="scheduling app, meeting scheduler, scheduling software, booking software, appointment scheduling, calendar sync, lead routing, round-robin scheduling, cold email outreach, sales automation, Calendly alternative" />
+  <meta name="author" content="LinksMeet Inc." />
+  <meta name="publisher" content="LinksMeet Inc." />
+  <meta name="application-name" content="LinksMeet" />
+  <meta name="theme-color" content="#2563eb" />
+  <meta name="color-scheme" content="light dark" />
+
+  <!-- Crawling / indexing directives (SEO) -->
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+  <meta name="googlebot" content="index, follow" />
+  <link rel="canonical" href="https://linksmeet.com/" />
+
+  <!-- ============ ICONS ============ -->
+  <link rel="icon" type="image/png" href="/LinksMeet-favicon.png" />
+  <link rel="apple-touch-icon" href="/LinksMeet-favicon.png" />
+  <link rel="shortcut icon" href="/LinksMeet-favicon.png" />
+
+  <!-- ============ OPEN GRAPH (Facebook, LinkedIn, Slack, iMessage) ============ -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="LinksMeet" />
+  <meta property="og:title" content="LinksMeet — Scheduling & Meeting Automation for Sales Teams" />
+  <meta property="og:description"
+    content="Combine lead discovery, personalized outreach, email deliverability, and meeting scheduling in one seamless workspace. Book more qualified meetings, automatically." />
+  <meta property="og:url" content="https://linksmeet.com/" />
+  <meta property="og:image" content="https://linksmeet.com/herosection.png" />
+  <meta property="og:image:alt" content="The LinksMeet scheduling and outreach workspace" />
+  <meta property="og:locale" content="en_US" />
+
+  <!-- ============ TWITTER / X CARD ============ -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="LinksMeet — Scheduling & Meeting Automation for Sales Teams" />
+  <meta name="twitter:description"
+    content="Combine lead discovery, personalized outreach, email deliverability, and meeting scheduling in one seamless workspace. Book more qualified meetings, automatically." />
+  <meta name="twitter:image" content="https://linksmeet.com/herosection.png" />
+  <meta name="twitter:image:alt" content="The LinksMeet scheduling and outreach workspace" />
+
+  <!-- ============ PERFORMANCE HINTS ============ -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+
+  <!-- ============ STRUCTURED DATA (SEO rich results + AEO/GEO answer engines) ============ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://linksmeet.com/#organization",
+        "name": "LinksMeet",
+        "legalName": "LinksMeet Inc.",
+        "url": "https://linksmeet.com/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://linksmeet.com/LinksMeet.png"
+        },
+        "description": "LinksMeet is scheduling and meeting-automation software that unifies lead discovery, cold outreach, email deliverability, and calendar booking for sales, support, and B2B teams.",
+        "sameAs": [
+          "https://github.com/4cloverlabs-org/LinksMeet"
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://linksmeet.com/#website",
+        "url": "https://linksmeet.com/",
+        "name": "LinksMeet",
+        "publisher": { "@id": "https://linksmeet.com/#organization" },
+        "inLanguage": "en-US"
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "LinksMeet",
+        "applicationCategory": "BusinessApplication",
+        "applicationSubCategory": "Scheduling & Appointment Software",
+        "operatingSystem": "Web, iOS, Android",
+        "url": "https://linksmeet.com/",
+        "description": "LinksMeet is a scheduling app and meeting scheduling software that eliminates booking back-and-forth. Share a link and LinksMeet handles calendar syncing, timezone detection, reminders, lead routing, and video calls through Zoom, Google Meet, and Microsoft Teams. It also runs personalized cold outreach and email campaigns so teams book more qualified meetings.",
+        "featureList": [
+          "Shareable booking links with automatic calendar sync",
+          "Automatic timezone detection and conversion",
+          "Round-robin and attribute-based lead routing",
+          "Automated reminders and follow-up workflows",
+          "Personalized cold email outreach and deliverability",
+          "Video calls via Zoom, Google Meet, and Microsoft Teams",
+          "CRM sync with Salesforce and HubSpot",
+          "Payments and real-time meeting analytics"
+        ],
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD",
+          "description": "Free plan available; paid plans unlock advanced routing, workflows, and integrations."
+        },
+        "publisher": { "@id": "https://linksmeet.com/#organization" }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is LinksMeet and how does it work as a scheduling app?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "LinksMeet is a scheduling app and meeting scheduling software used to eliminate booking back-and-forth. You share a link, and LinksMeet handles calendar syncing, timezone detection, reminders, and video calls through Zoom, Google Meet, Microsoft Teams, and LinksMeet Video. It works as a simple meeting scheduler for 1-on-1s or a fully automated scheduling system with routing and workflows."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What makes LinksMeet different from other scheduling apps?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "As a scheduler, LinksMeet offers exceptional value by integrating seamlessly with common workflow tools like Google Calendar, Zoom, and Stripe. It also works as a lead routing, distribution, and management tool for inbound-focused teams. Overall, LinksMeet is built for flexibility and customization."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can LinksMeet be used as scheduling software for Healthcare, Sales, Support, and B2B teams?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. LinksMeet adapts as scheduling software across industries and team structures. For B2B sales teams, LinksMeet works as booking software with attribute-based routing, round-robin lead distribution, and CRM updates in Salesforce or HubSpot on every booking. It's a complete automated scheduling system."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
 </head>
 
 <body>
   <div id="root"></div>
+
+  <!-- ============ NO-JS FALLBACK (crawlable content for SEO/AEO/GEO) ============ -->
+  <noscript>
+    <main>
+      <h1>LinksMeet — More qualified meetings with intelligent automation</h1>
+      <p>
+        LinksMeet combines lead discovery, personalized cold outreach, email deliverability, and
+        meeting scheduling into one seamless workspace. Share a link and let LinksMeet handle calendar
+        syncing, timezone detection, reminders, lead routing, and video calls through Zoom, Google Meet,
+        and Microsoft Teams.
+      </p>
+      <h2>What you can do with LinksMeet</h2>
+      <ul>
+        <li>Share booking links that sync automatically with Google Calendar and Outlook</li>
+        <li>Route inbound leads with round-robin and attribute-based rules</li>
+        <li>Run personalized cold email campaigns with strong deliverability</li>
+        <li>Update Salesforce and HubSpot automatically on every booking</li>
+        <li>Collect payments and track meetings with real-time analytics</li>
+      </ul>
+      <h2>Explore LinksMeet</h2>
+      <ul>
+        <li><a href="/pricing">Pricing</a></li>
+        <li><a href="/about">About</a></li>
+        <li><a href="/blog">Blog</a></li>
+        <li><a href="/contact">Contact</a></li>
+        <li><a href="/signup">Sign up</a></li>
+        <li><a href="/login">Log in</a></li>
+      </ul>
+      <p>This application requires JavaScript. Please enable JavaScript to use LinksMeet.</p>
+    </main>
+  </noscript>
+
   <script type="module" src="/src/main.tsx"></script>
 </body>
 
