@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import {
   LayoutGrid, Users, Search, Bell, Plus, ArrowUpRight, ArrowDownRight,
@@ -31,6 +31,16 @@ export default function EventTypesPage() {
     teamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember,
     editingWorkflow, setEditingWorkflow
   , setAvailIsDefault, availIsDefault, saveAvailability, availSchedule, setAvailSchedule, tzOpen, tzSearch, TIMEZONES, availPrefs, setTzOpen, setTzSearch, setAvailPrefs , toggleEventType, etDropdown, setEtDropdown, addEventType, deleteEventType, canEdit } = ctx || {};
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (!(e.target as Element).closest('.et-more-options-wrapper')) {
+        setEtDropdown(null);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [setEtDropdown]);
 
   return (
     <>
@@ -125,7 +135,7 @@ export default function EventTypesPage() {
                         </button>
                         
                         {/* Dropdown Wrapper */}
-                        <div style={{ position: 'relative' }}>
+                        <div style={{ position: 'relative' }} className="et-more-options-wrapper">
                           <button 
                             className="et-icon-btn"
                             onClick={() => setEtDropdown(etDropdown === e.id ? null : e.id)}
@@ -136,11 +146,6 @@ export default function EventTypesPage() {
 
                           {etDropdown === e.id && (
                             <>
-                              {/* Invisible backdrop to close dropdown */}
-                              <div 
-                                style={{ position: 'fixed', inset: 0, zIndex: 40 }}
-                                onClick={() => setEtDropdown(null)}
-                              />
                               <div style={{
                                 position: 'absolute', right: 0, top: '40px',
                                 background: '#fff', border: '1px solid #e2e8f0',
