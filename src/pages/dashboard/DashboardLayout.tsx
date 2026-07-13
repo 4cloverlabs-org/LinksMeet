@@ -61,11 +61,7 @@ const CONTACT_STATUSES: ContactStatus[] = ['New', 'Contacted', 'Follow up', 'Con
 const OPEN_STATUSES: ContactStatus[] = ['New', 'Follow up', 'Contacted'];
 
 const DEFAULT_EVENT_TYPES = [
-  { title: '15 Min Meeting', dur: '15m', slug: '15min', desc: 'A quick intro or sync call.' },
   { title: '30 Min Meeting', dur: '30m', slug: '30min', desc: 'Standard discovery conversation.' },
-  { title: 'Product Demo', dur: '45m', slug: 'demo', desc: 'Guided walkthrough of LinksMeet.' },
-  { title: 'Strategy Session', dur: '60m', slug: 'strategy', desc: 'Deep-dive planning with the team.' },
-  { title: 'Group Webinar', dur: '90m', slug: 'webinar', desc: 'Multi-attendee live session.' },
 ];
 
 // @ts-ignore
@@ -293,6 +289,19 @@ export default function DashboardLayout() {
   
   const [loading, setLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close the profile menu when clicking anywhere outside it.
+  useEffect(() => {
+    if (!showProfileMenu) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setShowProfileMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showProfileMenu]);
 
   // Apps State
   const [installedApps, setInstalledApps] = useState(INSTALLED);
@@ -348,7 +357,7 @@ export default function DashboardLayout() {
       } else if (title.includes('resources')) {
         subject = 'Additional resources for {EVENT_NAME}';
         defaultBody = 'Hi {ATTENDEE},\n\nHere are some additional resources to help you prepare or review what we discussed in {EVENT_NAME}.\n\n[Links]\n\nBest,\n{ORGANIZER}';
-      } else if (title.includes('new time')) {
+      } else if (title.includes('no-shows') || title.includes('no shows') || title.includes('new time')) {
         subject = 'Sorry we missed you! Let\'s reschedule';
         defaultBody = 'Hi {ATTENDEE},\n\nIt looks like you weren\'t able to make it to {EVENT_NAME}. No worries—you can book a new time using my scheduling link: [Your Link]\n\nBest,\n{ORGANIZER}';
       } else if (title.includes('bring id')) {
@@ -357,6 +366,24 @@ export default function DashboardLayout() {
       } else if (title.includes('reconfirm')) {
         subject = 'Please reconfirm your attendance for {EVENT_NAME}';
         defaultBody = 'Hi {ATTENDEE},\n\nPlease let us know if you will still be able to attend {EVENT_NAME} at {EVENT_DATE_ddd, h:mma}.\n\nReply YES to confirm, or let us know if you need to reschedule.\n\nThanks,\n{ORGANIZER}';
+      } else if (title.includes('reminder to host')) {
+        subject = 'Upcoming Event Reminder: {EVENT_NAME}';
+        defaultBody = 'Hi {ORGANIZER},\n\nThis is an automated reminder that you have an upcoming event: {EVENT_NAME} with {ATTENDEE} at {EVENT_DATE_ddd, h:mma}.\n\nBest,\nLinksMeet';
+      } else if (title.includes('reminder to invitee')) {
+        subject = 'Reminder: Upcoming Event - {EVENT_NAME}';
+        defaultBody = 'Hi {ATTENDEE},\n\nThis is a quick reminder about our upcoming event: {EVENT_NAME} at {EVENT_DATE_ddd, h:mma}.\n\nLooking forward to speaking with you!\n\nBest,\n{ORGANIZER}';
+      } else if (title.includes('reminder to someone else')) {
+        subject = 'Reminder: Upcoming Event - {EVENT_NAME}';
+        defaultBody = 'Hi,\n\nThis is a quick reminder about the upcoming event: {EVENT_NAME} scheduled for {EVENT_DATE_ddd, h:mma}.\n\nBest,\n{ORGANIZER}';
+      } else if (title.includes('request follow-up meeting')) {
+        subject = 'Following up from our meeting';
+        defaultBody = 'Hi {ATTENDEE},\n\nIt was great speaking with you! I\'d love to schedule a follow-up meeting to continue our conversation. You can pick a time that works for you here: [Your Link]\n\nBest,\n{ORGANIZER}';
+      } else if (title.includes('cancellation')) {
+        subject = 'Cancelled: {EVENT_NAME}';
+        defaultBody = 'Hi,\n\nPlease note that the upcoming event {EVENT_NAME} has been cancelled. If this was a mistake, please reach out to {ORGANIZER} to reschedule.\n\nBest,\nLinksMeet';
+      } else if (title.includes('follow-up') || title.includes('follow up')) {
+        subject = 'Update on {EVENT_NAME}';
+        defaultBody = 'Hi,\n\nWe just wrapped up {EVENT_NAME}. Here are the notes and next steps from our meeting.\n\nBest,\n{ORGANIZER}';
       }
     } else if (actionType === 'sms') {
       if (title.includes('thank you')) defaultBody = 'Hi {ATTENDEE}, thanks for joining our recent event! We hope you found it valuable.';
@@ -1441,7 +1468,7 @@ export default function DashboardLayout() {
           </div>
 
           <div className="crm-side-foot">
-            <div style={{ position: 'relative' }}>
+            <div ref={profileMenuRef} style={{ position: 'relative' }}>
               {showProfileMenu && (
                 <div style={{ position: 'absolute', bottom: 'calc(100% + 8px)', left: 0, width: '100%', background: '#fff', border: '1px solid #F5F5F5', borderRadius: '10px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)', overflow: 'hidden', zIndex: 100 }}>
                   <button onClick={() => { setShowProfileMenu(false); setView('admin'); }} style={{ width: '100%', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px', border: 'none', background: 'none', cursor: 'pointer', fontSize: '14px', fontWeight: 400, color: '#374151', textAlign: 'left' }} onMouseOver={(e) => e.currentTarget.style.background = '#F9FAFB'} onMouseOut={(e) => e.currentTarget.style.background = 'none'}>

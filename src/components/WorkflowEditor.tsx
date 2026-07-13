@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Zap, ArrowRight, Trash2, ChevronDown } from 'lucide-react';
 import './WorkflowEditor.css';
 
@@ -63,8 +63,33 @@ export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTy
   const [subject, setSubject] = useState(draft.action_payload?.subject || (draft.action_type === 'email' ? 'Reminder: {EVENT_NAME} - {EVENT_DATE_ddd, MMM D, YYYY h:mma}' : ''));
   const [body, setBody] = useState(draft.action_payload?.body || defaultBody);
 
-  const [applyToAll, setApplyToAll] = useState(draft.action_payload?.applyToAll !== false);
+  const [applyToAll, setApplyToAll] = useState(draft.action_payload?.applyToAll === true);
   const [targetEventTypes, setTargetEventTypes] = useState<string[]>(Array.isArray(draft.action_payload?.targetEventTypes) ? draft.action_payload.targetEventTypes : (draft.action_payload?.targetEventType ? [draft.action_payload.targetEventType] : []));
+  const [isEtDropdownOpen, setIsEtDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const [isActionDropdownOpen, setIsActionDropdownOpen] = useState(false);
+  const actionDropdownRef = useRef<HTMLDivElement>(null);
+
+  const [isTemplateDropdownOpen, setIsTemplateDropdownOpen] = useState(false);
+  const templateDropdownRef = useRef<HTMLDivElement>(null);
+  const [messageTemplate, setMessageTemplate] = useState('Reminder');
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsEtDropdownOpen(false);
+      }
+      if (actionDropdownRef.current && !actionDropdownRef.current.contains(event.target as Node)) {
+        setIsActionDropdownOpen(false);
+      }
+      if (templateDropdownRef.current && !templateDropdownRef.current.contains(event.target as Node)) {
+        setIsTemplateDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleSave = (overrideActive?: boolean) => {
     const finalActive = overrideActive !== undefined ? overrideActive : isActive;
@@ -167,27 +192,66 @@ export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTy
             ) : null}
 
             <div className="wf-form-group">
-              <label>Which event type will this apply to?</label>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', opacity: applyToAll ? 0.5 : 1, pointerEvents: applyToAll ? 'none' : 'auto' }}>
-                {eventTypes?.map(et => {
-                  const val = et.slug || et.title;
-                  return (
-                    <label key={val} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#111827', cursor: 'pointer' }}>
-                      <input 
-                        type="checkbox" 
-                        checked={targetEventTypes.includes(val)} 
-                        onChange={e => {
-                          if (e.target.checked) setTargetEventTypes([...targetEventTypes, val]);
-                          else setTargetEventTypes(targetEventTypes.filter(t => t !== val));
-                        }}
-                        disabled={applyToAll}
-                      /> {et.title}
-                    </label>
-                  );
-                })}
+              <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                Which event type will this apply to?
+              </label>
+
+              <div ref={dropdownRef} style={{ position: 'relative', marginTop: '8px' }}>
+                <div 
+                  onClick={() => !applyToAll && setIsEtDropdownOpen(!isEtDropdownOpen)}
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between', 
+                    padding: '12px 16px', 
+                    border: '1px solid #E5E7EB', 
+                    borderRadius: '8px', 
+                    background: applyToAll ? '#F9FAFB' : '#fff', 
+                    cursor: applyToAll ? 'not-allowed' : 'pointer',
+                    opacity: applyToAll ? 0.7 : 1,
+                    transition: 'border-color 0.2s'
+                  }}
+                  onMouseEnter={e => { if(!applyToAll) e.currentTarget.style.borderColor = '#D1D5DB' }}
+                  onMouseLeave={e => { if(!applyToAll) e.currentTarget.style.borderColor = '#E5E7EB' }}
+                >
+                  <span style={{ color: applyToAll ? '#9CA3AF' : '#111827', fontSize: '14px', fontWeight: 500 }}>
+                    {applyToAll ? 'All Event Types' : (targetEventTypes.length === 0 ? 'Select Event Types...' : `${targetEventTypes.length} event type${targetEventTypes.length > 1 ? 's' : ''} selected`)}
+                  </span>
+                  <ChevronDown size={18} color="#9CA3AF" style={{ transform: isEtDropdownOpen && !applyToAll ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+                </div>
+
+                {isEtDropdownOpen && !applyToAll && (
+                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', background: '#fff', border: '1px solid #E5E7EB', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 10, padding: '8px' }}>
+                    <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      {eventTypes?.map(et => {
+                        const val = et.slug || et.title;
+                        const isSelected = targetEventTypes.includes(val);
+                        return (
+                          <label key={val} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '8px', background: isSelected ? '#F3E8FF' : 'transparent', cursor: 'pointer', transition: 'background 0.2s', fontSize: '14px', color: isSelected ? '#7d3bec' : '#374151', fontWeight: isSelected ? 500 : 400 }} onMouseEnter={e => { if(!isSelected) e.currentTarget.style.background = '#F9FAFB' }} onMouseLeave={e => { if(!isSelected) e.currentTarget.style.background = 'transparent' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={isSelected} 
+                              onChange={e => {
+                                if (e.target.checked) setTargetEventTypes([...targetEventTypes, val]);
+                                else setTargetEventTypes(targetEventTypes.filter(t => t !== val));
+                              }}
+                              style={{ width: '16px', height: '16px', accentColor: '#7d3bec', cursor: 'pointer' }}
+                            /> 
+                            {et.title}
+                          </label>
+                        );
+                      })}
+                      {eventTypes?.length === 0 && (
+                        <div style={{ padding: '12px', textAlign: 'center', color: '#6B7280', fontSize: '13px' }}>No event types found</div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '16px', fontSize: '13px', color: '#374151', cursor: 'pointer', borderTop: '1px solid #E5E7EB', paddingTop: '16px' }}>
-                <input type="checkbox" checked={applyToAll} onChange={e => { setApplyToAll(e.target.checked); if (e.target.checked) setTargetEventTypes([]); }} /> Apply to all, including future event types
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '16px', fontSize: '13px', color: '#4B5563', cursor: 'pointer' }}>
+                <input type="checkbox" checked={applyToAll} onChange={e => { setApplyToAll(e.target.checked); if (e.target.checked) { setTargetEventTypes([]); setIsEtDropdownOpen(false); } }} style={{ accentColor: '#7d3bec', width: '16px', height: '16px', cursor: 'pointer' }} /> 
+                <span style={{ fontWeight: 500 }}>Apply to all, including future event types</span>
               </label>
             </div>
           </div>
@@ -209,19 +273,59 @@ export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTy
           <div className="wf-block-content">
             <div className="wf-form-group">
               <label>Do this</label>
-              <div className="wf-select-wrapper">
-                <select className="wf-input" value={draft.action_type} onChange={e => {
-                  setDraft({...draft, action_type: e.target.value});
-                  // update defaults when type changes
-                  if (e.target.value === 'sms') { setBody('Reminder: {EVENT_NAME} is at {EVENT_DATE_ddd, h:mma}.'); }
-                  if (e.target.value === 'voice') { setBody('Hi {ATTENDEE}. This is an AI calling to remind you about {EVENT_NAME}.'); }
-                  if (e.target.value === 'email') { setBody('Hi {ATTENDEE},\n\nThis is a reminder about your upcoming event.'); setSubject('Reminder: {EVENT_NAME}'); }
-                }}>
-                  <option value="email">Send email to attendees</option>
-                  <option value="sms">Send SMS to attendees</option>
-                  <option value="voice">AI Voice Call to attendees</option>
-                </select>
-                <ChevronDown size={14} className="wf-select-icon" />
+              <div style={{ position: 'relative' }} ref={actionDropdownRef}>
+                <div 
+                  onClick={() => setIsActionDropdownOpen(!isActionDropdownOpen)}
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between', 
+                    padding: '12px 16px', 
+                    border: '1px solid #E5E7EB', 
+                    borderRadius: '8px', 
+                    background: '#fff', 
+                    cursor: 'pointer',
+                    transition: 'border-color 0.2s'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = '#D1D5DB'}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = '#E5E7EB'}
+                >
+                  <span style={{ color: '#111827', fontSize: '14px', fontWeight: 500 }}>
+                    {draft.action_type === 'email' ? 'Send email to attendees' : draft.action_type === 'sms' ? 'Send SMS to attendees' : 'AI Voice Call to attendees'}
+                  </span>
+                  <ChevronDown size={18} color="#9CA3AF" style={{ transform: isActionDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+                </div>
+
+                {isActionDropdownOpen && (
+                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', background: '#fff', border: '1px solid #E5E7EB', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 10, padding: '8px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      {[
+                        { value: 'email', label: 'Send email to attendees' },
+                        { value: 'sms', label: 'Send SMS to attendees' },
+                        { value: 'voice', label: 'AI Voice Call to attendees' }
+                      ].map(opt => {
+                        const isSelected = draft.action_type === opt.value;
+                        return (
+                          <div 
+                            key={opt.value}
+                            onClick={() => {
+                              setDraft({...draft, action_type: opt.value});
+                              if (opt.value === 'sms') { setBody('Reminder: {EVENT_NAME} is at {EVENT_DATE_ddd, h:mma}.'); }
+                              if (opt.value === 'voice') { setBody('Hi {ATTENDEE}. This is an AI calling to remind you about {EVENT_NAME}.'); }
+                              if (opt.value === 'email') { setBody('Hi {ATTENDEE},\n\nThis is a reminder about your upcoming event.'); setSubject('Reminder: {EVENT_NAME}'); }
+                              setIsActionDropdownOpen(false);
+                            }}
+                            style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '8px', background: isSelected ? '#F3E8FF' : 'transparent', cursor: 'pointer', transition: 'background 0.2s', fontSize: '14px', color: isSelected ? '#7d3bec' : '#374151', fontWeight: isSelected ? 500 : 400 }} 
+                            onMouseEnter={e => { if(!isSelected) e.currentTarget.style.background = '#F9FAFB' }} 
+                            onMouseLeave={e => { if(!isSelected) e.currentTarget.style.background = 'transparent' }}
+                          >
+                            {opt.label}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -234,12 +338,52 @@ export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTy
 
             <div className="wf-form-group">
               <label>Message template</label>
-              <div className="wf-select-wrapper">
-                <select className="wf-input">
-                  <option>Reminder</option>
-                  <option>Custom</option>
-                </select>
-                <ChevronDown size={14} className="wf-select-icon" />
+              <div style={{ position: 'relative' }} ref={templateDropdownRef}>
+                <div 
+                  onClick={() => setIsTemplateDropdownOpen(!isTemplateDropdownOpen)}
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between', 
+                    padding: '12px 16px', 
+                    border: '1px solid #E5E7EB', 
+                    borderRadius: '8px', 
+                    background: '#fff', 
+                    cursor: 'pointer',
+                    transition: 'border-color 0.2s'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = '#D1D5DB'}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = '#E5E7EB'}
+                >
+                  <span style={{ color: '#111827', fontSize: '14px', fontWeight: 500 }}>
+                    {messageTemplate}
+                  </span>
+                  <ChevronDown size={18} color="#9CA3AF" style={{ transform: isTemplateDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+                </div>
+
+                {isTemplateDropdownOpen && (
+                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', background: '#fff', border: '1px solid #E5E7EB', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 10, padding: '8px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      {['Reminder', 'Custom'].map(opt => {
+                        const isSelected = messageTemplate === opt;
+                        return (
+                          <div 
+                            key={opt}
+                            onClick={() => {
+                              setMessageTemplate(opt);
+                              setIsTemplateDropdownOpen(false);
+                            }}
+                            style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '8px', background: isSelected ? '#F3E8FF' : 'transparent', cursor: 'pointer', transition: 'background 0.2s', fontSize: '14px', color: isSelected ? '#7d3bec' : '#374151', fontWeight: isSelected ? 500 : 400 }} 
+                            onMouseEnter={e => { if(!isSelected) e.currentTarget.style.background = '#F9FAFB' }} 
+                            onMouseLeave={e => { if(!isSelected) e.currentTarget.style.background = 'transparent' }}
+                          >
+                            {opt}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

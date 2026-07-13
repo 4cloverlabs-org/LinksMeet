@@ -32,6 +32,7 @@ export default function WorkflowsPage() {
   , handleSaveWorkflow, setMyWorkflows, API_BASE_URL, showWorkflowTypeModal, setShowWorkflowTypeModal, handleSelectType, canEdit } = ctx || {};
 
   const [wfTab, setWfTab] = useState<'create' | 'active' | 'drafts'>(myWorkflows.length > 0 ? 'active' : 'create');
+  const [workflowToDelete, setWorkflowToDelete] = useState<any>(null);
 
   const localHandleSave = (draft: any) => {
     handleSaveWorkflow(draft);
@@ -121,7 +122,7 @@ export default function WorkflowsPage() {
                           ].map(t => (
                             <div key={t.title} onClick={() => handleCreateWorkflow(t)} style={{ background: '#fff', border: '2px solid #F5F5F5', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', cursor: 'pointer', display: 'flex', flexDirection: 'column', height: '100%', minHeight: '180px' }}>
                               <div className="crm-kpi-top" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '16px' }}>
-                                <div className="crm-kpi-lab" style={{ fontSize: '1.05rem', color: '#111', fontWeight: 600, margin: 0, lineHeight: 1.3 }}>{t.title}</div>
+                                <div className="crm-kpi-lab" style={{ fontSize: '1.05rem', color: '#111', fontWeight: 500, margin: 0, lineHeight: 1.3 }}>{t.title}</div>
                                 <div style={{ position: 'relative', width: '40px', height: '40px', flexShrink: 0 }}>
                                   <div style={{ width: '100%', height: '100%', background: '#F3E8FF', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     <t.Icon size={20} color="#7d3bec" strokeWidth={2} />
@@ -154,21 +155,13 @@ export default function WorkflowsPage() {
                             { title: "Request follow-up meeting", desc: "Don't wait to meet again", Icon: Mail, Badge: RefreshCw, badgeColor: "#8B5CF6" },
                             { title: "Email your own feedback survey", desc: "Email a survey link from a third party like Typeform or Google Forms to get feedback from invitees after your event", Icon: Mail, Badge: Pencil, badgeColor: "#EC4899" },
                             { title: "Email no-shows to book a new time", desc: "Follow up with invitees who didn't show up to the meeting", Icon: Mail, Badge: XCircle, badgeColor: "#F97316" },
-                            { title: "Text reminder to host", desc: "Never miss an event — set automated text reminders", Icon: Smartphone, Badge: Clock, badgeColor: "#10B981" },
                             { title: "Email follow-up to someone else", desc: "Notify non-attendees so they can support your meeting next steps", Icon: Mail, Badge: AlertCircle, badgeColor: "#F59E0B" },
-                            { title: "Text booking confirmation to host", desc: "Keep hosts up-to-date with scheduled events", Icon: Smartphone, Badge: CheckCircle2, badgeColor: "#7d3bec" },
-                            { title: "Text cancellation notification to host", desc: "Keep hosts up-to-date with canceled events", Icon: Smartphone, Badge: XCircle, badgeColor: "#EF4444" },
-                            { title: "Text reminder to invitee", desc: "Reduce no-shows — send automated text reminders to invitees", Icon: Smartphone, Badge: Clock, badgeColor: "#10B981" },
-                            { title: "Text booking confirmation to invitee", desc: "Let invitees know their event is scheduled", Icon: Smartphone, Badge: CheckCircle2, badgeColor: "#7d3bec" },
-                            { title: "Text cancellation notification to invitee", desc: "Let invitees know as soon as an event is cancelled", Icon: Smartphone, Badge: XCircle, badgeColor: "#EF4444" },
                             { title: "Email cancellation notification to someone else", desc: "Update non-attendees so they can try to reschedule your meeting", Icon: Mail, Badge: AlertCircle, badgeColor: "#F59E0B" },
-                            { title: "Text follow-up to invitee", desc: "Finish up by texting your invitees after an event", Icon: Smartphone, Badge: RefreshCw, badgeColor: "#8B5CF6" },
-                            { title: "Email invitee to reconfirm", desc: "Reduce no-shows by asking your invitees to reconfirm they will attend your event", Icon: Mail, Badge: HelpCircle, badgeColor: "#F59E0B" },
-                            { title: "Text invitee to reconfirm", desc: "Reduce no-shows by asking your invitees to reconfirm they will attend your event", Icon: Smartphone, Badge: HelpCircle, badgeColor: "#F59E0B" }
+                            { title: "Email invitee to reconfirm", desc: "Reduce no-shows by asking your invitees to reconfirm they will attend your event", Icon: Mail, Badge: HelpCircle, badgeColor: "#F59E0B" }
                           ].map((t, i) => (
                             <div key={i} onClick={() => handleCreateWorkflow(t)} style={{ background: '#fff', border: '2px solid #F5F5F5', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', cursor: 'pointer', display: 'flex', flexDirection: 'column', height: '100%', minHeight: '180px' }}>
                               <div className="crm-kpi-top" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '16px' }}>
-                                <div className="crm-kpi-lab" style={{ fontSize: '1.05rem', color: '#111', fontWeight: 600, margin: 0, lineHeight: 1.3 }}>{t.title}</div>
+                                <div className="crm-kpi-lab" style={{ fontSize: '1.05rem', color: '#111', fontWeight: 500, margin: 0, lineHeight: 1.3 }}>{t.title}</div>
                                 <div style={{ position: 'relative', width: '40px', height: '40px', flexShrink: 0 }}>
                                   <div style={{ width: '100%', height: '100%', background: '#F3E8FF', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     <t.Icon size={20} color="#7d3bec" strokeWidth={2} />
@@ -206,7 +199,7 @@ export default function WorkflowsPage() {
                                   {w.action_type === 'email' ? <Mail size={18} /> : <Phone size={18} />}
                                 </span>
                                 <div style={{ flex: 1 }}>
-                                  <div className="nm" style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <div className="nm" style={{ fontWeight: 500, color: '#111', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     {w.template_name}
                                     <span style={{ padding: '2px 8px', background: '#DCFCE7', color: '#166534', fontSize: '11px', borderRadius: '12px', fontWeight: 600 }}>Activated</span>
                                   </div>
@@ -217,11 +210,7 @@ export default function WorkflowsPage() {
                                   <Edit2 size={16} />
                                 </button>
                                 {canEdit && <button className="wf-btn-icon" style={{ marginRight: '16px', color: '#EF4444', border: 'none', background: 'transparent' }} onClick={() => {
-                                  if (window.confirm('Delete this workflow?')) {
-                                    setMyWorkflows((prev: any[]) => prev.filter(old => old.id !== w.id));
-                                    setToast('Workflow deleted.');
-                                    setTimeout(() => setToast(null), 3000);
-                                  }
+                                  setWorkflowToDelete(w);
                                 }}>
                                   <Trash2 size={16} />
                                 </button>}
@@ -266,7 +255,7 @@ export default function WorkflowsPage() {
                                   {w.action_type === 'email' ? <Mail size={18} /> : <Phone size={18} />}
                                 </span>
                                 <div style={{ flex: 1 }}>
-                                  <div className="nm" style={{ fontWeight: 600, color: '#4B5563', fontSize: 14, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <div className="nm" style={{ fontWeight: 500, color: '#4B5563', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     {w.template_name}
                                     <span style={{ padding: '2px 8px', background: '#F3F4F6', color: '#4B5563', fontSize: '11px', borderRadius: '12px', fontWeight: 600 }}>Inactive</span>
                                   </div>
@@ -276,11 +265,7 @@ export default function WorkflowsPage() {
                                   <Edit2 size={16} />
                                 </button>
                                 {canEdit && <button className="wf-btn-icon" style={{ marginRight: '16px', color: '#EF4444', border: 'none', background: 'transparent' }} onClick={() => {
-                                  if (window.confirm('Delete this draft?')) {
-                                    setMyWorkflows((prev: any[]) => prev.filter(old => old.id !== w.id));
-                                    setToast('Workflow deleted.');
-                                    setTimeout(() => setToast(null), 3000);
-                                  }
+                                  setWorkflowToDelete(w);
                                 }}>
                                   <Trash2 size={16} />
                                 </button>}
@@ -359,6 +344,51 @@ export default function WorkflowsPage() {
                 </div>
               )}
 
+
+      {/* Delete Confirmation Modal */}
+      {workflowToDelete && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="crm-fade" style={{ background: '#fff', padding: '32px', borderRadius: '20px', width: '420px', maxWidth: '90%', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '1.35rem', fontWeight: 600, color: '#0f172a' }}>Delete Workflow?</h3>
+            <p style={{ margin: '0 0 28px 0', color: '#64748b', fontSize: '1rem', lineHeight: 1.5 }}>
+              Are you sure you want to delete <strong style={{ color: '#0f172a' }}>{workflowToDelete.template_name || 'this workflow'}</strong>? This action is permanent and cannot be undone.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button 
+                onClick={() => setWorkflowToDelete(null)}
+                style={{ padding: '10px 20px', background: '#F8FAFC', border: 'none', color: '#475569', fontWeight: 600, cursor: 'pointer', borderRadius: '10px', fontSize: '0.95rem', transition: 'background 0.2s' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#F1F5F9'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#F8FAFC'}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={async () => {
+                  try {
+                    setMyWorkflows((prev: any[]) => prev.filter(old => old.id !== workflowToDelete.id));
+                    const { data: sessionData } = await supabase.auth.getSession();
+                    const token = sessionData?.session?.access_token || '';
+                    await fetch(`${API_BASE_URL}/api/workflows/${workflowToDelete.id}`, {
+                       method: 'DELETE',
+                       headers: { 'Authorization': `Bearer ${token}` } 
+                    });
+                    setToast('Workflow deleted successfully.');
+                    setTimeout(() => setToast(null), 3000);
+                  } catch (err) {
+                    console.error(err);
+                  }
+                  setWorkflowToDelete(null);
+                }}
+                style={{ padding: '10px 20px', background: '#EF4444', border: 'none', color: '#fff', fontWeight: 600, cursor: 'pointer', borderRadius: '10px', fontSize: '0.95rem', transition: 'background 0.2s' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#DC2626'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#EF4444'}
+              >
+                Delete Workflow
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </>
   );

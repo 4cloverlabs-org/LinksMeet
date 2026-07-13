@@ -1306,22 +1306,24 @@ if (process.env.NODE_ENV !== 'test') {
       const { data: activeWorkflows } = await supabase.from('workflows').select('*').eq('is_active', true);
       if (!activeWorkflows || activeWorkflows.length === 0) return;
 
-      // 2. Fetch upcoming and recent bookings (start_time past 7 days to future)
-      const nowMs = Date.now();
-      const minDate = new Date(nowMs - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const { data: bookings } = await supabase
+      // 2. Fetch upcoming bookings
+      const minDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: bookings, error: bookingsErr } = await supabase
         .from('bookings')
-        .select('*, event_types(*), users(*)')
-        .in('status', ['New', 'Rescheduled'])
-        .gte('start_time', minDate);
+        .select('*, users(*)')
+        .in('status', ['upcoming', 'Rescheduled', 'New'])
+        .gte('created_at', minDate);
       
+      if (bookingsErr) console.error("Workflows Fetch Bookings Error:", bookingsErr);
       if (!bookings || bookings.length === 0) return;
 
       for (const booking of bookings) {
         const executedWfs = booking.executed_workflows || [];
-        const eventTitle = booking.event_types?.title || 'Event';
-        const eventTypeSlug = booking.event_types?.slug || '';
+        const eventTitle = booking.event_title || 'Event';
+        const eventTypeSlug = booking.event_slug || '';
         const ownerData = booking.users || {};
+        const bookerName = booking.booker_name || 'Guest';
+        const bookerEmail = booking.booker_email;
         
         for (const wf of activeWorkflows) {
           // Must belong to same user
@@ -1339,33 +1341,43 @@ if (process.env.NODE_ENV !== 'test') {
 
           // Calculate fire time
           let fireTimeMs = null;
-          if (wf.trigger_event === 'event_starts_before') {
-            fireTimeMs = new Date(booking.start_time).getTime() - wf.delay_ms;
-          } else if (wf.trigger_event === 'event_ends_after') {
-            fireTimeMs = new Date(booking.end_time).getTime() + wf.delay_ms;
+          let eventStartMs = null;
+          if (booking.slot) {
+             const cleanedSlot = booking.slot.replace(' · ', ' ');
+             const parsedDate = new Date(cleanedSlot);
+             if (!isNaN(parsedDate.getTime())) {
+               eventStartMs = parsedDate.getTime();
+             }
+          }
+
+          if (wf.trigger_event === 'event_starts_before' && eventStartMs) {
+            fireTimeMs = eventStartMs - wf.delay_ms;
+          } else if (wf.trigger_event === 'event_ends_after' && eventStartMs) {
+            // Estimate end time as start + 30 mins
+            fireTimeMs = eventStartMs + (30 * 60 * 1000) + wf.delay_ms;
           } else if (wf.trigger_event === 'booking_created') {
             fireTimeMs = new Date(booking.created_at).getTime() + wf.delay_ms;
           }
 
-          // If it's time to fire (or past due within reason, but we already filter by minDate)
-          if (fireTimeMs && nowMs >= fireTimeMs) {
+          // If it's time to fire (or past due within reason)
+          if (fireTimeMs && Date.now() >= fireTimeMs && Date.now() < fireTimeMs + (24 * 60 * 60 * 1000)) {
             console.log(`[WORKFLOW ENGINE] Firing workflow '${wf.template_name}' for booking ${booking.id}`);
             
-            const eventDateObj = new Date(booking.start_time);
+            const eventDateObj = eventStartMs ? new Date(eventStartMs) : new Date(booking.created_at);
             const eventDateFull = eventDateObj.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
             const eventDateShort = eventDateObj.toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit', hour12: true });
             
             let subject = wf.action_payload?.subject || `Workflow: ${wf.template_name}`;
             let bodyTxt = wf.action_payload?.body || `Hello,\n\nThis is a notification for ${eventTitle}.`;
             
-            subject = subject.replace(/\{EVENT_NAME\}/g, eventTitle).replace(/\{ATTENDEE\}/g, booking.name).replace(/\{ORGANIZER\}/g, ownerData.first_name || 'Organizer').replace(/\{EVENT_DATE_ddd, MMM D, YYYY h:mma\}/g, eventDateFull).replace(/\{EVENT_DATE_ddd, h:mma\}/g, eventDateShort);
-            bodyTxt = bodyTxt.replace(/\{EVENT_NAME\}/g, eventTitle).replace(/\{ATTENDEE\}/g, booking.name).replace(/\{ORGANIZER\}/g, ownerData.first_name || 'Organizer').replace(/\{EVENT_DATE_ddd, MMM D, YYYY h:mma\}/g, eventDateFull).replace(/\{EVENT_DATE_ddd, h:mma\}/g, eventDateShort);
+            subject = subject.replace(/\{EVENT_NAME\}/g, eventTitle).replace(/\{ATTENDEE\}/g, bookerName).replace(/\{ORGANIZER\}/g, ownerData.first_name || 'Organizer').replace(/\{EVENT_DATE_ddd, MMM D, YYYY h:mma\}/g, eventDateFull).replace(/\{EVENT_DATE_ddd, h:mma\}/g, eventDateShort);
+            bodyTxt = bodyTxt.replace(/\{EVENT_NAME\}/g, eventTitle).replace(/\{ATTENDEE\}/g, bookerName).replace(/\{ORGANIZER\}/g, ownerData.first_name || 'Organizer').replace(/\{EVENT_DATE_ddd, MMM D, YYYY h:mma\}/g, eventDateFull).replace(/\{EVENT_DATE_ddd, h:mma\}/g, eventDateShort);
             
-            if (wf.action_type === 'email') {
+            if (wf.action_type === 'email' && bookerEmail) {
                const customHtml = `<div style="font-family: sans-serif; padding: 20px; white-space: pre-wrap;">${bodyTxt}</div>`;
                try {
                  // Try to send email
-                 await sendEmailForUser(wf.user_id, booking.email, subject, customHtml);
+                 await sendEmailForUser(wf.user_id, bookerEmail, subject, customHtml);
                  
                  // Mark as executed
                  const newExecuted = [...executedWfs, wf.id];
