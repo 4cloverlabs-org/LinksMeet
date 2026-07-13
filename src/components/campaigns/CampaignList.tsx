@@ -171,17 +171,17 @@ export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, canEdit =
       <div style={{ padding: '20px 40px' }}>
 
       {/* Table */}
-      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
+      <div style={{ background: '#fff', border: '2px solid #F5F5F5', borderRadius: '16px', overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
             <tr>
-              <th style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', borderTopLeftRadius: '12px', padding: '12px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', width: '30%' }}>SEQUENCE NAME</th>
-              <th style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '12px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>CREATED</th>
-              <th style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '12px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>STATUS</th>
-              <th style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '12px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>STEPS</th>
-              <th style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '12px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>SENT</th>
-              <th style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '12px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>REPLY RATE</th>
-              <th style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', borderTopRightRadius: '12px', padding: '12px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>ACTIONS</th>
+              <th style={{ background: '#f8fafc', borderBottom: '2px solid #F5F5F5', padding: '12px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', width: '30%' }}>SEQUENCE NAME</th>
+              <th style={{ background: '#f8fafc', borderBottom: '2px solid #F5F5F5', padding: '12px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>CREATED</th>
+              <th style={{ background: '#f8fafc', borderBottom: '2px solid #F5F5F5', padding: '12px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>STATUS</th>
+              <th style={{ background: '#f8fafc', borderBottom: '2px solid #F5F5F5', padding: '12px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>STEPS</th>
+              <th style={{ background: '#f8fafc', borderBottom: '2px solid #F5F5F5', padding: '12px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>SENT</th>
+              <th style={{ background: '#f8fafc', borderBottom: '2px solid #F5F5F5', padding: '12px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>REPLY RATE</th>
+              <th style={{ background: '#f8fafc', borderBottom: '2px solid #F5F5F5', padding: '12px 24px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>ACTIONS</th>
             </tr>
           </thead>
           <tbody>
@@ -236,7 +236,7 @@ export const CampaignList: React.FC<CampaignListProps> = ({ campaigns, canEdit =
                 return (
                   <tr 
                     key={camp.id} 
-                    style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.2s', cursor: 'pointer' }}
+                    style={{ borderBottom: '1px solid #F5F5F5', transition: 'background 0.2s', cursor: 'pointer' }}
                     onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
                     onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                     onClick={() => onSelect(camp.id)}

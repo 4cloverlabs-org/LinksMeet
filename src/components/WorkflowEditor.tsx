@@ -22,6 +22,7 @@ interface WorkflowEditorProps {
 export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTypes }: WorkflowEditorProps) {
   const [draft, setDraft] = useState<WorkflowDraft>(initialDraft);
   const [isActive, setIsActive] = useState(!!initialDraft.is_active);
+  const [isActivating, setIsActivating] = useState(false);
   
   // Parse delay_ms into unit and value
   let initialDelayValue = 24;
@@ -108,8 +109,21 @@ export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTy
           {!isActive && (
             <button className="wf-btn-outline" onClick={() => handleSave()}>{isActive ? 'Save Workflow' : 'Save as Draft'}</button>
           )}
-          <button className="wf-btn-primary" onClick={() => isActive ? handleSave() : handleSave(true)}>
-            {isActive ? 'Save Workflow' : 'Activate'}
+          <button 
+            className="wf-btn-primary" 
+            style={{ minWidth: '110px' }}
+            onClick={() => {
+              if (isActive) {
+                handleSave();
+              } else {
+                setIsActivating(true);
+                setTimeout(() => {
+                  handleSave(true);
+                }, 1000);
+              }
+            }}
+          >
+            {isActivating ? 'Activated ✓' : (isActive ? 'Save Workflow' : 'Activate')}
           </button>
         </div>
       </div>

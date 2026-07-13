@@ -386,35 +386,51 @@ export default function DashboardLayout() {
     });
   };
 
-  const handleSaveWorkflow = (draft: WorkflowDraft) => {
+  const handleSaveWorkflow = async (draft: WorkflowDraft) => {
     const isUpdate = !!draft.id;
     const url = isUpdate ? `${API_BASE_URL}/api/workflows/${draft.id}` : `${API_BASE_URL}/api/workflows`;
     
-    fetch(url, {
-      method: isUpdate ? 'PUT' : 'POST',
-      headers: { 
-        'Authorization': `Bearer ${user?.access_token || ''}`,
-        'x-workspace-id': activeWorkspaceId || '',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(draft)
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.error) throw new Error(data.error);
-      setMyWorkflows(prev => {
-        if (isUpdate) return prev.map(w => w.id === data.id ? data : w);
-        return [data, ...prev];
+    const tempId = draft.id || ('temp-' + Date.now());
+    const optimisticData = { ...draft, id: tempId };
+    
+    // Optimistic Update
+    setMyWorkflows(prev => {
+      if (isUpdate) return prev.map(w => w.id === tempId ? optimisticData : w);
+      return [optimisticData, ...prev];
+    });
+    setEditingWorkflow(null);
+    
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token || '';
+
+      const res = await fetch(url, {
+        method: isUpdate ? 'PUT' : 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'x-workspace-id': activeWorkspaceId || '',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(draft)
       });
-      setEditingWorkflow(null);
+      
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      
+      // Replace optimistic data with real data
+      setMyWorkflows(prev => prev.map(w => w.id === tempId ? data : w));
       setToast(draft.is_active ? 'Workflow saved and activated!' : 'Workflow saved successfully!');
       setTimeout(() => setToast(null), 3000);
-    })
-    .catch(err => {
+    } catch (err: any) {
       console.error(err);
-      setToast('Failed to save workflow.');
+      // Revert optimistic update for new creations if failed
+      if (!isUpdate) {
+        setMyWorkflows(prev => prev.filter(w => w.id !== tempId));
+      }
+      alert('BACKEND ERROR PREVENTING SAVE: ' + (err.message || JSON.stringify(err)));
+      setToast('Save failed: ' + (err.message || 'Network Error'));
       setTimeout(() => setToast(null), 3000);
-    });
+    }
   };
 
   const [manageApp, setManageApp] = useState<typeof APPS[0] | null>(null);
@@ -735,17 +751,24 @@ export default function DashboardLayout() {
     };
     fetchProfile();
 
-    fetch(`${API_BASE_URL}/api/workflows`, {
-      headers: { 
-        'Authorization': `Bearer ${user?.access_token || ''}`,
-        'x-workspace-id': activeWorkspaceId || ''
+    const fetchWorkflows = async () => {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData?.session?.access_token || '';
+        
+        const res = await fetch(`${API_BASE_URL}/api/workflows`, {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'x-workspace-id': activeWorkspaceId || ''
+          }
+        });
+        const data = await res.json();
+        if (Array.isArray(data)) setMyWorkflows(data);
+      } catch (err) {
+        console.error(err);
       }
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (Array.isArray(data)) setMyWorkflows(data);
-    })
-    .catch(console.error);
+    };
+    fetchWorkflows();
 
     const wfChannel = supabase.channel('realtime_workflows')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'workflows', filter: `user_id=eq.${uid}` }, payload => {
@@ -850,7 +873,9 @@ export default function DashboardLayout() {
 
   const handleConnectGoogle = () => {
     localStorage.setItem('sm_onboarding_step_3', 'true');
-    window.location.href = `${API_BASE_URL}/auth/google?uid=${uid}`;
+    // Pass our origin so the backend returns us to this exact domain (keeps the session).
+    const origin = encodeURIComponent(window.location.origin);
+    window.location.href = `${API_BASE_URL}/auth/google?uid=${uid}&origin=${origin}`;
   };
   const handleDisconnectGoogle = async () => {
     localStorage.removeItem('sm_gmail_token');

@@ -89,6 +89,53 @@ const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3001/auth/google/callback'
 );
 
+// ----------------------------------------------------------------------
+// OAuth return-origin helpers
+//
+// After a "connect app" OAuth flow the user must land back on the SAME
+// origin they started from (e.g. https://linksmeet.com), otherwise their
+// Supabase session — stored in origin-scoped localStorage — is invisible
+// and they appear logged out. We carry the initiating origin through the
+// OAuth `state` param and validate it against ALLOWED_ORIGINS to avoid an
+// open redirect.
+// ----------------------------------------------------------------------
+const getAllowedOrigins = () =>
+  (process.env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((s) => s.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
+
+// Pick a safe frontend origin: the caller's origin if it's allow-listed,
+// otherwise fall back to FRONTEND_URL / first allowed origin / localhost.
+const resolveFrontendUrl = (candidateOrigin) => {
+  const allow = getAllowedOrigins();
+  const fallback = (process.env.FRONTEND_URL || allow[0] || 'http://localhost:5173').replace(/\/+$/, '');
+  if (!candidateOrigin) return fallback;
+  const clean = String(candidateOrigin).replace(/\/+$/, '');
+  // Honor the caller's origin only when it's trusted (empty allowlist => best-effort honor).
+  if (allow.length === 0 || allow.includes(clean)) return clean;
+  return fallback;
+};
+
+// Encode {uid, origin} into the OAuth state param (base64url JSON).
+const encodeOAuthState = (uid, origin) =>
+  Buffer.from(JSON.stringify({ uid: uid || '', origin: origin || null }), 'utf8').toString('base64url');
+
+// Decode the state param. Falls back to treating the raw value as a plain
+// uid for backward compatibility with older links already in flight.
+const decodeOAuthState = (rawState) => {
+  const raw = String(rawState || '');
+  try {
+    const parsed = JSON.parse(Buffer.from(raw, 'base64url').toString('utf8'));
+    if (parsed && typeof parsed === 'object' && parsed.uid) {
+      return { uid: String(parsed.uid), origin: parsed.origin ? String(parsed.origin) : null };
+    }
+  } catch (e) {
+    // Not encoded — legacy plain-uid state.
+  }
+  return { uid: raw, origin: null };
+};
+
 // Helper to encode emails for Gmail API
 const makeBody = (to, from, subject, message, replyTo = null, bcc = null) => {
   const cleanSubject = sanitizeHeader(subject);
@@ -123,7 +170,7 @@ const makeBody = (to, from, subject, message, replyTo = null, bcc = null) => {
 // ----------------------------------------------------
 app.get('/auth/google', (req, res) => {
   console.log("GET /auth/google hit with query:", req.query);
-  const { uid } = req.query; // LinksMeet user ID
+  const { uid, origin } = req.query; // LinksMeet user ID + initiating origin
   if (!uid) return res.status(400).send("User ID required");
 
   const url = oauth2Client.generateAuthUrl({
@@ -134,7 +181,8 @@ app.get('/auth/google', (req, res) => {
       'https://www.googleapis.com/auth/userinfo.email',
       'https://www.googleapis.com/auth/gmail.send'
     ],
-    state: uid // pass the UID so we know who to save it to in the callback
+    // Carry the UID (who to save tokens for) and origin (where to return) in state.
+    state: encodeOAuthState(uid, origin)
   });
   console.log("Redirecting user to Google OAuth URL:", url);
   res.redirect(url);
@@ -142,7 +190,8 @@ app.get('/auth/google', (req, res) => {
 
 app.get('/auth/google/callback', async (req, res) => {
   console.log("OAuth Callback Hit with query:", req.query);
-  const { code, state: uid } = req.query;
+  const { code, state } = req.query;
+  const { uid, origin } = decodeOAuthState(state);
   if (!code || !uid) {
     console.log("Missing code or uid in callback");
     return res.status(400).send("Invalid callback");
@@ -171,14 +220,14 @@ app.get('/auth/google/callback', async (req, res) => {
       console.log("Supabase client not initialized, cannot save tokens.");
     }
 
-    // Redirect back to CRM Dashboard
+    // Redirect back to the CRM Dashboard on the SAME origin the user started from.
     console.log("Redirecting to dashboard...");
-    const frontendUrl = process.env.FRONTEND_URL || (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',')[0] : 'http://localhost:5173');
+    const frontendUrl = resolveFrontendUrl(origin);
     res.redirect(`${frontendUrl}/dashboard?google_connected=true`);
   } catch (error) {
     console.error("Auth Error in callback:", error);
     if (error.message && error.message.includes('invalid_grant')) {
-      const frontendUrl = process.env.FRONTEND_URL || (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',')[0] : 'http://localhost:5173');
+      const frontendUrl = resolveFrontendUrl(origin);
       return res.redirect(`${frontendUrl}/dashboard?google_error=invalid_grant`);
     }
     res.status(500).send("Authentication failed: " + error.message);
@@ -339,35 +388,37 @@ const OAUTH_PROVIDERS = {
 
 app.get('/auth/:provider', (req, res) => {
   const { provider } = req.params;
-  const { uid } = req.query;
-  
+  const { uid, origin } = req.query;
+
   if (provider === 'google' || provider === 'mock') return; // Handled separately
-  
+
   const config = OAUTH_PROVIDERS[provider];
   if (!config) {
     return res.status(400).send("Unsupported provider: " + provider);
   }
-  
+
   const redirectUri = `${process.env.API_BASE_URL || 'http://localhost:3001'}/auth/${provider}/callback`;
-  
+
   // Generate Standard OAuth 2.0 URL
   const authUrl = new URL(config.authUrl);
   authUrl.searchParams.append('response_type', 'code');
-  
+
   // NOTE: If process.env.[PROVIDER]_CLIENT_ID is missing, this will pass an empty string
   // which will correctly trigger an "Invalid Client ID" error on the provider's actual website.
   authUrl.searchParams.append('client_id', config.clientId || '');
   authUrl.searchParams.append('redirect_uri', redirectUri);
-  authUrl.searchParams.append('state', uid || '');
-  
+  // Carry the UID and initiating origin so the callback can return the user home.
+  authUrl.searchParams.append('state', encodeOAuthState(uid, origin));
+
   res.redirect(authUrl.toString());
 });
 
 app.get('/auth/:provider/callback', async (req, res) => {
   const { provider } = req.params;
-  const { code, state: uid, error } = req.query;
-  const frontendUrl = process.env.FRONTEND_URL || (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',')[0] : 'http://localhost:5173');
-  
+  const { code, state, error } = req.query;
+  const { origin } = decodeOAuthState(state);
+  const frontendUrl = resolveFrontendUrl(origin);
+
   if (error || !code) {
     return res.redirect(`${frontendUrl}/dashboard?error=auth_failed`);
   }

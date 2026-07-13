@@ -12,7 +12,7 @@ import {
 import CampaignModule from '../../components/campaigns/CampaignModule';
 import WorkflowEditor from '../../components/WorkflowEditor';
 import EventTypeEditor from '../../components/EventTypeEditor';
-
+import { supabase } from '../../lib/supabase';
 
 export default function WorkflowsPage() {
   const ctx = useOutletContext<any>();
@@ -36,6 +36,32 @@ export default function WorkflowsPage() {
   const localHandleSave = (draft: any) => {
     handleSaveWorkflow(draft);
     setWfTab(draft.is_active ? 'active' : 'drafts');
+  };
+
+  const formatTrigger = (event: string, delayMs: number) => {
+    let timeStr = '';
+    if (delayMs > 0) {
+      const days = delayMs / (24 * 60 * 60 * 1000);
+      const hours = delayMs / (60 * 60 * 1000);
+      const minutes = delayMs / (60 * 1000);
+      
+      if (days % 1 === 0) timeStr = `${days} day${days > 1 ? 's' : ''}`;
+      else if (hours % 1 === 0) timeStr = `${hours} hour${hours > 1 ? 's' : ''}`;
+      else timeStr = `${minutes} minute${minutes > 1 ? 's' : ''}`;
+    }
+
+    switch(event) {
+      case 'event_starts_before':
+        return timeStr ? `${timeStr} before event starts` : 'Immediately before event starts';
+      case 'event_ends_after':
+        return timeStr ? `${timeStr} after event ends` : 'Immediately after event ends';
+      case 'booking_created':
+        return timeStr ? `${timeStr} after booking is scheduled` : 'Immediately when booked';
+      case 'booking_cancelled':
+        return timeStr ? `${timeStr} after cancellation` : 'Immediately when cancelled';
+      default:
+        return event;
+    }
   };
 
   return (
@@ -170,44 +196,53 @@ export default function WorkflowsPage() {
                   {wfTab === 'active' && (
                     <div className="crm-fade">
                       <div style={{ marginBottom: 40 }}>
-                        <div className="crm-fade" style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '0 20px' }}>
+                        <div className="crm-fade" style={{ background: '#fff', border: '2px solid #F5F5F5', borderRadius: 16, padding: '0 20px' }}>
                           {myWorkflows.filter((w: any) => w.is_active).length === 0 ? (
                             <div style={{ padding: '32px', textAlign: 'center', color: '#6B7280', fontSize: '14px' }}>No active workflows.</div>
                           ) : (
-                            myWorkflows.filter((w: any) => w.is_active).map((w: any) => (
-                              <div className="crm-wf" key={w.id} style={{ display: 'flex', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid #e2e8f0' }}>
+                            myWorkflows.filter((w: any) => w.is_active).map((w: any, i: number, arr: any[]) => (
+                              <div className="crm-wf" key={w.id} style={{ display: 'flex', alignItems: 'center', padding: '16px 0', border: 'none', borderBottom: i === arr.length - 1 ? 'none' : '2px solid #F5F5F5', borderRadius: 0, marginBottom: 0, background: 'transparent' }}>
                                 <span className="crm-wf-ic" style={{ background: '#F3E8FF', color: '#7d3bec', padding: 8, borderRadius: 8, marginRight: 16, display: 'flex', alignItems: 'center' }}>
                                   {w.action_type === 'email' ? <Mail size={18} /> : <Phone size={18} />}
                                 </span>
                                 <div style={{ flex: 1 }}>
-                                  <div className="nm" style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{w.template_name}</div>
-                                  <div className="fl" style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>Triggers on {w.trigger_event}</div>
+                                  <div className="nm" style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    {w.template_name}
+                                    <span style={{ padding: '2px 8px', background: '#DCFCE7', color: '#166534', fontSize: '11px', borderRadius: '12px', fontWeight: 600 }}>Activated</span>
+                                  </div>
+                                  <div className="fl" style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>Triggers: {formatTrigger(w.trigger_event, w.delay_ms || 0)}</div>
                                 </div>
-                                <span className="runs" style={{ fontSize: 13, color: '#64748b', marginRight: 16 }}>{w.runs} runs</span>
-                                <button className="crm-btn crm-btn-ghost" style={{ padding: '6px 10px', marginRight: 8 }} onClick={() => setEditingWorkflow(w)} disabled={!canEdit}>
-                                  <Edit2 size={14} />
+                                <span className="runs" style={{ fontSize: '13px', color: '#64748b', marginRight: '24px', background: '#F8FAFC', padding: '4px 10px', borderRadius: '12px', fontWeight: 500 }}>{w.runs} runs</span>
+                                <button className="wf-btn-icon" style={{ marginRight: '4px', border: 'none', background: 'transparent' }} onClick={() => setEditingWorkflow(w)} disabled={!canEdit}>
+                                  <Edit2 size={16} />
                                 </button>
-                                {canEdit && <button className="crm-btn crm-btn-ghost" style={{ padding: '6px 10px', marginRight: 16, color: '#DC2626' }} onClick={() => {
+                                {canEdit && <button className="wf-btn-icon" style={{ marginRight: '16px', color: '#EF4444', border: 'none', background: 'transparent' }} onClick={() => {
                                   if (window.confirm('Delete this workflow?')) {
                                     setMyWorkflows((prev: any[]) => prev.filter(old => old.id !== w.id));
                                     setToast('Workflow deleted.');
                                     setTimeout(() => setToast(null), 3000);
                                   }
                                 }}>
-                                  <Trash2 size={14} />
+                                  <Trash2 size={16} />
                                 </button>}
                                 <button 
                                   className={`crm-switch${w.is_active ? ' on' : ''}`} 
                                   disabled={!canEdit}
-                                  onClick={() => {
+                                  onClick={async () => {
                                     const newActive = !w.is_active;
                                     setMyWorkflows(prev => prev.map(old => old.id === w.id ? { ...old, is_active: newActive } : old));
                                     setWfTab(newActive ? 'active' : 'drafts');
-                                    fetch(`${API_BASE_URL}/api/workflows/${w.id}`, {
-                                      method: 'PUT',
-                                      headers: { 'Authorization': `Bearer ${user?.access_token || ''}`, 'Content-Type': 'application/json' },
-                                      body: JSON.stringify({ is_active: newActive })
-                                    }).catch(console.error);
+                                    try {
+                                      const { data: sessionData } = await supabase.auth.getSession();
+                                      const token = sessionData?.session?.access_token || '';
+                                      await fetch(`${API_BASE_URL}/api/workflows/${w.id}`, {
+                                        method: 'PUT',
+                                        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ is_active: newActive })
+                                      });
+                                    } catch (err) {
+                                      console.error(err);
+                                    }
                                   }}
                                 />
                               </div>
@@ -221,43 +256,52 @@ export default function WorkflowsPage() {
                   {wfTab === 'drafts' && (
                     <div className="crm-fade">
                       <div style={{ marginBottom: 40 }}>
-                        <div className="crm-fade" style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '0 20px' }}>
+                        <div className="crm-fade" style={{ background: '#fff', border: '2px solid #F5F5F5', borderRadius: 16, padding: '0 20px' }}>
                           {myWorkflows.filter((w: any) => !w.is_active).length === 0 ? (
                             <div style={{ padding: '32px', textAlign: 'center', color: '#6B7280', fontSize: '14px' }}>No drafts or inactive workflows.</div>
                           ) : (
-                            myWorkflows.filter((w: any) => !w.is_active).map((w: any) => (
-                              <div className="crm-wf" key={w.id} style={{ display: 'flex', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid #e2e8f0', opacity: 0.75 }}>
+                            myWorkflows.filter((w: any) => !w.is_active).map((w: any, i: number, arr: any[]) => (
+                              <div className="crm-wf" key={w.id} style={{ display: 'flex', alignItems: 'center', padding: '16px 0', border: 'none', borderBottom: i === arr.length - 1 ? 'none' : '2px solid #F5F5F5', borderRadius: 0, marginBottom: 0, background: 'transparent', opacity: 0.75 }}>
                                 <span className="crm-wf-ic" style={{ background: '#F3F4F6', color: '#6B7280', padding: 8, borderRadius: 8, marginRight: 16, display: 'flex', alignItems: 'center' }}>
                                   {w.action_type === 'email' ? <Mail size={18} /> : <Phone size={18} />}
                                 </span>
                                 <div style={{ flex: 1 }}>
-                                  <div className="nm" style={{ fontWeight: 600, color: '#4B5563', fontSize: 14 }}>{w.template_name}</div>
-                                  <div className="fl" style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>Triggers on {w.trigger_event}</div>
+                                  <div className="nm" style={{ fontWeight: 600, color: '#4B5563', fontSize: 14, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    {w.template_name}
+                                    <span style={{ padding: '2px 8px', background: '#F3F4F6', color: '#4B5563', fontSize: '11px', borderRadius: '12px', fontWeight: 600 }}>Inactive</span>
+                                  </div>
+                                  <div className="fl" style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>Triggers: {formatTrigger(w.trigger_event, w.delay_ms || 0)}</div>
                                 </div>
-                                <button className="crm-btn crm-btn-ghost" style={{ padding: '6px 10px', marginRight: 8 }} onClick={() => setEditingWorkflow(w)} disabled={!canEdit}>
-                                  <Edit2 size={14} />
+                                <button className="wf-btn-icon" style={{ marginRight: '4px', border: 'none', background: 'transparent' }} onClick={() => setEditingWorkflow(w)} disabled={!canEdit}>
+                                  <Edit2 size={16} />
                                 </button>
-                                {canEdit && <button className="crm-btn crm-btn-ghost" style={{ padding: '6px 10px', marginRight: 16, color: '#DC2626' }} onClick={() => {
+                                {canEdit && <button className="wf-btn-icon" style={{ marginRight: '16px', color: '#EF4444', border: 'none', background: 'transparent' }} onClick={() => {
                                   if (window.confirm('Delete this draft?')) {
                                     setMyWorkflows((prev: any[]) => prev.filter(old => old.id !== w.id));
                                     setToast('Workflow deleted.');
                                     setTimeout(() => setToast(null), 3000);
                                   }
                                 }}>
-                                  <Trash2 size={14} />
+                                  <Trash2 size={16} />
                                 </button>}
                                 <button 
                                   className={`crm-switch${w.is_active ? ' on' : ''}`} 
                                   disabled={!canEdit}
-                                  onClick={() => {
+                                  onClick={async () => {
                                     const newActive = !w.is_active;
                                     setMyWorkflows(prev => prev.map(old => old.id === w.id ? { ...old, is_active: newActive } : old));
                                     setWfTab(newActive ? 'active' : 'drafts');
-                                    fetch(`${API_BASE_URL}/api/workflows/${w.id}`, {
-                                      method: 'PUT',
-                                      headers: { 'Authorization': `Bearer ${user?.access_token || ''}`, 'Content-Type': 'application/json' },
-                                      body: JSON.stringify({ is_active: newActive })
-                                    }).catch(console.error);
+                                    try {
+                                      const { data: sessionData } = await supabase.auth.getSession();
+                                      const token = sessionData?.session?.access_token || '';
+                                      await fetch(`${API_BASE_URL}/api/workflows/${w.id}`, {
+                                        method: 'PUT',
+                                        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ is_active: newActive })
+                                      });
+                                    } catch (err) {
+                                      console.error(err);
+                                    }
                                   }}
                                 />
                               </div>

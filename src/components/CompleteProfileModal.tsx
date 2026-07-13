@@ -364,7 +364,7 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
                       if (onConnectGoogle) {
                         onConnectGoogle();
                       } else {
-                        window.location.href = `${API_BASE_URL}/auth/google?uid=${userProfile?.id || ''}`;
+                        window.location.href = `${API_BASE_URL}/auth/google?uid=${userProfile?.id || ''}&origin=${encodeURIComponent(window.location.origin)}`;
                       }
                     }}
                   >
@@ -383,7 +383,7 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
                       if (onConnectGoogle) {
                         onConnectGoogle();
                       } else {
-                        window.location.href = `${API_BASE_URL}/auth/google?uid=${userProfile?.id || ''}`;
+                        window.location.href = `${API_BASE_URL}/auth/google?uid=${userProfile?.id || ''}&origin=${encodeURIComponent(window.location.origin)}`;
                       }
                     }}
                   >
