@@ -1066,7 +1066,7 @@ export default function BookingPage() {
               )}
 
               <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '8px 0 0', lineHeight: 1.5 }}>
-                By proceeding, you agree to LinksMeet's <span style={{ color: '#7d3bec', cursor: 'pointer' }}>Terms</span> and <span style={{ color: '#7d3bec', cursor: 'pointer' }}>Privacy Policy</span>.
+                By proceeding, you agree to LinksMeet's <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" style={{ color: '#7d3bec', fontWeight: 600, textDecoration: 'underline' }}>Terms of Service</a>, <a href="/terms-and-conditions" target="_blank" rel="noopener noreferrer" style={{ color: '#7d3bec', fontWeight: 600, textDecoration: 'underline' }}>Terms & Conditions</a> and <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color: '#7d3bec', fontWeight: 600, textDecoration: 'underline' }}>Privacy Policy</a>.
               </p>
               
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '20px', marginTop: '16px' }}>

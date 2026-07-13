@@ -1,0 +1,483 @@
+/* =================================================================
+   LinksMeet — Legal & Marketing Page Styling
+   Provides premium, responsive typography, table of contents, and cards.
+   ================================================================= */
+
+.cc-page {
+  background: #ffffff;
+  color: #1e293b;
+  min-height: calc(100vh - 160px);
+  padding: 60px 20px 100px;
+  font-family: "Geist Sans", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.cc-container {
+  max-width: 1140px;
+  margin: 0 auto;
+}
+
+.cc-container.cc-legal {
+  max-width: 1100px;
+}
+
+/* Hero section */
+.cc-page-hero {
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 36px;
+  margin-bottom: 40px;
+}
+
+.cc-legal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  margin-bottom: 16px;
+  border: 1px solid #e2e8f0;
+}
+
+.cc-page-hero h1 {
+  font-size: 3.2rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.04em;
+  margin: 0 0 12px;
+  line-height: 1.15;
+}
+
+.cc-effective-date {
+  font-size: 0.98rem;
+  color: #64748b;
+  margin: 0 0 24px;
+}
+
+.cc-effective-date strong {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.cc-intro-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px 28px;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: #334155;
+}
+
+.cc-intro-box p {
+  margin: 0 0 12px;
+}
+
+.cc-intro-box p:last-child {
+  margin-bottom: 0;
+}
+
+.cc-intro-ack {
+  font-weight: 600;
+  color: #0f172a;
+  border-top: 1px dashed #cbd5e1;
+  padding-top: 12px;
+  margin-top: 12px !important;
+}
+
+/* Layout: Sidebar + Content */
+.cc-legal-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 50px;
+  align-items: start;
+}
+
+.cc-legal-sidebar {
+  position: sticky;
+  top: 100px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px 20px;
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
+}
+
+.cc-sidebar-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.cc-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cc-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #475569;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  width: 100%;
+}
+
+.cc-sidebar-link:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.cc-sidebar-link.active {
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+/* Prose formatting */
+.cc-prose {
+  font-size: 1.04rem;
+  line-height: 1.75;
+  color: #334155;
+}
+
+.cc-policy-section {
+  padding-bottom: 40px;
+  margin-bottom: 40px;
+  border-bottom: 1px solid #f1f5f9;
+  scroll-margin-top: 100px;
+}
+
+.cc-policy-section:last-of-type {
+  border-bottom: none;
+}
+
+.cc-prose h2 {
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0 0 16px;
+}
+
+.cc-prose h3 {
+  font-size: 1.22rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 28px 0 12px;
+}
+
+.cc-prose p {
+  margin: 0 0 16px;
+}
+
+.cc-prose ul {
+  margin: 0 0 20px 20px;
+  padding: 0;
+}
+
+.cc-prose li {
+  margin-bottom: 8px;
+  color: #334155;
+}
+
+.cc-prose li strong {
+  color: #0f172a;
+}
+
+.cc-prose a {
+  color: #2563eb;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 500;
+}
+
+.cc-prose a:hover {
+  color: #1d4ed8;
+}
+
+/* Callouts & Special boxes */
+.cc-policy-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 0.94rem;
+  font-weight: 600;
+  margin: 8px 0 16px;
+}
+
+.cc-callout-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  padding: 18px 20px;
+  border-radius: 12px;
+  font-size: 0.96rem;
+  line-height: 1.6;
+  margin: 20px 0;
+}
+
+.cc-callout-warning svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #d97706;
+}
+
+.cc-highlight-text {
+  background: #f8fafc;
+  border-left: 4px solid #7d3bec;
+  padding: 16px 20px;
+  border-radius: 0 8px 8px 0;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.cc-contact-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 24px;
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cc-contact-row {
+  display: flex;
+  font-size: 1rem;
+}
+
+.cc-contact-row strong {
+  width: 110px;
+  color: #0f172a;
+}
+
+.cc-policy-footer-ack {
+  background: #0f172a;
+  color: #f8fafc;
+  padding: 28px 32px;
+  border-radius: 16px;
+  font-size: 1.05rem;
+  font-weight: 500;
+  line-height: 1.6;
+  text-align: center;
+  margin-top: 40px;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2);
+}
+
+@media (max-width: 900px) {
+  .cc-legal-layout {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .cc-legal-sidebar {
+    position: static;
+    max-height: none;
+  }
+  .cc-page-hero h1 {
+    font-size: 2.4rem;
+  }
+}
+
+/* =================================================================
+   Navbar & Footer for Marketing Layout
+   ================================================================= */
+.cc-nav {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid #f1f5f9;
+  height: 70px;
+  display: flex;
+  align-items: center;
+}
+
+.cc-nav-inner {
+  width: 100%;
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cc-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: #0f172a;
+  text-decoration: none;
+}
+
+.cc-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.cc-nav-links a {
+  font-size: 0.94rem;
+  font-weight: 500;
+  color: #475569;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.cc-nav-links a:hover,
+.cc-nav-links a.active {
+  color: #0f172a;
+}
+
+.cc-btn-dark {
+  background: #0f172a;
+  color: #ffffff;
+  padding: 10px 20px;
+  border-radius: 9999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.cc-btn-dark:hover {
+  background: #1e293b;
+  transform: translateY(-1px);
+}
+
+.cc-footer {
+  background: #0f172a;
+  color: #f8fafc;
+  padding: 80px 0 0;
+  border-top: 1px solid #1e293b;
+}
+
+.cc-footer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.6fr 1fr 1fr;
+  gap: 40px;
+  padding: 0 20px 60px;
+}
+
+.cc-foot-col h5 {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  margin: 0 0 20px;
+}
+
+.cc-foot-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cc-foot-col a {
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 0.94rem;
+  transition: color 0.2s;
+}
+
+.cc-foot-col a:hover {
+  color: #ffffff;
+}
+
+.cc-foot-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+}
+
+.cc-foot-brand p {
+  font-size: 0.88rem;
+  color: #94a3b8;
+  line-height: 1.6;
+  margin: 12px 0 0;
+}
+
+.cc-foot-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 28px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  font-size: 0.88rem;
+  color: #94a3b8;
+}
+
+.cc-foot-bottom a {
+  color: #cbd5e1;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.cc-foot-bottom a:hover {
+  color: #ffffff;
+}
+
+.cc-socials {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.cc-socials a {
+  color: #94a3b8;
+  transition: color 0.2s;
+}
+
+.cc-socials a:hover {
+  color: #ffffff;
+}
+
+@media (max-width: 900px) {
+  .cc-footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+  .cc-foot-brand {
+    grid-column: span 2;
+  }
+}

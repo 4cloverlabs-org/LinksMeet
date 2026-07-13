@@ -12,6 +12,7 @@ import Careers from './marketing/Careers';
 import Pricing from './marketing/Pricing';
 import Privacy from './marketing/Privacy';
 import Terms from './marketing/Terms';
+import TermsAndConditions from './marketing/TermsAndConditions';
 import NotFound from './marketing/NotFound';
 import Login from './marketing/Login';
 import Signup from './marketing/Signup';
@@ -52,8 +53,9 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/pricing" element={<Pricing />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy-policy" element={<Privacy />} />
+            <Route path="/terms-of-service" element={<Terms />} />
+            <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
           </Route>
 
           {/* ---- Auth ---- */}

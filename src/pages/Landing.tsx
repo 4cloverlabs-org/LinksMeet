@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
 import { motion } from 'framer-motion';
 import { Check, Target, Github, Twitter, Linkedin, CheckCircle2, FileText, GitMerge, BarChart3, Sparkles, Wand2, AlignLeft, Database, ChevronDown, Search, Filter, Calendar, Link, ArrowUpRight, ChevronRight, Shield, Info } from 'lucide-react';
@@ -890,48 +890,59 @@ export default function Landing() {
       {/* ============ FOOTER ============ */}
       <section className="lexaro-footer-section">
         <div className="lexaro-container">
-
-
-          <div className="lexaro-footer-grid">
+          <div className="lexaro-footer-grid" style={{ gridTemplateColumns: '2.2fr 1fr 1fr 1fr 1fr' }}>
             <div className="lexaro-footer-col">
               <div className="lexaro-footer-logo">
                 <img src="/LinksMeet-without-bg.png" alt="LinksMeet" style={{ width: '26px', height: '26px', objectFit: 'contain', borderRadius: '5px', marginRight: '6px' }} />
                 LinksMeet
               </div>
               <p style={{ color: '#888', fontSize: '0.95rem', lineHeight: 1.6, maxWidth: '240px' }}>
-                The AI-powered outbound platform for modern teams to scale their revenue.
+                Online meeting scheduling platform developed to simplify appointment booking and connect your calendars.
               </p>
             </div>
             <div className="lexaro-footer-col">
               <h4>Platform</h4>
               <div className="lexaro-footer-links">
-                <a href="#">Prospecting</a>
-                <a href="#">Outreach</a>
-                <a href="#">Deliverability</a>
-                <a href="#">Integrations</a>
+                <a href="#features">Scheduling</a>
+                <a href="#integrations">Integrations</a>
+                <RouterLink to="/pricing">Pricing</RouterLink>
+                <RouterLink to="/login">Sign In</RouterLink>
               </div>
             </div>
             <div className="lexaro-footer-col">
               <h4>Company</h4>
               <div className="lexaro-footer-links">
-                <a href="#">About us</a>
-                <a href="#">Careers</a>
-                <a href="#">Blog</a>
-                <a href="#">Contact</a>
+                <RouterLink to="/about">About us</RouterLink>
+                <RouterLink to="/careers">Careers</RouterLink>
+                <RouterLink to="/blog">Blog</RouterLink>
+                <RouterLink to="/contact">Contact</RouterLink>
               </div>
             </div>
             <div className="lexaro-footer-col">
               <h4>Resources</h4>
               <div className="lexaro-footer-links">
-                <a href="#">Help Center</a>
-                <a href="#">Community</a>
-                <a href="#">Outbound Playbooks</a>
+                <RouterLink to="/blog">Help Center</RouterLink>
+                <RouterLink to="/blog">Community</RouterLink>
+                <RouterLink to="/contact">Support</RouterLink>
+              </div>
+            </div>
+            <div className="lexaro-footer-col">
+              <h4>Legal</h4>
+              <div className="lexaro-footer-links">
+                <RouterLink to="/privacy-policy" style={{ color: '#ffffff', fontWeight: 600 }}>Privacy Policy</RouterLink>
+                <RouterLink to="/terms-of-service">Terms of Service</RouterLink>
+                <RouterLink to="/terms-and-conditions">Terms & Conditions</RouterLink>
               </div>
             </div>
           </div>
 
           <div className="lexaro-footer-bottom">
-            <div>© 2026 LinksMeet Inc. All rights reserved.</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+              <span>© {new Date().getFullYear()} LinksMeet Inc. All rights reserved.</span>
+              <RouterLink to="/privacy-policy" style={{ color: '#aaa', textDecoration: 'none', fontSize: '0.88rem' }}>Privacy Policy</RouterLink>
+              <RouterLink to="/terms-of-service" style={{ color: '#aaa', textDecoration: 'none', fontSize: '0.88rem' }}>Terms of Service</RouterLink>
+              <RouterLink to="/terms-and-conditions" style={{ color: '#aaa', textDecoration: 'none', fontSize: '0.88rem' }}>Terms & Conditions</RouterLink>
+            </div>
             <div style={{ display: 'flex', gap: '20px' }}>
               <Twitter size={20} color="#888" style={{ cursor: 'pointer' }} />
               <Github size={20} color="#888" style={{ cursor: 'pointer' }} />

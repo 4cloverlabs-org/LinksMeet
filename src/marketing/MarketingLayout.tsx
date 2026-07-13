@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { Link, NavLink, useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Linkedin, Github } from 'lucide-react';
 import { POSTS } from './posts';
 import '../pages/Landing.css';
+import './Legal.css';
 
 export default function MarketingLayout() {
   const navigate = useNavigate();
@@ -54,52 +55,69 @@ export default function MarketingLayout() {
       </main>
 
       {/* ============ FOOTER ============ */}
-      <footer className="cc-footer">
-        <div className="cc-container">
-          <div className="cc-footer-grid">
-            <div className="cc-foot-col">
-              <h5>Product</h5>
-              <Link to="/">Home</Link>
-              <a href="/#features">Features</a>
-              <Link to="/pricing">Pricing</Link>
+      <section className="lexaro-footer-section">
+        <div className="lexaro-container">
+          <div className="lexaro-footer-grid" style={{ gridTemplateColumns: '2.2fr 1fr 1fr 1fr 1fr' }}>
+            <div className="lexaro-footer-col">
+              <div className="lexaro-footer-logo">
+                <img src="/LinksMeet-without-bg.png" alt="LinksMeet" style={{ width: '26px', height: '26px', objectFit: 'contain', borderRadius: '5px', marginRight: '6px' }} />
+                LinksMeet
+              </div>
+              <p style={{ color: '#888', fontSize: '0.95rem', lineHeight: 1.6, maxWidth: '240px' }}>
+                Online meeting scheduling platform developed to simplify appointment booking and connect your calendars.
+              </p>
             </div>
-            <div className="cc-foot-col">
-              <h5>Company</h5>
-              <Link to="/about">About</Link>
-              <Link to="/contact">Contact</Link>
-              <Link to="/careers">Careers</Link>
+            <div className="lexaro-footer-col">
+              <h4>Platform</h4>
+              <div className="lexaro-footer-links">
+                <a href="/#features">Scheduling</a>
+                <a href="/#integrations">Integrations</a>
+                <Link to="/pricing">Pricing</Link>
+                <Link to="/login">Sign In</Link>
+              </div>
             </div>
-
-            <div className="cc-foot-brand">
-              <div className="cc-foot-cube cc-floaty" />
-              <p>Built for modern<br />sales teams</p>
+            <div className="lexaro-footer-col">
+              <h4>Company</h4>
+              <div className="lexaro-footer-links">
+                <Link to="/about">About us</Link>
+                <Link to="/careers">Careers</Link>
+                <Link to="/blog">Blog</Link>
+                <Link to="/contact">Contact</Link>
+              </div>
             </div>
-
-            <div className="cc-foot-col">
-              <h5>Resources</h5>
-              <Link to="/blog">Blog</Link>
-              <Link to={`/blog/${firstPost}`}>Latest article</Link>
-              <Link to="/careers">Careers</Link>
+            <div className="lexaro-footer-col">
+              <h4>Resources</h4>
+              <div className="lexaro-footer-links">
+                <Link to="/blog">Help Center</Link>
+                <Link to="/blog">Community</Link>
+                <Link to="/contact">Support</Link>
+              </div>
             </div>
-            <div className="cc-foot-col">
-              <h5>Legal</h5>
-              <Link to="/privacy">Privacy Policy</Link>
-              <Link to="/terms">Terms of Service</Link>
-              <Link to="/contact">Support</Link>
+            <div className="lexaro-footer-col">
+              <h4>Legal</h4>
+              <div className="lexaro-footer-links">
+                <Link to="/privacy-policy" style={{ color: '#ffffff', fontWeight: 600 }}>Privacy Policy</Link>
+                <Link to="/terms-of-service">Terms of Service</Link>
+                <Link to="/terms-and-conditions">Terms & Conditions</Link>
+              </div>
             </div>
           </div>
 
-          <div className="cc-foot-bottom">
-            <span className="copy">LinksMeet © {new Date().getFullYear()}</span>
-            <div className="cc-socials">
-              <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><Linkedin size={16} /></a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter"><Twitter size={16} /></a>
-              <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><Instagram size={16} /></a>
-              <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><Facebook size={16} /></a>
+          <div className="lexaro-footer-bottom">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+              <span>© {new Date().getFullYear()} LinksMeet Inc. All rights reserved.</span>
+              <Link to="/privacy-policy" style={{ color: '#aaa', textDecoration: 'none', fontSize: '0.88rem' }}>Privacy Policy</Link>
+              <Link to="/terms-of-service" style={{ color: '#aaa', textDecoration: 'none', fontSize: '0.88rem' }}>Terms of Service</Link>
+              <Link to="/terms-and-conditions" style={{ color: '#aaa', textDecoration: 'none', fontSize: '0.88rem' }}>Terms & Conditions</Link>
+            </div>
+            <div style={{ display: 'flex', gap: '20px' }}>
+              <Twitter size={20} color="#888" style={{ cursor: 'pointer' }} />
+              <Github size={20} color="#888" style={{ cursor: 'pointer' }} />
+              <Linkedin size={20} color="#888" style={{ cursor: 'pointer' }} />
             </div>
           </div>
         </div>
-      </footer>
+      </section>
     </div>
   );
 }
