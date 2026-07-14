@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
-import { motion } from 'framer-motion';
-import { Check, Target, Github, Twitter, Linkedin, CheckCircle2, FileText, GitMerge, BarChart3, Sparkles, Wand2, AlignLeft, Database, ChevronDown, Search, Filter, Calendar, Link, ArrowUpRight, ChevronRight, Shield, Info } from 'lucide-react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import React from 'react';
+import { Check, Target, Github, Twitter, Linkedin, CheckCircle2, FileText, GitMerge, BarChart3, Sparkles, Wand2, AlignLeft, Database, ChevronDown, Search, Filter, Calendar, Link, ArrowUpRight, ChevronRight, Menu, ArrowRight, X, Play, Globe, Zap, Clock, Users, Code, Lock, RefreshCw, Smartphone, Monitor, Shield, Layout, Settings, Mail, Bell, MessageSquare, Megaphone, LineChart, Plus, Maximize, User, FileEdit, Info, Loader, Edit2, ArrowUpDown, MousePointer2 } from 'lucide-react';
 import './Landing.css';
+import './features_refined.css';
 
 const FadeUp = ({ children, delay = 0, className = "" }: { children: React.ReactNode, delay?: number, className?: string }) => (
   <motion.div
@@ -16,6 +18,65 @@ const FadeUp = ({ children, delay = 0, className = "" }: { children: React.React
     {children}
   </motion.div>
 );
+
+const ScrollRevealGrid = ({ children, header }: { children: React.ReactNode, header?: React.ReactNode }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    // Start tracking when the top of the container hits the bottom of the viewport
+    offset: ["start end", "end end"]
+  });
+
+  const cards = React.Children.toArray(children);
+  
+  // scrollYProgress maps over 300vh total.
+  // 0.00 -> 0.33 is when the container is scrolling up into view (before it sticks).
+  // 0.33 -> 1.00 is when it is stuck and scrolling 200vh.
+  const timings = [
+    [0.10, 0.33], // Card 1: Animates as the section scrolls into view
+    [0.35, 0.55], // Card 2: Animates after sticking
+    [0.55, 0.75], // Card 3: Animates after sticking
+    [0.75, 0.95]  // Card 4: Animates after sticking
+  ];
+
+  return (
+    <div ref={containerRef} style={{ height: '300vh', position: 'relative' }}>
+      <div style={{ position: 'sticky', top: 0, height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', paddingTop: '20px', overflow: 'hidden' }}>
+        {header && (
+          <div style={{ width: '100%', maxWidth: '1600px', margin: '0 auto', padding: '0 20px', zIndex: 10 }}>
+            {header}
+          </div>
+        )}
+        <div style={{ width: '100%' }}>
+          <div className="lexaro-4col-grid" style={{ padding: '0 20px', maxWidth: '1600px', margin: '0 auto' }}>
+            {cards.map((child, index) => {
+              const [start, end] = timings[index] || [0, 1];
+              
+              // Use manual clamping via a callback function to guarantee the animation stops perfectly at its destination
+              const opacity = useTransform(scrollYProgress, (v) => {
+                if (v <= start) return 0;
+                if (v >= end) return 1;
+                return (v - start) / (end - start);
+              });
+              
+              const y = useTransform(scrollYProgress, (v) => {
+                if (v <= start) return 60;
+                if (v >= end) return 0;
+                return 60 - ((v - start) / (end - start)) * 60;
+              });
+              
+              return (
+                <motion.div key={index} style={{ opacity, y, height: '100%' }}>
+                  {child}
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 /* ---- Real brand logos for the integrations orbit ---- */
 const SalesforceLogo = () => (
@@ -54,21 +115,7 @@ const GoogleLogo = () => (
   </svg>
 );
 
-const SectionGridLine = () => (
-  <div style={{
-    position: 'absolute',
-    bottom: 0,
-    left: '50%',
-    transform: 'translateX(-50%)',
-    width: '100%',
-    maxWidth: '1120px',
-    borderBottom: '1px dashed rgba(0,0,0,0.15)',
-    zIndex: 50
-  }}>
-    <div style={{ position: 'absolute', bottom: -2, left: -2, width: 5, height: 5, background: 'rgba(0,0,0,0.4)' }} />
-    <div style={{ position: 'absolute', bottom: -2, right: -2, width: 5, height: 5, background: 'rgba(0,0,0,0.4)' }} />
-  </div>
-);
+const SectionGridLine = () => null;
 
 const faqData = [
   {
@@ -147,10 +194,7 @@ export default function Landing() {
     <div className="lexaro-landing" style={{ minHeight: '100vh', position: 'relative' }}>
 
       {/* Outer bounding box simulating the Framer canvas */}
-      <div style={{ position: 'relative', width: '100%', marginBottom: '80px' }}>
-        {/* Global Vertical Lines passing throughout the main content (stops before footer) */}
-        <div className="global-vertical-line left-line" />
-        <div className="global-vertical-line right-line" />
+      <div style={{ position: 'relative', width: '100%', marginBottom: '0px' }}>
 
         {/* ============ NAVBAR ============ */}
         <nav className="lexaro-nav" style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(12px)' }}>
@@ -242,8 +286,8 @@ export default function Landing() {
 
 
         {/* ============ TRUSTED LOGOS ============ */}
-        <section className="lexaro-trusted" style={{ position: 'relative' }}>
-          <div className="lexaro-container">
+        <section className="lexaro-trusted" style={{ position: 'relative', width: '100%', maxWidth: '100vw', overflow: 'hidden' }}>
+          <div style={{ width: '100%' }}>
             <FadeUp>
               <p style={{ textAlign: 'center', color: '#666', fontSize: '0.9rem', marginBottom: '24px' }}>Trusted by innovative teams worldwide</p>
               <div className="lexaro-marquee-wrapper">
@@ -271,126 +315,227 @@ export default function Landing() {
           <SectionGridLine />
         </section>
 
-        {/* ============ THE PROBLEM (LEGACY WORKFLOWS) ============ */}
-        <section className="lexaro-legacy-section" style={{ padding: '80px 0', position: 'relative' }}>
-          <div className="lexaro-container" style={{ position: 'relative', borderLeft: '1px solid #eaeaea', borderRight: '1px solid #eaeaea' }}>
-
+        {/* ============ 4-COLUMN FEATURES GRID ============ */}
+        <section className="lexaro-legacy-section" style={{ position: 'relative' }}>
+          <div className="lexaro-container" style={{ position: 'relative', maxWidth: '1600px', width: '95%' }}>
             {/* Top Hatched Bar */}
-            <div className="hatched-bg" style={{ position: 'absolute', top: -49, left: -1, right: -1, borderLeft: '1px solid #eaeaea', borderRight: '1px solid #eaeaea', height: '48px' }} />
-
+            <div className="hatched-bg" style={{ position: 'absolute', top: -49, left: -1, right: -1, height: '48px' }} />
             {/* Bottom Hatched Bar */}
-            <div className="hatched-bg" style={{ position: 'absolute', bottom: -49, left: -1, right: -1, borderLeft: '1px solid #eaeaea', borderRight: '1px solid #eaeaea', height: '48px' }} />
+            <div className="hatched-bg" style={{ position: 'absolute', bottom: -49, left: -1, right: -1, height: '48px' }} />
 
-            {/* Corner Markers Removed */}
-
-            <div style={{ padding: '80px 60px' }}>
-              <FadeUp>
-                <div className="lexaro-legacy-header" style={{ marginBottom: '60px' }}>
-                  <h2 style={{ fontSize: '2.8rem' }}>The problem with legacy<br />outbound workflows</h2>
-                  <p>Fragmented sales tools kill productivity. Teams juggle too many platforms — and it slows everything down.</p>
-                </div>
-              </FadeUp>
-
-              <FadeUp delay={0.1}>
-                <div className="lexaro-legacy-grid-2">
-                  {/* Left Card: Scattered */}
-                  <div className="lexaro-legacy-card">
-                    <h3>Fragmented Data Silos</h3>
+            <div style={{ padding: '0 20px' }}>
+              <ScrollRevealGrid 
+                header={
+                  <FadeUp>
+                    <div className="lexaro-legacy-header" style={{ marginBottom: '32px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', maxWidth: '100%', gap: '8px' }}>
+                      <h2 className="lexaro-system-title" style={{ margin: 0, lineHeight: 0.95 }}>The problem with legacy<br />outbound workflows</h2>
+                      <p style={{ margin: 0, maxWidth: '600px', color: '#666', fontSize: '1.1rem' }}>Fragmented sales tools kill productivity. LinksMeet unifies everything you need into one intelligent system.</p>
+                    </div>
+                  </FadeUp>
+                }
+              >
+                
+                {/* Card 1 */}
+                  <div className="lexaro-feature-card">
+                    <div className="lexaro-feature-icon">
+                      <Link size={22} strokeWidth={1.5} />
+                    </div>
+                    <h3>Fragmented Data Sources</h3>
                     <p>Prospects live in ZoomInfo. Emails live in Outreach. Calendars live in Google. Nothing is connected, causing data leaks and lost deals.</p>
-                    <div className="lexaro-legacy-visual">
-                      <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
-                        <path d="M 50 200 L 120 170 L 150 210 L 250 160 L 330 180 L 400 130" fill="none" stroke="#ccc" strokeWidth="1.5" strokeDasharray="4 4" />
-                      </svg>
-
-                      {/* Point Dots */}
-                      <div style={{ position: 'absolute', top: 196, left: 46, width: 8, height: 8, background: '#111', borderRadius: '50%', zIndex: 2, boxShadow: '0 0 0 4px #eee' }} />
-                      <div style={{ position: 'absolute', top: 166, left: 116, width: 8, height: 8, background: '#111', borderRadius: '50%', zIndex: 2, boxShadow: '0 0 0 4px #eee' }} />
-                      <div style={{ position: 'absolute', top: 206, left: 146, width: 8, height: 8, background: '#111', borderRadius: '50%', zIndex: 2, boxShadow: '0 0 0 4px #eee' }} />
-                      <div style={{ position: 'absolute', top: 156, left: 246, width: 8, height: 8, background: '#111', borderRadius: '50%', zIndex: 2, boxShadow: '0 0 0 4px #eee' }} />
-                      <div style={{ position: 'absolute', top: 176, left: 326, width: 8, height: 8, background: '#111', borderRadius: '50%', zIndex: 2, boxShadow: '0 0 0 4px #eee' }} />
-
-                      {/* Pills */}
-                      <div className="lexaro-node-pill" style={{ top: '130px', left: '80px', transform: 'rotate(-10deg)', zIndex: 3 }}>
-                        ZoomInfo
-                        <div className="lexaro-warning-icon">!</div>
+                    
+                    <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+                      <div className="lexaro-mockup-pill lexaro-loop-pill-1">
+                        <div className="lexaro-mockup-pill-icon-solid">
+                          <Database size={16} />
+                        </div>
+                        <div className="lexaro-mockup-pill-text">
+                          <span className="lexaro-mockup-pill-title">ZoomInfo</span>
+                          <span className="lexaro-mockup-pill-sub">Prospect Data</span>
+                        </div>
+                        <div className="lexaro-mockup-pill-badge" style={{ background: '#F5F3FF', padding: '4px 10px', borderRadius: '12px' }}>Disconnected</div>
                       </div>
-                      <div className="lexaro-node-pill" style={{ top: '120px', left: '220px', transform: 'rotate(10deg)', zIndex: 3 }}>
-                        Outreach
-                        <div className="lexaro-warning-icon">!</div>
+                      
+                      <div className="lexaro-mockup-pill lexaro-loop-pill-2">
+                        <div className="lexaro-mockup-pill-icon-light">
+                          <Mail size={16} />
+                        </div>
+                        <div className="lexaro-mockup-pill-text">
+                          <span className="lexaro-mockup-pill-title">Outreach</span>
+                          <span className="lexaro-mockup-pill-sub">Email Platform</span>
+                        </div>
+                        <div className="lexaro-mockup-pill-badge" style={{ background: '#F5F3FF', padding: '4px 10px', borderRadius: '12px' }}>Disconnected</div>
                       </div>
-                      <div className="lexaro-node-pill" style={{ top: '200px', left: '160px', transform: 'rotate(5deg)', zIndex: 3 }}>
-                        Calendly
-                        <div className="lexaro-warning-icon">!</div>
+                      
+                      <div className="lexaro-mockup-pill lexaro-loop-pill-3">
+                        <div className="lexaro-mockup-pill-icon-light">
+                          <Calendar size={16} /> 
+                        </div>
+                        <div className="lexaro-mockup-pill-text">
+                          <span className="lexaro-mockup-pill-title">Google</span>
+                          <span className="lexaro-mockup-pill-sub">Calendars</span>
+                        </div>
+                        <div className="lexaro-mockup-pill-badge" style={{ background: '#F5F3FF', padding: '4px 10px', borderRadius: '12px' }}>Disconnected</div>
+                      </div>
+
+                      {/* Connected Badge overlay */}
+                      <div className="lexaro-connected-badge">
+                        Connected <ArrowUpDown size={12} style={{ color: '#4b5563' }} />
                       </div>
                     </div>
                   </div>
-
-                  {/* Right Card: Unified */}
-                  <div className="lexaro-legacy-card">
-                    <h3>The All-In-One Revenue Engine</h3>
-                    <p>LinksMeet unifies your lead discovery, automated sequences, and meeting scheduling into a single, intelligent workspace.</p>
-                    <div className="lexaro-legacy-visual">
-                      <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
-                        <path d="M 120 180 C 150 180, 150 100, 190 100" fill="none" stroke="#ccc" strokeWidth="1.5" strokeDasharray="4 4" />
-                        <path d="M 120 180 C 160 180, 160 180, 190 180" fill="none" stroke="#ccc" strokeWidth="1.5" strokeDasharray="4 4" />
-                        <path d="M 120 180 C 150 180, 150 250, 190 250" fill="none" stroke="#ccc" strokeWidth="1.5" strokeDasharray="4 4" />
-                      </svg>
-
-                      {/* LinksMeet Node */}
-                      <div className="lexaro-node-lexaro" style={{ top: '140px', left: '30px', zIndex: 3 }}>
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M12 4L4 12L12 20L20 12L12 4Z" fill="#555" />
-                          <path d="M6 10L14 18L18 14L10 6L6 10Z" fill="#111" />
-                          <path d="M18 10L10 18L6 14L14 6L18 10Z" fill="#333" />
-                        </svg>
-                        LinksMeet
-                      </div>
-
-                      {/* Pills */}
-                      <div className="lexaro-node-pill" style={{ top: '80px', left: '190px', zIndex: 3 }}>
-                        <div style={{ background: '#10b981', color: '#fff', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Check size={12} strokeWidth={3} />
-                        </div>
-                        Verified Data
-                      </div>
-                      <div className="lexaro-node-pill" style={{ top: '160px', left: '190px', zIndex: 3 }}>
-                        <div style={{ background: '#10b981', color: '#fff', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Check size={12} strokeWidth={3} />
-                        </div>
-                        AI Sequences
-                      </div>
-                      <div className="lexaro-node-pill" style={{ top: '230px', left: '190px', zIndex: 3 }}>
-                        <div style={{ background: '#10b981', color: '#fff', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Check size={12} strokeWidth={3} />
-                        </div>
-                        Auto-Booking
-                      </div>
+                {/* Card 2 */}
+                  <div className="lexaro-feature-card">
+                    <div className="lexaro-feature-icon">
+                      <Shield size={22} strokeWidth={1.5} />
                     </div>
-                  </div>
-                </div>
-              </FadeUp>
-
-              {/* Bottom 4 Features */}
-              <FadeUp delay={0.2}>
-                <div className="lexaro-legacy-grid-4">
-                  <div className="lexaro-feature-col">
-                    <h4><CheckCircle2 size={20} strokeWidth={1.5} /> AI Personalization</h4>
-                    <p>Generate highly personalized icebreakers and emails at scale.</p>
-                  </div>
-                  <div className="lexaro-feature-col">
-                    <h4><FileText size={20} strokeWidth={1.5} /> Deliverability Excellence</h4>
+                    <h3>Deliverability Excellence</h3>
                     <p>Protect sender reputation with SPF/DKIM tracking and warm-up.</p>
+                    
+                    <div className="lexaro-target-container">
+                      <div className="lexaro-target-layout">
+                        <div className="lexaro-target-left">
+                          <div>
+                            <div className="lexaro-target-select-label">SPF Record</div>
+                            <div className="lexaro-target-select lexaro-shimmer">Verified <ChevronDown size={14} /></div>
+                          </div>
+                          <div>
+                            <div className="lexaro-target-select-label">DKIM Record</div>
+                            <div className="lexaro-target-select lexaro-shimmer">Verified <ChevronDown size={14} /></div>
+                          </div>
+                        </div>
+                        <div className="lexaro-target-right">
+                          <div style={{ position: 'absolute', left: 0, top: 15, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <div className="lexaro-shimmer lexaro-bar-pulse-h1" style={{ width: '26px', height: '6px', background: '#e5e7eb', borderRadius: '999px' }}></div>
+                            <div className="lexaro-shimmer lexaro-bar-pulse-h2" style={{ width: '20px', height: '6px', background: '#e5e7eb', borderRadius: '999px' }}></div>
+                            <div className="lexaro-shimmer lexaro-bar-pulse-h3" style={{ width: '12px', height: '6px', background: '#e5e7eb', borderRadius: '999px' }}></div>
+                            <div className="lexaro-shimmer lexaro-bar-pulse-h4" style={{ width: '16px', height: '6px', background: '#e5e7eb', borderRadius: '999px' }}></div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '100%', position: 'relative' }}>
+                            <div style={{ position: 'absolute', bottom: -1, left: '-10px', right: '-10px', borderBottom: '2px dotted #e5e7eb', zIndex: 0 }}></div>
+                            <div className="lexaro-bar-indigo-light lexaro-shimmer lexaro-bar-pulse-1" style={{ height: '35%' }}></div>
+                            <div className="lexaro-bar-indigo-dark lexaro-shimmer lexaro-bar-pulse-2" style={{ height: '55%' }}></div>
+                            <div className="lexaro-bar-indigo-light lexaro-shimmer lexaro-bar-pulse-3" style={{ height: '75%' }}></div>
+                            <div className="lexaro-bar-indigo-dark lexaro-shimmer lexaro-bar-pulse-4" style={{ height: '95%' }}></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="lexaro-target-bottom">
+                        <div className="lexaro-target-bottom-label">Sender Score</div>
+                        <div className="lexaro-avatar-group">
+                          <img src="https://i.pravatar.cc/150?img=47" className="lexaro-avatar" alt="Avatar 1" />
+                          <img src="https://i.pravatar.cc/150?img=12" className="lexaro-avatar" alt="Avatar 2" />
+                          <img src="https://i.pravatar.cc/150?img=33" className="lexaro-avatar" alt="Avatar 3" />
+                          <img src="https://i.pravatar.cc/150?img=5" className="lexaro-avatar" alt="Avatar 4" />
+                          <div className="lexaro-avatar-count lexaro-shimmer">99/100</div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="lexaro-feature-col">
-                    <h4><GitMerge size={20} strokeWidth={1.5} /> Cold Email Automation</h4>
+                {/* Card 3 */}
+                  <div className="lexaro-feature-card">
+                    <div className="lexaro-feature-icon">
+                      <GitMerge size={22} strokeWidth={1.5} />
+                    </div>
+                    <h3>Cold Email Automation</h3>
                     <p>Build multi-step sequences with smart delays and A/B testing.</p>
+                    
+                    <div style={{ position: 'relative', height: '280px', width: '100%', marginTop: 'auto', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '8px' }}>
+                      
+                      {/* Step 1 */}
+                      <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.02)', width: '220px', textAlign: 'left' }}>
+                        <Mail size={14} color="#6D28D9" />
+                        <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#0f172a' }}>Initial Outreach</div>
+                          <div style={{ fontSize: '0.65rem', color: '#64748b' }}>Automated Email</div>
+                        </div>
+                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#6D28D9' }}></div>
+                      </div>
+
+                      {/* Animated Connector 1 */}
+                      <div className="lexaro-sequence-connector">
+                        <div className="lexaro-sequence-pulse lexaro-delay-1"></div>
+                      </div>
+
+                      {/* Delay Tag */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#ffffff', color: '#475569', fontSize: '0.65rem', fontWeight: 600, padding: '4px 12px', borderRadius: '16px', zIndex: 2, border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                        <Clock size={12} color="#6D28D9" /> Wait 3 Days
+                      </div>
+
+                      {/* Animated Connector 2 */}
+                      <div className="lexaro-sequence-connector">
+                        <div className="lexaro-sequence-pulse lexaro-delay-2"></div>
+                      </div>
+
+                      {/* Step 2 */}
+                      <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.02)', width: '220px', textAlign: 'left' }}>
+                        <Mail size={14} color="#6D28D9" />
+                        <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#0f172a' }}>Value Prop Follow-up</div>
+                          <div style={{ fontSize: '0.65rem', color: '#64748b' }}>If no reply</div>
+                        </div>
+                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', border: '1px solid #ddd6fe' }}></div>
+                      </div>
+
+                      {/* White Fade Gradient */}
+                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '90px', background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.9) 40%, rgba(255,255,255,1) 100%)', zIndex: 5 }}></div>
+
+                      {/* Active Button */}
+                      <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', background: '#6D28D9', color: '#ffffff', padding: '10px 24px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', zIndex: 10, width: 'max-content', boxShadow: '0 4px 15px rgba(109, 40, 217, 0.3)' }}>
+                        <Play size={14} fill="currentColor" /> Launch Campaign
+                      </div>
+                    </div>
                   </div>
-                  <div className="lexaro-feature-col">
-                    <h4><BarChart3 size={20} strokeWidth={1.5} /> Meeting Scheduling</h4>
+                {/* Card 4 */}
+                  <div className="lexaro-feature-card">
+                    <div className="lexaro-feature-icon">
+                      <Calendar size={22} strokeWidth={1.5} />
+                    </div>
+                    <h3>Meeting Scheduling</h3>
                     <p>Let prospects book meetings directly with calendar sync.</p>
+                    
+                    <div className="lexaro-opt-layout">
+                      <div className="lexaro-opt-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        Availability 
+                        <span style={{ fontSize: '0.65rem', fontWeight: 600, color: '#6D28D9', background: '#F5F3FF', padding: '4px 8px', borderRadius: '12px' }}>October</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '16px', marginTop: '12px', flex: 1, position: 'relative' }}>
+                        {/* Mini Calendar Grid */}
+                        <div style={{ flex: 1.2, display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', alignContent: 'start' }}>
+                          {['M','T','W','T','F','S','S'].map((d, i) => (
+                            <div key={'d'+i} style={{ fontSize: '0.55rem', fontWeight: 700, color: '#9CA3AF', textAlign: 'center', marginBottom: '4px' }}>{d}</div>
+                          ))}
+                          {[...Array(31)].map((_, i) => (
+                            <div key={i} className={i === 14 ? 'lexaro-date-animate' : ''} style={{ 
+                              aspectRatio: '1/1', 
+                              borderRadius: '4px', 
+                              background: i === 14 ? undefined : '#f8fafc',
+                              border: i === 14 ? undefined : '1px solid #f1f5f9',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              color: i === 14 ? undefined : '#cbd5e1',
+                              fontSize: '0.6rem', fontWeight: 600,
+                              boxShadow: i === 14 ? undefined : 'none'
+                            }}>
+                              {i + 1}
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Animated Cursor */}
+                        <div className="lexaro-animated-cursor">
+                          <MousePointer2 size={16} fill="#6D28D9" color="#ffffff" strokeWidth={1} style={{ transform: 'rotate(-15deg)' }} />
+                        </div>
+
+                        {/* Time slots */}
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <div style={{ fontSize: '0.65rem', fontWeight: 600, color: '#64748b', marginBottom: '4px' }}>Select Time</div>
+                          <div style={{ border: '2px solid #F5F5F5', borderRadius: '6px', padding: '8px 0', fontSize: '0.7rem', fontWeight: 600, color: '#334155', textAlign: 'center', background: '#ffffff', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>10:00 AM</div>
+                          <div className="lexaro-time-animate" style={{ borderRadius: '6px', padding: '8px 0', fontSize: '0.7rem', fontWeight: 600, textAlign: 'center' }}>11:30 AM</div>
+                          <div style={{ border: '2px solid #F5F5F5', borderRadius: '6px', padding: '8px 0', fontSize: '0.7rem', fontWeight: 600, color: '#334155', textAlign: 'center', background: '#ffffff', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>2:00 PM</div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </FadeUp>
+              </ScrollRevealGrid>
             </div>
           </div>
           <SectionGridLine />
@@ -400,7 +545,7 @@ export default function Landing() {
         <section className="lexaro-system-section" id="features" style={{ position: 'relative' }}>
           <div className="lexaro-container">
             <FadeUp>
-              <h2 className="lexaro-system-title" style={{ marginBottom: '80px' }}>Turn scattered sales tools into a<br />controlled system</h2>
+              <h2 className="lexaro-system-title" style={{ marginBottom: '40px' }}>Turn disconnected sales tools into a<br />controlled system</h2>
             </FadeUp>
 
             <div className="lexaro-stack">
