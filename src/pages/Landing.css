@@ -1067,82 +1067,128 @@
 }
 
 /* =================================================================
-   Integrations (Exact Image Match)
+   Integrations (Concentric Orbit)
    ================================================================= */
 .lexaro-orbit-wrapper {
   position: relative;
-  width: 640px;
-  height: 640px;
+  width: 100%;
+  max-width: 800px;
+  height: 600px;
   margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .lexaro-orbit-center {
-  width: 96px;
-  height: 96px;
+  position: absolute;
+  width: 100px;
+  height: 100px;
   background: #fff;
-  border: 1px solid #eaeaea;
-  border-radius: 24px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+  box-shadow: 0 10px 30px rgba(109, 40, 217, 0.2);
+  border: 1px solid rgba(109, 40, 217, 0.1);
 }
 
-.lexaro-orbit-ring {
+.lexaro-orbit-logo {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  z-index: 2;
+}
+
+.lexaro-orbit-pulse {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  border: 1px dashed rgba(0,0,0,0.15);
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
+  background: rgba(109, 40, 217, 0.2);
+  animation: orbitPulse 3s infinite;
+  z-index: 1;
 }
 
-.ring-1 {
-  width: 340px;
-  height: 340px;
-  animation: spinRing 30s linear infinite;
+@keyframes orbitPulse {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+  100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
 }
 
-.ring-2 {
-  width: 520px;
-  height: 520px;
-  animation: spinRing 40s linear infinite reverse;
-}
-
-.lexaro-orbit-icon {
+.lexaro-orbit {
   position: absolute;
-  width: 64px;
-  height: 64px;
+  border-radius: 50%;
+  border: 1px dashed rgba(109, 40, 217, 0.3);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: spin linear infinite;
+}
+
+.lexaro-orbit-inner {
+  width: 250px;
+  height: 250px;
+  animation-duration: 20s;
+}
+
+.lexaro-orbit-middle {
+  width: 400px;
+  height: 400px;
+  animation-duration: 35s;
+  animation-direction: reverse;
+}
+
+.lexaro-orbit-outer {
+  width: 550px;
+  height: 550px;
+  animation-duration: 50s;
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.lexaro-orbit-node {
+  position: absolute;
+  width: 56px;
+  height: 56px;
   background: #fff;
-  border: 1px solid #eaeaea;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  border: 1px solid #f1f5f9;
   transform: translate(-50%, -50%);
+  animation: counterSpin linear infinite;
 }
 
-.ring-1 .lexaro-orbit-icon {
-  animation: spinIcon 30s linear infinite;
+.lexaro-orbit-inner .lexaro-orbit-node { animation-duration: 20s; }
+.lexaro-orbit-middle .lexaro-orbit-node { animation-duration: 35s; animation-direction: reverse; }
+.lexaro-orbit-outer .lexaro-orbit-node { animation-duration: 50s; }
+
+@keyframes counterSpin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(-360deg); }
 }
 
-.ring-2 .lexaro-orbit-icon {
-  animation: spinIcon 40s linear infinite reverse;
+.lexaro-orbit-node svg {
+  width: 28px;
+  height: 28px;
 }
 
-@keyframes spinRing {
-  from { transform: translate(-50%, -50%) rotate(0deg); }
-  to { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
-@keyframes spinIcon {
-  from { transform: translate(-50%, -50%) rotate(360deg); }
-  to { transform: translate(-50%, -50%) rotate(0deg); }
+@media (max-width: 768px) {
+  .lexaro-orbit-wrapper {
+    transform: scale(0.6);
+    margin-top: -100px;
+    margin-bottom: -100px;
+  }
 }
 
 /* =================================================================

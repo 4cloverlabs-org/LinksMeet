@@ -96,7 +96,7 @@ export default function MarketingLayout() {
             <div className="lexaro-footer-col">
               <h4>Legal</h4>
               <div className="lexaro-footer-links">
-                <Link to="/privacy-policy" style={{ color: '#ffffff', fontWeight: 600 }}>Privacy Policy</Link>
+                <Link to="/privacy-policy">Privacy Policy</Link>
                 <Link to="/terms-of-service">Terms of Service</Link>
                 <Link to="/terms-and-conditions">Terms & Conditions</Link>
               </div>
@@ -105,10 +105,7 @@ export default function MarketingLayout() {
 
           <div className="lexaro-footer-bottom">
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <span>© {new Date().getFullYear()} LinksMeet Inc. All rights reserved.</span>
-              <Link to="/privacy-policy" style={{ color: '#aaa', textDecoration: 'none', fontSize: '0.88rem' }}>Privacy Policy</Link>
-              <Link to="/terms-of-service" style={{ color: '#aaa', textDecoration: 'none', fontSize: '0.88rem' }}>Terms of Service</Link>
-              <Link to="/terms-and-conditions" style={{ color: '#aaa', textDecoration: 'none', fontSize: '0.88rem' }}>Terms & Conditions</Link>
+              <span>© {new Date().getFullYear()} LinksMeet. All rights reserved.</span>
             </div>
             <div style={{ display: 'flex', gap: '20px' }}>
               <Twitter size={20} color="#888" style={{ cursor: 'pointer' }} />

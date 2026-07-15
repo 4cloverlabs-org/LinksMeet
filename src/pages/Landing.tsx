@@ -805,25 +805,26 @@ export default function Landing() {
 
             <FadeUp delay={0.1}>
               <div className="lexaro-orbit-wrapper">
-                {/* Central Logo */}
                 <div className="lexaro-orbit-center">
-                  <img src="/LinksMeet-without-bg.png" alt="LinksMeet" style={{ width: '56px', height: '56px', objectFit: 'contain' }} />
+                  <div className="lexaro-orbit-pulse"></div>
+                  <img src="/LinksMeet-without-bg.png" alt="LinksMeet" className="lexaro-orbit-logo" />
                 </div>
 
-                {/* Ring 1 (Inner): CRM + sending domains */}
-                <div className="lexaro-orbit-ring ring-1">
-                  <div className="lexaro-orbit-icon" style={{ top: '0%', left: '50%' }}><SalesforceLogo /></div>
-                  <div className="lexaro-orbit-icon" style={{ top: '100%', left: '50%' }}><HubspotLogo /></div>
-                  <div className="lexaro-orbit-icon" style={{ top: '50%', left: '0%' }}><GmailLogo /></div>
-                  <div className="lexaro-orbit-icon" style={{ top: '50%', left: '100%' }}><OutlookLogo /></div>
+                <div className="lexaro-orbit lexaro-orbit-inner">
+                  <div className="lexaro-orbit-node" style={{ top: '0%', left: '50%' }}><SalesforceLogo /></div>
+                  <div className="lexaro-orbit-node" style={{ top: '100%', left: '50%' }}><HubspotLogo /></div>
                 </div>
 
-                {/* Ring 2 (Outer): data + automation */}
-                <div className="lexaro-orbit-ring ring-2">
-                  <div className="lexaro-orbit-icon" style={{ top: '14.6%', left: '14.6%' }}><SlackLogo /></div>
-                  <div className="lexaro-orbit-icon" style={{ top: '85.4%', left: '85.4%' }}><NotionLogo /></div>
-                  <div className="lexaro-orbit-icon" style={{ top: '14.6%', left: '85.4%' }}><ZapierLogo /></div>
-                  <div className="lexaro-orbit-icon" style={{ top: '85.4%', left: '14.6%' }}><GoogleLogo /></div>
+                <div className="lexaro-orbit lexaro-orbit-middle">
+                  <div className="lexaro-orbit-node" style={{ top: '50%', left: '0%' }}><GmailLogo /></div>
+                  <div className="lexaro-orbit-node" style={{ top: '50%', left: '100%' }}><OutlookLogo /></div>
+                  <div className="lexaro-orbit-node" style={{ top: '15%', left: '85%' }}><SlackLogo /></div>
+                </div>
+
+                <div className="lexaro-orbit lexaro-orbit-outer">
+                  <div className="lexaro-orbit-node" style={{ top: '85%', left: '15%' }}><ZapierLogo /></div>
+                  <div className="lexaro-orbit-node" style={{ top: '15%', left: '15%' }}><NotionLogo /></div>
+                  <div className="lexaro-orbit-node" style={{ top: '85%', left: '85%' }}><GoogleLogo /></div>
                 </div>
               </div>
             </FadeUp>
@@ -1116,7 +1117,7 @@ export default function Landing() {
             <div className="lexaro-footer-col">
               <h4>Legal</h4>
               <div className="lexaro-footer-links">
-                <RouterLink to="/privacy-policy" style={{ color: '#ffffff', fontWeight: 600 }}>Privacy Policy</RouterLink>
+                <RouterLink to="/privacy-policy">Privacy Policy</RouterLink>
                 <RouterLink to="/terms-of-service">Terms of Service</RouterLink>
                 <RouterLink to="/terms-and-conditions">Terms & Conditions</RouterLink>
               </div>
@@ -1125,10 +1126,7 @@ export default function Landing() {
 
           <div className="lexaro-footer-bottom">
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <span>© {new Date().getFullYear()} LinksMeet Inc. All rights reserved.</span>
-              <RouterLink to="/privacy-policy" style={{ color: '#aaa', textDecoration: 'none', fontSize: '0.88rem' }}>Privacy Policy</RouterLink>
-              <RouterLink to="/terms-of-service" style={{ color: '#aaa', textDecoration: 'none', fontSize: '0.88rem' }}>Terms of Service</RouterLink>
-              <RouterLink to="/terms-and-conditions" style={{ color: '#aaa', textDecoration: 'none', fontSize: '0.88rem' }}>Terms & Conditions</RouterLink>
+              <span>© {new Date().getFullYear()} LinksMeet. All rights reserved.</span>
             </div>
             <div style={{ display: 'flex', gap: '20px' }}>
               <Twitter size={20} color="#888" style={{ cursor: 'pointer' }} />
