@@ -75,6 +75,13 @@
   padding: 0 24px;
 }
 
+.lexaro-container-wide {
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
 /* =================================================================
    Global Vertical Lines
    ================================================================= */
@@ -1092,12 +1099,15 @@
   justify-content: center;
   gap: 12px;
   font-size: 0.95rem;
-  font-weight: 600;
+  font-weight: 500;
   color: #111;
 }
 .lexaro-pricing-toggle-text {
   cursor: pointer;
   transition: color 0.2s;
+}
+.lexaro-pricing-toggle-text.active {
+  color: #7d3bec;
 }
 .lexaro-pricing-toggle-text.inactive {
   color: #9ca3af;
@@ -1105,11 +1115,14 @@
 .lexaro-pricing-toggle {
   width: 48px;
   height: 24px;
-  background: black;
+  background: #e5e7eb;
   border-radius: 20px;
   position: relative;
   cursor: pointer;
   transition: background 0.3s;
+}
+.lexaro-pricing-toggle.annual {
+  background: #7d3bec;
 }
 .lexaro-pricing-toggle::after {
   content: '';
@@ -1121,6 +1134,7 @@
   background: #fff;
   border-radius: 50%;
   transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 .lexaro-pricing-toggle.annual::after {
   transform: translateX(27px);
@@ -1129,20 +1143,20 @@
   transform: translateX(3px);
 }
 .lexaro-pricing-discount {
-  background: transparent;
-  border: 1px solid #111;
+  background: #f3f0ff;
+  border: 1px solid #d8cbf9;
   padding: 2px 8px;
   border-radius: 20px;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #111;
+  color: #7d3bec;
 }
 
-.lexaro-pricing-grid-3 {
+.lexaro-pricing-grid-4 {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 24px;
-  max-width: 1100px;
+  max-width: 100%;
   margin: 0 auto;
   align-items: end; /* Align bottoms or center? Image shows them top-aligned */
   align-items: stretch;
@@ -1155,8 +1169,8 @@
   background: #fff;
   border-radius: 16px;
   padding: 24px 20px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  border: 2px solid #F5F5F5;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.02);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -1257,7 +1271,7 @@
   font-weight: 500;
 }
 .lexaro-pricing-features li svg {
-  color: #111;
+  color: #7d3bec;
   flex-shrink: 0;
 }
 
@@ -1271,7 +1285,7 @@
   transition: all 0.2s ease;
   border-radius: 6px;
   background: transparent;
-  border: 1px solid #111;
+  border: 2px solid #F5F5F5;
   color: #111;
   display: flex;
   align-items: center;
@@ -1282,12 +1296,12 @@
   background: #f9fafb;
 }
 .lexaro-pricing-btn-solid {
-  background: linear-gradient(180deg, black 0%, #111827 100%);
+  background: #7d3bec;
   color: #fff;
   border: none;
 }
 .lexaro-pricing-btn-solid:hover {
-  background: linear-gradient(180deg, #111827 0%, #000000 100%);
+  background: #6a2cc9;
 }
 
 .lexaro-pricing-guarantee {

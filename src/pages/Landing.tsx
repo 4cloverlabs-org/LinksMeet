@@ -867,7 +867,7 @@ export default function Landing() {
 
         {/* ============ PRICING (Exact Image Match) ============ */}
         <section className="lexaro-pricing-section" id="pricing">
-          <div className="lexaro-container">
+          <div className="lexaro-container-wide">
             <FadeUp>
               <div className="lexaro-pricing-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <h2 className="lexaro-title" style={{ marginBottom: '16px' }}>Simple pricing for every team</h2>
@@ -881,90 +881,108 @@ export default function Landing() {
               </div>
             </FadeUp>
 
-            <div className="lexaro-pricing-grid-3">
+            <div className="lexaro-pricing-grid-4">
               {/* Starter */}
               <FadeUp delay={0.1} className="lexaro-full-height">
                 <div className="lexaro-pricing-box">
                   <div className="lexaro-pricing-top-tier">Starter</div>
-                  <div className="lexaro-pricing-top-price">${isAnnual ? '22' : '29'}<span>/ month{isAnnual ? ', billed annually' : ''}</span></div>
                   <div className="lexaro-pricing-desc">
-                    Ideal for small teams just getting started with structured workflows
+                    Best for testing the waters or solo marketers.
                   </div>
+                  <div className="lexaro-pricing-top-price">Free</div>
+
+                  <button className="lexaro-pricing-btn" style={{ marginBottom: '24px' }}>
+                    Get Started
+                  </button>
 
                   <div className="lexaro-pricing-features">
-                    <h4>Features:</h4>
                     <ul>
-                      <li><Check size={16} strokeWidth={1.5} /> Up to 5 team members</li>
-                      <li><Check size={16} strokeWidth={1.5} /> 5,000 active contacts</li>
-                      <li><Check size={16} strokeWidth={1.5} /> Basic lead enrichment <Info size={14} style={{ color: '#9ca3af', marginLeft: 'auto' }} /></li>
-                      <li><Check size={16} strokeWidth={1.5} /> Email & Calendar Sync <Info size={14} style={{ color: '#9ca3af', marginLeft: 'auto' }} /></li>
-                      <li><Check size={16} strokeWidth={1.5} /> Core integrations</li>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> 1 User Workspace</li>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> 2 AI Campaigns per month</li>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> Basic Automation Tools</li>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> Standard AI Text Generator</li>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> Community Support</li>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> 1 User Workspace</li>
                     </ul>
                   </div>
-
-                  <button className="lexaro-pricing-btn">
-                    Get Started <ArrowUpRight size={16} />
-                  </button>
                 </div>
               </FadeUp>
 
-              {/* Team */}
+              {/* Growth */}
               <FadeUp delay={0.2} className="lexaro-full-height">
-                <div className="lexaro-pricing-box premium">
-                  <div className="lexaro-pricing-popular">Most Popular</div>
-                  <div className="lexaro-pricing-top-tier">Team</div>
-                  <div className="lexaro-pricing-top-price">${isAnnual ? '119' : '159'}<span>/ month{isAnnual ? ', billed annually' : ''}</span></div>
+                <div className="lexaro-pricing-box">
+                  <div className="lexaro-pricing-top-tier">Growth</div>
                   <div className="lexaro-pricing-desc">
-                    Tailored for growing teams scaling projects and automations confidently
+                    Built for growing teams that need more scale and insights.
                   </div>
+                  <div className="lexaro-pricing-top-price">${isAnnual ? '39' : '49'}</div>
+
+                  <button className="lexaro-pricing-btn" style={{ marginBottom: '24px' }}>
+                    Get Started
+                  </button>
 
                   <div className="lexaro-pricing-features">
-                    <h4>Features:</h4>
                     <ul>
-                      <li><Check size={16} strokeWidth={1.5} /> Up to 25 team members</li>
-                      <li><Check size={16} strokeWidth={1.5} /> 50,000 active contacts</li>
-                      <li><Check size={16} strokeWidth={1.5} /> Advanced AI personalization <Info size={14} style={{ color: '#9ca3af', marginLeft: 'auto' }} /></li>
-                      <li><Check size={16} strokeWidth={1.5} /> Built-in meeting scheduling <Info size={14} style={{ color: '#9ca3af', marginLeft: 'auto' }} /></li>
-                      <li><Check size={16} strokeWidth={1.5} /> Dedicated sending IPs <Info size={14} style={{ color: '#9ca3af', marginLeft: 'auto' }} /></li>
-                      <li><Check size={16} strokeWidth={1.5} /> All integrations</li>
-                      <li><Check size={16} strokeWidth={1.5} /> AI sequence generator</li>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> Up to 5 Users</li>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> 20 AI Campaigns per month</li>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> Dynamic Audience Targeting</li>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> Email, Ads & Social Auto-Templates</li>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> Performance Insights Dashboard</li>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> 5 User Workspace</li>
                     </ul>
-                  </div>
-
-                  <button className="lexaro-pricing-btn lexaro-pricing-btn-solid">
-                    Start Free Trial <ArrowUpRight size={16} />
-                  </button>
-                  <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '0.8rem', color: 'var(--lx-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 500 }}>
-                    $0 today · Cancel anytime
                   </div>
                 </div>
               </FadeUp>
 
-              {/* Organization */}
+              {/* Pro */}
               <FadeUp delay={0.3} className="lexaro-full-height">
                 <div className="lexaro-pricing-box">
-                  <div className="lexaro-pricing-top-tier">Organization</div>
-                  <div className="lexaro-pricing-top-price">Custom<span>{isAnnual ? '/ annually' : '/ monthly'}</span></div>
+                  <div className="lexaro-pricing-top-tier">Pro</div>
                   <div className="lexaro-pricing-desc">
-                    Perfect for large organizations and startups requiring advanced control
+                    All the power. For serious marketers and small agencies.
                   </div>
+                  <div className="lexaro-pricing-top-price">${isAnnual ? '99' : '129'}</div>
+
+                  <button className="lexaro-pricing-btn lexaro-pricing-btn-solid" style={{ marginBottom: '24px' }}>
+                    Get Started
+                  </button>
 
                   <div className="lexaro-pricing-features">
-                    <h4>Features:</h4>
                     <ul>
-                      <li><Check size={16} strokeWidth={1.5} /> Unlimited team members</li>
-                      <li><Check size={16} strokeWidth={1.5} /> Unlimited active contacts</li>
-                      <li><Check size={16} strokeWidth={1.5} /> Dedicated account manager <Info size={14} style={{ color: '#9ca3af', marginLeft: 'auto' }} /></li>
-                      <li><Check size={16} strokeWidth={1.5} /> Custom integrations <Info size={14} style={{ color: '#9ca3af', marginLeft: 'auto' }} /></li>
-                      <li><Check size={16} strokeWidth={1.5} /> SLA guarantee <Info size={14} style={{ color: '#9ca3af', marginLeft: 'auto' }} /></li>
-                      <li><Check size={16} strokeWidth={1.5} /> SSO & advanced security</li>
-                      <li><Check size={16} strokeWidth={1.5} /> Custom contract terms</li>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> Unlimited Campaigns</li>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> Unlimited Team Members</li>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> AI-Performance Predictions</li>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> A/B Testing Recommendations</li>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> Performance Insights Dashboard</li>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> Priority Chat & Email Support</li>
                     </ul>
                   </div>
+                </div>
+              </FadeUp>
 
-                  <button className="lexaro-pricing-btn">
-                    Contact Sales <ChevronRight size={16} />
+              {/* Enterprise */}
+              <FadeUp delay={0.4} className="lexaro-full-height">
+                <div className="lexaro-pricing-box">
+                  <div className="lexaro-pricing-top-tier">Enterprise</div>
+                  <div className="lexaro-pricing-desc">
+                    Tailored AI marketing infrastructure for large teams.
+                  </div>
+                  <div className="lexaro-pricing-top-price">Custom</div>
+
+                  <button className="lexaro-pricing-btn" style={{ marginBottom: '24px' }}>
+                    Get Started
                   </button>
+
+                  <div className="lexaro-pricing-features">
+                    <ul>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> Dedicated Onboarding</li>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> Custom Integrations</li>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> Performance Insights Dashboard</li>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> SLA & Security Compliance</li>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> Priority Chat & Email Support</li>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> VIP Support & Strategy Calls</li>
+                    </ul>
+                  </div>
                 </div>
               </FadeUp>
             </div>
