@@ -404,11 +404,12 @@
     margin-bottom: 8px;
   }
   .lexaro-target-container, .lexaro-email-container, .lexaro-calendar-container, .lexaro-gen-layout {
-    height: 180px;
+    height: auto;
+    min-height: 180px;
     padding: 12px;
   }
   .lexaro-target-right {
-    height: 50px;
+    height: 65px;
   }
   .lexaro-target-layout {
     margin-bottom: 8px;
