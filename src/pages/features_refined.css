@@ -638,7 +638,7 @@
   width: 20px;
   height: 20px;
   pointer-events: none;
-  animation: cursor-select 6s infinite ease;
+  animation: cursor-select 10s infinite ease;
   left: 120%;
   top: 120%;
 }
@@ -670,7 +670,7 @@
 }
 
 .lexaro-date-animate {
-  animation: date-click 6s infinite;
+  animation: date-click 10s infinite;
 }
 @keyframes date-click {
   0%, 30% {
@@ -694,7 +694,7 @@
 }
 
 .lexaro-time-animate {
-  animation: time-click 6s infinite;
+  animation: time-click 10s infinite;
 }
 @keyframes time-click {
   0%, 60% {
