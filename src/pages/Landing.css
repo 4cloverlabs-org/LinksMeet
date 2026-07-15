@@ -234,12 +234,14 @@
 
 .lexaro-hero {
   text-align: center;
-  padding-top: 80px;
-  padding-bottom: 120px;
+  padding-top: 40px;
+  padding-bottom: 60px;
+  min-height: 80vh;
   background: transparent;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
 }
 .lexaro-hero-title {
   font-family: "Geist Sans", "Geist Placeholder", sans-serif;
@@ -1564,7 +1566,7 @@
   
   /* Hero section */
   .lexaro-hero-title { font-size: 2.5rem; line-height: 1.1; }
-  .lexaro-hero { padding-top: 80px; padding-bottom: 140px; min-height: 60vh; }
+  .lexaro-hero { padding-top: 60px; padding-bottom: 100px; min-height: auto; }
   .hero-gradient-bg {
     background: 
       radial-gradient(ellipse 80% 300px at 0% 100%, rgba(125, 59, 236, 0.6) 0%, rgba(125, 59, 236, 0.15) 50%, transparent 100%),
