@@ -223,6 +223,7 @@ export default function Landing() {
             <section className="lexaro-hero" id="home">
               {/* New Background Gradient */}
               <div className="hero-gradient-bg" />
+              <div className="hero-noise-texture" />
 
               <div className="lexaro-container" style={{ position: 'relative', zIndex: 10 }}>
                 <motion.div
