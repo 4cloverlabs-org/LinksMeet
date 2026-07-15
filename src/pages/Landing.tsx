@@ -492,10 +492,10 @@ export default function Landing() {
                         </div>
 
                         {/* Time slots */}
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ flex: 1, minWidth: '55px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           <div style={{ fontSize: '0.65rem', fontWeight: 600, color: '#64748b', marginBottom: '4px', textAlign: 'center', lineHeight: 1.4 }}>Select<br/>Time</div>
-                          <div style={{ border: '2px solid #F5F5F5', borderRadius: '6px', padding: '8px 0', fontSize: '0.7rem', fontWeight: 600, color: '#334155', textAlign: 'center', background: '#ffffff', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', lineHeight: 1.4 }}>10:00<br/>AM</div>
-                          <div className="lexaro-time-animate" style={{ borderRadius: '6px', padding: '8px 0', fontSize: '0.7rem', fontWeight: 600, textAlign: 'center', lineHeight: 1.4 }}>11:30<br/>AM</div>
+                          <div className="lexaro-time-animate" style={{ borderRadius: '6px', padding: '8px 0', fontSize: '0.7rem', fontWeight: 600, textAlign: 'center', lineHeight: 1.4 }}>10:00<br/>AM</div>
+                          <div style={{ border: '2px solid #F5F5F5', borderRadius: '6px', padding: '8px 0', fontSize: '0.7rem', fontWeight: 600, color: '#334155', textAlign: 'center', background: '#ffffff', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', lineHeight: 1.4 }}>11:30<br/>AM</div>
                           <div style={{ border: '2px solid #F5F5F5', borderRadius: '6px', padding: '8px 0', fontSize: '0.7rem', fontWeight: 600, color: '#334155', textAlign: 'center', background: '#ffffff', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', lineHeight: 1.4 }}>2:00<br/>PM</div>
                         </div>
                       </div>
