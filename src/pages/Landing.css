@@ -234,9 +234,13 @@
 
 .lexaro-hero {
   text-align: center;
-  padding-top: 80px;
-  padding-bottom: 80px;
-  background: #fff;
+  padding-top: 120px;
+  padding-bottom: 240px;
+  background: transparent;
+  min-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 .lexaro-hero-title {
   font-family: "Geist Sans", "Geist Placeholder", sans-serif;
@@ -249,22 +253,69 @@
   margin-bottom: 24px;
 }
 .lexaro-hero-sub {
-  font-size: 17px;
-  color: #888;
+  font-size: 18px;
+  color: #666;
   line-height: 1.6;
   margin: 0 auto 40px;
-  max-width: 600px;
+  max-width: 680px;
+  letter-spacing: -0.01em;
 }
 .lexaro-hero-cta {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 16px;
   margin-bottom: 80px;
+}
+.lexaro-btn-primary-hero {
+  background: #7d3bec;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 14px 28px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(125, 59, 236, 0.4);
+  transition: all 0.2s ease;
+}
+.lexaro-btn-primary-hero:hover {
+  background: #6a2cc9;
+  transform: translateY(-1px);
+}
+.lexaro-btn-secondary-hero {
+  background: #fff;
+  color: #111;
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
+  padding: 14px 24px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+  transition: all 0.2s ease;
+}
+.lexaro-btn-secondary-hero:hover {
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  transform: translateY(-1px);
 }
 
 /* =================================================================
    New Hero Specific CSS
    ================================================================= */
+.hero-gradient-bg {
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(ellipse 80% 600px at 0% 100%, rgba(125, 59, 236, 0.6) 0%, rgba(125, 59, 236, 0.15) 50%, transparent 100%),
+    radial-gradient(ellipse 80% 600px at 100% 100%, rgba(125, 59, 236, 0.6) 0%, rgba(125, 59, 236, 0.15) 50%, transparent 100%),
+    linear-gradient(to top, rgba(125, 59, 236, 0.4) 0%, transparent 250px);
+  pointer-events: none;
+  z-index: 0;
+}
 .hero-grid-bg {
   position: absolute;
   inset: 0;
@@ -1311,7 +1362,82 @@
   margin-top: 60px;
   font-weight: 500;
 }
-
+/* =================================================================
+   FAQ Section
+   ================================================================= */
+.lexaro-faq {
+  padding: 120px 0;
+  background: #fff;
+}
+.lexaro-faq-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 80px;
+}
+.lexaro-faq-left {
+  position: sticky;
+  top: 120px;
+  align-self: start;
+}
+.lexaro-faq-subtitle {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #475569;
+  margin-bottom: 12px;
+}
+.lexaro-faq-title {
+  font-size: 2.8rem;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  color: #111;
+  margin-bottom: 24px;
+  line-height: 1.1;
+}
+.lexaro-faq-desc {
+  font-size: 1.1rem;
+  color: #4b5563;
+  line-height: 1.5;
+}
+.lexaro-faq-list {
+  display: flex;
+  flex-direction: column;
+}
+.lexaro-faq-item {
+  border-bottom: 1px solid #eaeaea;
+}
+.lexaro-faq-item details {
+  width: 100%;
+}
+.lexaro-faq-item summary {
+  padding: 32px 0;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #111;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.lexaro-faq-item summary::-webkit-details-marker {
+  display: none;
+}
+.lexaro-faq-item summary::after {
+  content: '+';
+  font-size: 2rem;
+  font-weight: 300;
+  color: #888;
+  transition: transform 0.3s ease;
+}
+.lexaro-faq-item details[open] summary::after {
+  transform: rotate(45deg);
+}
+.lexaro-faq-content {
+  padding-bottom: 32px;
+  color: #4b5563;
+  line-height: 1.6;
+  font-size: 1rem;
+}
 
 /* =================================================================
    Footer
@@ -1396,11 +1522,59 @@
 }
 
 @media (max-width: 1024px) {
-  .lexaro-problem-grid,
+  .lexaro-legacy-grid-2,
   .lexaro-workflows,
   .lexaro-pricing-grid { grid-template-columns: 1fr; }
+  
+  .lexaro-legacy-grid-4 { grid-template-columns: 1fr 1fr; }
+  
   .lexaro-feature-block, .lexaro-feature-block.reverse { flex-direction: column; gap: 40px; }
+  .lexaro-system-box { grid-template-columns: 1fr; }
+  .lexaro-system-content { padding: 40px; }
+  
+  .lexaro-operation-grid { grid-template-columns: 1fr; }
+  .lexaro-faq-grid { grid-template-columns: 1fr; }
+  
+  .lexaro-legacy-card:first-child {
+    border-right: none;
+    border-bottom: 1px solid #eaeaea;
+    padding-right: 0;
+    padding-bottom: 40px;
+    margin-bottom: 40px;
+  }
+  
   .lexaro-footer-grid { grid-template-columns: 1fr 1fr; gap: 40px; }
   .lexaro-footer-cta h2 { font-size: 2.5rem; }
+}
+
+@media (max-width: 768px) {
+  /* Hide nav links on mobile, keep buttons */
+  .lexaro-nav-links { display: none; }
+  .lexaro-nav .lexaro-container { grid-template-columns: auto 1fr auto; }
+  
+  /* Hero section */
+  .lexaro-hero-title { font-size: 2.5rem; line-height: 1.1; }
+  .lexaro-hero { padding-top: 80px; padding-bottom: 140px; min-height: 60vh; }
+  .hero-gradient-bg {
+    background: 
+      radial-gradient(ellipse 80% 300px at 0% 100%, rgba(125, 59, 236, 0.6) 0%, rgba(125, 59, 236, 0.15) 50%, transparent 100%),
+      radial-gradient(ellipse 80% 300px at 100% 100%, rgba(125, 59, 236, 0.6) 0%, rgba(125, 59, 236, 0.15) 50%, transparent 100%),
+      linear-gradient(to top, rgba(125, 59, 236, 0.4) 0%, transparent 150px);
+  }
+  .lexaro-hero-cta { flex-direction: column; gap: 12px; }
+  .lexaro-hero-cta button { width: 100%; justify-content: center; }
+  
+  /* Generic typography and spacing */
+  .lexaro-title, .lexaro-system-title, .lexaro-workflows-header h2 { font-size: 2rem; }
+  .lexaro-container { padding: 0 16px; }
+  .hero-wrapper { border-radius: 20px; }
+  
+  /* 4-col grid to 1-col */
+  .lexaro-legacy-grid-4 { grid-template-columns: 1fr; }
+  
+  /* Footer */
+  .lexaro-footer-grid { grid-template-columns: 1fr; gap: 32px; }
+  .lexaro-footer-bottom { flex-direction: column; gap: 16px; text-align: center; }
+  .lexaro-footer-cta h2 { font-size: 2rem; }
 }
 
