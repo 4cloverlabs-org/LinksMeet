@@ -33,28 +33,419 @@
   overflow-x: clip;
 }
 
-/* ---------- Magic stack (sticky stacking cards) ---------- */
-.lexaro-system-section { overflow: visible; }
-.lexaro-stack { position: relative; }
-.lexaro-stack-item {
-  position: sticky;
-  margin-bottom: 64px;
+/* =================================================================
+   System (Bento Grid Pro)
+   ================================================================= */
+/* =================================================================
+   System (Grid UI)
+   ================================================================= */
+/* =================================================================
+   System (3-Column Grid UI)
+   ================================================================= */
+.lexaro-grid-ui {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 40px;
 }
-.lexaro-stack-item:last-child { margin-bottom: 0; }
-.lexaro-stack-item:nth-of-type(1) { top: 96px; }
-.lexaro-stack-item:nth-of-type(2) { top: 120px; }
-.lexaro-stack-item:nth-of-type(3) { top: 144px; }
-.lexaro-stack-item > .lexaro-system-box {
-  background: var(--sk-surface-light, #F8F9FA);
-  transition: transform 0.3s ease;
+
+.lexaro-grid-card {
+  background: #ffffff;
+  border: 1px solid #eaeaea;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+  min-height: 400px;
+  overflow: hidden;
 }
-.lexaro-stack-item:hover > .lexaro-system-box {
+.lexaro-grid-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.06);
 }
-/* the inner preview ("dream box") container gets its own inset/raised shadow */
-.lexaro-stack-item .lexaro-system-visual-container {
+
+.grid-card-content {
+  padding: 32px 32px 16px 32px;
 }
-@media (max-width: 768px) {
-  .lexaro-stack-item { position: static; margin-bottom: 24px; }
+.grid-card-content h3 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #111;
+  margin: 0 0 12px 0;
+  letter-spacing: -0.02em;
+}
+.grid-card-content p {
+  font-size: 1rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.grid-card-visual {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  min-height: 220px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* -------------------------------------
+   Visual 1: AI Powered Outreach
+   ------------------------------------- */
+.v1-ai-center {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90px;
+  height: 90px;
+  background: #ffffff;
+  border: 8px solid #faf5ff; /* Acts as inner purple padding */
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(125, 59, 236, 0.08); /* Soft purple shadow */
+  box-sizing: border-box; /* Keep the 90px width */
+  z-index: 5;
+}
+.v1-ai-center svg {
+  color: #7d3bec; /* Brand purple */
+  animation: pulseSparkle 2s infinite ease-in-out;
+}
+.v1-ai-tag {
+  position: absolute;
+  background: #ffffff;
+  padding: 8px 14px;
+  border-radius: 8px; /* Decreased corner rounding */
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #475569;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.02);
+  white-space: nowrap;
+  border: 1px solid rgba(0,0,0,0.02);
+  z-index: 4;
+}
+.v1-ai-tag.highlight {
+  background: #6D28D9; /* Matching Launch Campaign background */
+  color: #ffffff;
+  border: none;
+  box-shadow: none; /* Removed shadow */
+  z-index: 6;
+  font-weight: 500;
+  font-size: 0.85rem;
+  padding: 10px 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.v1-tag-1 { top: 100px; left: 10px; transform: rotate(-8deg); animation-delay: 0s; }
+.v1-tag-2 { top: 120px; left: 50%; transform: translateX(-50%) rotate(0deg); animation-delay: -1s; } /* Centered and un-rotated */
+.v1-tag-3 { top: 90px; right: -5px; transform: rotate(6deg); animation-delay: -2s; }
+.v1-tag-4 { top: 160px; left: 15px; transform: rotate(-5deg); animation-delay: -3s; }
+.v1-tag-5 { top: 155px; right: 15px; transform: rotate(4deg); animation-delay: -1.5s; }
+
+@keyframes pulseSparkle {
+  0%, 100% { transform: scale(1); filter: none; }
+  50% { transform: scale(1.15); filter: none; }
+}
+@keyframes floatAiTag {
+  0%, 100% { margin-top: 0; }
+  50% { margin-top: -6px; }
+}
+
+/* -------------------------------------
+   Visual 2: Gauge / Speedometer (Image Match)
+   ------------------------------------- */
+.v2-gauge-container {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 280px;
+  height: 160px; /* Fully encompasses the pivot dot with extra padding */
+  overflow: hidden;
+}
+/* Outer soft ring (thin) */
+.v2-gauge-bg {
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: #f5edff; /* Very light shade of #7d3bec */
+  position: relative;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.04), inset 0 -2px 6px rgba(255,255,255,0.8);
+}
+/* The segmented colored track (Thick, with crisp transparent gaps) */
+.v2-gauge-track {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 248px;
+  height: 248px;
+  border-radius: 50%;
+  box-shadow: inset 0 8px 16px rgba(0,0,0,0.08); /* Casts shadow from outer ring */
+  background: conic-gradient(from 270deg at 50% 50%, 
+    #c4b5fd 0deg 35deg, 
+    transparent 35deg 37deg, 
+    #a78bfa 37deg 71deg, 
+    transparent 71deg 73deg, 
+    #8b5cf6 73deg 107deg, 
+    transparent 107deg 109deg, 
+    #7c3aed 109deg 143deg, 
+    transparent 143deg 145deg, 
+    #6d28d9 145deg 180deg, 
+    transparent 180deg 360deg
+  );
+}
+/* Inner white circle with purple rim */
+.v2-gauge-inner {
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  transform: translate(-50%, 50%);
+  width: 155px;
+  height: 155px;
+  background: #ffffff;
+  border: 10px solid #f5edff; /* Acts as the inner padding/rim */
+  border-radius: 50%;
+  box-shadow: 0 -12px 32px rgba(0,0,0,0.08), 0 -4px 12px rgba(0,0,0,0.04);
+  z-index: 2;
+  box-sizing: border-box; /* Ensure the border eats into the width instead of expanding it */
+}
+
+/* The Needle */
+.v2-needle-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+  filter: drop-shadow(0px 8px 12px rgba(0,0,0,0.15));
+}
+.v2-needle {
+  position: absolute;
+  bottom: 50%;
+  left: calc(50% - 5px); /* 10px wide base */
+  width: 10px;
+  height: 80px; /* Shorter to match image */
+  background: #581c87; /* Darkest purple */
+  transform-origin: bottom center;
+  clip-path: polygon(45% 0, 55% 0, 100% 100%, 0 100%);
+  border-radius: 0;
+  animation: organicNeedle 8s infinite cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.v2-gauge-pivot {
+  position: absolute;
+  bottom: 50%;
+  left: 50%; 
+  transform: translate(-50%, 50%);
+  width: 16px; /* Small solid circle matching image */
+  height: 16px;
+  background: #581c87;
+  border-radius: 50%;
+  border: none;
+  box-shadow: none;
+  z-index: 4;
+}
+@keyframes organicNeedle {
+  0%, 10% { transform: rotate(-60deg); }
+  15%, 45% { transform: rotate(50deg); }
+  50%, 65% { transform: rotate(20deg); }
+  70%, 95% { transform: rotate(60deg); }
+  100% { transform: rotate(-60deg); }
+}
+
+.v2-tag {
+  position: absolute;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(0,0,0,0.04);
+  padding: 4px 8px; /* Extra small padding */
+  border-radius: 6px;
+  font-size: 0.65rem; /* Extra small font */
+  font-weight: 600;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 4px; /* Very tight gap */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  animation: floatTagPro 5s infinite ease-in-out;
+}
+.v2-tag-1 { top: 55px; left: 15px; animation-delay: 0s; transform: rotate(-5deg); } /* Moved right to 15px */
+.v2-tag-2 { top: 10px; right: 15px; animation-delay: -2.5s; transform: rotate(5deg); }
+.v2-badge-red { background: #fecaca; color: #b91c1c; padding: 2px 4px; border-radius: 12px; font-size: 0.6rem; display: flex; align-items: center; gap: 2px; }
+.v2-badge-blue { background: #bfdbfe; color: #1d4ed8; padding: 2px 4px; border-radius: 12px; font-size: 0.6rem; display: flex; align-items: center; gap: 2px; }
+
+/* -------------------------------------
+   Visual 3: Envelope / Insights
+   ------------------------------------- */
+/* -------------------------------------
+   Visual 3: Envelope / Insights (Image Match)
+   ------------------------------------- */
+.v3-envelope-container {
+  position: absolute;
+  bottom: -20px;
+  width: 280px;
+  height: 200px;
+  display: flex;
+  justify-content: center;
+}
+
+/* Flap (Back Top) */
+.v3-env-flap {
+  position: absolute;
+  top: 10px;
+  width: 100%;
+  height: 90px;
+  background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  z-index: 1;
+}
+
+/* Back Pocket */
+.v3-env-back {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 120px;
+  background: #e2e8f0;
+  border-radius: 0 0 12px 12px;
+  box-shadow: inset 0 20px 30px rgba(0,0,0,0.1);
+  z-index: 2;
+}
+
+/* Items Layer (Inside Pocket) */
+.v3-items-layer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+}
+
+/* Front Pouch */
+.v3-env-front-wrapper {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 140px;
+  z-index: 5;
+  filter: drop-shadow(0 -4px 10px rgba(0,0,0,0.08));
+}
+.v3-env-front {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+  border-radius: 0 0 12px 12px;
+  clip-path: polygon(0 25%, 50% 55%, 100% 25%, 100% 100%, 0 100%);
+}
+
+/* The exact cards from the image (using Brand Purple) */
+.v3-badge-insights {
+  position: absolute;
+  top: 45px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 16px;
+  border: 1.5px dashed #7d3bec; /* Brand Purple dashed */
+  border-radius: 20px;
+  color: #7d3bec;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(255,255,255,0.8);
+  animation: floatInsights 4s infinite ease-in-out;
+}
+
+.v3-card-action {
+  position: absolute;
+  top: 100px;
+  left: 30px;
+  background: #7d3bec; /* Brand Purple */
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 6px 12px rgba(125,59,236,0.3);
+  transform: rotate(-12deg);
+  animation: popItem1 5s infinite cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.v3-card-churn {
+  position: absolute;
+  top: 110px;
+  left: 60px;
+  background: #ffffff;
+  color: #334155;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transform: rotate(-3deg);
+  animation: popItem2 5s infinite cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s;
+}
+
+.v3-card-mrr {
+  position: absolute;
+  top: 85px;
+  right: 15px;
+  background: #ffffff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+  transform: rotate(8deg);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: popItem3 5s infinite cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s;
+}
+.v3-card-mrr-col {
+  display: flex;
+  flex-direction: column;
+}
+.v3-card-mrr-col span { font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.v3-card-mrr-col strong { font-size: 1.1rem; color: #0f172a; margin-top: 2px; }
+.v3-mrr-pill {
+  background: #e9d5ff; /* purple-200 */
+  color: #7d3bec; /* brand purple */
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+@keyframes floatInsights {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-5px); }
+}
+@keyframes popItem1 {
+  0%, 15% { transform: translateY(50px) rotate(-12deg); opacity: 0; }
+  25%, 85% { transform: translateY(0) rotate(-12deg); opacity: 1; }
+  92%, 100% { transform: translateY(50px) rotate(-12deg); opacity: 0; }
+}
+@keyframes popItem2 {
+  0%, 15% { transform: translateY(50px) rotate(-3deg); opacity: 0; }
+  25%, 85% { transform: translateY(0) rotate(-3deg); opacity: 1; }
+  92%, 100% { transform: translateY(50px) rotate(-3deg); opacity: 0; }
+}
+@keyframes popItem3 {
+  0%, 15% { transform: translateY(50px) rotate(8deg); opacity: 0; }
+  25%, 85% { transform: translateY(0) rotate(8deg); opacity: 1; }
+  92%, 100% { transform: translateY(50px) rotate(8deg); opacity: 0; }
+}
+
+@media (max-width: 900px) {
+  .lexaro-grid-ui { grid-template-columns: 1fr; }
 }
 
 .lexaro-landing h1,

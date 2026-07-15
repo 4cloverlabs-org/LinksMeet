@@ -3,7 +3,7 @@ import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import React from 'react';
-import { Check, Target, Github, Twitter, Linkedin, CheckCircle2, FileText, GitMerge, BarChart3, Sparkles, Wand2, AlignLeft, Database, ChevronDown, Search, Filter, Calendar, Link, ArrowUpRight, ChevronRight, Menu, ArrowRight, X, Play, Globe, Zap, Clock, Users, Code, Lock, RefreshCw, Smartphone, Monitor, Shield, Layout, Settings, Mail, Bell, MessageSquare, Megaphone, LineChart, Plus, Maximize, User, FileEdit, Info, Loader, Edit2, ArrowUpDown, MousePointer2 } from 'lucide-react';
+import { Check, Target, Github, Twitter, Linkedin, CheckCircle2, FileText, GitMerge, BarChart3, Sparkles, Wand2, AlignLeft, Database, ChevronDown, Search, Filter, Calendar, Link, ArrowUpRight, ChevronRight, Menu, ArrowRight, X, Play, Globe, Zap, Clock, Users, Code, Lock, RefreshCw, Smartphone, Monitor, Shield, Layout, Settings, Mail, Bell, MessageSquare, Megaphone, LineChart, Plus, Maximize, User, FileEdit, Info, Loader, Edit2, ArrowUpDown, MousePointer2, Cloud, Activity } from 'lucide-react';
 import './Landing.css';
 import './features_refined.css';
 
@@ -227,9 +227,9 @@ export default function Landing() {
 
               <div className="lexaro-container" style={{ position: 'relative', zIndex: 10 }}>
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, ease: "easeOut" }}
+                  initial={{ opacity: 0, y: 30, filter: 'blur(12px)' }}
+                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
                 >
                   <h1 className="lexaro-hero-title">More qualified meetings with<br />intelligent automation</h1>
                   <p className="lexaro-hero-sub">
@@ -251,7 +251,8 @@ export default function Landing() {
         </div>
 
 
-        {/* ============ TRUSTED LOGOS ============ */}
+        {/* ============ TRUSTED LOGOS (COMMENTED OUT FOR FUTURE USE) ============ */}
+        {false && (
         <section className="lexaro-trusted" style={{ position: 'relative', width: '100%', maxWidth: '100vw', overflow: 'hidden' }}>
           <div style={{ width: '100%' }}>
             <FadeUp>
@@ -280,6 +281,7 @@ export default function Landing() {
           </div>
           <SectionGridLine />
         </section>
+        )}
 
         {/* ============ 4-COLUMN FEATURES GRID ============ */}
         <section className="lexaro-legacy-section" style={{ position: 'relative' }}>
@@ -511,280 +513,75 @@ export default function Landing() {
         <section className="lexaro-system-section" id="features" style={{ position: 'relative' }}>
           <div className="lexaro-container">
             <FadeUp>
-              <h2 className="lexaro-system-title" style={{ marginBottom: '40px' }}>Turn disconnected sales tools into a<br />controlled system</h2>
+              <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+                <h2 className="lexaro-system-title" style={{ marginBottom: '16px' }}>Get clear answers in 3 simple steps</h2>
+                <p style={{ fontSize: '1.2rem', color: '#64748b', maxWidth: '600px', margin: '0 auto', lineHeight: '1.6' }}>From data to clarity—uncover insights, take action, and grow smarter in three simple steps.</p>
+              </div>
             </FadeUp>
 
-            <div className="lexaro-stack">
-              <div className="lexaro-stack-item">
-                <div className="lexaro-system-box">
-                  <div className="lexaro-system-visual-container">
-                    <div className="lexaro-system-visual">
-                      {/* SVG Paths connecting cards to center node */}
-                      <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
-                        <path d="M 260 50 C 350 50, 350 210, 410 210" fill="none" stroke="#334155" strokeWidth="1.5" strokeOpacity="0.4" />
-                        <path d="M 260 160 C 350 160, 350 210, 410 210" fill="none" stroke="#64748b" strokeWidth="1.5" strokeOpacity="0.4" />
-                        <path d="M 260 270 C 350 270, 350 210, 410 210" fill="none" stroke="#2563eb" strokeWidth="1.5" strokeOpacity="0.4" />
-                        <path d="M 260 380 C 350 380, 350 210, 410 210" fill="none" stroke="#525252" strokeWidth="1.5" strokeOpacity="0.4" />
-                      </svg>
+            <div className="lexaro-grid-ui">
+              {/* Card 1: AI Powered Outreach */}
+              <FadeUp delay={0.1} className="lexaro-grid-card">
+                <div className="grid-card-content">
+                  <h3>AI-Powered Outreach</h3>
+                  <p>AI automatically analyzes leads, generates personalized campaigns, and schedules follow-ups.</p>
+                </div>
+                <div className="grid-card-visual" style={{ minHeight: '200px', overflow: 'hidden' }}>
+                  <div className="v1-ai-center">
+                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0px 4px 12px rgba(125, 59, 236, 0.4))' }}>
+                      <path d="M11 2C11 2 11 9 19 11C11 13 11 20 11 20C11 20 11 13 3 11C11 9 11 2 11 2Z" fill="currentColor"/>
+                      <path d="M18 14C18 14 18 17.5 22 18.5C18 19.5 18 23 18 23C18 23 18 19.5 14 18.5C18 17.5 18 14 18 14Z" fill="currentColor"/>
+                    </svg>
+                  </div>
+                  <div className="v1-ai-tag v1-tag-1">Analyze lead</div>
+                  <div className="v1-ai-tag v1-tag-2 highlight">Generate campaign</div>
+                  <div className="v1-ai-tag v1-tag-3">Schedule follow-up</div>
+                  <div className="v1-ai-tag v1-tag-4">Personalize email</div>
+                  <div className="v1-ai-tag v1-tag-5">Score prospect</div>
+                </div>
+              </FadeUp>
 
-                      {/* Mid-path Dots */}
-                      <div className="lexaro-path-dot" style={{ background: '#334155', top: 100, left: 330 }} />
-                      <div className="lexaro-path-dot" style={{ background: '#64748b', top: 170, left: 340 }} />
-                      <div className="lexaro-path-dot" style={{ background: '#2563eb', top: 250, left: 340 }} />
-                      <div className="lexaro-path-dot" style={{ background: '#111', top: 320, left: 330 }} />
-
-                      {/* Card 1: PDF */}
-                      <div className="lexaro-doc-card" style={{ top: 10, left: 40, borderLeft: '4px solid #334155' }}>
-                        <div className="lexaro-doc-card-icon" style={{ color: '#334155' }}>
-                          <FileText size={20} />
-                        </div>
-                        <div className="lexaro-doc-card-text">
-                          <div className="lexaro-doc-card-title">Lead Database.csv</div>
-                          <div className="lexaro-doc-card-sub">Verified contacts</div>
-                        </div>
-                        <div className="lexaro-doc-card-check"><Check size={10} strokeWidth={3} /></div>
+              {/* Card 2: Track User Behavior (Gauge) */}
+              <FadeUp delay={0.2} className="lexaro-grid-card">
+                <div className="grid-card-content">
+                  <h3>Track User Behavior</h3>
+                  <p>See what’s used, what’s dropped, and what keeps users engaged.</p>
+                </div>
+                <div className="grid-card-visual" style={{ paddingBottom: '20px' }}>
+                  <div className="v2-gauge-container">
+                    <div className="v2-gauge-bg">
+                      <div className="v2-gauge-track" />
+                      <div className="v2-gauge-inner" />
+                      <div className="v2-needle-wrapper">
+                        <div className="v2-needle" />
                       </div>
-
-                      {/* Card 2: Slack */}
-                      <div className="lexaro-doc-card" style={{ top: 120, left: 40, borderLeft: '4px solid #f97316' }}>
-                        <div className="lexaro-doc-card-icon" style={{ color: '#f97316' }}>
-                          <Wand2 size={20} />
-                        </div>
-                        <div className="lexaro-doc-card-text">
-                          <div className="lexaro-doc-card-title">Cold Sequences</div>
-                          <div className="lexaro-doc-card-sub">Email outreach</div>
-                        </div>
-                        <div className="lexaro-doc-card-check"><Check size={10} strokeWidth={3} /></div>
-                      </div>
-
-                      {/* Card 3: Glossary */}
-                      <div className="lexaro-doc-card" style={{ top: 230, left: 40, borderLeft: '4px solid #2563eb' }}>
-                        <div className="lexaro-doc-card-icon" style={{ color: '#2563eb' }}>
-                          <FileText size={20} />
-                        </div>
-                        <div className="lexaro-doc-card-text">
-                          <div className="lexaro-doc-card-title">Sender Reputation</div>
-                          <div className="lexaro-doc-card-sub">Domain warm-up</div>
-                        </div>
-                        <div className="lexaro-doc-card-check"><Check size={10} strokeWidth={3} /></div>
-                      </div>
-
-                      {/* Card 4: Notion */}
-                      <div className="lexaro-doc-card" style={{ top: 340, left: 40, borderLeft: '4px solid #111' }}>
-                        <div className="lexaro-doc-card-icon" style={{ color: '#2563eb' }}>
-                          <Database size={20} /> {/* Using Target as placeholder for Notion logo */}
-                        </div>
-                        <div className="lexaro-doc-card-text">
-                          <div className="lexaro-doc-card-title">Salesforce Sync</div>
-                          <div className="lexaro-doc-card-sub">CRM Data</div>
-                        </div>
-                        <div className="lexaro-doc-card-check"><Check size={10} strokeWidth={3} /></div>
-                      </div>
-
-                      {/* LinksMeet Center Node */}
-                      <div className="lexaro-center-ring">
-                        {/* Ring edge markers */}
-                        <div style={{ position: 'absolute', top: -3, left: '50%', width: 6, height: 6, border: '1px solid #aaa', borderRadius: '50%', background: '#fff' }} />
-                        <div style={{ position: 'absolute', bottom: -3, left: '50%', width: 6, height: 6, border: '1px solid #aaa', borderRadius: '50%', background: '#fff' }} />
-                        <div style={{ position: 'absolute', left: -3, top: '50%', width: 6, height: 6, border: '1px solid #aaa', borderRadius: '50%', background: '#fff' }} />
-                        <div style={{ position: 'absolute', right: -3, top: '50%', width: 6, height: 6, border: '1px solid #aaa', borderRadius: '50%', background: '#fff' }} />
-
-                        <div className="lexaro-center-node">
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 4L4 12L12 20L20 12L12 4Z" fill="#555" />
-                            <path d="M6 10L14 18L18 14L10 6L6 10Z" fill="#111" />
-                            <path d="M18 10L10 18L6 14L14 6L18 10Z" fill="#333" />
-                          </svg>
-                        </div>
-                      </div>
+                      <div className="v2-gauge-pivot" />
                     </div>
                   </div>
-
-                  <div className="lexaro-system-content">
-                    <h3>Turn scattered lead data into qualified meetings</h3>
-                    <p>Discover verified prospects, generate highly personalized cold emails, and schedule meetings automatically.</p>
-                    <button className="lexaro-btn lexaro-btn-ghost" onClick={goSignup} style={{ padding: '14px 28px', fontSize: '15px', position: 'relative' }}>
-                      <div style={{ position: 'absolute', top: -1, left: -1, width: 4, height: 4, borderLeft: '1px solid #aaa', borderTop: '1px solid #aaa' }} />
-                      <div style={{ position: 'absolute', top: -1, right: -1, width: 4, height: 4, borderRight: '1px solid #aaa', borderTop: '1px solid #aaa' }} />
-                      <div style={{ position: 'absolute', bottom: -1, left: -1, width: 4, height: 4, borderLeft: '1px solid #aaa', borderBottom: '1px solid #aaa' }} />
-                      <div style={{ position: 'absolute', bottom: -1, right: -1, width: 4, height: 4, borderRight: '1px solid #aaa', borderBottom: '1px solid #aaa' }} />
-                      See examples ↗
-                    </button>
+                  {/* Floating Tags perfectly matching the image */}
+                  <div className="v2-tag v2-tag-1">
+                    Low Engagement <span className="v2-badge-red">↓ 8%</span>
+                  </div>
+                  <div className="v2-tag v2-tag-2">
+                    High Engagement <span className="v2-badge-blue">↑ 12%</span>
                   </div>
                 </div>
-              </div>
+              </FadeUp>
 
-              {/* Block 2: Enforce tone */}
-              <div className="lexaro-stack-item">
-                <div className="lexaro-system-box">
-                  <div className="lexaro-system-content" style={{ padding: '40px 40px 40px 80px' }}>
-                    <h3>Manage conversations from a Unified Communication Hub</h3>
-                    <p>Centralize replies from Gmail and Outlook, categorize conversations using AI, and manage every lead from a single inbox.</p>
-                    <button className="lexaro-btn lexaro-btn-ghost" onClick={goSignup} style={{ padding: '14px 28px', fontSize: '15px', position: 'relative' }}>
-                      <div style={{ position: 'absolute', top: -1, left: -1, width: 4, height: 4, borderLeft: '1px solid #aaa', borderTop: '1px solid #aaa' }} />
-                      <div style={{ position: 'absolute', top: -1, right: -1, width: 4, height: 4, borderRight: '1px solid #aaa', borderTop: '1px solid #aaa' }} />
-                      <div style={{ position: 'absolute', bottom: -1, left: -1, width: 4, height: 4, borderLeft: '1px solid #aaa', borderBottom: '1px solid #aaa' }} />
-                      <div style={{ position: 'absolute', bottom: -1, right: -1, width: 4, height: 4, borderRight: '1px solid #aaa', borderBottom: '1px solid #aaa' }} />
-                      See examples ↗
-                    </button>
-                  </div>
-
-                  <div className="lexaro-system-visual-container">
-                    <div className="lexaro-system-visual" style={{ height: '500px' }}>
-                      <div className="lexaro-correction-card" style={{ position: 'absolute', top: '30px', left: '40px', right: '40px', background: '#fff', border: '1px solid #eaeaea', borderRadius: '4px', display: 'flex', flexDirection: 'column', overflow: 'hidden', zIndex: 2 }}>
-
-                        {/* Text Preview */}
-                        <div style={{ padding: '16px 24px', fontSize: '0.95rem', color: '#111' }}>Draft Preview</div>
-                        <div style={{ padding: '0 24px 20px', fontSize: '1rem', color: '#111', lineHeight: '1.6' }}>
-                          <span style={{ background: '#ffedd5', color: '#9a3412', padding: '2px 4px', borderRadius: '2px' }}>Buy my product.</span> It is <span style={{ background: '#ffedd5', color: '#9a3412', padding: '2px 4px', borderRadius: '2px' }}>the best on the market.</span>
-                          <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', border: '1px solid #fde68a', background: '#fffbeb', color: '#d97706', padding: '4px 8px', borderRadius: '2px', fontSize: '0.75rem' }}>
-                              <div style={{ width: 14, height: 14, background: '#d97706', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold' }}>!</div>
-                              Low personalization
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', border: '1px solid #fde68a', background: '#fffbeb', color: '#d97706', padding: '4px 8px', borderRadius: '2px', fontSize: '0.75rem' }}>
-                              <div style={{ width: 14, height: 14, background: '#d97706', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold' }}>!</div>
-                              Spam trigger detected
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Corrected Version */}
-                        <div style={{ background: '#f5f5f5', borderTop: '1px solid #eaeaea', borderBottom: '1px solid #eaeaea', padding: '12px 24px', fontSize: '0.95rem', color: '#111' }}>AI Optimized Version</div>
-                        <div style={{ padding: '20px 24px', fontSize: '1rem', color: '#111', lineHeight: '1.6' }}>
-                          <span style={{ background: '#bbf7d0', color: '#166534', padding: '2px 4px', borderRadius: '2px' }}>Hi Sarah,</span> saw your recent post on <span style={{ background: '#bbf7d0', color: '#166534', padding: '2px 4px', borderRadius: '2px' }}>RevOps efficiency</span>. We help teams like yours scale...
-                          <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', border: '1px solid #a7f3d0', background: '#ecfdf5', color: '#059669', padding: '4px 8px', borderRadius: '2px', fontSize: '0.75rem' }}>
-                              <div style={{ width: 14, height: 14, background: '#059669', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold' }}>✓</div>
-                              Highly personalized
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', border: '1px solid #a7f3d0', background: '#ecfdf5', color: '#059669', padding: '4px 8px', borderRadius: '2px', fontSize: '0.75rem' }}>
-                              <div style={{ width: 14, height: 14, background: '#059669', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold' }}>✓</div>
-                              Inbox placement optimized
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+              {/* Card 3: Turn Insights Into Action (Envelope) */}
+              <FadeUp delay={0.3} className="lexaro-grid-card">
+                <div className="grid-card-content">
+                  <h3>Turn Insights Into Action</h3>
+                  <p>Get clear, actionable recommendations to boost retention and grow MRR.</p>
+                </div>
+                <div className="grid-card-visual" style={{ paddingBottom: '20px', display: 'flex', justifyContent: 'center' }}>
+                  <div style={{ position: 'relative', width: '85%', display: 'flex' }}>
+                    <img src="/envelope-icon.jpg" alt="Actionable Insights Envelope" style={{ width: '100%', height: 'auto', objectFit: 'contain' }} />
+                    {/* Guarantees the image perfectly adopts the #7d3bec hue/saturation while preserving whites/blacks */}
+                    <div style={{ position: 'absolute', inset: 0, background: '#7d3bec', mixBlendMode: 'color', pointerEvents: 'none' }} />
                   </div>
                 </div>
-              </div>
-
-              {/* Block 3: Generate aligned content */}
-              <div className="lexaro-stack-item">
-                <div className="lexaro-system-box">
-                  <div className="lexaro-system-visual-container">
-                    <div className="lexaro-system-visual" style={{ height: '420px', overflow: 'hidden' }}>
-
-                      {/* Central Node at bottom */}
-                      <div className="lexaro-center-ring" style={{ top: 'auto', bottom: '20px', left: '50%', transform: 'translateX(-50%)' }}>
-                        {/* Ring edge markers */}
-                        <div style={{ position: 'absolute', top: -3, left: '50%', width: 6, height: 6, border: '1px solid #aaa', borderRadius: '50%', background: '#fff' }} />
-                        <div style={{ position: 'absolute', bottom: -3, left: '50%', width: 6, height: 6, border: '1px solid #aaa', borderRadius: '50%', background: '#fff' }} />
-                        <div style={{ position: 'absolute', left: -3, top: '50%', width: 6, height: 6, border: '1px solid #aaa', borderRadius: '50%', background: '#fff' }} />
-                        <div style={{ position: 'absolute', right: -3, top: '50%', width: 6, height: 6, border: '1px solid #aaa', borderRadius: '50%', background: '#fff' }} />
-
-                        <div className="lexaro-center-node">
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 4L4 12L12 20L20 12L12 4Z" fill="#555" />
-                            <path d="M6 10L14 18L18 14L10 6L6 10Z" fill="#111" />
-                            <path d="M18 10L10 18L6 14L14 6L18 10Z" fill="#333" />
-                          </svg>
-                        </div>
-                      </div>
-
-                      {/* Dashed lines connecting to center */}
-                      <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
-                        <path d="M 230 370 L 140 55" fill="none" stroke="#ccc" strokeWidth="1" strokeDasharray="4 4" />
-                        <path d="M 230 370 L 270 145" fill="none" stroke="#ccc" strokeWidth="1" strokeDasharray="4 4" />
-                        <path d="M 230 370 L 150 235" fill="none" stroke="#ccc" strokeWidth="1" strokeDasharray="4 4" />
-                        <path d="M 230 370 L 260 325" fill="none" stroke="#ccc" strokeWidth="1" strokeDasharray="4 4" />
-                      </svg>
-
-                      {/* Card 1: PDF */}
-                      <div className="lexaro-doc-card" style={{ top: 10, left: 20, borderLeft: '4px solid #334155', transform: 'rotate(-2deg)', opacity: 0.15, filter: 'blur(1px)' }}>
-                        <div className="lexaro-doc-card-icon" style={{ color: '#334155' }}><FileText size={20} /></div>
-                        <div className="lexaro-doc-card-text">
-                          <div className="lexaro-doc-card-title">New booking confirmed</div>
-                          <div className="lexaro-doc-card-sub">James Oliver booked a 30min call</div>
-                        </div>
-                      </div>
-                      <div className="lexaro-doc-card" style={{ top: 20, left: 30, borderLeft: '4px solid #334155', transform: 'rotate(-2deg)' }}>
-                        <div className="lexaro-doc-card-icon" style={{ color: '#334155' }}><FileText size={20} /></div>
-                        <div className="lexaro-doc-card-text">
-                          <div className="lexaro-doc-card-title">New booking confirmed</div>
-                          <div className="lexaro-doc-card-sub">James Oliver booked a 30min call</div>
-                        </div>
-                        <div className="lexaro-doc-card-check"><Check size={10} strokeWidth={3} /></div>
-                      </div>
-
-                      {/* Card 2: Slack */}
-                      <div className="lexaro-doc-card" style={{ top: 100, left: 170, borderLeft: '4px solid #64748b', transform: 'rotate(2deg)', opacity: 0.15, filter: 'blur(1px)' }}>
-                        <div className="lexaro-doc-card-icon" style={{ color: '#f97316' }}><AlignLeft size={20} /></div>
-                        <div className="lexaro-doc-card-text">
-                          <div className="lexaro-doc-card-title">Booking rescheduled</div>
-                          <div className="lexaro-doc-card-sub">Moved to Wed, 25 Mar 15:00</div>
-                        </div>
-                      </div>
-                      <div className="lexaro-doc-card" style={{ top: 110, left: 160, borderLeft: '4px solid #64748b', transform: 'rotate(2deg)' }}>
-                        <div className="lexaro-doc-card-icon" style={{ color: '#f97316' }}><AlignLeft size={20} /></div>
-                        <div className="lexaro-doc-card-text">
-                          <div className="lexaro-doc-card-title">Booking rescheduled</div>
-                          <div className="lexaro-doc-card-sub">Moved to Wed, 25 Mar 15:00</div>
-                        </div>
-                        <div className="lexaro-doc-card-check"><Check size={10} strokeWidth={3} /></div>
-                      </div>
-
-                      {/* Card 3: Glossary */}
-                      <div className="lexaro-doc-card" style={{ top: 190, left: 30, borderLeft: '4px solid #2563eb', transform: 'rotate(-1deg)', opacity: 0.15, filter: 'blur(1px)' }}>
-                        <div className="lexaro-doc-card-icon" style={{ color: '#2563eb' }}><FileText size={20} /></div>
-                        <div className="lexaro-doc-card-text">
-                          <div className="lexaro-doc-card-title">Meeting starts in 15 mins</div>
-                          <div className="lexaro-doc-card-sub">Your next meeting is starting</div>
-                        </div>
-                      </div>
-                      <div className="lexaro-doc-card" style={{ top: 200, left: 40, borderLeft: '4px solid #2563eb', transform: 'rotate(-1deg)' }}>
-                        <div className="lexaro-doc-card-icon" style={{ color: '#2563eb' }}><FileText size={20} /></div>
-                        <div className="lexaro-doc-card-text">
-                          <div className="lexaro-doc-card-title">Meeting starts in 15 mins</div>
-                          <div className="lexaro-doc-card-sub">Your next meeting is starting</div>
-                        </div>
-                        <div className="lexaro-doc-card-check"><Check size={10} strokeWidth={3} /></div>
-                      </div>
-
-                      {/* Card 4: Notion */}
-                      <div className="lexaro-doc-card" style={{ top: 280, left: 160, borderLeft: '4px solid #111', transform: 'rotate(1deg)', opacity: 0.15, filter: 'blur(1px)' }}>
-                        <div className="lexaro-doc-card-icon" style={{ color: '#2563eb' }}><CheckCircle2 size={20} /></div>
-                        <div className="lexaro-doc-card-text">
-                          <div className="lexaro-doc-card-title">Meeting is starting now</div>
-                          <div className="lexaro-doc-card-sub">Hurry up!</div>
-                        </div>
-                      </div>
-                      <div className="lexaro-doc-card" style={{ top: 290, left: 150, borderLeft: '4px solid #111', transform: 'rotate(1deg)' }}>
-                        <div className="lexaro-doc-card-icon" style={{ color: '#2563eb' }}><CheckCircle2 size={20} /></div>
-                        <div className="lexaro-doc-card-text">
-                          <div className="lexaro-doc-card-title">Meeting is starting now</div>
-                          <div className="lexaro-doc-card-sub">Hurry up!</div>
-                        </div>
-                        <div className="lexaro-doc-card-check"><Check size={10} strokeWidth={3} /></div>
-                      </div>
-
-                    </div>
-                  </div>
-
-                  <div className="lexaro-system-content">
-                    <h3>Track the complete customer journey through a CRM</h3>
-                    <p>Customizable pipelines to monitor opportunities, meetings, and revenue with detailed real-time analytics.</p>
-                    <button className="lexaro-btn lexaro-btn-ghost" onClick={goSignup} style={{ padding: '14px 28px', fontSize: '15px', position: 'relative' }}>
-                      <div style={{ position: 'absolute', top: -1, left: -1, width: 4, height: 4, borderLeft: '1px solid #aaa', borderTop: '1px solid #aaa' }} />
-                      <div style={{ position: 'absolute', top: -1, right: -1, width: 4, height: 4, borderRight: '1px solid #aaa', borderTop: '1px solid #aaa' }} />
-                      <div style={{ position: 'absolute', bottom: -1, left: -1, width: 4, height: 4, borderLeft: '1px solid #aaa', borderBottom: '1px solid #aaa' }} />
-                      <div style={{ position: 'absolute', bottom: -1, right: -1, width: 4, height: 4, borderRight: '1px solid #aaa', borderBottom: '1px solid #aaa' }} />
-                      See examples ↗
-                    </button>
-                  </div>
-                </div>
-              </div>
+              </FadeUp>
             </div>
           </div>
           <SectionGridLine />
