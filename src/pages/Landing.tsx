@@ -408,7 +408,7 @@ export default function Landing() {
                     <div style={{ position: 'relative', height: '280px', width: '100%', marginTop: 'auto', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '8px' }}>
                       
                       {/* Step 1 */}
-                      <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.02)', width: '220px', textAlign: 'left' }}>
+                      <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 2, width: '220px', textAlign: 'left' }}>
                         <Mail size={14} color="#6D28D9" />
                         <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
                           <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#0f172a' }}>Initial Outreach</div>
@@ -423,7 +423,7 @@ export default function Landing() {
                       </div>
 
                       {/* Delay Tag */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#ffffff', color: '#475569', fontSize: '0.65rem', fontWeight: 600, padding: '4px 12px', borderRadius: '16px', zIndex: 2, border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#ffffff', color: '#475569', fontSize: '0.65rem', fontWeight: 600, padding: '4px 12px', borderRadius: '16px', zIndex: 2, border: '1px solid #e2e8f0' }}>
                         <Clock size={12} color="#6D28D9" /> Wait 3 Days
                       </div>
 
@@ -433,7 +433,7 @@ export default function Landing() {
                       </div>
 
                       {/* Step 2 */}
-                      <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.02)', width: '220px', textAlign: 'left' }}>
+                      <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 2, width: '220px', textAlign: 'left' }}>
                         <Mail size={14} color="#6D28D9" />
                         <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
                           <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#0f172a' }}>Value Prop Follow-up</div>
@@ -446,7 +446,7 @@ export default function Landing() {
                       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '90px', background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.9) 40%, rgba(255,255,255,1) 100%)', zIndex: 5 }}></div>
 
                       {/* Active Button */}
-                      <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', background: '#6D28D9', color: '#ffffff', padding: '10px 24px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', zIndex: 10, width: 'max-content', boxShadow: '0 4px 15px rgba(109, 40, 217, 0.3)' }}>
+                      <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', background: '#6D28D9', color: '#ffffff', padding: '10px 24px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', zIndex: 10, width: 'max-content' }}>
                         <Play size={14} fill="currentColor" /> Launch Campaign
                       </div>
                     </div>
