@@ -3,7 +3,7 @@ import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import React from 'react';
-import { Check, Target, Github, Twitter, Linkedin, CheckCircle2, FileText, GitMerge, BarChart3, Sparkles, Wand2, AlignLeft, Database, ChevronDown, Search, Filter, Calendar, Link, ArrowUpRight, ChevronRight, Menu, ArrowRight, X, Play, Globe, Zap, Clock, Users, Code, Lock, RefreshCw, Smartphone, Monitor, Shield, Layout, Settings, Mail, Bell, MessageSquare, Megaphone, LineChart, Plus, Maximize, User, FileEdit, Info, Loader, Edit2, ArrowUpDown, MousePointer2 } from 'lucide-react';
+import { Check, Target, Github, Twitter, Linkedin, CheckCircle2, FileText, GitMerge, BarChart3, Wand2, AlignLeft, Database, ChevronDown, Search, Filter, Calendar, Link, ArrowUpRight, ChevronRight, Menu, ArrowRight, X, Play, Globe, Zap, Clock, Users, Code, Lock, RefreshCw, Smartphone, Monitor, Shield, Layout, Settings, Mail, Bell, MessageSquare, Megaphone, LineChart, Plus, Maximize, User, FileEdit, Info, Loader, Edit2, ArrowUpDown, MousePointer2 } from 'lucide-react';
 import './Landing.css';
 import './features_refined.css';
 
@@ -120,7 +120,7 @@ const SectionGridLine = () => null;
 const faqData = [
   {
     q: "What is LinksMeet and how does it work as a scheduling app?",
-    a: "LinksMeet is a scheduling app and meeting scheduling software used to eliminate booking back-and-forth. You share a link, and LinksMeet handles calendar syncing, timezone detection, reminders, and video calls through Zoom, Google Meet, Microsoft Teams, and LinksMeet Video. It works as a simple meeting scheduler for 1-on-1s or a fully automated scheduling system with routing and workflows."
+    a: "LinksMeet is a scheduling app and meeting scheduling software used to eliminate booking back and forth. You share a link, and LinksMeet handles calendar syncing, timezone detection, reminders, and video calls through Zoom, Google Meet, Microsoft Teams, and LinksMeet Video. It works as a simple meeting scheduler for 1 on 1s or a fully automated scheduling system with routing and workflows."
   },
   {
     q: "What makes LinksMeet different from other scheduling apps?",
@@ -196,93 +196,58 @@ export default function Landing() {
       {/* Outer bounding box simulating the Framer canvas */}
       <div style={{ position: 'relative', width: '100%', marginBottom: '0px' }}>
 
-        {/* ============ NAVBAR ============ */}
-        <nav className="lexaro-nav" style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(12px)' }}>
-          <div className="lexaro-container">
-            <div className="lexaro-logo">
-              <img src="/LinksMeet-without-bg.png" alt="LinksMeet" style={{ width: '26px', height: '26px', objectFit: 'contain', borderRadius: '5px', marginRight: '6px' }} />
-              LinksMeet
-            </div>
-            <div className="lexaro-nav-links">
-              <a href="#about">About</a>
-              <a href="#features">Features</a>
-              <a href="#pricing">Pricing</a>
-              <a href="#blog">Blog</a>
-              <a href="#contact">Contact</a>
-            </div>
-            <div className="lexaro-nav-actions">
-              <button className="lexaro-btn" style={{ background: 'transparent', color: '#0f172a' }} onClick={() => navigate('/login')}>Log in</button>
-              <button className="lexaro-btn lexaro-btn-dark" onClick={goSignup}>Get Started</button>
-            </div>
-          </div>
-
-          <SectionGridLine />
-        </nav>
-
-        {/* ============ HERO ============ */}
-        <section className="lexaro-hero" id="home" style={{ position: 'relative' }}>
-
-          {/* Subtle Grid Background */}
-          <div className="hero-grid-bg" />
-
-          <div className="lexaro-container" style={{ position: 'relative', zIndex: 10 }}>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-              style={{ position: 'relative', zIndex: 20 }}
-            >
-              <div className="lexaro-badge">
-                AI-Powered Sales Engagement Platform
+        <div style={{ backgroundColor: '#ffffff', padding: '16px' }}>
+          <div className="hero-wrapper" style={{ borderRadius: '32px', overflow: 'hidden', backgroundColor: '#F7F7F7', boxShadow: '0 8px 30px rgba(0,0,0,0.04)', position: 'relative', zIndex: 10 }}>
+            {/* ============ NAVBAR ============ */}
+            <nav className="lexaro-nav" style={{ position: 'relative', zIndex: 100, background: 'transparent' }}>
+              <div className="lexaro-container">
+                <div className="lexaro-logo">
+                  <img src="/LinksMeet-without-bg.png" alt="LinksMeet" style={{ width: '26px', height: '26px', objectFit: 'contain', borderRadius: '5px', marginRight: '6px' }} />
+                  LinksMeet
+                </div>
+                <div className="lexaro-nav-links">
+                  <a href="#about">About</a>
+                  <a href="#features">Features</a>
+                  <a href="#pricing">Pricing</a>
+                  <a href="#blog">Blog</a>
+                  <a href="#contact">Contact</a>
+                </div>
+                <div className="lexaro-nav-actions">
+                  <button className="lexaro-btn" style={{ background: 'transparent', color: '#0f172a', fontWeight: 500, padding: '8px 16px' }} onClick={() => navigate('/login')}>Log in</button>
+                  <button className="lexaro-btn lexaro-btn-dark" onClick={goSignup} style={{ padding: '8px 20px', borderRadius: '6px', fontSize: '14px' }}>Get Started</button>
+                </div>
               </div>
-              <h1 className="lexaro-hero-title">More qualified meetings with<br />intelligent automation</h1>
-              <p className="lexaro-hero-sub">
-                LinksMeet combines lead discovery, personalized cold outreach, email deliverability,<br />
-                and meeting scheduling into one seamless workspace.
-              </p>
-              <div className="lexaro-hero-cta">
-                <button className="lexaro-btn lexaro-btn-dark" onClick={goSignup} style={{ borderRadius: '100px', padding: '14px 28px', fontSize: '1rem', fontWeight: 600 }}>
-                  Start your free trial
-                </button>
-                <button className="lexaro-btn" onClick={() => navigate('/login')} style={{ background: 'rgba(0,0,0,0.05)', color: '#0f172a', borderRadius: '100px', padding: '14px 28px', fontSize: '1rem', fontWeight: 600 }}>
-                  Log in
-                </button>
-              </div>
-            </motion.div>
+            </nav>
 
-            {/* Bottom Graphic Showcase */}
-            <div style={{ perspective: '2000px', padding: '10px 0 120px', display: 'flex', justifyContent: 'center' }}>
-              <motion.div
-                className="hero-graphic-container"
-                initial={{ opacity: 0, y: 80, x: 0, rotateX: 0, rotateY: 0, rotateZ: -12 }}
-                animate={{ opacity: 1, y: 0, x: 0, rotateX: 0, rotateY: 0, rotateZ: -8 }}
-                transition={{ duration: 1.2, delay: 0.2, ease: "easeOut" }}
-                style={{
-                  marginTop: '10px',
-                  width: '100%',
-                  maxWidth: '1000px',
-                  overflow: 'visible',
-                  display: 'block',
-                  position: 'relative'
-                }}
-              >
-                <img
-                  src="/herosection.png"
-                  alt="Hero Graphic"
-                  style={{
-                    width: '100%',
-                    height: 'auto',
-                    display: 'block',
-                    borderRadius: '16px',
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
-                  }}
-                />
-              </motion.div>
-            </div>
+            {/* ============ HERO ============ */}
+            <section className="lexaro-hero" id="home">
+              {/* New Background Gradient */}
+              <div className="hero-gradient-bg" />
+
+              <div className="lexaro-container" style={{ position: 'relative', zIndex: 10 }}>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
+                >
+                  <h1 className="lexaro-hero-title">More qualified meetings with<br />intelligent automation</h1>
+                  <p className="lexaro-hero-sub">
+                    LinksMeet combines lead discovery, personalized cold outreach, email deliverability,
+                    and meeting scheduling into one seamless workspace.
+                  </p>
+                  <div className="lexaro-hero-cta">
+                    <button className="lexaro-btn-primary-hero" onClick={goSignup}>
+                      Start your free trial
+                    </button>
+                    <button className="lexaro-btn-secondary-hero" onClick={() => navigate('/login')}>
+                      How It Works
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
+            </section>
           </div>
-          <SectionGridLine />
-        </section>
+        </div>
 
 
         {/* ============ TRUSTED LOGOS ============ */}
@@ -389,7 +354,7 @@ export default function Landing() {
                       <Shield size={22} strokeWidth={1.5} />
                     </div>
                     <h3>Deliverability Excellence</h3>
-                    <p>Protect sender reputation with SPF/DKIM tracking and warm-up.</p>
+                    <p>Protect sender reputation with SPF/DKIM tracking and warm up.</p>
                     
                     <div className="lexaro-target-container">
                       <div className="lexaro-target-layout">
@@ -437,7 +402,7 @@ export default function Landing() {
                       <GitMerge size={22} strokeWidth={1.5} />
                     </div>
                     <h3>Cold Email Automation</h3>
-                    <p>Build multi-step sequences with smart delays and A/B testing.</p>
+                    <p>Build multi step sequences with smart delays and A/B testing.</p>
                     
                     <div style={{ position: 'relative', height: '280px', width: '100%', marginTop: 'auto', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '8px' }}>
                       
@@ -598,7 +563,7 @@ export default function Landing() {
                         </div>
                         <div className="lexaro-doc-card-text">
                           <div className="lexaro-doc-card-title">Sender Reputation</div>
-                          <div className="lexaro-doc-card-sub">Domain warm-up</div>
+                          <div className="lexaro-doc-card-sub">Domain warm up</div>
                         </div>
                         <div className="lexaro-doc-card-check"><Check size={10} strokeWidth={3} /></div>
                       </div>
@@ -808,7 +773,7 @@ export default function Landing() {
 
                   <div className="lexaro-system-content">
                     <h3>Track the complete customer journey through a CRM</h3>
-                    <p>Customizable pipelines to monitor opportunities, meetings, and revenue with detailed real-time analytics.</p>
+                    <p>Customizable pipelines to monitor opportunities, meetings, and revenue with detailed real time analytics.</p>
                     <button className="lexaro-btn lexaro-btn-ghost" onClick={goSignup} style={{ padding: '14px 28px', fontSize: '15px', position: 'relative' }}>
                       <div style={{ position: 'absolute', top: -1, left: -1, width: 4, height: 4, borderLeft: '1px solid #aaa', borderTop: '1px solid #aaa' }} />
                       <div style={{ position: 'absolute', top: -1, right: -1, width: 4, height: 4, borderRight: '1px solid #aaa', borderTop: '1px solid #aaa' }} />
@@ -876,7 +841,7 @@ export default function Landing() {
                   <span className={`lexaro-pricing-toggle-text ${!isAnnual ? 'active' : 'inactive'}`}>Monthly</span>
                   <div className={`lexaro-pricing-toggle ${isAnnual ? 'annual' : 'monthly'}`} />
                   <span className={`lexaro-pricing-toggle-text ${isAnnual ? 'active' : 'inactive'}`}>Annually</span>
-                  <span className="lexaro-pricing-discount">- 25%</span>
+                  <span className="lexaro-pricing-discount">25%</span>
                 </div>
               </div>
             </FadeUp>
@@ -926,7 +891,7 @@ export default function Landing() {
                       <li><CheckCircle2 size={16} strokeWidth={2} /> Up to 5 Users</li>
                       <li><CheckCircle2 size={16} strokeWidth={2} /> 20 AI Campaigns per month</li>
                       <li><CheckCircle2 size={16} strokeWidth={2} /> Dynamic Audience Targeting</li>
-                      <li><CheckCircle2 size={16} strokeWidth={2} /> Email, Ads & Social Auto-Templates</li>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> Email, Ads & Social Auto Templates</li>
                       <li><CheckCircle2 size={16} strokeWidth={2} /> Performance Insights Dashboard</li>
                       <li><CheckCircle2 size={16} strokeWidth={2} /> 5 User Workspace</li>
                     </ul>
@@ -951,7 +916,7 @@ export default function Landing() {
                     <ul>
                       <li><CheckCircle2 size={16} strokeWidth={2} /> Unlimited Campaigns</li>
                       <li><CheckCircle2 size={16} strokeWidth={2} /> Unlimited Team Members</li>
-                      <li><CheckCircle2 size={16} strokeWidth={2} /> AI-Performance Predictions</li>
+                      <li><CheckCircle2 size={16} strokeWidth={2} /> AI Performance Predictions</li>
                       <li><CheckCircle2 size={16} strokeWidth={2} /> A/B Testing Recommendations</li>
                       <li><CheckCircle2 size={16} strokeWidth={2} /> Performance Insights Dashboard</li>
                       <li><CheckCircle2 size={16} strokeWidth={2} /> Priority Chat & Email Support</li>
@@ -988,66 +953,121 @@ export default function Landing() {
             </div>
             
             <div className="lexaro-pricing-guarantee">
-              Each plan includes a 14-day, no-questions-asked full refund policy.
+              Each plan includes a 14 day, no questions asked full refund policy.
             </div>
           </div>
         </section>
 
         {/* ============ FAQ ============ */}
-        <section className="lexaro-faq-section" style={{ padding: '100px 0', backgroundColor: '#fff', borderTop: '1px solid #eaeaea' }}>
+        <section className="lexaro-faq" id="faq">
           <div className="lexaro-container">
-            <FadeUp>
-              <div style={{ textAlign: 'center', marginBottom: '80px' }}>
-                <div className="lexaro-badge" style={{ margin: '0 auto 16px', display: 'inline-block' }}>Support & Answers</div>
-                <h2 className="lexaro-title" style={{ fontSize: '3rem', letterSpacing: '-0.04em' }}>Frequently asked questions</h2>
-                <p className="lexaro-subtitle" style={{ fontSize: '1.2rem', color: '#777', maxWidth: '600px', margin: '0 auto' }}>
-                  Everything you need to know about the product and how it works.
-                </p>
+            <div className="lexaro-faq-grid">
+              
+              {/* Left Column: Header */}
+              <div className="lexaro-faq-left">
+                <FadeUp>
+                  <div className="lexaro-faq-subtitle">Support & Answers</div>
+                  <h2 className="lexaro-faq-title">Frequently asked<br/>questions</h2>
+                  <p className="lexaro-faq-desc">Everything you need to know about the product and how it works.</p>
+                  
+                  <div style={{ marginTop: '40px' }}>
+                    <p style={{ fontSize: '0.95rem', color: '#64748b', marginBottom: '12px', fontWeight: 500 }}>Still have questions?</p>
+                    <button className="lexaro-btn lexaro-btn-ghost" onClick={() => navigate('/contact')} style={{ borderRadius: '8px', padding: '10px 24px', fontSize: '14px', border: '1px solid rgba(125, 59, 236, 0.3)', color: '#7d3bec', fontWeight: 500, backgroundColor: 'rgba(125, 59, 236, 0.05)' }}>
+                      Contact our team
+                    </button>
+                  </div>
+                </FadeUp>
               </div>
-            </FadeUp>
 
-            <FadeUp delay={0.1}>
-              <FaqAccordion />
-            </FadeUp>
+              {/* Right Column: Accordions */}
+              <div className="lexaro-faq-right">
+                <div className="lexaro-faq-list">
+              <FadeUp delay={0.1} className="lexaro-faq-item">
+                <details>
+                  <summary>What is LinksMeet and how does it work as a scheduling app?</summary>
+                  <div className="lexaro-faq-content">
+                    LinksMeet is a scheduling app and meeting scheduling software used to eliminate booking back and forth. You share a link, and LinksMeet handles calendar syncing, timezone detection, reminders, and video calls through Zoom, Google Meet, Microsoft Teams, and LinksMeet Video. It works as a simple meeting scheduler for 1 on 1s or a fully automated scheduling system with routing and workflows.
+                  </div>
+                </details>
+              </FadeUp>
+              <FadeUp delay={0.2} className="lexaro-faq-item">
+                <details>
+                  <summary>What makes LinksMeet different from other scheduling apps?</summary>
+                  <div className="lexaro-faq-content">
+                    Unlike standard scheduling tools, LinksMeet offers a fully integrated AI powered sales engagement platform. We combine automated lead discovery, personalized cold outreach, superior email deliverability, and intelligent scheduling into one seamless workspace to help you close deals faster.
+                  </div>
+                </details>
+              </FadeUp>
+              <FadeUp delay={0.3} className="lexaro-faq-item">
+                <details>
+                  <summary>Can LinksMeet be used as scheduling software for Healthcare, Sales, Support, and B2B teams?</summary>
+                  <div className="lexaro-faq-content">
+                    Absolutely! LinksMeet is highly adaptable. Sales and B2B teams can use it for automated lead routing and discovery, while Healthcare and Support teams benefit from secure, reliable scheduling with seamless integrations for video conferencing and calendar management.
+                  </div>
+                </details>
+              </FadeUp>
+            </div>
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* ============ CAMPAIGN VILLAGE ============ */}
-        <section className="lexaro-campaign-village" style={{ position: 'relative', overflow: 'hidden', padding: '100px 20px', backgroundColor: '#fff' }}>
-          <div className="lexaro-container">
+        {/* ============ CTA SECTION ============ */}
+        <section className="lexaro-cta-section" style={{ position: 'relative', overflow: 'hidden', padding: '100px 20px', backgroundColor: '#fff' }}>
+          <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
             <FadeUp>
-              <div style={{ position: 'relative', borderRadius: '24px', overflow: 'hidden', padding: '120px 40px', textAlign: 'center', boxShadow: '0 24px 48px -12px rgba(0,0,0,0.15)' }}>
+              <div style={{ position: 'relative', borderRadius: '24px', overflow: 'hidden', padding: '80px 40px', textAlign: 'center', backgroundColor: '#7d3bec', border: '4px solid #F5F5F5', boxShadow: 'none' }}>
 
-                {/* Full Background Image */}
-                <div style={{ position: 'absolute', inset: -20, zIndex: 0 }}>
-                  <img src="/hero-landscape.png" alt="Background Texture" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  {/* Full-width blur and darken overlay for the entire section */}
-                  <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.20)', backdropFilter: 'blur(3px)' }} />
-                </div>
+                {/* Geometric Background Shapes (Animated professionally) */}
+                <motion.div 
+                  animate={{ y: [0, 20, 0], x: [0, -15, 0], scale: [1, 1.04, 1] }}
+                  transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
+                  style={{ position: 'absolute', top: '-10%', left: '-5%', width: '300px', height: '300px', borderRadius: '50%', backgroundColor: 'rgba(255, 255, 255, 0.05)', zIndex: 0 }} 
+                />
+                <motion.div 
+                  animate={{ y: [0, -25, 0], x: [0, 15, 0], rotate: [15, 25, 15] }}
+                  transition={{ duration: 22, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                  style={{ position: 'absolute', bottom: '-20%', left: '-5%', width: '250px', height: '250px', borderRadius: '40px', backgroundColor: 'rgba(0, 0, 0, 0.05)', zIndex: 0 }} 
+                />
+                <motion.div 
+                  animate={{ scale: [1, 1.03, 1], x: [0, -10, 0] }}
+                  transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+                  style={{ position: 'absolute', top: '-10%', right: '-5%', width: '350px', height: '350px', borderRadius: '50%', backgroundColor: 'rgba(0, 0, 0, 0.05)', zIndex: 0 }} 
+                />
+                <motion.div 
+                  animate={{ y: [0, -15, 0], scale: [1, 1.05, 1] }}
+                  transition={{ duration: 20, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                  style={{ position: 'absolute', bottom: '-30%', right: '5%', width: '400px', height: '400px', borderRadius: '50%', backgroundColor: 'rgba(255, 255, 255, 0.05)', zIndex: 0 }} 
+                />
 
                 {/* Foreground Content */}
-                <div style={{ position: 'relative', zIndex: 10, maxWidth: '640px', margin: '0 auto' }}>
-                  <h2 style={{ fontSize: '3.5rem', fontWeight: 600, letterSpacing: '-0.04em', lineHeight: 1.1, color: '#111', marginBottom: '24px' }}>
-                    Your best-performing<br />campaign starts here.
+                <div style={{ position: 'relative', zIndex: 10, maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  
+                  {/* Title & Subtitle */}
+                  <h2 style={{ fontSize: '3.5rem', fontWeight: 500, letterSpacing: '-0.04em', lineHeight: 1.1, color: '#fff', marginBottom: '24px' }}>
+                    Your best performing<br />campaign starts here.
                   </h2>
-                  <p style={{ fontSize: '1.15rem', color: '#475569', marginBottom: '40px', fontWeight: 500 }}>
+                  <p style={{ fontSize: '1.15rem', color: 'rgba(255, 255, 255, 0.9)', marginBottom: '40px', fontWeight: 500 }}>
                     Set up in minutes. See results from day one.
                   </p>
 
+                  {/* Buttons */}
                   <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-                    <button className="lexaro-btn lexaro-btn-dark" onClick={goSignup} style={{ borderRadius: '40px', padding: '14px 32px', fontSize: '16px', backgroundColor: '#111', border: 'none', color: '#fff' }}>
+                    <button className="lexaro-btn lexaro-btn-dark" onClick={goSignup} style={{ borderRadius: '40px', padding: '14px 32px', fontSize: '16px', backgroundColor: '#fff', border: 'none', color: '#111', fontWeight: 600 }}>
                       Start for free
                     </button>
-                    <button className="lexaro-btn lexaro-btn-ghost" onClick={goSignup} style={{ borderRadius: '40px', padding: '14px 32px', fontSize: '16px', backgroundColor: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.15)', color: '#111', backdropFilter: 'blur(8px)' }}>
+                    <button className="lexaro-btn lexaro-btn-ghost" onClick={goSignup} style={{ borderRadius: '40px', padding: '14px 32px', fontSize: '16px', backgroundColor: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.3)', color: '#fff', fontWeight: 500, backdropFilter: 'blur(8px)' }}>
                       Talk to sales
                     </button>
                   </div>
+
                 </div>
 
               </div>
             </FadeUp>
           </div>
         </section>
+
       </div> {/* End of main content boundary container */}
 
       {/* ============ FOOTER ============ */}
