@@ -32,20 +32,23 @@ export default function MarketingLayout() {
   return (
     <div className="cc-landing">
       {/* ============ NAVBAR ============ */}
-      <nav className="cc-nav">
-        <div className="cc-nav-inner">
-          <Link to="/" className="cc-logo">
-            <img src="/LinksMeet-without-bg.png" alt="LinksMeet" style={{ width: 26, height: 26, objectFit: 'contain', borderRadius: 5 }} />
-            <span>LinksMeet</span>
-          </Link>
-          <div className="cc-nav-links">
-            <NavLink to="/about">About</NavLink>
-            <a href="/#features">Features</a>
-            <NavLink to="/blog">Blog</NavLink>
-            <NavLink to="/pricing">Pricing</NavLink>
-            <NavLink to="/contact">Contact</NavLink>
+      <nav className="lexaro-nav" style={{ position: 'sticky', top: 0, zIndex: 100, backgroundColor: '#ffffff', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+        <div className="lexaro-container">
+          <div className="lexaro-logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
+            <img src="/LinksMeet-without-bg.png" alt="LinksMeet" style={{ width: '26px', height: '26px', objectFit: 'contain', borderRadius: '5px', marginRight: '6px' }} />
+            LinksMeet
           </div>
-          <button className="cc-btn cc-btn-dark" onClick={() => navigate('/signup')}>Book a Demo</button>
+          <div className="lexaro-nav-links">
+            <Link to="/about">About</Link>
+            <a href="/#features">Features</a>
+            <a href="/#pricing">Pricing</a>
+            <Link to="/blog">Blog</Link>
+            <Link to="/contact">Contact</Link>
+          </div>
+          <div className="lexaro-nav-actions">
+            <button className="lexaro-btn" style={{ background: 'transparent', color: '#0f172a', fontWeight: 500, padding: '8px 16px' }} onClick={() => navigate('/login')}>Log in</button>
+            <button className="lexaro-btn lexaro-btn-dark" onClick={() => navigate('/signup')} style={{ padding: '8px 20px', borderRadius: '6px', fontSize: '14px' }}>Get Started</button>
+          </div>
         </div>
       </nav>
 
