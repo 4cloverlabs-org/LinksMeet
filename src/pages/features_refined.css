@@ -647,14 +647,14 @@
   0%, 15% { left: 120%; top: 120%; opacity: 0; transform: scale(1); }
   20% { opacity: 1; transform: scale(1); }
   
-  /* Hover Date 15, pause briefly before clicking */
-  27%, 29% { left: 4%; top: 53%; opacity: 1; transform: scale(1); }
-  /* Click Date 15 */
-  30% { left: 4%; top: 53%; opacity: 1; transform: scale(0.7); }
-  31% { left: 4%; top: 53%; opacity: 1; transform: scale(1); }
+  /* Hover Date 29, pause briefly before clicking */
+  27%, 29% { left: 4%; top: 85%; opacity: 1; transform: scale(1); }
+  /* Click Date 29 */
+  30% { left: 4%; top: 85%; opacity: 1; transform: scale(0.7); }
+  31% { left: 4%; top: 85%; opacity: 1; transform: scale(1); }
   
   /* Hold to read selection */
-  32%, 48% { left: 4%; top: 53%; opacity: 1; transform: scale(1); }
+  32%, 48% { left: 4%; top: 85%; opacity: 1; transform: scale(1); }
   
   /* Hover 11:30 AM, pause briefly */
   57%, 59% { left: 75%; top: 53%; opacity: 1; transform: scale(1); }
