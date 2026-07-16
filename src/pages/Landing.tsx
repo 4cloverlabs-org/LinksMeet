@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 import React from 'react';
 import { Check, Target, Github, Twitter, Linkedin, CheckCircle2, FileText, GitMerge, BarChart3, Sparkles, Wand2, AlignLeft, Database, ChevronDown, Search, Filter, Calendar, Link, ArrowUpRight, ChevronRight, Menu, ArrowRight, X, Play, Globe, Zap, Clock, Users, Code, Lock, RefreshCw, Smartphone, Monitor, Shield, Layout, Settings, Mail, Bell, MessageSquare, Megaphone, LineChart, Plus, Maximize, User, FileEdit, Info, Loader, Edit2, ArrowUpDown, MousePointer2, Cloud, Activity } from 'lucide-react';
 import './Landing.css';
@@ -39,6 +39,12 @@ const ScrollRevealGrid = ({ children, header }: { children: React.ReactNode, hea
     [0.75, 0.95]  // Card 4: Animates after sticking
   ];
 
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
+
   return (
     <div ref={containerRef} style={{ height: '300vh', position: 'relative' }}>
       <div style={{ position: 'sticky', top: 0, height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', paddingTop: '20px', overflow: 'hidden' }}>
@@ -48,18 +54,18 @@ const ScrollRevealGrid = ({ children, header }: { children: React.ReactNode, hea
           </div>
         )}
         <div style={{ width: '100%' }}>
-          <div className="lexaro-4col-grid" style={{ padding: '0 20px', maxWidth: '1600px', margin: '0 auto' }}>
+          <div className="linksmeet-4col-grid" style={{ padding: '0 20px', maxWidth: '1600px', margin: '0 auto' }}>
             {cards.map((child, index) => {
               const [start, end] = timings[index] || [0, 1];
               
               // Use manual clamping via a callback function to guarantee the animation stops perfectly at its destination
-              const opacity = useTransform(scrollYProgress, (v) => {
+              const opacity = useTransform(smoothProgress, (v) => {
                 if (v <= start) return 0;
                 if (v >= end) return 1;
                 return (v - start) / (end - start);
               });
               
-              const y = useTransform(scrollYProgress, (v) => {
+              const y = useTransform(smoothProgress, (v) => {
                 if (v <= start) return 60;
                 if (v >= end) return 0;
                 return 60 - ((v - start) / (end - start)) * 60;
@@ -186,12 +192,11 @@ export default function Landing() {
   const [isAnnual, setIsAnnual] = useState(true);
 
   useEffect(() => {
-    // We intentionally removed the auto-redirect so logged-in users can still view the landing page.
-    // If they want to go to their dashboard, they can click the CTA buttons.
+    document.title = "LinksMeet — Scheduling & Meeting Automation";
   }, []);
 
   return (
-    <div className="lexaro-landing" style={{ minHeight: '100vh', position: 'relative' }}>
+    <div className="linksmeet-landing" style={{ minHeight: '100vh', position: 'relative' }}>
 
       {/* Outer bounding box simulating the Framer canvas */}
       <div style={{ position: 'relative', width: '100%', marginBottom: '0px' }}>
@@ -199,48 +204,48 @@ export default function Landing() {
         <div style={{ backgroundColor: '#ffffff', padding: '24px' }}>
           <div className="hero-wrapper" style={{ borderRadius: '32px', overflow: 'hidden', backgroundColor: '#F7F7F7', border: '2px solid #F6F6F6', position: 'relative', zIndex: 10 }}>
             {/* ============ NAVBAR ============ */}
-            <nav className="lexaro-nav" style={{ position: 'relative', zIndex: 100, background: 'transparent' }}>
-              <div className="lexaro-container">
-                <div className="lexaro-logo">
+            <nav className="linksmeet-nav" style={{ position: 'relative', zIndex: 100, background: 'transparent' }}>
+              <div className="linksmeet-container">
+                <div className="linksmeet-logo">
                   <img src="/LinksMeet-without-bg.png" alt="LinksMeet" style={{ width: '26px', height: '26px', objectFit: 'contain', borderRadius: '5px', marginRight: '6px' }} />
                   LinksMeet
                 </div>
-                <div className="lexaro-nav-links">
+                <div className="linksmeet-nav-links">
                   <a href="#about">About</a>
                   <a href="#features">Features</a>
                   <a href="#pricing">Pricing</a>
                   <a href="#blog">Blog</a>
                   <a href="#contact">Contact</a>
                 </div>
-                <div className="lexaro-nav-actions">
-                  <button className="lexaro-btn" style={{ background: 'transparent', color: '#0f172a', fontWeight: 500, padding: '8px 16px' }} onClick={() => navigate('/login')}>Log in</button>
-                  <button className="lexaro-btn lexaro-btn-dark" onClick={goSignup} style={{ padding: '8px 20px', borderRadius: '6px', fontSize: '14px' }}>Get Started</button>
+                <div className="linksmeet-nav-actions">
+                  <button className="linksmeet-btn" style={{ background: 'transparent', color: '#0f172a', fontWeight: 500, padding: '8px 16px' }} onClick={() => navigate('/login')}>Log in</button>
+                  <button className="linksmeet-btn linksmeet-btn-dark" onClick={goSignup} style={{ padding: '8px 20px', borderRadius: '6px', fontSize: '14px' }}>Get Started</button>
                 </div>
               </div>
             </nav>
 
             {/* ============ HERO ============ */}
-            <section className="lexaro-hero" id="home">
+            <section className="linksmeet-hero" id="home">
               {/* New Background Gradient */}
               <div className="hero-gradient-bg" />
               <div className="hero-noise-texture" />
 
-              <div className="lexaro-container" style={{ position: 'relative', zIndex: 10 }}>
+              <div className="linksmeet-container" style={{ position: 'relative', zIndex: 10 }}>
                 <motion.div
                   initial={{ opacity: 0, y: 30, filter: 'blur(12px)' }}
                   animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                   transition={{ duration: 0.8, ease: "easeOut" }}
                 >
-                  <h1 className="lexaro-hero-title">More qualified meetings with<br />intelligent automation</h1>
-                  <p className="lexaro-hero-sub">
+                  <h1 className="linksmeet-hero-title">More qualified meetings with<br />intelligent automation</h1>
+                  <p className="linksmeet-hero-sub">
                     LinksMeet combines lead discovery, personalized cold outreach, email deliverability,
                     and meeting scheduling into one seamless workspace.
                   </p>
-                  <div className="lexaro-hero-cta">
-                    <button className="lexaro-btn-primary-hero" onClick={goSignup}>
+                  <div className="linksmeet-hero-cta">
+                    <button className="linksmeet-btn-primary-hero" onClick={goSignup}>
                       Start your free trial
                     </button>
-                    <button className="lexaro-btn-secondary-hero" onClick={() => navigate('/login')}>
+                    <button className="linksmeet-btn-secondary-hero" onClick={() => navigate('/login')}>
                       <Play size={16} fill="currentColor" /> How It Works
                     </button>
                   </div>
@@ -253,14 +258,14 @@ export default function Landing() {
 
         {/* ============ TRUSTED LOGOS (COMMENTED OUT FOR FUTURE USE) ============ */}
         {false && (
-        <section className="lexaro-trusted" style={{ position: 'relative', width: '100%', maxWidth: '100vw', overflow: 'hidden' }}>
+        <section className="linksmeet-trusted" style={{ position: 'relative', width: '100%', maxWidth: '100vw', overflow: 'hidden' }}>
           <div style={{ width: '100%' }}>
             <FadeUp>
               <p style={{ textAlign: 'center', color: '#666', fontSize: '0.9rem', marginBottom: '24px' }}>Trusted by innovative teams worldwide</p>
-              <div className="lexaro-marquee-wrapper">
-                <div className="lexaro-marquee-track">
+              <div className="linksmeet-marquee-wrapper">
+                <div className="linksmeet-marquee-track">
                   {[...Array(3)].map((_, i) => (
-                    <div key={i} className="lexaro-marquee-items">
+                    <div key={i} className="linksmeet-marquee-items">
                       <span style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L22 20H2L12 2Z" /></svg>
                         Vercel
@@ -284,8 +289,8 @@ export default function Landing() {
         )}
 
         {/* ============ 4-COLUMN FEATURES GRID ============ */}
-        <section className="lexaro-legacy-section" style={{ position: 'relative' }}>
-          <div className="lexaro-container" style={{ position: 'relative', maxWidth: '1600px', width: '95%' }}>
+        <section className="linksmeet-legacy-section" style={{ position: 'relative' }}>
+          <div className="linksmeet-container" style={{ position: 'relative', maxWidth: '1600px', width: '95%' }}>
             {/* Top Hatched Bar */}
             <div className="hatched-bg" style={{ position: 'absolute', top: -49, left: -1, right: -1, height: '48px' }} />
             {/* Bottom Hatched Bar */}
@@ -295,8 +300,8 @@ export default function Landing() {
               <ScrollRevealGrid 
                 header={
                   <FadeUp>
-                    <div className="lexaro-legacy-header" style={{ marginBottom: '32px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', maxWidth: '100%', gap: '8px' }}>
-                      <h2 className="lexaro-system-title" style={{ margin: 0, lineHeight: 0.95 }}>The problem with legacy<br />outbound workflows</h2>
+                    <div className="linksmeet-legacy-header" style={{ marginBottom: '32px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', maxWidth: '100%', gap: '8px' }}>
+                      <h2 className="linksmeet-system-title" style={{ margin: 0, lineHeight: 0.95 }}>The problem with legacy<br />outbound workflows</h2>
                       <p style={{ margin: 0, maxWidth: '600px', color: '#666', fontSize: '1.1rem' }}>Fragmented sales tools kill productivity. LinksMeet unifies everything you need into one intelligent system.</p>
                     </div>
                   </FadeUp>
@@ -304,104 +309,104 @@ export default function Landing() {
               >
                 
                 {/* Card 1 */}
-                  <div className="lexaro-feature-card">
-                    <div className="lexaro-feature-icon">
+                  <div className="linksmeet-feature-card">
+                    <div className="linksmeet-feature-icon">
                       <Link size={22} strokeWidth={1.5} />
                     </div>
                     <h3>Fragmented Data Sources</h3>
                     <p>Prospects live in ZoomInfo. Emails live in Outreach. Calendars live in Google. Nothing is connected, causing data leaks and lost deals.</p>
                     
                     <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-                      <div className="lexaro-mockup-pill lexaro-loop-pill-1">
-                        <div className="lexaro-mockup-pill-icon-solid">
+                      <div className="linksmeet-mockup-pill linksmeet-loop-pill-1">
+                        <div className="linksmeet-mockup-pill-icon-solid">
                           <Database size={16} />
                         </div>
-                        <div className="lexaro-mockup-pill-text">
-                          <span className="lexaro-mockup-pill-title">ZoomInfo</span>
-                          <span className="lexaro-mockup-pill-sub">Prospect Data</span>
+                        <div className="linksmeet-mockup-pill-text">
+                          <span className="linksmeet-mockup-pill-title">ZoomInfo</span>
+                          <span className="linksmeet-mockup-pill-sub">Prospect Data</span>
                         </div>
-                        <div className="lexaro-mockup-pill-badge" style={{ background: '#F5F3FF', padding: '4px 10px', borderRadius: '12px' }}>Disconnected</div>
+                        <div className="linksmeet-mockup-pill-badge" style={{ background: '#F5F3FF', padding: '4px 10px', borderRadius: '12px' }}>Disconnected</div>
                       </div>
                       
-                      <div className="lexaro-mockup-pill lexaro-loop-pill-2">
-                        <div className="lexaro-mockup-pill-icon-light">
+                      <div className="linksmeet-mockup-pill linksmeet-loop-pill-2">
+                        <div className="linksmeet-mockup-pill-icon-light">
                           <Mail size={16} />
                         </div>
-                        <div className="lexaro-mockup-pill-text">
-                          <span className="lexaro-mockup-pill-title">Outreach</span>
-                          <span className="lexaro-mockup-pill-sub">Email Platform</span>
+                        <div className="linksmeet-mockup-pill-text">
+                          <span className="linksmeet-mockup-pill-title">Outreach</span>
+                          <span className="linksmeet-mockup-pill-sub">Email Platform</span>
                         </div>
-                        <div className="lexaro-mockup-pill-badge" style={{ background: '#F5F3FF', padding: '4px 10px', borderRadius: '12px' }}>Disconnected</div>
+                        <div className="linksmeet-mockup-pill-badge" style={{ background: '#F5F3FF', padding: '4px 10px', borderRadius: '12px' }}>Disconnected</div>
                       </div>
                       
-                      <div className="lexaro-mockup-pill lexaro-loop-pill-3">
-                        <div className="lexaro-mockup-pill-icon-light">
+                      <div className="linksmeet-mockup-pill linksmeet-loop-pill-3">
+                        <div className="linksmeet-mockup-pill-icon-light">
                           <Calendar size={16} /> 
                         </div>
-                        <div className="lexaro-mockup-pill-text">
-                          <span className="lexaro-mockup-pill-title">Google</span>
-                          <span className="lexaro-mockup-pill-sub">Calendars</span>
+                        <div className="linksmeet-mockup-pill-text">
+                          <span className="linksmeet-mockup-pill-title">Google</span>
+                          <span className="linksmeet-mockup-pill-sub">Calendars</span>
                         </div>
-                        <div className="lexaro-mockup-pill-badge" style={{ background: '#F5F3FF', padding: '4px 10px', borderRadius: '12px' }}>Disconnected</div>
+                        <div className="linksmeet-mockup-pill-badge" style={{ background: '#F5F3FF', padding: '4px 10px', borderRadius: '12px' }}>Disconnected</div>
                       </div>
 
                       {/* Connected Badge overlay */}
-                      <div className="lexaro-connected-badge">
+                      <div className="linksmeet-connected-badge">
                         Connected <ArrowUpDown size={12} style={{ color: '#4b5563' }} />
                       </div>
                     </div>
                   </div>
                 {/* Card 2 */}
-                  <div className="lexaro-feature-card">
-                    <div className="lexaro-feature-icon">
+                  <div className="linksmeet-feature-card">
+                    <div className="linksmeet-feature-icon">
                       <Shield size={22} strokeWidth={1.5} />
                     </div>
                     <h3>Deliverability Excellence</h3>
                     <p>Protect sender reputation with SPF/DKIM tracking and warm-up.</p>
                     
-                    <div className="lexaro-target-container">
-                      <div className="lexaro-target-layout">
-                        <div className="lexaro-target-left">
+                    <div className="linksmeet-target-container">
+                      <div className="linksmeet-target-layout">
+                        <div className="linksmeet-target-left">
                           <div>
-                            <div className="lexaro-target-select-label">SPF Record</div>
-                            <div className="lexaro-target-select lexaro-shimmer">Verified <ChevronDown size={14} /></div>
+                            <div className="linksmeet-target-select-label">SPF Record</div>
+                            <div className="linksmeet-target-select linksmeet-shimmer">Verified <ChevronDown size={14} /></div>
                           </div>
                           <div>
-                            <div className="lexaro-target-select-label">DKIM Record</div>
-                            <div className="lexaro-target-select lexaro-shimmer">Verified <ChevronDown size={14} /></div>
+                            <div className="linksmeet-target-select-label">DKIM Record</div>
+                            <div className="linksmeet-target-select linksmeet-shimmer">Verified <ChevronDown size={14} /></div>
                           </div>
                         </div>
-                        <div className="lexaro-target-right">
+                        <div className="linksmeet-target-right">
                           <div style={{ position: 'absolute', left: 0, top: 15, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <div className="lexaro-shimmer lexaro-bar-pulse-h1" style={{ width: '26px', height: '6px', background: '#e5e7eb', borderRadius: '999px' }}></div>
-                            <div className="lexaro-shimmer lexaro-bar-pulse-h2" style={{ width: '20px', height: '6px', background: '#e5e7eb', borderRadius: '999px' }}></div>
-                            <div className="lexaro-shimmer lexaro-bar-pulse-h3" style={{ width: '12px', height: '6px', background: '#e5e7eb', borderRadius: '999px' }}></div>
-                            <div className="lexaro-shimmer lexaro-bar-pulse-h4" style={{ width: '16px', height: '6px', background: '#e5e7eb', borderRadius: '999px' }}></div>
+                            <div className="linksmeet-shimmer linksmeet-bar-pulse-h1" style={{ width: '26px', height: '6px', background: '#e5e7eb', borderRadius: '999px' }}></div>
+                            <div className="linksmeet-shimmer linksmeet-bar-pulse-h2" style={{ width: '20px', height: '6px', background: '#e5e7eb', borderRadius: '999px' }}></div>
+                            <div className="linksmeet-shimmer linksmeet-bar-pulse-h3" style={{ width: '12px', height: '6px', background: '#e5e7eb', borderRadius: '999px' }}></div>
+                            <div className="linksmeet-shimmer linksmeet-bar-pulse-h4" style={{ width: '16px', height: '6px', background: '#e5e7eb', borderRadius: '999px' }}></div>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '100%', position: 'relative' }}>
                             <div style={{ position: 'absolute', bottom: -1, left: '-10px', right: '-10px', borderBottom: '2px dotted #e5e7eb', zIndex: 0 }}></div>
-                            <div className="lexaro-bar-indigo-light lexaro-shimmer lexaro-bar-pulse-1" style={{ height: '35%' }}></div>
-                            <div className="lexaro-bar-indigo-dark lexaro-shimmer lexaro-bar-pulse-2" style={{ height: '55%' }}></div>
-                            <div className="lexaro-bar-indigo-light lexaro-shimmer lexaro-bar-pulse-3" style={{ height: '75%' }}></div>
-                            <div className="lexaro-bar-indigo-dark lexaro-shimmer lexaro-bar-pulse-4" style={{ height: '95%' }}></div>
+                            <div className="linksmeet-bar-indigo-light linksmeet-shimmer linksmeet-bar-pulse-1" style={{ height: '35%' }}></div>
+                            <div className="linksmeet-bar-indigo-dark linksmeet-shimmer linksmeet-bar-pulse-2" style={{ height: '55%' }}></div>
+                            <div className="linksmeet-bar-indigo-light linksmeet-shimmer linksmeet-bar-pulse-3" style={{ height: '75%' }}></div>
+                            <div className="linksmeet-bar-indigo-dark linksmeet-shimmer linksmeet-bar-pulse-4" style={{ height: '95%' }}></div>
                           </div>
                         </div>
                       </div>
-                      <div className="lexaro-target-bottom">
-                        <div className="lexaro-target-bottom-label">Sender Score</div>
-                        <div className="lexaro-avatar-group">
-                          <img src="https://i.pravatar.cc/150?img=47" className="lexaro-avatar" alt="Avatar 1" />
-                          <img src="https://i.pravatar.cc/150?img=12" className="lexaro-avatar" alt="Avatar 2" />
-                          <img src="https://i.pravatar.cc/150?img=33" className="lexaro-avatar" alt="Avatar 3" />
-                          <img src="https://i.pravatar.cc/150?img=5" className="lexaro-avatar" alt="Avatar 4" />
-                          <div className="lexaro-avatar-count lexaro-shimmer">99/100</div>
+                      <div className="linksmeet-target-bottom">
+                        <div className="linksmeet-target-bottom-label">Sender Score</div>
+                        <div className="linksmeet-avatar-group">
+                          <img src="https://i.pravatar.cc/150?img=47" className="linksmeet-avatar" alt="Avatar 1" />
+                          <img src="https://i.pravatar.cc/150?img=12" className="linksmeet-avatar" alt="Avatar 2" />
+                          <img src="https://i.pravatar.cc/150?img=33" className="linksmeet-avatar" alt="Avatar 3" />
+                          <img src="https://i.pravatar.cc/150?img=5" className="linksmeet-avatar" alt="Avatar 4" />
+                          <div className="linksmeet-avatar-count linksmeet-shimmer">99/100</div>
                         </div>
                       </div>
                     </div>
                   </div>
                 {/* Card 3 */}
-                  <div className="lexaro-feature-card">
-                    <div className="lexaro-feature-icon">
+                  <div className="linksmeet-feature-card">
+                    <div className="linksmeet-feature-icon">
                       <GitMerge size={22} strokeWidth={1.5} />
                     </div>
                     <h3>Cold Email Automation</h3>
@@ -420,8 +425,8 @@ export default function Landing() {
                       </div>
 
                       {/* Animated Connector 1 */}
-                      <div className="lexaro-sequence-connector">
-                        <div className="lexaro-sequence-pulse lexaro-delay-1"></div>
+                      <div className="linksmeet-sequence-connector">
+                        <div className="linksmeet-sequence-pulse linksmeet-delay-1"></div>
                       </div>
 
                       {/* Delay Tag */}
@@ -430,8 +435,8 @@ export default function Landing() {
                       </div>
 
                       {/* Animated Connector 2 */}
-                      <div className="lexaro-sequence-connector">
-                        <div className="lexaro-sequence-pulse lexaro-delay-2"></div>
+                      <div className="linksmeet-sequence-connector">
+                        <div className="linksmeet-sequence-pulse linksmeet-delay-2"></div>
                       </div>
 
                       {/* Step 2 */}
@@ -454,15 +459,15 @@ export default function Landing() {
                     </div>
                   </div>
                 {/* Card 4 */}
-                  <div className="lexaro-feature-card">
-                    <div className="lexaro-feature-icon">
+                  <div className="linksmeet-feature-card">
+                    <div className="linksmeet-feature-icon">
                       <Calendar size={22} strokeWidth={1.5} />
                     </div>
                     <h3>Meeting Scheduling</h3>
                     <p>Let prospects book meetings directly with calendar sync.</p>
                     
-                    <div className="lexaro-opt-layout">
-                      <div className="lexaro-opt-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div className="linksmeet-opt-layout">
+                      <div className="linksmeet-opt-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         Availability 
                         <span style={{ fontSize: '0.65rem', fontWeight: 600, color: '#6D28D9', background: '#F5F3FF', padding: '4px 8px', borderRadius: '12px' }}>October</span>
                       </div>
@@ -473,7 +478,7 @@ export default function Landing() {
                             <div key={'d'+i} style={{ fontSize: '0.55rem', fontWeight: 700, color: '#9CA3AF', textAlign: 'center', marginBottom: '4px' }}>{d}</div>
                           ))}
                           {[...Array(31)].map((_, i) => (
-                            <div key={i} className={i === 14 ? 'lexaro-date-animate' : ''} style={{ 
+                            <div key={i} className={i === 14 ? 'linksmeet-date-animate' : ''} style={{ 
                               aspectRatio: '1/1', 
                               borderRadius: '4px', 
                               background: i === 14 ? undefined : '#f8fafc',
@@ -489,14 +494,14 @@ export default function Landing() {
                         </div>
 
                         {/* Animated Cursor */}
-                        <div className="lexaro-animated-cursor">
+                        <div className="linksmeet-animated-cursor">
                           <MousePointer2 size={16} fill="#6D28D9" color="#ffffff" strokeWidth={1} style={{ transform: 'rotate(-15deg)' }} />
                         </div>
 
                         {/* Time slots */}
                         <div style={{ flex: 1, minWidth: '55px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           <div style={{ fontSize: '0.65rem', fontWeight: 600, color: '#64748b', marginBottom: '4px', textAlign: 'center', lineHeight: 1.4 }}>Select<br/>Time</div>
-                          <div className="lexaro-time-animate" style={{ borderRadius: '6px', padding: '8px 0', fontSize: '0.7rem', fontWeight: 600, textAlign: 'center', lineHeight: 1.4 }}>10:00<br/>AM</div>
+                          <div className="linksmeet-time-animate" style={{ borderRadius: '6px', padding: '8px 0', fontSize: '0.7rem', fontWeight: 600, textAlign: 'center', lineHeight: 1.4 }}>10:00<br/>AM</div>
                           <div style={{ border: '2px solid #F5F5F5', borderRadius: '6px', padding: '8px 0', fontSize: '0.7rem', fontWeight: 600, color: '#334155', textAlign: 'center', background: '#ffffff', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', lineHeight: 1.4 }}>11:30<br/>AM</div>
                           <div style={{ border: '2px solid #F5F5F5', borderRadius: '6px', padding: '8px 0', fontSize: '0.7rem', fontWeight: 600, color: '#334155', textAlign: 'center', background: '#ffffff', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', lineHeight: 1.4 }}>2:00<br/>PM</div>
                         </div>
@@ -510,18 +515,18 @@ export default function Landing() {
         </section>
 
         {/* ============ THE SYSTEM (EXACT MATCH) ============ */}
-        <section className="lexaro-system-section" id="features" style={{ position: 'relative' }}>
-          <div className="lexaro-container">
+        <section className="linksmeet-system-section" id="features" style={{ position: 'relative' }}>
+          <div className="linksmeet-container">
             <FadeUp>
               <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-                <h2 className="lexaro-system-title" style={{ marginBottom: '16px' }}>Get clear answers in 3 simple steps</h2>
+                <h2 className="linksmeet-system-title" style={{ marginBottom: '16px' }}>Get clear answers in 3 simple steps</h2>
                 <p style={{ fontSize: '1.2rem', color: '#64748b', maxWidth: '600px', margin: '0 auto', lineHeight: '1.6' }}>From data to clarity—uncover insights, take action, and grow smarter in three simple steps.</p>
               </div>
             </FadeUp>
 
-            <div className="lexaro-grid-ui">
+            <div className="linksmeet-grid-ui">
               {/* Card 1: AI Powered Outreach */}
-              <FadeUp delay={0.1} className="lexaro-grid-card">
+              <FadeUp delay={0.1} className="linksmeet-grid-card">
                 <div className="grid-card-content">
                   <h3>AI-Powered Outreach</h3>
                   <p>AI automatically analyzes leads, generates personalized campaigns, and schedules follow-ups.</p>
@@ -542,7 +547,7 @@ export default function Landing() {
               </FadeUp>
 
               {/* Card 2: Track User Behavior (Gauge) */}
-              <FadeUp delay={0.2} className="lexaro-grid-card">
+              <FadeUp delay={0.2} className="linksmeet-grid-card">
                 <div className="grid-card-content">
                   <h3>Track User Behavior</h3>
                   <p>See what’s used, what’s dropped, and what keeps users engaged.</p>
@@ -569,7 +574,7 @@ export default function Landing() {
               </FadeUp>
 
               {/* Card 3: Turn Insights Into Action (Envelope) */}
-              <FadeUp delay={0.3} className="lexaro-grid-card">
+              <FadeUp delay={0.3} className="linksmeet-grid-card">
                 <div className="grid-card-content">
                   <h3>Turn Insights Into Action</h3>
                   <p>Get clear, actionable recommendations to boost retention and grow MRR.</p>
@@ -591,37 +596,37 @@ export default function Landing() {
 
 
         {/* ============ INTEGRATIONS (Exact Image Match) ============ */}
-        <section className="lexaro-section bg-white" id="integrations" style={{ position: 'relative' }}>
-          <div className="lexaro-container">
+        <section className="linksmeet-section bg-white" id="integrations" style={{ position: 'relative' }}>
+          <div className="linksmeet-container">
             <FadeUp>
-              <div className="lexaro-integrations-header" style={{ textAlign: 'center', marginBottom: '80px' }}>
-                <h2 className="lexaro-title" style={{ marginBottom: '16px' }}>Works with your existing stack</h2>
-                <p className="lexaro-subtitle" style={{ fontSize: '1.15rem', color: '#777' }}>LinksMeet integrates with your CRM, data providers, and sending domains seamlessly.</p>
+              <div className="linksmeet-integrations-header" style={{ textAlign: 'center', marginBottom: '80px' }}>
+                <h2 className="linksmeet-title" style={{ marginBottom: '16px' }}>Works with your existing stack</h2>
+                <p className="linksmeet-subtitle" style={{ fontSize: '1.15rem', color: '#777' }}>LinksMeet integrates with your CRM, data providers, and sending domains seamlessly.</p>
               </div>
             </FadeUp>
 
             <FadeUp delay={0.1}>
-              <div className="lexaro-orbit-wrapper">
-                <div className="lexaro-orbit-center">
-                  <div className="lexaro-orbit-pulse"></div>
-                  <img src="/LinksMeet-without-bg.png" alt="LinksMeet" className="lexaro-orbit-logo" />
+              <div className="linksmeet-orbit-wrapper">
+                <div className="linksmeet-orbit-center">
+                  <div className="linksmeet-orbit-pulse"></div>
+                  <img src="/LinksMeet-without-bg.png" alt="LinksMeet" className="linksmeet-orbit-logo" />
                 </div>
 
-                <div className="lexaro-orbit lexaro-orbit-inner">
-                  <div className="lexaro-orbit-node" style={{ top: '0%', left: '50%' }}><SalesforceLogo /></div>
-                  <div className="lexaro-orbit-node" style={{ top: '100%', left: '50%' }}><HubspotLogo /></div>
+                <div className="linksmeet-orbit linksmeet-orbit-inner">
+                  <div className="linksmeet-orbit-node" style={{ top: '0%', left: '50%' }}><SalesforceLogo /></div>
+                  <div className="linksmeet-orbit-node" style={{ top: '100%', left: '50%' }}><HubspotLogo /></div>
                 </div>
 
-                <div className="lexaro-orbit lexaro-orbit-middle">
-                  <div className="lexaro-orbit-node" style={{ top: '50%', left: '0%' }}><GmailLogo /></div>
-                  <div className="lexaro-orbit-node" style={{ top: '50%', left: '100%' }}><OutlookLogo /></div>
-                  <div className="lexaro-orbit-node" style={{ top: '15%', left: '85%' }}><SlackLogo /></div>
+                <div className="linksmeet-orbit linksmeet-orbit-middle">
+                  <div className="linksmeet-orbit-node" style={{ top: '50%', left: '0%' }}><GmailLogo /></div>
+                  <div className="linksmeet-orbit-node" style={{ top: '50%', left: '100%' }}><OutlookLogo /></div>
+                  <div className="linksmeet-orbit-node" style={{ top: '15%', left: '85%' }}><SlackLogo /></div>
                 </div>
 
-                <div className="lexaro-orbit lexaro-orbit-outer">
-                  <div className="lexaro-orbit-node" style={{ top: '85%', left: '15%' }}><ZapierLogo /></div>
-                  <div className="lexaro-orbit-node" style={{ top: '15%', left: '15%' }}><NotionLogo /></div>
-                  <div className="lexaro-orbit-node" style={{ top: '85%', left: '85%' }}><GoogleLogo /></div>
+                <div className="linksmeet-orbit linksmeet-orbit-outer">
+                  <div className="linksmeet-orbit-node" style={{ top: '85%', left: '15%' }}><ZapierLogo /></div>
+                  <div className="linksmeet-orbit-node" style={{ top: '15%', left: '15%' }}><NotionLogo /></div>
+                  <div className="linksmeet-orbit-node" style={{ top: '85%', left: '85%' }}><GoogleLogo /></div>
                 </div>
               </div>
             </FadeUp>
@@ -630,36 +635,36 @@ export default function Landing() {
         </section>
 
         {/* ============ PRICING (Exact Image Match) ============ */}
-        <section className="lexaro-pricing-section" id="pricing">
-          <div className="lexaro-container-wide">
+        <section className="linksmeet-pricing-section" id="pricing">
+          <div className="linksmeet-container-wide">
             <FadeUp>
-              <div className="lexaro-pricing-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <h2 className="lexaro-title" style={{ marginBottom: '16px' }}>Simple pricing for every team</h2>
-                <p className="lexaro-subtitle" style={{ marginBottom: '32px' }}>Choose a plan that supports your workflow and scales as you grow.</p>
-                <div className="lexaro-pricing-toggle-container" onClick={() => setIsAnnual(!isAnnual)}>
-                  <span className={`lexaro-pricing-toggle-text ${!isAnnual ? 'active' : 'inactive'}`}>Monthly</span>
-                  <div className={`lexaro-pricing-toggle ${isAnnual ? 'annual' : 'monthly'}`} />
-                  <span className={`lexaro-pricing-toggle-text ${isAnnual ? 'active' : 'inactive'}`}>Annually</span>
-                  <span className="lexaro-pricing-discount">- 25%</span>
+              <div className="linksmeet-pricing-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <h2 className="linksmeet-title" style={{ marginBottom: '16px' }}>Simple pricing for every team</h2>
+                <p className="linksmeet-subtitle" style={{ marginBottom: '32px' }}>Choose a plan that supports your workflow and scales as you grow.</p>
+                <div className="linksmeet-pricing-toggle-container" onClick={() => setIsAnnual(!isAnnual)}>
+                  <span className={`linksmeet-pricing-toggle-text ${!isAnnual ? 'active' : 'inactive'}`}>Monthly</span>
+                  <div className={`linksmeet-pricing-toggle ${isAnnual ? 'annual' : 'monthly'}`} />
+                  <span className={`linksmeet-pricing-toggle-text ${isAnnual ? 'active' : 'inactive'}`}>Annually</span>
+                  <span className="linksmeet-pricing-discount">- 25%</span>
                 </div>
               </div>
             </FadeUp>
 
-            <div className="lexaro-pricing-grid-4">
+            <div className="linksmeet-pricing-grid-4">
               {/* Starter */}
-              <FadeUp delay={0.1} className="lexaro-full-height">
-                <div className="lexaro-pricing-box">
-                  <div className="lexaro-pricing-top-tier">Starter</div>
-                  <div className="lexaro-pricing-desc">
+              <FadeUp delay={0.1} className="linksmeet-full-height">
+                <div className="linksmeet-pricing-box">
+                  <div className="linksmeet-pricing-top-tier">Starter</div>
+                  <div className="linksmeet-pricing-desc">
                     Best for testing the waters or solo marketers.
                   </div>
-                  <div className="lexaro-pricing-top-price">Free</div>
+                  <div className="linksmeet-pricing-top-price">Free</div>
 
-                  <button className="lexaro-pricing-btn" style={{ marginBottom: '24px' }}>
+                  <button className="linksmeet-pricing-btn" style={{ marginBottom: '24px' }}>
                     Get Started
                   </button>
 
-                  <div className="lexaro-pricing-features">
+                  <div className="linksmeet-pricing-features">
                     <ul>
                       <li><CheckCircle2 size={16} strokeWidth={2} /> 1 User Workspace</li>
                       <li><CheckCircle2 size={16} strokeWidth={2} /> 2 AI Campaigns per month</li>
@@ -673,19 +678,19 @@ export default function Landing() {
               </FadeUp>
 
               {/* Growth */}
-              <FadeUp delay={0.2} className="lexaro-full-height">
-                <div className="lexaro-pricing-box">
-                  <div className="lexaro-pricing-top-tier">Growth</div>
-                  <div className="lexaro-pricing-desc">
+              <FadeUp delay={0.2} className="linksmeet-full-height">
+                <div className="linksmeet-pricing-box">
+                  <div className="linksmeet-pricing-top-tier">Growth</div>
+                  <div className="linksmeet-pricing-desc">
                     Built for growing teams that need more scale and insights.
                   </div>
-                  <div className="lexaro-pricing-top-price">${isAnnual ? '39' : '49'}</div>
+                  <div className="linksmeet-pricing-top-price">${isAnnual ? '39' : '49'}</div>
 
-                  <button className="lexaro-pricing-btn" style={{ marginBottom: '24px' }}>
+                  <button className="linksmeet-pricing-btn" style={{ marginBottom: '24px' }}>
                     Get Started
                   </button>
 
-                  <div className="lexaro-pricing-features">
+                  <div className="linksmeet-pricing-features">
                     <ul>
                       <li><CheckCircle2 size={16} strokeWidth={2} /> Up to 5 Users</li>
                       <li><CheckCircle2 size={16} strokeWidth={2} /> 20 AI Campaigns per month</li>
@@ -699,19 +704,19 @@ export default function Landing() {
               </FadeUp>
 
               {/* Pro */}
-              <FadeUp delay={0.3} className="lexaro-full-height">
-                <div className="lexaro-pricing-box">
-                  <div className="lexaro-pricing-top-tier">Pro</div>
-                  <div className="lexaro-pricing-desc">
+              <FadeUp delay={0.3} className="linksmeet-full-height">
+                <div className="linksmeet-pricing-box">
+                  <div className="linksmeet-pricing-top-tier">Pro</div>
+                  <div className="linksmeet-pricing-desc">
                     All the power. For serious marketers and small agencies.
                   </div>
-                  <div className="lexaro-pricing-top-price">${isAnnual ? '99' : '129'}</div>
+                  <div className="linksmeet-pricing-top-price">${isAnnual ? '99' : '129'}</div>
 
-                  <button className="lexaro-pricing-btn lexaro-pricing-btn-solid" style={{ marginBottom: '24px' }}>
+                  <button className="linksmeet-pricing-btn linksmeet-pricing-btn-solid" style={{ marginBottom: '24px' }}>
                     Get Started
                   </button>
 
-                  <div className="lexaro-pricing-features">
+                  <div className="linksmeet-pricing-features">
                     <ul>
                       <li><CheckCircle2 size={16} strokeWidth={2} /> Unlimited Campaigns</li>
                       <li><CheckCircle2 size={16} strokeWidth={2} /> Unlimited Team Members</li>
@@ -725,19 +730,19 @@ export default function Landing() {
               </FadeUp>
 
               {/* Enterprise */}
-              <FadeUp delay={0.4} className="lexaro-full-height">
-                <div className="lexaro-pricing-box">
-                  <div className="lexaro-pricing-top-tier">Enterprise</div>
-                  <div className="lexaro-pricing-desc">
+              <FadeUp delay={0.4} className="linksmeet-full-height">
+                <div className="linksmeet-pricing-box">
+                  <div className="linksmeet-pricing-top-tier">Enterprise</div>
+                  <div className="linksmeet-pricing-desc">
                     Tailored AI marketing infrastructure for large teams.
                   </div>
-                  <div className="lexaro-pricing-top-price">Custom</div>
+                  <div className="linksmeet-pricing-top-price">Custom</div>
 
-                  <button className="lexaro-pricing-btn" style={{ marginBottom: '24px' }}>
+                  <button className="linksmeet-pricing-btn" style={{ marginBottom: '24px' }}>
                     Get Started
                   </button>
 
-                  <div className="lexaro-pricing-features">
+                  <div className="linksmeet-pricing-features">
                     <ul>
                       <li><CheckCircle2 size={16} strokeWidth={2} /> Dedicated Onboarding</li>
                       <li><CheckCircle2 size={16} strokeWidth={2} /> Custom Integrations</li>
@@ -751,27 +756,27 @@ export default function Landing() {
               </FadeUp>
             </div>
             
-            <div className="lexaro-pricing-guarantee">
+            <div className="linksmeet-pricing-guarantee">
               Each plan includes a 14-day, no-questions-asked full refund policy.
             </div>
           </div>
         </section>
 
         {/* ============ FAQ ============ */}
-        <section className="lexaro-faq" id="faq">
-          <div className="lexaro-container">
-            <div className="lexaro-faq-grid">
+        <section className="linksmeet-faq" id="faq">
+          <div className="linksmeet-container">
+            <div className="linksmeet-faq-grid">
               
               {/* Left Column: Header */}
-              <div className="lexaro-faq-left">
+              <div className="linksmeet-faq-left">
                 <FadeUp>
-                  <div className="lexaro-faq-subtitle">Support & Answers</div>
-                  <h2 className="lexaro-faq-title">Frequently asked<br/>questions</h2>
-                  <p className="lexaro-faq-desc">Everything you need to know about the product and how it works.</p>
+                  <div className="linksmeet-faq-subtitle">Support & Answers</div>
+                  <h2 className="linksmeet-faq-title">Frequently asked<br/>questions</h2>
+                  <p className="linksmeet-faq-desc">Everything you need to know about the product and how it works.</p>
                   
                   <div style={{ marginTop: '40px' }}>
                     <p style={{ fontSize: '0.95rem', color: '#64748b', marginBottom: '12px', fontWeight: 500 }}>Still have questions?</p>
-                    <button className="lexaro-btn lexaro-btn-ghost" onClick={() => navigate('/contact')} style={{ borderRadius: '8px', padding: '10px 24px', fontSize: '14px', border: '1px solid rgba(125, 59, 236, 0.3)', color: '#7d3bec', fontWeight: 500, backgroundColor: 'rgba(125, 59, 236, 0.05)' }}>
+                    <button className="linksmeet-btn linksmeet-btn-ghost" onClick={() => navigate('/contact')} style={{ borderRadius: '8px', padding: '10px 24px', fontSize: '14px', border: '1px solid rgba(125, 59, 236, 0.3)', color: '#7d3bec', fontWeight: 500, backgroundColor: 'rgba(125, 59, 236, 0.05)' }}>
                       Contact our team
                     </button>
                   </div>
@@ -779,28 +784,28 @@ export default function Landing() {
               </div>
 
               {/* Right Column: Accordions */}
-              <div className="lexaro-faq-right">
-                <div className="lexaro-faq-list">
-              <FadeUp delay={0.1} className="lexaro-faq-item">
+              <div className="linksmeet-faq-right">
+                <div className="linksmeet-faq-list">
+              <FadeUp delay={0.1} className="linksmeet-faq-item">
                 <details>
                   <summary>What is LinksMeet and how does it work as a scheduling app?</summary>
-                  <div className="lexaro-faq-content">
+                  <div className="linksmeet-faq-content">
                     LinksMeet is a scheduling app and meeting scheduling software used to eliminate booking back-and-forth. You share a link, and LinksMeet handles calendar syncing, timezone detection, reminders, and video calls through Zoom, Google Meet, Microsoft Teams, and LinksMeet Video. It works as a simple meeting scheduler for 1-on-1s or a fully automated scheduling system with routing and workflows.
                   </div>
                 </details>
               </FadeUp>
-              <FadeUp delay={0.2} className="lexaro-faq-item">
+              <FadeUp delay={0.2} className="linksmeet-faq-item">
                 <details>
                   <summary>What makes LinksMeet different from other scheduling apps?</summary>
-                  <div className="lexaro-faq-content">
+                  <div className="linksmeet-faq-content">
                     Unlike standard scheduling tools, LinksMeet offers a fully integrated AI-powered sales engagement platform. We combine automated lead discovery, personalized cold outreach, superior email deliverability, and intelligent scheduling into one seamless workspace to help you close deals faster.
                   </div>
                 </details>
               </FadeUp>
-              <FadeUp delay={0.3} className="lexaro-faq-item">
+              <FadeUp delay={0.3} className="linksmeet-faq-item">
                 <details>
                   <summary>Can LinksMeet be used as scheduling software for Healthcare, Sales, Support, and B2B teams?</summary>
-                  <div className="lexaro-faq-content">
+                  <div className="linksmeet-faq-content">
                     Absolutely! LinksMeet is highly adaptable. Sales and B2B teams can use it for automated lead routing and discovery, while Healthcare and Support teams benefit from secure, reliable scheduling with seamless integrations for video conferencing and calendar management.
                   </div>
                 </details>
@@ -812,7 +817,7 @@ export default function Landing() {
         </section>
 
         {/* ============ CTA SECTION ============ */}
-        <section className="lexaro-cta-section" style={{ position: 'relative', overflow: 'hidden', padding: '100px 20px', backgroundColor: '#fff' }}>
+        <section className="linksmeet-cta-section" style={{ position: 'relative', overflow: 'hidden', padding: '100px 20px', backgroundColor: '#fff' }}>
           <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
             <FadeUp>
               <div style={{ position: 'relative', borderRadius: '24px', overflow: 'hidden', padding: '80px 40px', textAlign: 'center', backgroundColor: '#7d3bec', border: '4px solid #F5F5F5', boxShadow: 'none' }}>
@@ -855,10 +860,10 @@ export default function Landing() {
 
                   {/* Buttons */}
                   <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-                    <button className="lexaro-btn lexaro-btn-dark" onClick={goSignup} style={{ borderRadius: '40px', padding: '14px 32px', fontSize: '16px', backgroundColor: '#fff', border: 'none', color: '#111', fontWeight: 500 }}>
+                    <button className="linksmeet-btn linksmeet-btn-dark" onClick={goSignup} style={{ borderRadius: '40px', padding: '14px 32px', fontSize: '16px', backgroundColor: '#fff', border: 'none', color: '#111', fontWeight: 500 }}>
                       Start for free
                     </button>
-                    <button className="lexaro-btn lexaro-btn-ghost" onClick={goSignup} style={{ borderRadius: '40px', padding: '14px 32px', fontSize: '16px', backgroundColor: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.3)', color: '#fff', fontWeight: 400, backdropFilter: 'blur(8px)' }}>
+                    <button className="linksmeet-btn linksmeet-btn-ghost" onClick={goSignup} style={{ borderRadius: '40px', padding: '14px 32px', fontSize: '16px', backgroundColor: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.3)', color: '#fff', fontWeight: 400, backdropFilter: 'blur(8px)' }}>
                       Talk to sales
                     </button>
                   </div>
@@ -873,11 +878,11 @@ export default function Landing() {
       </div> {/* End of main content boundary container */}
 
       {/* ============ FOOTER ============ */}
-      <section className="lexaro-footer-section">
-        <div className="lexaro-container">
-          <div className="lexaro-footer-grid" style={{ gridTemplateColumns: '2.2fr 1fr 1fr 1fr 1fr' }}>
-            <div className="lexaro-footer-col">
-              <div className="lexaro-footer-logo">
+      <section className="linksmeet-footer-section">
+        <div className="linksmeet-container">
+          <div className="linksmeet-footer-grid" style={{ gridTemplateColumns: '2.2fr 1fr 1fr 1fr 1fr' }}>
+            <div className="linksmeet-footer-col">
+              <div className="linksmeet-footer-logo">
                 <img src="/LinksMeet-without-bg.png" alt="LinksMeet" style={{ width: '26px', height: '26px', objectFit: 'contain', borderRadius: '5px', marginRight: '6px' }} />
                 LinksMeet
               </div>
@@ -885,35 +890,35 @@ export default function Landing() {
                 Online meeting scheduling platform developed to simplify appointment booking and connect your calendars.
               </p>
             </div>
-            <div className="lexaro-footer-col">
+            <div className="linksmeet-footer-col">
               <h4>Platform</h4>
-              <div className="lexaro-footer-links">
+              <div className="linksmeet-footer-links">
                 <a href="#features">Scheduling</a>
                 <a href="#integrations">Integrations</a>
                 <RouterLink to="/pricing">Pricing</RouterLink>
                 <RouterLink to="/login">Sign In</RouterLink>
               </div>
             </div>
-            <div className="lexaro-footer-col">
+            <div className="linksmeet-footer-col">
               <h4>Company</h4>
-              <div className="lexaro-footer-links">
+              <div className="linksmeet-footer-links">
                 <RouterLink to="/about">About us</RouterLink>
                 <RouterLink to="/careers">Careers</RouterLink>
                 <RouterLink to="/blog">Blog</RouterLink>
                 <RouterLink to="/contact">Contact</RouterLink>
               </div>
             </div>
-            <div className="lexaro-footer-col">
+            <div className="linksmeet-footer-col">
               <h4>Resources</h4>
-              <div className="lexaro-footer-links">
+              <div className="linksmeet-footer-links">
                 <RouterLink to="/blog">Help Center</RouterLink>
                 <RouterLink to="/blog">Community</RouterLink>
                 <RouterLink to="/contact">Support</RouterLink>
               </div>
             </div>
-            <div className="lexaro-footer-col">
+            <div className="linksmeet-footer-col">
               <h4>Legal</h4>
-              <div className="lexaro-footer-links">
+              <div className="linksmeet-footer-links">
                 <RouterLink to="/privacy-policy">Privacy Policy</RouterLink>
                 <RouterLink to="/terms-of-service">Terms of Service</RouterLink>
                 <RouterLink to="/terms-and-conditions">Terms & Conditions</RouterLink>
@@ -921,7 +926,7 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="lexaro-footer-bottom">
+          <div className="linksmeet-footer-bottom">
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
               <span>© {new Date().getFullYear()} LinksMeet. All rights reserved.</span>
             </div>

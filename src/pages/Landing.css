@@ -1,9 +1,9 @@
 /* =================================================================
-   Lexaro — Premium UI Redesign
-   Scoped under .lexaro-landing
+   LinksMeet — Premium UI Redesign
+   Scoped under .linksmeet-landing
    ================================================================= */
 
-.lexaro-landing {
+.linksmeet-landing {
   --lx-bg: #FFFFFF;
   --lx-surface: #FFFFFF;
   --lx-surface-dark: #FFFFFF;
@@ -42,14 +42,14 @@
 /* =================================================================
    System (3-Column Grid UI)
    ================================================================= */
-.lexaro-grid-ui {
+.linksmeet-grid-ui {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 24px;
   margin-top: 40px;
 }
 
-.lexaro-grid-card {
+.linksmeet-grid-card {
   background: #ffffff;
   border: 1px solid #eaeaea;
   border-radius: 24px;
@@ -60,7 +60,7 @@
   min-height: 400px;
   overflow: hidden;
 }
-.lexaro-grid-card:hover {
+.linksmeet-grid-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 30px rgba(0,0,0,0.06);
 }
@@ -445,13 +445,13 @@
 }
 
 @media (max-width: 900px) {
-  .lexaro-grid-ui { grid-template-columns: 1fr; }
+  .linksmeet-grid-ui { grid-template-columns: 1fr; }
 }
 
-.lexaro-landing h1,
-.lexaro-landing h2,
-.lexaro-landing h3,
-.lexaro-landing h4 {
+.linksmeet-landing h1,
+.linksmeet-landing h2,
+.linksmeet-landing h3,
+.linksmeet-landing h4 {
   color: var(--lx-heading);
   font-weight: 500;
   letter-spacing: -0.03em;
@@ -459,14 +459,14 @@
   margin: 0;
 }
 
-.lexaro-container {
+.linksmeet-container {
   width: 100%;
   max-width: 1120px;
   margin: 0 auto;
   padding: 0 24px;
 }
 
-.lexaro-container-wide {
+.linksmeet-container-wide {
   width: 100%;
   max-width: 1320px;
   margin: 0 auto;
@@ -498,23 +498,23 @@
   }
 }
 
-.lexaro-section {
+.linksmeet-section {
   padding: 120px 0;
   position: relative;
 }
-.lexaro-section.bg-surface {
+.linksmeet-section.bg-surface {
   background: var(--lx-surface);
   border-top: 1px solid var(--lx-border-light);
   border-bottom: 1px solid var(--lx-border-light);
 }
-.lexaro-section.bg-white {
+.linksmeet-section.bg-white {
   background: var(--lx-bg);
 }
 
 /* =================================================================
    Buttons & Globals
    ================================================================= */
-.lexaro-btn {
+.linksmeet-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -528,26 +528,26 @@
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   text-decoration: none;
 }
-.lexaro-btn-dark {
+.linksmeet-btn-dark {
   background: #111;
   color: #fff;
 }
-.lexaro-btn-dark:hover { 
+.linksmeet-btn-dark:hover { 
   background: #000; 
   transform: translateY(-1px);
 }
 
-.lexaro-btn-ghost {
+.linksmeet-btn-ghost {
   background: transparent;
   color: #111;
   border: 1px solid #e0e0e0;
 }
-.lexaro-btn-ghost:hover { 
+.linksmeet-btn-ghost:hover { 
   background: #f9f9f9; 
   border-color: #d4d4d4;
 }
 
-.lexaro-badge {
+.linksmeet-badge {
   display: inline-block;
   background: #f4f4f5;
   color: #666;
@@ -559,12 +559,12 @@
   margin-bottom: 24px;
 }
 
-.lexaro-title {
+.linksmeet-title {
   font-size: clamp(2.5rem, 4vw, 3.5rem);
   text-align: center;
   margin-bottom: 24px;
 }
-.lexaro-subtitle {
+.linksmeet-subtitle {
   font-size: 1.15rem;
   text-align: center;
   color: var(--lx-text);
@@ -576,7 +576,7 @@
 /* =================================================================
    Navbar & Hero Exact Match
    ================================================================= */
-.lexaro-nav {
+.linksmeet-nav {
   background: #fff;
   height: 72px;
   display: flex;
@@ -586,14 +586,14 @@
 }
 
 
-.lexaro-nav .lexaro-container {
+.linksmeet-nav .linksmeet-container {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   width: 100%;
   max-width: 1120px;
 }
-.lexaro-logo {
+.linksmeet-logo {
   color: #111;
   font-weight: 700;
   font-size: 1.25rem;
@@ -602,28 +602,28 @@
   gap: 8px;
   letter-spacing: -0.02em;
 }
-.lexaro-nav-links {
+.linksmeet-nav-links {
   display: flex;
   gap: 32px;
   justify-content: center;
   align-items: center;
 }
-.lexaro-nav-links a {
+.linksmeet-nav-links a {
   color: #888;
   font-weight: 400;
   font-size: 14px;
   text-decoration: none;
   transition: color 0.2s;
 }
-.lexaro-nav-links a:hover { color: #111; }
+.linksmeet-nav-links a:hover { color: #111; }
 
-.lexaro-nav-actions {
+.linksmeet-nav-actions {
   display: flex;
   justify-content: flex-end;
   align-items: center;
 }
 
-.lexaro-hero {
+.linksmeet-hero {
   text-align: center;
   padding-top: 40px;
   padding-bottom: 60px;
@@ -634,7 +634,7 @@
   align-items: center;
   justify-content: center;
 }
-.lexaro-hero-title {
+.linksmeet-hero-title {
   font-family: "Geist Sans", "Geist Placeholder", sans-serif;
   font-style: normal;
   font-weight: 400;
@@ -644,7 +644,7 @@
   letter-spacing: -0.03em;
   margin-bottom: 24px;
 }
-.lexaro-hero-sub {
+.linksmeet-hero-sub {
   font-size: 18px;
   color: #666;
   line-height: 1.6;
@@ -652,14 +652,14 @@
   max-width: 680px;
   letter-spacing: -0.01em;
 }
-.lexaro-hero-cta {
+.linksmeet-hero-cta {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 16px;
   margin-bottom: 80px;
 }
-.lexaro-btn-primary-hero {
+.linksmeet-btn-primary-hero {
   background: #7d3bec;
   color: #fff;
   border: none;
@@ -671,11 +671,11 @@
   box-shadow: 0 4px 14px rgba(125, 59, 236, 0.4);
   transition: all 0.2s ease;
 }
-.lexaro-btn-primary-hero:hover {
+.linksmeet-btn-primary-hero:hover {
   background: #6a2cc9;
   transform: translateY(-1px);
 }
-.lexaro-btn-secondary-hero {
+.linksmeet-btn-secondary-hero {
   background: #fff;
   color: #111;
   border: 1px solid #eaeaea;
@@ -690,7 +690,7 @@
   box-shadow: 0 4px 14px rgba(0,0,0,0.06);
   transition: all 0.2s ease;
 }
-.lexaro-btn-secondary-hero:hover {
+.linksmeet-btn-secondary-hero:hover {
   box-shadow: 0 6px 20px rgba(0,0,0,0.1);
   transform: translateY(-1px);
 }
@@ -744,7 +744,7 @@
 /* =================================================================
    Trusted Logos Marquee
    ================================================================= */
-.lexaro-marquee-wrapper {
+.linksmeet-marquee-wrapper {
   overflow: hidden;
   width: 100%;
   position: relative;
@@ -753,13 +753,13 @@
   padding: 20px 0;
 }
 
-.lexaro-marquee-track {
+.linksmeet-marquee-track {
   display: flex;
   width: fit-content;
   animation: scrollMarquee 20s linear infinite;
 }
 
-.lexaro-marquee-items {
+.linksmeet-marquee-items {
   display: flex;
   align-items: center;
   justify-content: space-around;
@@ -768,7 +768,7 @@
   color: #666;
 }
 
-.lexaro-marquee-items svg {
+.linksmeet-marquee-items svg {
   opacity: 0.6;
 }
 
@@ -780,12 +780,12 @@
 /* =================================================================
    Dashboard Mockup Exact 3D
    ================================================================= */
-.lexaro-dashboard-wrapper {
+.linksmeet-dashboard-wrapper {
   perspective: 1200px;
   max-width: 1000px;
   margin: 0 auto;
 }
-.lexaro-dashboard {
+.linksmeet-dashboard {
   background: #FFFFFF;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
@@ -797,11 +797,11 @@
 /* =================================================================
    Trusted Logos
    ================================================================= */
-.lexaro-trusted {
+.linksmeet-trusted {
   padding: 60px 0 20px;
   text-align: center;
 }
-.lexaro-trusted p {
+.linksmeet-trusted p {
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -809,7 +809,7 @@
   font-weight: 500;
   margin-bottom: 40px;
 }
-.lexaro-logos {
+.linksmeet-logos {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -819,58 +819,58 @@
   filter: grayscale(100%);
   transition: opacity 0.3s;
 }
-.lexaro-logos:hover { opacity: 0.6; }
+.linksmeet-logos:hover { opacity: 0.6; }
 
 /* =================================================================
    Legacy Problem Section (Exact Image Match)
    ================================================================= */
-.lexaro-legacy-section {
+.linksmeet-legacy-section {
   background: #FFFFFF;
   padding: 120px 0;
   text-align: left;
 }
-.lexaro-legacy-header {
+.linksmeet-legacy-header {
   max-width: 600px;
   margin-bottom: 80px;
 }
-.lexaro-legacy-header h2 {
+.linksmeet-legacy-header h2 {
   font-size: clamp(3rem, 4vw, 3.5rem);
   font-weight: 400;
   letter-spacing: -0.04em;
   line-height: 1.1;
   margin-bottom: 24px;
 }
-.lexaro-legacy-header p {
+.linksmeet-legacy-header p {
   font-size: 1.15rem;
   color: #666;
   line-height: 1.6;
 }
 
-.lexaro-legacy-grid-2 {
+.linksmeet-legacy-grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   border-top: 1px solid #eaeaea;
   border-bottom: 1px solid #eaeaea;
 }
-.lexaro-legacy-card {
+.linksmeet-legacy-card {
   padding: 60px 40px 0 0; /* Padding adjustments */
 }
-.lexaro-legacy-card:first-child {
+.linksmeet-legacy-card:first-child {
   border-right: 1px solid #eaeaea;
   padding-right: 60px;
   padding-left: 0;
 }
-.lexaro-legacy-card:last-child {
+.linksmeet-legacy-card:last-child {
   padding-left: 60px;
   padding-right: 0;
 }
-.lexaro-legacy-card h3 {
+.linksmeet-legacy-card h3 {
   font-size: 1.8rem;
   font-weight: 400;
   margin-bottom: 16px;
   letter-spacing: -0.03em;
 }
-.lexaro-legacy-card p {
+.linksmeet-legacy-card p {
   color: #888;
   font-size: 1rem;
   line-height: 1.6;
@@ -878,7 +878,7 @@
   max-width: 400px;
 }
 
-.lexaro-legacy-visual {
+.linksmeet-legacy-visual {
   height: 280px;
   background-color: #fff;
   background-image: radial-gradient(#e5e5e5 1px, transparent 1px);
@@ -891,7 +891,7 @@
   margin: 0 20px; /* Indent slightly */
 }
 
-.lexaro-node-pill {
+.linksmeet-node-pill {
   position: absolute;
   background: #fff;
   border: 1px solid #eaeaea;
@@ -907,7 +907,7 @@
   white-space: nowrap;
   letter-spacing: 0.02em;
 }
-.lexaro-node-lexaro {
+.linksmeet-node-linksmeet {
   position: absolute;
   background: #fff;
   border: 1px dashed #ccc;
@@ -921,7 +921,7 @@
   font-size: 0.9rem;
 }
 
-.lexaro-warning-icon {
+.linksmeet-warning-icon {
   position: absolute;
   top: -8px;
   right: -8px;
@@ -937,13 +937,13 @@
   font-weight: bold;
 }
 
-.lexaro-legacy-grid-4 {
+.linksmeet-legacy-grid-4 {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 40px;
   padding-top: 60px;
 }
-.lexaro-feature-col h4 {
+.linksmeet-feature-col h4 {
   font-size: 1.05rem;
   font-weight: 400;
   margin-bottom: 12px;
@@ -952,7 +952,7 @@
   gap: 12px;
   color: #111;
 }
-.lexaro-feature-col p {
+.linksmeet-feature-col p {
   color: #888;
   font-size: 0.95rem;
   line-height: 1.6;
@@ -961,13 +961,13 @@
 /* =================================================================
    System Section (Exact Image Match)
    ================================================================= */
-.lexaro-system-section {
+.linksmeet-system-section {
   padding: 40px 0 120px;
   margin-top: -200px;
   background: #fafafa;
   text-align: center;
 }
-.lexaro-system-title {
+.linksmeet-system-title {
   font-size: clamp(2.5rem, 4vw, 3rem);
   font-weight: 400;
   letter-spacing: -0.04em;
@@ -976,7 +976,7 @@
   line-height: 1.1;
 }
 
-.lexaro-system-box {
+.linksmeet-system-box {
   background: #F8F9FA;
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -987,18 +987,18 @@
   box-shadow: 0 4px 24px rgba(0,0,0,0.04);
   overflow: hidden;
 }
-.lexaro-system-visual-container {
+.linksmeet-system-visual-container {
   padding: 40px;
 }
-.lexaro-system-visual {
+.linksmeet-system-visual {
   background: #fff;
   height: 420px;
   position: relative;
 }
-.lexaro-system-content {
+.linksmeet-system-content {
   padding: 40px 80px 40px 40px;
 }
-.lexaro-system-content h3 {
+.linksmeet-system-content h3 {
   font-size: 2.2rem;
   font-weight: 400;
   color: #111;
@@ -1006,7 +1006,7 @@
   line-height: 1.1;
   margin-bottom: 24px;
 }
-.lexaro-system-content p {
+.linksmeet-system-content p {
   font-size: 1.1rem;
   color: #888;
   line-height: 1.6;
@@ -1014,7 +1014,7 @@
 }
 
 /* Document cards inside visual */
-.lexaro-doc-card {
+.linksmeet-doc-card {
   position: absolute;
   background: #fff;
   border: 1px solid #eaeaea;
@@ -1026,27 +1026,27 @@
   gap: 16px;
   z-index: 3;
 }
-.lexaro-doc-card-icon {
+.linksmeet-doc-card-icon {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 24px;
   height: 24px;
 }
-.lexaro-doc-card-text {
+.linksmeet-doc-card-text {
   flex: 1;
 }
-.lexaro-doc-card-title {
+.linksmeet-doc-card-title {
   font-size: 0.8rem;
   font-weight: 600;
   color: #111;
   margin-bottom: 4px;
 }
-.lexaro-doc-card-sub {
+.linksmeet-doc-card-sub {
   font-size: 0.65rem;
   color: #999;
 }
-.lexaro-doc-card-check {
+.linksmeet-doc-card-check {
   width: 14px;
   height: 14px;
   border-radius: 50%;
@@ -1058,8 +1058,8 @@
   border: 1px solid #bbf7d0;
 }
 
-/* Lexaro Center Node */
-.lexaro-center-ring {
+/* LinksMeet Center Node */
+.linksmeet-center-ring {
   position: absolute;
   top: 150px;
   left: 400px;
@@ -1072,7 +1072,7 @@
   align-items: center;
   justify-content: center;
 }
-.lexaro-center-node {
+.linksmeet-center-node {
   width: 60px;
   height: 60px;
   background: #fff;
@@ -1085,7 +1085,7 @@
 }
 
 /* Dot markers on lines */
-.lexaro-path-dot {
+.linksmeet-path-dot {
   position: absolute;
   width: 6px;
   height: 6px;
@@ -1096,34 +1096,34 @@
 /* =================================================================
    Core Operations Grid (Exact Image Match)
    ================================================================= */
-.lexaro-operations-section {
+.linksmeet-operations-section {
   padding: 120px 0;
   background: var(--lx-bg, #FFFFFF);
   color: #111;
 }
-.lexaro-operations-header {
+.linksmeet-operations-header {
   text-align: center;
   margin-bottom: 80px;
 }
-.lexaro-operations-header h2 {
+.linksmeet-operations-header h2 {
   font-size: clamp(2.5rem, 4vw, 3rem);
   font-weight: 400;
   letter-spacing: -0.04em;
   color: #111;
   margin-bottom: 24px;
 }
-.lexaro-operations-header p {
+.linksmeet-operations-header p {
   font-size: 1.15rem;
   color: #888;
   max-width: 700px;
   margin: 0 auto;
 }
 
-.lexaro-operations-container {
-  /* Inherits standard .lexaro-container 1120px max-width */
+.linksmeet-operations-container {
+  /* Inherits standard .linksmeet-container 1120px max-width */
 }
 
-.lexaro-operations-grid {
+.linksmeet-operations-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 32px;
@@ -1131,16 +1131,16 @@
 }
 
 @media (max-width: 1100px) {
-  .lexaro-operations-grid {
+  .linksmeet-operations-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 @media (max-width: 768px) {
-  .lexaro-operations-grid {
+  .linksmeet-operations-grid {
     grid-template-columns: 1fr;
   }
 }
-.lexaro-operation-card {
+.linksmeet-operation-card {
   background: #fff;
   border-radius: 16px;
   border: 1px solid #e2e8f0;
@@ -1149,7 +1149,7 @@
   flex-direction: column;
   overflow: hidden;
 }
-.lexaro-op-visual {
+.linksmeet-op-visual {
   height: 240px;
   background: #f8fafc;
   border-bottom: 1px solid #e2e8f0;
@@ -1159,18 +1159,18 @@
   justify-content: center;
   overflow: hidden;
 }
-.lexaro-op-content {
+.linksmeet-op-content {
   padding: 32px 24px;
   flex: 1;
 }
-.lexaro-op-content h3 {
+.linksmeet-op-content h3 {
   font-size: 1.4rem;
   font-weight: 400;
   color: #111;
   margin-bottom: 16px;
   letter-spacing: -0.02em;
 }
-.lexaro-op-content p {
+.linksmeet-op-content p {
   font-size: 0.95rem;
   color: #555;
   line-height: 1.6;
@@ -1334,14 +1334,14 @@
 /* =================================================================
    Steps Section (Exact Image Match)
    ================================================================= */
-.lexaro-steps-section {
+.linksmeet-steps-section {
   padding: 120px 0;
   background: #fff;
 }
-.lexaro-steps-header {
+.linksmeet-steps-header {
   margin-bottom: 80px;
 }
-.lexaro-steps-header h2 {
+.linksmeet-steps-header h2 {
   font-size: clamp(2.5rem, 4vw, 3rem);
   font-weight: 400;
   letter-spacing: -0.04em;
@@ -1349,18 +1349,18 @@
   margin-bottom: 16px;
   line-height: 1.1;
 }
-.lexaro-steps-header p {
+.linksmeet-steps-header p {
   font-size: 1.15rem;
   color: #777;
 }
 
-.lexaro-steps-grid {
+.linksmeet-steps-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 24px;
 }
 
-.lexaro-step-card {
+.linksmeet-step-card {
   display: flex;
   flex-direction: column;
   background: #FFFFFF;
@@ -1369,7 +1369,7 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03), 0 24px 60px -12px rgba(0, 0, 0, 0.03);
   padding: 32px;
 }
-.lexaro-step-visual {
+.linksmeet-step-visual {
   height: 380px;
   position: relative;
   margin-bottom: 32px;
@@ -1377,7 +1377,7 @@
   align-items: center;
   justify-content: center;
 }
-.lexaro-step-label {
+.linksmeet-step-label {
   display: flex;
   align-items: center;
   gap: 16px;
@@ -1385,29 +1385,29 @@
   color: #666;
   margin-bottom: 16px;
 }
-.lexaro-step-label::before,
-.lexaro-step-label::after {
+.linksmeet-step-label::before,
+.linksmeet-step-label::after {
   content: '';
   display: block;
   width: 24px;
   height: 1px;
   background: #ddd;
 }
-.lexaro-step-card h3 {
+.linksmeet-step-card h3 {
   font-size: 1.4rem;
   font-weight: 400;
   color: #111;
   margin-bottom: 16px;
   letter-spacing: -0.02em;
 }
-.lexaro-step-card p {
+.linksmeet-step-card p {
   font-size: 1rem;
   color: #777;
   line-height: 1.6;
 }
 
 /* Common small doc card for visuals */
-.lexaro-mini-card {
+.linksmeet-mini-card {
   position: absolute;
   background: #fff;
   border: 1px solid rgba(0,0,0,0.06);
@@ -1423,15 +1423,15 @@
   z-index: 2;
   white-space: nowrap;
 }
-.lexaro-mini-card-col {
+.linksmeet-mini-card-col {
   display: flex;
   flex-direction: column;
 }
-.lexaro-mini-card-sub {
+.linksmeet-mini-card-sub {
   font-size: 0.55rem;
   color: #999;
 }
-.lexaro-mini-chip {
+.linksmeet-mini-chip {
   position: absolute;
   background: #fff;
   border: 1px solid rgba(0,0,0,0.06);
@@ -1446,7 +1446,7 @@
   z-index: 2;
   box-shadow: 0 4px 16px -4px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.04);
 }
-.lexaro-mini-chip-icon {
+.linksmeet-mini-chip-icon {
   width: 14px;
   height: 14px;
   background: #10b981;
@@ -1460,7 +1460,7 @@
 /* =================================================================
    Integrations (Concentric Orbit)
    ================================================================= */
-.lexaro-orbit-wrapper {
+.linksmeet-orbit-wrapper {
   position: relative;
   width: 100%;
   max-width: 800px;
@@ -1472,7 +1472,7 @@
   overflow: hidden;
 }
 
-.lexaro-orbit-center {
+.linksmeet-orbit-center {
   position: absolute;
   width: 100px;
   height: 100px;
@@ -1486,14 +1486,14 @@
   border: 1px solid rgba(109, 40, 217, 0.1);
 }
 
-.lexaro-orbit-logo {
+.linksmeet-orbit-logo {
   width: 60px;
   height: 60px;
   object-fit: contain;
   z-index: 2;
 }
 
-.lexaro-orbit-pulse {
+.linksmeet-orbit-pulse {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -1511,7 +1511,7 @@
   100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
 }
 
-.lexaro-orbit {
+.linksmeet-orbit {
   position: absolute;
   border-radius: 50%;
   border: 1px dashed rgba(109, 40, 217, 0.3);
@@ -1521,20 +1521,20 @@
   animation: spin linear infinite;
 }
 
-.lexaro-orbit-inner {
+.linksmeet-orbit-inner {
   width: 250px;
   height: 250px;
   animation-duration: 20s;
 }
 
-.lexaro-orbit-middle {
+.linksmeet-orbit-middle {
   width: 400px;
   height: 400px;
   animation-duration: 35s;
   animation-direction: reverse;
 }
 
-.lexaro-orbit-outer {
+.linksmeet-orbit-outer {
   width: 550px;
   height: 550px;
   animation-duration: 50s;
@@ -1545,7 +1545,7 @@
   100% { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
-.lexaro-orbit-node {
+.linksmeet-orbit-node {
   position: absolute;
   width: 56px;
   height: 56px;
@@ -1560,22 +1560,22 @@
   animation: counterSpin linear infinite;
 }
 
-.lexaro-orbit-inner .lexaro-orbit-node { animation-duration: 20s; }
-.lexaro-orbit-middle .lexaro-orbit-node { animation-duration: 35s; animation-direction: reverse; }
-.lexaro-orbit-outer .lexaro-orbit-node { animation-duration: 50s; }
+.linksmeet-orbit-inner .linksmeet-orbit-node { animation-duration: 20s; }
+.linksmeet-orbit-middle .linksmeet-orbit-node { animation-duration: 35s; animation-direction: reverse; }
+.linksmeet-orbit-outer .linksmeet-orbit-node { animation-duration: 50s; }
 
 @keyframes counterSpin {
   0% { transform: translate(-50%, -50%) rotate(0deg); }
   100% { transform: translate(-50%, -50%) rotate(-360deg); }
 }
 
-.lexaro-orbit-node svg {
+.linksmeet-orbit-node svg {
   width: 28px;
   height: 28px;
 }
 
 @media (max-width: 768px) {
-  .lexaro-orbit-wrapper {
+  .linksmeet-orbit-wrapper {
     transform: scale(0.6);
     margin-top: -100px;
     margin-bottom: -100px;
@@ -1585,15 +1585,15 @@
 /* =================================================================
    Pricing (Exact Image Match)
    ================================================================= */
-.lexaro-pricing-section {
+.linksmeet-pricing-section {
   padding: 100px 0 120px;
   background: #fcfcfd;
 }
-.lexaro-pricing-header {
+.linksmeet-pricing-header {
   text-align: center;
   margin-bottom: 64px;
 }
-.lexaro-pricing-toggle-container {
+.linksmeet-pricing-toggle-container {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1602,17 +1602,17 @@
   font-weight: 500;
   color: #111;
 }
-.lexaro-pricing-toggle-text {
+.linksmeet-pricing-toggle-text {
   cursor: pointer;
   transition: color 0.2s;
 }
-.lexaro-pricing-toggle-text.active {
+.linksmeet-pricing-toggle-text.active {
   color: #7d3bec;
 }
-.lexaro-pricing-toggle-text.inactive {
+.linksmeet-pricing-toggle-text.inactive {
   color: #9ca3af;
 }
-.lexaro-pricing-toggle {
+.linksmeet-pricing-toggle {
   width: 48px;
   height: 24px;
   background: #e5e7eb;
@@ -1621,10 +1621,10 @@
   cursor: pointer;
   transition: background 0.3s;
 }
-.lexaro-pricing-toggle.annual {
+.linksmeet-pricing-toggle.annual {
   background: #7d3bec;
 }
-.lexaro-pricing-toggle::after {
+.linksmeet-pricing-toggle::after {
   content: '';
   position: absolute;
   top: 3px;
@@ -1636,13 +1636,13 @@
   transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
-.lexaro-pricing-toggle.annual::after {
+.linksmeet-pricing-toggle.annual::after {
   transform: translateX(27px);
 }
-.lexaro-pricing-toggle.monthly::after {
+.linksmeet-pricing-toggle.monthly::after {
   transform: translateX(3px);
 }
-.lexaro-pricing-discount {
+.linksmeet-pricing-discount {
   background: #f3f0ff;
   border: 1px solid #d8cbf9;
   padding: 2px 8px;
@@ -1652,7 +1652,7 @@
   color: #7d3bec;
 }
 
-.lexaro-pricing-grid-4 {
+.linksmeet-pricing-grid-4 {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 24px;
@@ -1662,10 +1662,10 @@
   align-items: stretch;
 }
 
-.lexaro-full-height {
+.linksmeet-full-height {
   height: 100%;
 }
-.lexaro-pricing-box {
+.linksmeet-pricing-box {
   background: #fff;
   border-radius: 16px;
   padding: 24px 20px;
@@ -1676,7 +1676,7 @@
   height: 100%;
   position: relative;
 }
-.lexaro-pricing-box.premium {
+.linksmeet-pricing-box.premium {
   background: black;
   border: none;
   border-radius: 16px;
@@ -1685,7 +1685,7 @@
   z-index: 2;
   padding: 40px 20px 24px;
 }
-.lexaro-pricing-box.premium::before {
+.linksmeet-pricing-box.premium::before {
   content: '';
   position: absolute;
   top: 16px;
@@ -1697,7 +1697,7 @@
   z-index: -1;
 }
 
-.lexaro-pricing-popular {
+.linksmeet-pricing-popular {
   position: absolute;
   top: 40px;
   right: 20px;
@@ -1709,17 +1709,17 @@
   font-weight: 500;
   color: #6b7280;
 }
-.lexaro-pricing-box.premium .lexaro-pricing-popular {
+.linksmeet-pricing-box.premium .linksmeet-pricing-popular {
   top: 28px;
 }
 
-.lexaro-pricing-top-tier {
+.linksmeet-pricing-top-tier {
   font-size: 1rem;
   font-weight: 600;
   color: #111;
   margin-bottom: 8px;
 }
-.lexaro-pricing-top-price {
+.linksmeet-pricing-top-price {
   font-size: 2.2rem;
   font-weight: 600;
   color: #111;
@@ -1729,14 +1729,14 @@
   letter-spacing: -0.02em;
   margin-bottom: 12px;
 }
-.lexaro-pricing-top-price span {
+.linksmeet-pricing-top-price span {
   font-size: 0.75rem;
   color: #6b7280;
   letter-spacing: normal;
   font-weight: 500;
 }
 
-.lexaro-pricing-desc {
+.linksmeet-pricing-desc {
   font-size: 0.8rem;
   color: #4b5563;
   line-height: 1.4;
@@ -1744,17 +1744,17 @@
   min-height: 34px;
 }
 
-.lexaro-pricing-features {
+.linksmeet-pricing-features {
   flex: 1;
   margin-bottom: 20px;
 }
-.lexaro-pricing-features h4 {
+.linksmeet-pricing-features h4 {
   font-size: 0.85rem;
   font-weight: 600;
   color: #111;
   margin-bottom: 12px;
 }
-.lexaro-pricing-features ul {
+.linksmeet-pricing-features ul {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -1762,7 +1762,7 @@
   flex-direction: column;
   gap: 8px;
 }
-.lexaro-pricing-features li {
+.linksmeet-pricing-features li {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1770,12 +1770,12 @@
   color: #4b5563;
   font-weight: 500;
 }
-.lexaro-pricing-features li svg {
+.linksmeet-pricing-features li svg {
   color: #7d3bec;
   flex-shrink: 0;
 }
 
-.lexaro-pricing-btn {
+.linksmeet-pricing-btn {
   width: 100%;
   padding: 10px;
   text-align: center;
@@ -1792,19 +1792,19 @@
   justify-content: center;
   gap: 8px;
 }
-.lexaro-pricing-btn:hover {
+.linksmeet-pricing-btn:hover {
   background: #f9fafb;
 }
-.lexaro-pricing-btn-solid {
+.linksmeet-pricing-btn-solid {
   background: #7d3bec;
   color: #fff;
   border: none;
 }
-.lexaro-pricing-btn-solid:hover {
+.linksmeet-pricing-btn-solid:hover {
   background: #6a2cc9;
 }
 
-.lexaro-pricing-guarantee {
+.linksmeet-pricing-guarantee {
   text-align: center;
   font-size: 0.85rem;
   color: #6b7280;
@@ -1814,27 +1814,27 @@
 /* =================================================================
    FAQ Section
    ================================================================= */
-.lexaro-faq {
+.linksmeet-faq {
   padding: 120px 0;
   background: #fff;
 }
-.lexaro-faq-grid {
+.linksmeet-faq-grid {
   display: grid;
   grid-template-columns: 1fr 1.5fr;
   gap: 80px;
 }
-.lexaro-faq-left {
+.linksmeet-faq-left {
   position: sticky;
   top: 120px;
   align-self: start;
 }
-.lexaro-faq-subtitle {
+.linksmeet-faq-subtitle {
   font-size: 0.95rem;
   font-weight: 500;
   color: #475569;
   margin-bottom: 12px;
 }
-.lexaro-faq-title {
+.linksmeet-faq-title {
   font-size: 2.8rem;
   font-weight: 400;
   letter-spacing: -0.03em;
@@ -1842,22 +1842,22 @@
   margin-bottom: 24px;
   line-height: 1.1;
 }
-.lexaro-faq-desc {
+.linksmeet-faq-desc {
   font-size: 1.1rem;
   color: #4b5563;
   line-height: 1.5;
 }
-.lexaro-faq-list {
+.linksmeet-faq-list {
   display: flex;
   flex-direction: column;
 }
-.lexaro-faq-item {
+.linksmeet-faq-item {
   border-bottom: 1px solid #eaeaea;
 }
-.lexaro-faq-item details {
+.linksmeet-faq-item details {
   width: 100%;
 }
-.lexaro-faq-item summary {
+.linksmeet-faq-item summary {
   padding: 32px 0;
   font-size: 1.2rem;
   font-weight: 500;
@@ -1868,20 +1868,20 @@
   justify-content: space-between;
   align-items: center;
 }
-.lexaro-faq-item summary::-webkit-details-marker {
+.linksmeet-faq-item summary::-webkit-details-marker {
   display: none;
 }
-.lexaro-faq-item summary::after {
+.linksmeet-faq-item summary::after {
   content: '+';
   font-size: 2rem;
   font-weight: 300;
   color: #888;
   transition: transform 0.3s ease;
 }
-.lexaro-faq-item details[open] summary::after {
+.linksmeet-faq-item details[open] summary::after {
   transform: rotate(45deg);
 }
-.lexaro-faq-content {
+.linksmeet-faq-content {
   padding-bottom: 32px;
   color: #4b5563;
   line-height: 1.6;
@@ -1891,23 +1891,23 @@
 /* =================================================================
    Footer
    ================================================================= */
-.lexaro-footer-section {
+.linksmeet-footer-section {
   background: #0a0a0a;
   color: #fff;
   padding-top: 120px;
   padding-bottom: 0;
 }
-.lexaro-footer-cta {
+.linksmeet-footer-cta {
   text-align: center;
   margin-bottom: 100px;
 }
-.lexaro-footer-cta h2 {
+.linksmeet-footer-cta h2 {
   font-size: 3.5rem;
   letter-spacing: -0.04em;
   margin-bottom: 32px;
   color: #fff;
 }
-.lexaro-footer-cta-btn {
+.linksmeet-footer-cta-btn {
   background: #fff;
   color: #0a0a0a;
   padding: 16px 32px;
@@ -1918,11 +1918,11 @@
   display: inline-block;
   transition: transform 0.2s, background 0.2s;
 }
-.lexaro-footer-cta-btn:hover {
+.linksmeet-footer-cta-btn:hover {
   background: #f0f0f0;
   transform: translateY(-2px);
 }
-.lexaro-footer-grid {
+.linksmeet-footer-grid {
   display: grid;
   grid-template-columns: 2.5fr 1fr 1fr 1fr;
   gap: 64px;
@@ -1931,7 +1931,7 @@
   padding-top: 80px;
   padding-bottom: 80px;
 }
-.lexaro-footer-logo {
+.linksmeet-footer-logo {
   color: #fff;
   font-weight: 700;
   font-size: 1.25rem;
@@ -1941,26 +1941,26 @@
   letter-spacing: -0.02em;
   margin-bottom: 24px;
 }
-.lexaro-footer-col h4 {
+.linksmeet-footer-col h4 {
   font-size: 0.85rem;
   color: #fff;
   margin-bottom: 24px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
-.lexaro-footer-links {
+.linksmeet-footer-links {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
-.lexaro-footer-links a {
+.linksmeet-footer-links a {
   color: #888;
   text-decoration: none;
   font-size: 0.95rem;
   transition: color 0.2s;
 }
-.lexaro-footer-links a:hover { color: #fff; }
-.lexaro-footer-bottom {
+.linksmeet-footer-links a:hover { color: #fff; }
+.linksmeet-footer-bottom {
   border-top: 1px solid #222;
   padding: 32px 0;
   display: flex;
@@ -1971,20 +1971,20 @@
 }
 
 @media (max-width: 1024px) {
-  .lexaro-legacy-grid-2,
-  .lexaro-workflows,
-  .lexaro-pricing-grid { grid-template-columns: 1fr; }
+  .linksmeet-legacy-grid-2,
+  .linksmeet-workflows,
+  .linksmeet-pricing-grid { grid-template-columns: 1fr; }
   
-  .lexaro-legacy-grid-4 { grid-template-columns: 1fr 1fr; }
+  .linksmeet-legacy-grid-4 { grid-template-columns: 1fr 1fr; }
   
-  .lexaro-feature-block, .lexaro-feature-block.reverse { flex-direction: column; gap: 40px; }
-  .lexaro-system-box { grid-template-columns: 1fr; }
-  .lexaro-system-content { padding: 40px; }
+  .linksmeet-feature-block, .linksmeet-feature-block.reverse { flex-direction: column; gap: 40px; }
+  .linksmeet-system-box { grid-template-columns: 1fr; }
+  .linksmeet-system-content { padding: 40px; }
   
-  .lexaro-operation-grid { grid-template-columns: 1fr; }
-  .lexaro-faq-grid { grid-template-columns: 1fr; }
+  .linksmeet-operation-grid { grid-template-columns: 1fr; }
+  .linksmeet-faq-grid { grid-template-columns: 1fr; }
   
-  .lexaro-legacy-card:first-child {
+  .linksmeet-legacy-card:first-child {
     border-right: none;
     border-bottom: 1px solid #eaeaea;
     padding-right: 0;
@@ -1992,38 +1992,38 @@
     margin-bottom: 40px;
   }
   
-  .lexaro-footer-grid { grid-template-columns: 1fr 1fr; gap: 40px; }
-  .lexaro-footer-cta h2 { font-size: 2.5rem; }
+  .linksmeet-footer-grid { grid-template-columns: 1fr 1fr; gap: 40px; }
+  .linksmeet-footer-cta h2 { font-size: 2.5rem; }
 }
 
 @media (max-width: 768px) {
   /* Hide nav links on mobile, keep buttons */
-  .lexaro-nav-links { display: none; }
-  .lexaro-nav .lexaro-container { grid-template-columns: auto 1fr auto; }
+  .linksmeet-nav-links { display: none; }
+  .linksmeet-nav .linksmeet-container { grid-template-columns: auto 1fr auto; }
   
   /* Hero section */
-  .lexaro-hero-title { font-size: 2.5rem; line-height: 1.1; }
-  .lexaro-hero { padding-top: 60px; padding-bottom: 100px; min-height: auto; }
+  .linksmeet-hero-title { font-size: 2.5rem; line-height: 1.1; }
+  .linksmeet-hero { padding-top: 60px; padding-bottom: 100px; min-height: auto; }
   .hero-gradient-bg {
     background: 
       radial-gradient(ellipse 80% 300px at 0% 100%, rgba(125, 59, 236, 0.6) 0%, rgba(125, 59, 236, 0.15) 50%, transparent 100%),
       radial-gradient(ellipse 80% 300px at 100% 100%, rgba(125, 59, 236, 0.6) 0%, rgba(125, 59, 236, 0.15) 50%, transparent 100%),
       linear-gradient(to top, rgba(125, 59, 236, 0.4) 0%, transparent 150px);
   }
-  .lexaro-hero-cta { flex-direction: column; gap: 12px; }
-  .lexaro-hero-cta button { width: 100%; justify-content: center; }
+  .linksmeet-hero-cta { flex-direction: column; gap: 12px; }
+  .linksmeet-hero-cta button { width: 100%; justify-content: center; }
   
   /* Generic typography and spacing */
-  .lexaro-title, .lexaro-system-title, .lexaro-workflows-header h2 { font-size: 2rem; }
-  .lexaro-container { padding: 0 16px; }
+  .linksmeet-title, .linksmeet-system-title, .linksmeet-workflows-header h2 { font-size: 2rem; }
+  .linksmeet-container { padding: 0 16px; }
   .hero-wrapper { border-radius: 20px; }
   
   /* 4-col grid to 1-col */
-  .lexaro-legacy-grid-4 { grid-template-columns: 1fr; }
+  .linksmeet-legacy-grid-4 { grid-template-columns: 1fr; }
   
   /* Footer */
-  .lexaro-footer-grid { grid-template-columns: 1fr; gap: 32px; }
-  .lexaro-footer-bottom { flex-direction: column; gap: 16px; text-align: center; }
-  .lexaro-footer-cta h2 { font-size: 2rem; }
+  .linksmeet-footer-grid { grid-template-columns: 1fr; gap: 32px; }
+  .linksmeet-footer-bottom { flex-direction: column; gap: 16px; text-align: center; }
+  .linksmeet-footer-cta h2 { font-size: 2rem; }
 }
 
