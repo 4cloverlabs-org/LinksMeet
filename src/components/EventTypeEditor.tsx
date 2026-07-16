@@ -45,6 +45,71 @@ const ALL_MONTHS_DATA = (() => {
 const MONTHS = ALL_MONTHS_DATA.map(m => m.name);
 const DAYS_IN_MONTH = ALL_MONTHS_DATA.map(m => m.days);
 
+function CustomDropdown({ value, options, onChange, style, dropUp }: { value: string; options: string[]; onChange: (v: string) => void; style?: React.CSSProperties; dropUp?: boolean }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div 
+      style={{ position: 'relative', minWidth: '120px', outline: 'none', ...style }} 
+      tabIndex={0} 
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+          setOpen(false);
+        }
+      }}
+    >
+      <div onClick={() => setOpen(!open)} style={{ padding: '8px 12px', borderRadius: '8px', border: '2px solid #F5F5F5', background: '#ffffff', fontSize: '0.9rem', color: '#0f172a', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+        {value}
+        <ChevronDown size={16} color="#64748b" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+      </div>
+      {open && (
+        <div style={{ position: 'absolute', ...(dropUp ? { bottom: '100%', marginBottom: '4px' } : { top: '100%', marginTop: '4px' }), left: 0, right: 0, background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 50, overflow: 'hidden', padding: '4px' }}>
+          {options.map(opt => (
+            <div
+              key={opt}
+              onClick={() => { onChange(opt); setOpen(false); }}
+              style={{ padding: '8px 12px', borderRadius: '4px', fontSize: '0.9rem', color: value === opt ? '#ffffff' : '#0f172a', background: value === opt ? '#7d3bec' : '#ffffff', cursor: 'pointer', transition: 'background 0.1s' }}
+              onMouseEnter={e => { if (value !== opt) e.currentTarget.style.background = '#f8fafc'; }}
+              onMouseLeave={e => { if (value !== opt) e.currentTarget.style.background = '#ffffff'; }}
+            >
+              {opt}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
+const getLocale = (lang) => {
+  switch (lang) {
+    case 'French': return 'fr-FR';
+    case 'Spanish': return 'es-ES';
+    case 'German': return 'de-DE';
+    default: return 'en-US';
+  }
+};
+
+const t = (key, lang) => {
+  const dict = {
+    'Your name *': { French: 'Votre nom *', Spanish: 'Tu nombre *', German: 'Dein Name *' },
+    'Email address *': { French: 'Adresse e-mail *', Spanish: 'Correo electrónico *', German: 'E-Mail-Adresse *' },
+    'Additional notes': { French: 'Notes supplémentaires', Spanish: 'Notas adicionales', German: 'Zusätzliche Notizen' },
+    'Please share anything that will help prepare for our meeting.': { French: 'Veuillez partager tout ce qui pourrait aider à préparer notre réunion.', Spanish: 'Por favor, comparta cualquier cosa que ayude a prepararse para nuestra reunión.', German: 'Bitte teilen Sie alles mit, was zur Vorbereitung auf unser Meeting hilft.' },
+    'Add guests': { French: 'Ajouter des invités', Spanish: 'Añadir invitados', German: 'Gäste hinzufügen' },
+    'Back': { French: 'Retour', Spanish: 'Volver', German: 'Zurück' },
+    'Confirm': { French: 'Confirmer', Spanish: 'Confirmar', German: 'Bestätigen' },
+    'm': { French: 'm', Spanish: 'm', German: ' Min.' },
+    'Google Meet': { French: 'Google Meet', Spanish: 'Google Meet', German: 'Google Meet' },
+    'Phone Call': { French: 'Appel téléphonique', Spanish: 'Llamada telefónica', German: 'Telefonanruf' },
+    'In-Person Meeting': { French: 'Réunion en personne', Spanish: 'Reunión en persona', German: 'Persönliches Meeting' },
+    'Asia/Calcutta': { French: 'Asie/Calcutta', Spanish: 'Asia/Calcuta', German: 'Asien/Kalkutta' },
+    'Asia/Kolkata': { French: 'Asie/Kolkata', Spanish: 'Asia/Kolkata', German: 'Asien/Kalkutta' }
+  };
+  return dict[key]?.[lang] || key;
+};
+
 export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: Props) {
   const { user } = useAuth();
   const hostName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Host';
@@ -130,9 +195,9 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
   const [disableCancelling, setDisableCancelling] = useState(false);
   const [disableRescheduling, setDisableRescheduling] = useState(false);
 
-  const [eventColor, setEventColor] = useState('#7d3bec');
+  const [eventColor, setEventColor] = useState(initialData?.eventColor || '#7d3bec');
   const [autoTranslate, setAutoTranslate] = useState(false);
-  const [interfaceLang, setInterfaceLang] = useState('English');
+  const [interfaceLang, setInterfaceLang] = useState(initialData?.interfaceLang || 'English');
   const [lockTimezone, setLockTimezone] = useState(false);
 
   // Booking Form questions state
@@ -154,6 +219,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
   // Confirmation state
   const [confChannel, setConfChannel] = useState<'email' | 'phone'>('email');
   const [calEventName, setCalEventName] = useState(`${form.title || '15 min meeting'} between ${userName} and {Scheduler}`);
+  const [isEditingCalEventName, setIsEditingCalEventName] = useState(false);
   const [customReplyTo, setCustomReplyTo] = useState(!!initialData?.replyToEmail);
   const [replyToEmail, setReplyToEmail] = useState(initialData?.replyToEmail || '');
   const [sendTranscription, setSendTranscription] = useState(true);
@@ -385,13 +451,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
     }));
   };
 
-  const handleEditCalEventName = () => {
-    const val = window.prompt('Customize calendar event name template:', calEventName);
-    if (val && val.trim()) {
-      setCalEventName(val.trim());
-      triggerToast('Updated calendar event name template!');
-    }
-  };
+
 
   const toggleAppConnection = (appId: string, appName: string) => {
     setAppsConnected(prev => {
@@ -483,6 +543,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
       id: eventId,
       redirectUrl: confRedirect ? redirectUrl : null,
       replyToEmail: customReplyTo ? replyToEmail : null,
+      eventColor,
       allowedLayouts,
       defaultLayout,
       formSettings: {
@@ -633,8 +694,8 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
       {/* FLOATING TOAST NOTIFICATION */}
       {toastMsg && (
-        <div style={{ position: 'fixed', top: '80px', right: '32px', background: '#0f172a', color: '#ffffff', padding: '12px 20px', borderRadius: '10px', fontSize: '0.88rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', zIndex: 100000, animation: 'fadeIn 0.2s ease' }}>
-          <Check size={16} color="#4ade80" /> {toastMsg}
+        <div style={{ position: 'fixed', top: '80px', right: '32px', background: '#7d3bec', color: '#ffffff', padding: '12px 20px', borderRadius: '10px', fontSize: '0.88rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', zIndex: 100000, animation: 'fadeIn 0.2s ease' }}>
+          <Check size={16} color="#ffffff" /> {toastMsg}
         </div>
       )}
 
@@ -1086,13 +1147,13 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.85rem', color: '#475569' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Clock size={16} color="#64748b" /> {durMinutes}m
+                        <Clock size={16} color="#64748b" /> {durMinutes}{t('m', interfaceLang)}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <LocIcon size={16} color="#64748b" /> {form.location?.replace(' (Default)', '') || 'Google Meet'}
+                        <LocIcon size={16} color="#64748b" /> {t(form.location, interfaceLang)?.replace(' (Default)', '') || 'Google Meet'}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                        <Globe size={16} color="#64748b" /> Asia/Kolkata <ChevronDown size={14} />
+                        <Globe size={16} color="#64748b" /> {t('Asia/Kolkata', interfaceLang)} <ChevronDown size={14} />
                       </div>
                     </div>
                   </div>
@@ -1116,7 +1177,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', fontSize: '0.68rem', fontWeight: 700, marginBottom: '8px' }}>
-                      <div style={{ color: '#7d3bec' }}>SUN</div>
+                      <div style={{ color: eventColor }}>SUN</div>
                       <div style={{ color: '#64748b' }}>MON</div>
                       <div style={{ color: '#64748b' }}>TUE</div>
                       <div style={{ color: '#64748b' }}>WED</div>
@@ -1143,7 +1204,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                               height: '26px',
                               margin: '0 auto',
                               borderRadius: '50%',
-                              background: isSel && !isPast ? '#7d3bec' : 'transparent',
+                              background: isSel && !isPast ? eventColor : 'transparent',
                               color: isSel && !isPast ? '#ffffff' : isPast ? '#cbd5e1' : '#0f172a',
                               display: 'flex',
                               flexDirection: 'column',
@@ -1158,7 +1219,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                           >
                             <span>{d}</span>
                             {isAvailable && !isPast && (
-                              <div style={{ width: '3px', height: '3px', borderRadius: '50%', background: isSel ? '#ffffff' : '#7d3bec', position: 'absolute', bottom: '3px' }} />
+                              <div style={{ width: '3px', height: '3px', borderRadius: '50%', background: isSel ? '#ffffff' : eventColor, position: 'absolute', bottom: '3px' }} />
                             )}
                           </div>
                         );
@@ -1203,7 +1264,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>Time zone</label>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', border: '2px solid #F5F5F5', borderRadius: '8px', background: '#ffffff', color: '#0f172a', fontWeight: 500, fontSize: '0.88rem', marginBottom: '20px', cursor: 'pointer' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Globe size={16} color="#64748b" /> Asia/Kolkata (GMT +05:30)
+                      <Globe size={16} color="#64748b" /> {t('Asia/Kolkata', interfaceLang)} (GMT +05:30)
                     </div>
                     <ChevronDown size={16} color="#64748b" />
                   </div>
@@ -1349,7 +1410,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       </div>
 
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', fontSize: '0.65rem', fontWeight: 700, marginBottom: '8px' }}>
-                        <div style={{ color: '#7d3bec' }}>SUN</div>
+                        <div style={{ color: eventColor }}>SUN</div>
                         <div style={{ color: '#64748b' }}>MON</div>
                         <div style={{ color: '#64748b' }}>TUE</div>
                         <div style={{ color: '#64748b' }}>WED</div>
@@ -1376,7 +1437,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                                 height: '28px',
                                 margin: '0 auto',
                                 borderRadius: '50%',
-                                background: isSel && !isPast ? '#7d3bec' : 'transparent',
+                                background: isSel && !isPast ? eventColor : 'transparent',
                                 color: isSel && !isPast ? '#ffffff' : isPast ? '#cbd5e1' : '#0f172a',
                                 display: 'flex',
                                 flexDirection: 'column',
@@ -1391,7 +1452,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                             >
                               <span>{d}</span>
                               {isAvailable && !isPast && (
-                                <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: isSel ? '#ffffff' : '#7d3bec', position: 'absolute', bottom: '2px' }} />
+                                <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: isSel ? '#ffffff' : eventColor, position: 'absolute', bottom: '2px' }} />
                               )}
                             </div>
                           );
@@ -1547,13 +1608,13 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
                         <Calendar size={18} style={{ marginTop: '2px' }} />
                         <div>
-                          <div>Saturday, July 4, 2026</div>
-                          <div style={{ color: '#0f172a', fontWeight: 600 }}>10:00 - 10:15 am</div>
+                          <div>{new Date(2026, 6, 4).toLocaleDateString(getLocale(interfaceLang), { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</div>
+                          <div style={{ color: '#0f172a', fontWeight: 600 }}>{new Date(2026, 6, 4, 10, 0).toLocaleTimeString(getLocale(interfaceLang), { hour: 'numeric', minute: '2-digit' }).toLowerCase()} - {new Date(2026, 6, 4, 10, 15).toLocaleTimeString(getLocale(interfaceLang), { hour: 'numeric', minute: '2-digit' }).toLowerCase()}</div>
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
                         <Clock size={18} />
-                        {durMinutes}m
+                        {durMinutes}{t('m', interfaceLang)}
                       </div>
                       <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
                         <Video size={18} />
@@ -1561,8 +1622,8 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       </div>
                       <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
                         <Globe size={18} />
-                        Asia/Calcutta
-                      </div>
+{t('Asia/Calcutta', interfaceLang)}
+</div>
                     </div>
                   </div>
 
@@ -1597,8 +1658,8 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     )}
 
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '16px', marginTop: 'auto' }}>
-                      <button type="button" onClick={() => triggerToast('Navigating back...')} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>Back</button>
-                      <button type="button" onClick={() => triggerToast('Preview: Confirm booking clicked!')} style={{ background: '#7d3bec', border: 'none', borderRadius: '8px', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, padding: '10px 24px', cursor: 'pointer' }}>Confirm</button>
+                      <button type="button" onClick={() => triggerToast('Navigating back...')} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>{t('Back', interfaceLang)}</button>
+                      <button type="button" onClick={() => triggerToast('Preview: Confirm booking clicked!')} style={{ background: eventColor, border: 'none', borderRadius: '8px', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, padding: '10px 24px', cursor: 'pointer' }}>{t('Confirm', interfaceLang)}</button>
                     </div>
                   </div>
                 </div>
@@ -1623,11 +1684,21 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     <div style={{ display: 'flex', gap: '12px' }}>
                       <input 
                         type="text" 
-                        readOnly 
+                        readOnly={!isEditingCalEventName}
                         value={calEventName}
-                        style={{ flex: 1, padding: '10px 14px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#f8fafc', color: '#334155', fontSize: '0.9rem', outline: 'none' }}
+                        onChange={(e) => setCalEventName(e.target.value)}
+                        style={{ flex: 1, padding: '10px 14px', borderRadius: '6px', border: isEditingCalEventName ? '2px solid #7d3bec' : '2px solid #F5F5F5', background: isEditingCalEventName ? '#ffffff' : '#f8fafc', color: '#334155', fontSize: '0.9rem', outline: 'none', transition: 'all 0.2s' }}
                       />
-                      <button type="button" onClick={handleEditCalEventName} style={{ padding: '0 16px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          if (isEditingCalEventName) triggerToast('Updated calendar event name template!');
+                          setIsEditingCalEventName(!isEditingCalEventName);
+                        }} 
+                        style={{ padding: '0 16px', borderRadius: '6px', border: '2px solid #F5F5F5', background: isEditingCalEventName ? '#7d3bec' : '#ffffff', color: isEditingCalEventName ? '#ffffff' : '#0f172a', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                      >
+                        {isEditingCalEventName ? 'Save' : 'Edit'}
+                      </button>
                     </div>
                   </div>
                   <div style={{ height: '1px', background: '#e2e8f0' }} />
@@ -1677,7 +1748,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   
                   {/* Top Confirmation Section */}
                   <div style={{ padding: '40px 32px 32px', textAlign: 'center' }}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#eff6ff', color: '#7d3bec', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                    <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#7d3bec', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
                       {confRedirect ? <Link2 size={24} strokeWidth={3} /> : <Check size={24} strokeWidth={3} />}
                     </div>
                     <h2 style={{ margin: '0 0 12px', fontSize: '1.4rem', fontWeight: 700, color: '#0f172a' }}>{confRedirect ? 'Redirecting...' : 'This meeting is scheduled'}</h2>
@@ -1727,50 +1798,11 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     {/* Where */}
                     <div style={{ display: 'flex' }}>
                       <div style={{ width: '100px', fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>Where</div>
-                      <div style={{ flex: 1, fontSize: '0.9rem', color: '#334155' }}>{form.location || 'Google Meet'}</div>
+                      <div style={{ flex: 1, fontSize: '0.9rem', color: '#334155' }}>{t(form.location || 'Google Meet', interfaceLang)}</div>
                     </div>
                   </div>
 
-                  <div style={{ height: '1px', background: '#e2e8f0', margin: '0 32px' }} />
 
-                  {/* Add to calendar */}
-                  <div style={{ padding: '24px 32px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
-                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>Add to calendar</span>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button type="button" onClick={() => triggerToast('Downloading Google Calendar invite...')} style={{ width: '36px', height: '36px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                        <svg viewBox="0 0 256 256" width="20" height="20">
-                          <path fill="#fff" d="M195.368 60.632H60.632v134.736h134.736z"/>
-                          <path fill="#ea4335" d="M195.368 256L256 195.368l-30.316-5.172l-30.316 5.172l-5.533 27.73z"/>
-                          <path fill="#188038" d="M0 195.368v40.421C0 246.956 9.044 256 20.21 256h40.422l6.225-30.316l-6.225-30.316l-33.033-5.172z"/>
-                          <path fill="#1967d2" d="M256 60.632V20.21C256 9.044 246.956 0 235.79 0h-40.422q-5.532 22.554-5.533 33.196q0 10.641 5.533 27.436q20.115 5.76 30.316 5.76T256 60.631"/>
-                          <path fill="#fbbc04" d="M256 60.632h-60.632v134.736H256z"/>
-                          <path fill="#34a853" d="M195.368 195.368H60.632V256h134.736z"/>
-                          <path fill="#4285f4" d="M195.368 0H20.211C9.044 0 0 9.044 0 20.21v175.158h60.632V60.632h134.736z"/>
-                          <path fill="#4285f4" d="M88.27 165.154c-5.036-3.402-8.523-8.37-10.426-14.94l11.689-4.816q1.59 6.063 5.558 9.398c2.627 2.223 5.827 3.318 9.566 3.318q5.734 0 9.852-3.487c2.746-2.324 4.127-5.288 4.127-8.875q0-5.508-4.345-8.994c-2.897-2.324-6.535-3.486-10.88-3.486h-6.754v-11.57h6.063q5.608 0 9.448-3.033c2.56-2.02 3.84-4.783 3.84-8.303c0-3.132-1.145-5.625-3.435-7.494c-2.29-1.87-5.188-2.813-8.708-2.813c-3.436 0-6.164.91-8.185 2.745a16.1 16.1 0 0 0-4.413 6.754l-11.57-4.817c1.532-4.345 4.345-8.185 8.471-11.503s9.398-4.985 15.798-4.985c4.733 0 8.994.91 12.767 2.745c3.772 1.836 6.736 4.379 8.875 7.613c2.14 3.25 3.2 6.888 3.2 10.93c0 4.126-.993 7.613-2.98 10.476s-4.43 5.052-7.327 6.585v.69a22.25 22.25 0 0 1 9.398 7.327c2.442 3.284 3.672 7.208 3.672 11.79c0 4.58-1.163 8.673-3.487 12.26c-2.324 3.588-5.54 6.417-9.617 8.472c-4.092 2.055-8.69 3.1-13.793 3.1c-5.912.016-11.369-1.685-16.405-5.087m71.797-58.005l-12.833 9.28l-6.417-9.734l23.023-16.607h8.825v78.333h-12.598z"/>
-                        </svg>
-                      </button>
-                      <button type="button" onClick={() => triggerToast('Downloading Outlook invite...')} style={{ width: '36px', height: '36px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                        <svg viewBox="0 0 32 32" width="20" height="20">
-                          <path fill="#0072c6" d="M19.484 7.937v5.477l1.916 1.205a.5.5 0 0 0 .21 0l8.238-5.554a1.174 1.174 0 0 0-.959-1.128Z"/>
-                          <path fill="#0072c6" d="m19.484 15.457l1.747 1.2a.52.52 0 0 0 .543 0c-.3.181 8.073-5.378 8.073-5.378v10.066a1.408 1.408 0 0 1-1.49 1.555h-8.874zm-9.044-2.525a1.61 1.61 0 0 0-1.42.838a4.13 4.13 0 0 0-.526 2.218A4.05 4.05 0 0 0 9.02 18.2a1.6 1.6 0 0 0 2.771.022a4 4 0 0 0 .515-2.2a4.37 4.37 0 0 0-.5-2.281a1.54 1.54 0 0 0-1.366-.809"/>
-                          <path fill="#0072c6" d="M2.153 5.155v21.427L18.453 30V2Zm10.908 14.336a3.23 3.23 0 0 1-2.7 1.361a3.19 3.19 0 0 1-2.64-1.318A5.46 5.46 0 0 1 6.706 16.1a5.87 5.87 0 0 1 1.036-3.616a3.27 3.27 0 0 1 2.744-1.384a3.12 3.12 0 0 1 2.61 1.321a5.64 5.64 0 0 1 1 3.484a5.76 5.76 0 0 1-1.035 3.586"/>
-                        </svg>
-                      </button>
-                      <button type="button" onClick={() => triggerToast('Downloading Office 365 invite...')} style={{ width: '36px', height: '36px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                        <svg viewBox="0 0 48 48" width="20" height="20">
-                          <path fill="#d83b01" d="M22.25 5L8 10v28l14.25 5 17.75-6.5V11.5L22.25 5z"/>
-                          <path fill="#f36d21" d="M22.25 5v38l17.75-6.5V11.5L22.25 5z"/>
-                          <path fill="#ff8c00" d="M22.25 15.5L13.5 18v12l8.75 2.5 10.75-3.5V19L22.25 15.5z"/>
-                          <path fill="#fff" d="M22.25 19.5c-2.48 0-4.5 2.02-4.5 4.5s2.02 4.5 4.5 4.5 4.5-2.02 4.5-4.5-2.02-4.5-4.5-4.5zm0 6.8c-1.27 0-2.3-1.03-2.3-2.3s1.03-2.3 2.3-2.3 2.3 1.03 2.3 2.3-1.03 2.3-2.3 2.3z"/>
-                        </svg>
-                      </button>
-                      <button type="button" onClick={() => triggerToast('Downloading Yahoo Calendar invite...')} style={{ width: '36px', height: '36px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                        <svg viewBox="0 0 512 143" width="30" height="9">
-                          <path fill="#5f01d1" d="M0 34.607h30.475l17.69 45.324l17.95-45.324h29.7l-44.68 107.436H21.306l12.268-28.409zm126.676-1.808c-22.856 0-37.318 20.532-37.318 40.934c0 22.985 15.883 41.193 36.931 41.193c15.754 0 21.694-9.556 21.694-9.556v7.49h26.6V34.607h-26.6v7.102c-.13 0-6.715-8.91-21.307-8.91m5.682 25.18c10.589 0 16.012 8.394 16.012 15.883c0 8.135-5.81 16.142-16.012 16.142c-8.393 0-16.012-6.844-16.012-15.754c0-9.04 6.07-16.27 16.012-16.27m51.265 54.88V0h27.763v41.967s6.585-9.168 20.402-9.168c16.916 0 26.86 12.655 26.86 30.604v49.457h-27.635V70.118c0-6.07-2.84-12.01-9.426-12.01c-6.715 0-10.201 5.94-10.201 12.01v42.742zM306.038 32.8c-26.214 0-41.838 19.886-41.838 41.322c0 24.276 18.853 40.934 41.967 40.934c22.34 0 41.838-15.883 41.838-40.547c0-26.988-20.532-41.709-41.967-41.709m.258 25.31c9.297 0 15.625 7.747 15.625 15.882c0 6.973-5.94 15.625-15.625 15.625c-8.91 0-15.495-7.102-15.495-15.754c0-8.135 5.423-15.754 15.495-15.754m87.938-25.31c-26.214 0-41.839 19.886-41.839 41.322c0 24.276 18.853 40.934 41.968 40.934c22.34 0 41.838-15.883 41.838-40.547c0-26.988-20.403-41.709-41.967-41.709m.258 25.31c9.297 0 15.625 7.747 15.625 15.882c0 6.973-5.94 15.625-15.625 15.625c-8.91 0-15.496-7.102-15.496-15.754c0-8.135 5.553-15.754 15.496-15.754m63.66 19.498c10.202 0 18.466 8.264 18.466 18.466c0 10.2-8.264 18.465-18.465 18.465s-18.466-8.264-18.466-18.465s8.265-18.466 18.466-18.466m24.536-6.715H449.5L478.943 0H512z"/>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
 
                   <div style={{ height: '1px', background: '#e2e8f0' }} />
 
@@ -1796,8 +1828,8 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
                       {/* Month */}
                       <div onClick={() => toggleLayout('Month')} style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}>
-                        <div style={{ width: '110px', height: '70px', border: allowedLayouts.includes('Month') ? '2px solid #7d3bec' : '2px solid #F5F5F5', borderRadius: '8px', background: allowedLayouts.includes('Month') ? '#f8fafc' : '#ffffff', padding: '8px', position: 'relative' }}>
-                          <div style={{ width: '20px', height: '4px', background: '#7d3bec', borderRadius: '2px', marginBottom: '8px' }}></div>
+                        <div style={{ width: '110px', height: '70px', border: allowedLayouts.includes('Month') ? `2px solid ${eventColor}` : '2px solid #F5F5F5', borderRadius: '8px', background: allowedLayouts.includes('Month') ? '#f8fafc' : '#ffffff', padding: '8px', position: 'relative' }}>
+                          <div style={{ width: '20px', height: '4px', background: eventColor, borderRadius: '2px', marginBottom: '8px' }}></div>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
                              <div style={{ height: '4px', background: '#cbd5e1', borderRadius: '2px' }}></div>
                              <div style={{ height: '4px', background: '#cbd5e1', borderRadius: '2px' }}></div>
@@ -1805,50 +1837,50 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                              <div style={{ height: '4px', background: '#cbd5e1', borderRadius: '2px' }}></div>
                              <div style={{ height: '4px', background: '#cbd5e1', borderRadius: '2px' }}></div>
                              <div style={{ height: '4px', background: '#cbd5e1', borderRadius: '2px' }}></div>
-                             <div style={{ height: '4px', background: '#bfdbfe', borderRadius: '2px' }}></div>
+                             <div style={{ height: '4px', background: eventColor, borderRadius: '2px' }}></div>
                              <div style={{ height: '4px', background: '#cbd5e1', borderRadius: '2px' }}></div>
                           </div>
                         </div>
                         <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}>
-                          <input type="checkbox" checked={allowedLayouts.includes('Month')} readOnly style={{ accentColor: '#7d3bec', cursor: 'pointer' }} /> Month {defaultLayout === 'Month' && <span style={{ color: '#64748b', fontWeight: 400 }}>(Default)</span>}
+                          <input type="checkbox" checked={allowedLayouts.includes('Month')} readOnly style={{ accentColor: eventColor, cursor: 'pointer' }} /> Month {defaultLayout === 'Month' && <span style={{ color: '#64748b', fontWeight: 400 }}>(Default)</span>}
                         </label>
                       </div>
 
                       {/* Weekly */}
                       <div onClick={() => toggleLayout('Weekly')} style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}>
-                        <div style={{ width: '110px', height: '70px', border: allowedLayouts.includes('Weekly') ? '2px solid #7d3bec' : '2px solid #F5F5F5', borderRadius: '8px', background: allowedLayouts.includes('Weekly') ? '#f8fafc' : '#ffffff', padding: '8px', display: 'flex', gap: '6px' }}>
+                        <div style={{ width: '110px', height: '70px', border: allowedLayouts.includes('Weekly') ? `2px solid ${eventColor}` : '2px solid #F5F5F5', borderRadius: '8px', background: allowedLayouts.includes('Weekly') ? '#f8fafc' : '#ffffff', padding: '8px', display: 'flex', gap: '6px' }}>
                           <div style={{ flex: 1 }}>
-                            <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: '2px solid #bfdbfe', marginBottom: '8px' }}></div>
+                            <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: `2px solid ${eventColor}`, marginBottom: '8px' }}></div>
                             <div style={{ width: '80%', height: '2px', background: '#cbd5e1', borderRadius: '2px', marginBottom: '2px' }}></div>
                             <div style={{ width: '60%', height: '2px', background: '#cbd5e1', borderRadius: '2px' }}></div>
                           </div>
                           <div style={{ flex: 2, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2px' }}>
                              <div style={{ background: '#f1f5f9', borderRadius: '2px' }}></div>
                              <div style={{ background: '#f1f5f9', borderRadius: '2px' }}></div>
-                             <div style={{ background: '#bfdbfe', borderRadius: '2px' }}></div>
+                             <div style={{ background: eventColor, borderRadius: '2px' }}></div>
                           </div>
                         </div>
                         <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}>
-                          <input type="checkbox" checked={allowedLayouts.includes('Weekly')} readOnly style={{ accentColor: '#7d3bec', cursor: 'pointer' }} /> Weekly {defaultLayout === 'Weekly' && <span style={{ color: '#64748b', fontWeight: 400 }}>(Default)</span>}
+                          <input type="checkbox" checked={allowedLayouts.includes('Weekly')} readOnly style={{ accentColor: eventColor, cursor: 'pointer' }} /> Weekly {defaultLayout === 'Weekly' && <span style={{ color: '#64748b', fontWeight: 400 }}>(Default)</span>}
                         </label>
                       </div>
 
                       {/* Column */}
                       <div onClick={() => toggleLayout('Column')} style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}>
-                        <div style={{ width: '110px', height: '70px', border: allowedLayouts.includes('Column') ? '2px solid #7d3bec' : '2px solid #F5F5F5', borderRadius: '8px', background: allowedLayouts.includes('Column') ? '#f8fafc' : '#ffffff', padding: '8px', display: 'flex', gap: '8px' }}>
+                        <div style={{ width: '110px', height: '70px', border: allowedLayouts.includes('Column') ? `2px solid ${eventColor}` : '2px solid #F5F5F5', borderRadius: '8px', background: allowedLayouts.includes('Column') ? '#f8fafc' : '#ffffff', padding: '8px', display: 'flex', gap: '8px' }}>
                           <div style={{ flex: 1 }}>
-                            <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: '2px solid #bfdbfe', marginBottom: '8px' }}></div>
+                            <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: `2px solid ${eventColor}`, marginBottom: '8px' }}></div>
                             <div style={{ width: '80%', height: '2px', background: '#cbd5e1', borderRadius: '2px', marginBottom: '2px' }}></div>
                             <div style={{ width: '60%', height: '2px', background: '#cbd5e1', borderRadius: '2px' }}></div>
                           </div>
                           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                            <div style={{ height: '4px', background: '#bfdbfe', borderRadius: '2px' }}></div>
-                            <div style={{ height: '4px', background: '#bfdbfe', borderRadius: '2px' }}></div>
-                            <div style={{ height: '4px', background: '#bfdbfe', borderRadius: '2px' }}></div>
+                            <div style={{ height: '4px', background: eventColor, borderRadius: '2px' }}></div>
+                            <div style={{ height: '4px', background: eventColor, borderRadius: '2px' }}></div>
+                            <div style={{ height: '4px', background: eventColor, borderRadius: '2px' }}></div>
                           </div>
                         </div>
                         <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}>
-                          <input type="checkbox" checked={allowedLayouts.includes('Column')} readOnly style={{ accentColor: '#7d3bec', cursor: 'pointer' }} /> Column {defaultLayout === 'Column' && <span style={{ color: '#64748b', fontWeight: 400 }}>(Default)</span>}
+                          <input type="checkbox" checked={allowedLayouts.includes('Column')} readOnly style={{ accentColor: eventColor, cursor: 'pointer' }} /> Column {defaultLayout === 'Column' && <span style={{ color: '#64748b', fontWeight: 400 }}>(Default)</span>}
                         </label>
                       </div>
                     </div>
@@ -1861,13 +1893,13 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     <h3 style={{ margin: '0 0 12px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Default view</h3>
                     
                     <div style={{ display: 'inline-flex', background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '8px', padding: '4px', marginBottom: '16px' }}>
-                      {allowedLayouts.includes('Month') && <button type="button" onClick={() => { setDefaultLayout('Month'); triggerToast('Set default view to Month'); }} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: defaultLayout === 'Month' ? '#eff6ff' : 'transparent', color: defaultLayout === 'Month' ? '#7d3bec' : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Month</button>}
-                      {allowedLayouts.includes('Weekly') && <button type="button" onClick={() => { setDefaultLayout('Weekly'); triggerToast('Set default view to Weekly'); }} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: defaultLayout === 'Weekly' ? '#eff6ff' : 'transparent', color: defaultLayout === 'Weekly' ? '#7d3bec' : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Weekly</button>}
-                      {allowedLayouts.includes('Column') && <button type="button" onClick={() => { setDefaultLayout('Column'); triggerToast('Set default view to Column'); }} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: defaultLayout === 'Column' ? '#eff6ff' : 'transparent', color: defaultLayout === 'Column' ? '#7d3bec' : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Column</button>}
+                      {allowedLayouts.includes('Month') && <button type="button" onClick={() => { setDefaultLayout('Month'); triggerToast('Set default view to Month'); }} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: defaultLayout === 'Month' ? `${eventColor}1a` : 'transparent', color: defaultLayout === 'Month' ? eventColor : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Month</button>}
+                      {allowedLayouts.includes('Weekly') && <button type="button" onClick={() => { setDefaultLayout('Weekly'); triggerToast('Set default view to Weekly'); }} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: defaultLayout === 'Weekly' ? `${eventColor}1a` : 'transparent', color: defaultLayout === 'Weekly' ? eventColor : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Weekly</button>}
+                      {allowedLayouts.includes('Column') && <button type="button" onClick={() => { setDefaultLayout('Column'); triggerToast('Set default view to Column'); }} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: defaultLayout === 'Column' ? `${eventColor}1a` : 'transparent', color: defaultLayout === 'Column' ? eventColor : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Column</button>}
                     </div>
 
                     <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>
-                      You can manage this for all your event types in Settings -&gt; Appearance or <button type="button" onClick={() => triggerToast('Opening Override rules modal...')} style={{ background: 'none', border: 'none', color:'#7d3bec', textDecoration:'none', fontWeight: 500, cursor: 'pointer', padding: 0 }}>Override</button> for this event only.
+                      You can manage this for all your event types in Settings -&gt; Appearance or <button type="button" onClick={() => triggerToast('Opening Override rules modal...')} style={{ background: 'none', border: 'none', color: eventColor, textDecoration:'none', fontWeight: 500, cursor: 'pointer', padding: 0 }}>Override</button> for this event only.
                     </p>
                   </div>
 
@@ -1879,21 +1911,12 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       <h3 style={{ margin: '0 0 4px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Event type color</h3>
                       <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>This is only used for event type & booking differentiation within the app. It is not displayed to bookers.</p>
                     </div>
-                    <input type="color" value={eventColor} onChange={e => { setEventColor(e.target.value); triggerToast(`Updated event accent color`); }} style={{ cursor: 'pointer', border: 'none', background: 'none', width: '36px', height: '36px', padding: 0 }} />
-                  </div>
-
-                  <div style={{ height: '1px', background: '#e2e8f0' }} />
-
-                  {/* Auto translate title and description */}
-                  <div style={{ padding: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                    <div style={{ paddingRight: '24px' }}>
-                      <h3 style={{ margin: '0 0 4px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Auto translate title and description</h3>
-                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Automatically translate titles and descriptions to the visitor's browser language using AI.</p>
+                    <div style={{ position: 'relative', width: '36px', height: '36px', borderRadius: '50%', background: eventColor, cursor: 'pointer', border: '2px solid #F5F5F5', overflow: 'hidden', flexShrink: 0 }}>
+                      <input type="color" value={eventColor} onChange={e => { setEventColor(e.target.value); triggerToast(`Updated event accent color`); }} style={{ opacity: 0, position: 'absolute', top: '-10px', left: '-10px', width: '60px', height: '60px', cursor: 'pointer' }} />
                     </div>
-                    <ToggleSwitch checked={autoTranslate} onChange={() => { setAutoTranslate(!autoTranslate); triggerToast(!autoTranslate ? 'Enabled AI Auto-translate' : 'Disabled Auto-translate'); }} />
                   </div>
 
-                  <div style={{ height: '1px', background: '#e2e8f0' }} />
+
 
                   {/* Interface language */}
                   <div style={{ padding: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
@@ -1901,12 +1924,12 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       <h3 style={{ margin: '0 0 4px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Interface language</h3>
                       <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>Set your preferred language for the booking interface</p>
                     </div>
-                    <select value={interfaceLang} onChange={e => { setInterfaceLang(e.target.value); triggerToast(`Set interface language to ${e.target.value}`); }} style={{ padding: '8px 12px', borderRadius: '8px', border: '2px solid #F5F5F5', outline: 'none', fontSize: '0.9rem', color: '#0f172a', fontWeight: 500, minWidth: '120px', cursor: 'pointer' }}>
-                      <option>English</option>
-                      <option>French</option>
-                      <option>Spanish</option>
-                      <option>German</option>
-                    </select>
+                    <CustomDropdown
+                      value={interfaceLang}
+                      options={['English', 'French', 'Spanish', 'German']}
+                      onChange={(val) => { setInterfaceLang(val); triggerToast(`Set interface language to ${val}`); }}
+                      dropUp={true}
+                    />
                   </div>
 
                   <div style={{ height: '1px', background: '#e2e8f0' }} />
@@ -1929,7 +1952,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   
                   {/* Preview Left: Details */}
                   <div style={{ width: '320px', borderRight: '2px solid #F5F5F5', padding: '32px 24px', background: '#ffffff' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#7d3bec', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 700, marginBottom: '20px' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: eventColor, color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 700, marginBottom: '20px' }}>
                       {hostInitials}
                     </div>
                     <div style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600, marginBottom: '4px' }}>{hostName}</div>
@@ -1942,22 +1965,22 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
                         <Calendar size={18} style={{ marginTop: '2px' }} />
                         <div>
-                          <div>Saturday, July 4, 2026</div>
-                          <div style={{ color: '#0f172a', fontWeight: 600 }}>10:00 - 10:15 am</div>
+                          <div>{new Date(2026, 6, 4).toLocaleDateString(getLocale(interfaceLang), { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</div>
+                          <div style={{ color: '#0f172a', fontWeight: 600 }}>{new Date(2026, 6, 4, 10, 0).toLocaleTimeString(getLocale(interfaceLang), { hour: 'numeric', minute: '2-digit' }).toLowerCase()} - {new Date(2026, 6, 4, 10, 15).toLocaleTimeString(getLocale(interfaceLang), { hour: 'numeric', minute: '2-digit' }).toLowerCase()}</div>
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
                         <Clock size={18} />
-                        {durMinutes}m
+                        {durMinutes}{t('m', interfaceLang)}
                       </div>
                       <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
                         <Video size={18} />
-                        {form.location || 'Google Meet'}
+                        {t(form.location || 'Google Meet', interfaceLang)}
                       </div>
                       <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500, alignItems: 'center' }}>
                         <Globe size={18} />
-                        Asia/Calcutta
-                        {!lockTimezone && <ChevronDown size={14} />}
+{t('Asia/Calcutta', interfaceLang)}
+{!lockTimezone && <ChevronDown size={14} />}
                         {lockTimezone && <span style={{ fontSize: '0.7rem', background: '#f1f5f9', color: '#64748b', padding: '2px 6px', borderRadius: '4px', marginLeft: 'auto' }}>Locked</span>}
                       </div>
                     </div>
@@ -1967,19 +1990,19 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   <div style={{ flex: 1, padding: '32px 40px', display: 'flex', flexDirection: 'column' }}>
                     <div style={{ marginBottom: '20px' }}>
                       <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>
-                        {interfaceLang === 'French' ? 'Votre nom *' : interfaceLang === 'Spanish' ? 'Tu nombre *' : interfaceLang === 'German' ? 'Dein Name *' : 'Your name *'}
+                        {t('Your name *', interfaceLang)}
                       </label>
                       <input type="text" readOnly value={hostName} style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
                     </div>
                     <div style={{ marginBottom: '20px' }}>
                       <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>
-                        {interfaceLang === 'French' ? 'Adresse e-mail *' : interfaceLang === 'Spanish' ? 'Correo electrónico *' : interfaceLang === 'German' ? 'E-Mail-Adresse *' : 'Email address *'}
+                        {t('Email address *', interfaceLang)}
                       </label>
                       <input type="text" readOnly value="guest@example.com" style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
                     </div>
                     <div style={{ marginBottom: '20px' }}>
-                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Additional notes</label>
-                      <textarea readOnly value="Please share anything that will help prepare for our meeting." style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', minHeight: '80px', resize: 'none', outline: 'none' }} />
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>{t('Additional notes', interfaceLang)}</label>
+                      <textarea readOnly value={t('Please share anything that will help prepare for our meeting.', interfaceLang)} style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', minHeight: '80px', resize: 'none', outline: 'none' }} />
                     </div>
 
                     <button type="button" onClick={() => triggerToast('Opening Add Guests input...')} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.85rem', fontWeight: 600, padding: 0, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginBottom: '40px' }}>
@@ -1987,8 +2010,8 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     </button>
 
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '16px', marginTop: 'auto' }}>
-                      <button type="button" onClick={() => triggerToast('Navigating back...')} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>Back</button>
-                      <button type="button" onClick={() => triggerToast('Preview: Confirm booking clicked!')} style={{ background: '#7d3bec', border: 'none', borderRadius: '8px', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, padding: '10px 24px', cursor: 'pointer' }}>Confirm</button>
+                      <button type="button" onClick={() => triggerToast('Navigating back...')} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>{t('Back', interfaceLang)}</button>
+                      <button type="button" onClick={() => triggerToast('Preview: Confirm booking clicked!')} style={{ background: eventColor, border: 'none', borderRadius: '8px', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, padding: '10px 24px', cursor: 'pointer' }}>{t('Confirm', interfaceLang)}</button>
                     </div>
                   </div>
                 </div>
@@ -2334,7 +2357,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   
                   {/* Preview Left: Details */}
                   <div style={{ width: '320px', borderRight: '2px solid #F5F5F5', padding: '32px 24px', background: '#ffffff' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#7d3bec', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 700, marginBottom: '20px' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: eventColor, color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 700, marginBottom: '20px' }}>
                       {hostInitials}
                     </div>
                     <div style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600, marginBottom: '4px' }}>{hostName}</div>
@@ -2351,22 +2374,22 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
                         <Calendar size={18} style={{ marginTop: '2px' }} />
                         <div>
-                          <div>Saturday, July 4, 2026</div>
-                          <div style={{ color: '#0f172a', fontWeight: 600 }}>10:00 - 10:15 am</div>
+                          <div>{new Date(2026, 6, 4).toLocaleDateString(getLocale(interfaceLang), { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</div>
+                          <div style={{ color: '#0f172a', fontWeight: 600 }}>{new Date(2026, 6, 4, 10, 0).toLocaleTimeString(getLocale(interfaceLang), { hour: 'numeric', minute: '2-digit' }).toLowerCase()} - {new Date(2026, 6, 4, 10, 15).toLocaleTimeString(getLocale(interfaceLang), { hour: 'numeric', minute: '2-digit' }).toLowerCase()}</div>
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
                         <Clock size={18} />
-                        {durMinutes}m
+                        {durMinutes}{t('m', interfaceLang)}
                       </div>
                       <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
                         <Video size={18} />
-                        {form.location || 'Google Meet'}
+                        {t(form.location || 'Google Meet', interfaceLang)}
                       </div>
                       <div style={{ display: 'flex', gap: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
                         <Globe size={18} />
-                        Asia/Calcutta
-                      </div>
+{t('Asia/Calcutta', interfaceLang)}
+</div>
                     </div>
                   </div>
 
@@ -2381,8 +2404,8 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                       <input type="text" readOnly value={userEmail} style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', outline: 'none' }} />
                     </div>
                     <div style={{ marginBottom: '20px' }}>
-                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Additional notes</label>
-                      <textarea readOnly value="Please share anything that will help prepare for our meeting." style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', minHeight: '80px', resize: 'none', outline: 'none' }} />
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>{t('Additional notes', interfaceLang)}</label>
+                      <textarea readOnly value={t('Please share anything that will help prepare for our meeting.', interfaceLang)} style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '2px solid #F5F5F5', background: '#ffffff', color: '#0f172a', fontSize: '0.9rem', minHeight: '80px', resize: 'none', outline: 'none' }} />
                     </div>
 
                     <button type="button" onClick={() => triggerToast('Opening Add Guests input...')} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.85rem', fontWeight: 600, padding: 0, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginBottom: '40px' }}>
@@ -2390,8 +2413,8 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     </button>
 
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '16px', marginTop: 'auto' }}>
-                      <button type="button" onClick={() => triggerToast('Navigating back...')} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>Back</button>
-                      <button type="button" onClick={() => triggerToast('Preview: Confirm booking clicked!')} style={{ background: '#7d3bec', border: 'none', borderRadius: '8px', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, padding: '10px 24px', cursor: 'pointer' }}>Confirm</button>
+                      <button type="button" onClick={() => triggerToast('Navigating back...')} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>{t('Back', interfaceLang)}</button>
+                      <button type="button" onClick={() => triggerToast('Preview: Confirm booking clicked!')} style={{ background: eventColor, border: 'none', borderRadius: '8px', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, padding: '10px 24px', cursor: 'pointer' }}>{t('Confirm', interfaceLang)}</button>
                     </div>
                   </div>
                 </div>

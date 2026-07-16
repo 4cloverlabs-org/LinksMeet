@@ -91,17 +91,17 @@ export default function OverviewPage() {
                   </div>
 
                   {/* By status donut */}
-                  <div className="crm-card">
+                  <div className="crm-card" style={{ display: 'flex', flexDirection: 'column' }}>
                     <div className="crm-card-head"><h3>Leads by status</h3></div>
                     {contacts.length === 0 ? (
-                      <div className="crm-empty" style={{ padding: '28px 10px' }}>
+                      <div className="crm-empty" style={{ padding: '28px 10px', margin: 'auto' }}>
                         <span className="ic"><Users size={22} /></span>
                         <h3>No leads yet</h3>
                         <p>Add one manually or get them automatically from your booking widget.</p>
                         <button className="crm-btn crm-btn-primary" style={{ margin: '0 auto' }} onClick={() => { setCForm(blankContact); setShowContactForm(true); }}><Plus size={15} /> Add lead</button>
                       </div>
                     ) : (
-                      <div className="crm-donut-wrap">
+                      <div className="crm-donut-wrap" style={{ flex: 1, justifyContent: 'center', gap: '40px' }}>
                         <Donut stages={statusStages} total={contacts.length} label="leads" />
                         <div className="crm-legend">
                           {statusStages.map(s => (

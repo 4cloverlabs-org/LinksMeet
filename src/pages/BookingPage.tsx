@@ -37,6 +37,36 @@ const calcEndTime = (start: string, duration: string) => {
   return `${newH}:${newM.toString().padStart(2, '0')}${newPM ? 'pm' : 'am'}`;
 };
 
+
+const getLocale = (lang) => {
+  switch (lang) {
+    case 'French': return 'fr-FR';
+    case 'Spanish': return 'es-ES';
+    case 'German': return 'de-DE';
+    default: return 'en-US';
+  }
+};
+
+
+const t = (key, lang) => {
+  const dict = {
+    'Your name *': { French: 'Votre nom *', Spanish: 'Tu nombre *', German: 'Dein Name *' },
+    'Email address *': { French: 'Adresse e-mail *', Spanish: 'Correo electrónico *', German: 'E-Mail-Adresse *' },
+    'Additional notes': { French: 'Notes supplémentaires', Spanish: 'Notas adicionales', German: 'Zusätzliche Notizen' },
+    'Please share anything that will help prepare for our meeting.': { French: 'Veuillez partager tout ce qui pourrait aider à préparer notre réunion.', Spanish: 'Por favor, comparta cualquier cosa que ayude a prepararse para nuestra reunión.', German: 'Bitte teilen Sie alles mit, was zur Vorbereitung auf unser Meeting hilft.' },
+    'Add guests': { French: 'Ajouter des invités', Spanish: 'Añadir invitados', German: 'Gäste hinzufügen' },
+    'Back': { French: 'Retour', Spanish: 'Volver', German: 'Zurück' },
+    'Confirm': { French: 'Confirmer', Spanish: 'Confirmar', German: 'Bestätigen' },
+    'm': { French: 'm', Spanish: 'm', German: ' Min.' },
+    'Google Meet': { French: 'Google Meet', Spanish: 'Google Meet', German: 'Google Meet' },
+    'Phone Call': { French: 'Appel téléphonique', Spanish: 'Llamada telefónica', German: 'Telefonanruf' },
+    'In-Person Meeting': { French: 'Réunion en personne', Spanish: 'Reunión en persona', German: 'Persönliches Meeting' },
+    'Asia/Calcutta': { French: 'Asie/Calcutta', Spanish: 'Asia/Calcuta', German: 'Asien/Kalkutta' },
+    'Asia/Kolkata': { French: 'Asie/Kolkata', Spanish: 'Asia/Kolkata', German: 'Asien/Kalkutta' }
+  };
+  return dict[key]?.[lang] || key;
+};
+
 export default function BookingPage() {
   const { uid, slug } = useParams<{ uid: string; slug: string }>();
 
@@ -44,6 +74,8 @@ export default function BookingPage() {
   const [error, setError] = useState('');
   const [hostName, setHostName] = useState('');
   const [eventType, setEventType] = useState<EventType | null>(null);
+  const interfaceLang = eventType?.interfaceLang || eventType?.interface_lang || 'English';
+  const eventColor = eventType?.eventColor || eventType?.event_color || '#7d3bec';
   
   const [step, setStep] = useState<1 | 2>(1);
   const now = new Date();
@@ -248,8 +280,8 @@ export default function BookingPage() {
         // Format slot string
         const startDate = new Date(startTime);
         const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-        const formattedDate = `${months[startDate.getMonth()]} ${startDate.getDate()}, ${startDate.getFullYear()}`;
-        const formattedTime = startDate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        const formattedDate = startDate.toLocaleDateString(getLocale(interfaceLang), { month: 'long', day: 'numeric', year: 'numeric' });
+        const formattedTime = startDate.toLocaleTimeString(getLocale(interfaceLang), { hour: 'numeric', minute: '2-digit' });
         const slotStr = `${formattedDate} · ${formattedTime}`;
 
         // 1. Insert Booking directly
@@ -294,7 +326,7 @@ export default function BookingPage() {
 
   
   const daysInCurrentMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-  const currentMonthName = new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' });
+  const currentMonthName = new Date(currentYear, currentMonth).toLocaleString(getLocale(interfaceLang), { month: 'long' });
 
   const generateTimeSlotsForDate = (targetDate: Date) => {
     const slots = [];
@@ -365,12 +397,12 @@ export default function BookingPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', rowGap: '24px', fontSize: '0.95rem', alignItems: 'start' }}>
               
               <div style={{ fontWeight: 700, color: '#0f172a' }}>What</div>
-              <div style={{ color: '#0f172a' }}>{eventType?.dur || '15m'} meeting between {hostName} and {name || hostName}</div>
+              <div style={{ color: '#0f172a' }}>{parseInt(eventType?.dur || '15')}{t('m', interfaceLang)} meeting between {hostName} and {name || hostName}</div>
 
               <div style={{ fontWeight: 700, color: '#0f172a' }}>When</div>
               <div>
                 <div style={{ color: '#0f172a', fontWeight: 500 }}>
-                  {new Date(currentYear, currentMonth, selectedDate).toLocaleString('default', { weekday: 'long' })}, {currentMonthName} {selectedDate}, {currentYear}
+                  {new Date(currentYear, currentMonth, selectedDate).toLocaleDateString(getLocale(interfaceLang), { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
                 </div>
                 <div style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '2px' }}>
                   {selectedTime || '9:00 AM'} - {calcEndTime(selectedTime || '9:00am', eventType?.dur || '15m')} (India Standard Time)
@@ -392,7 +424,7 @@ export default function BookingPage() {
               <div style={{ fontWeight: 700, color: '#0f172a' }}>Where</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Video size={16} color="#64748b" />
-                <span style={{ color: '#0f172a', fontWeight: 500 }}>{eventType?.location || 'Google Meet'}</span>
+                <span style={{ color: '#0f172a', fontWeight: 500 }}>{t(eventType?.location || 'Google Meet', interfaceLang)}</span>
                 <ExternalLink
                   size={16}
                   color="#7d3bec"
@@ -573,10 +605,10 @@ export default function BookingPage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '0.9rem', color: '#475569' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 600 }}>
-                <Clock size={18} color="#64748b" /> {eventType?.dur || '15m'}
+                <Clock size={18} color="#64748b" /> {parseInt(eventType?.dur || '15')}{t('m', interfaceLang)}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Video size={18} color="#64748b" /> {eventType?.location || 'Google Meet'}
+                <Video size={18} color="#64748b" /> {t(eventType?.location || 'Google Meet', interfaceLang)}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 600, cursor: 'pointer' }}>
                 <Globe size={18} color="#64748b" /> Asia/Kolkata
@@ -996,17 +1028,17 @@ export default function BookingPage() {
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                 <CalendarIcon size={20} color="#7d3bec" style={{ flexShrink: 0, marginTop: '2px' }} />
                 <div style={{ lineHeight: 1.4, fontWeight: 500 }}>
-                  <div>{new Date(currentYear, currentMonth, selectedDate).toLocaleString('default', { weekday: 'long' })}, {currentMonthName} {selectedDate}, {currentYear}</div>
+                  <div>{new Date(currentYear, currentMonth, selectedDate).toLocaleDateString(getLocale(interfaceLang), { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</div>
                   <div style={{ color: '#475569', fontSize: '0.85rem' }}>{selectedTime || '4:45 pm'} - {calcEndTime(selectedTime || '4:45pm', eventType?.dur || '15m')}</div>
                 </div>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 500 }}>
-                <Clock size={20} color="#7d3bec" style={{ flexShrink: 0 }} /> {eventType?.dur || '15m'}
+                <Clock size={20} color="#7d3bec" style={{ flexShrink: 0 }} /> {parseInt(eventType?.dur || '15')}{t('m', interfaceLang)}
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 500 }}>
-                <Video size={20} color="#7d3bec" style={{ flexShrink: 0 }} /> {eventType?.location || 'Google Meet'}
+                <Video size={20} color="#7d3bec" style={{ flexShrink: 0 }} /> {t(eventType?.location || 'Google Meet', interfaceLang)}
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 500 }}>
@@ -1019,9 +1051,9 @@ export default function BookingPage() {
           <div style={{ borderLeft: '1px solid #f1f5f9', paddingLeft: '40px' }}>
             <form onSubmit={handleBook} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {(eventType?.formSettings?.questions || [
-                { id: 'name', label: 'Your name', type: 'Name', required: true, active: true },
-                { id: 'email', label: 'Email address', type: 'Email', required: true, active: true },
-                { id: 'notes', label: 'Additional notes', type: 'Long text', required: false, active: true }
+                { id: 'name', label: t('Your name *', interfaceLang).replace(' *', ''), type: 'Name', required: true, active: true },
+                { id: 'email', label: t('Email address *', interfaceLang).replace(' *', ''), type: 'Email', required: true, active: true },
+                { id: 'notes', label: t('Additional notes', interfaceLang), type: 'Long text', required: false, active: true }
               ]).filter((q: any) => q.active && q.id !== 'guests' && q.id !== 'reschedule').map((q: any) => (
                 <div key={q.id}>
                   <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>
@@ -1031,7 +1063,7 @@ export default function BookingPage() {
                     <textarea
                       required={q.required}
                       rows={3}
-                      placeholder={q.id === 'notes' ? "Please share anything that will help prepare for our meeting." : ""}
+                      placeholder={q.id === 'notes' ? t('Please share anything that will help prepare for our meeting.', interfaceLang) : ''}
                       value={q.id === 'notes' ? notes : ''}
                       onChange={e => { if (q.id === 'notes') setNotes(e.target.value); }}
                       style={{ width: '100%', padding: '12px 16px', border: '1px solid #e2e8f0', background: '#ffffff', color: '#0f172a', borderRadius: '10px', outline: 'none', fontSize: '0.92rem', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
@@ -1074,15 +1106,13 @@ export default function BookingPage() {
                   type="button"
                   onClick={() => setStep(1)}
                   style={{ background: 'none', border: 'none', color: '#475569', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', padding: '10px 16px' }}
-                >
-                  Back
-                </button>
+                >{t('Back', interfaceLang)}</button>
                 <button
                   type="submit"
                   disabled={bookingStatus === 'booking'}
                   style={{ padding: '12px 32px', background: '#7d3bec', color: '#ffffff', border: 'none', borderRadius: '12px', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(125, 59, 236, 0.25)' }}
                 >
-                  {bookingStatus === 'booking' ? <Loader2 size={18} className="crm-spin-ic" /> : 'Confirm'}
+                  {bookingStatus === 'booking' ? <Loader2 size={18} className="crm-spin-ic" /> : t('Confirm', interfaceLang)}
                 </button>
               </div>
             </form>

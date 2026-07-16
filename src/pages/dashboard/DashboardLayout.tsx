@@ -143,28 +143,26 @@ const TRANSACTIONS = [
 
 /* ---------------- chart helpers ---------------- */
 function Donut({ stages, total, label }: { stages: { name: string; color: string; value: number }[]; total: number; label: string }) {
-  const R = 54, C = 2 * Math.PI * R;
+  const R = 76, C = 2 * Math.PI * R;
   const sum = stages.reduce((a, s) => a + s.value, 0) || 1;
-  let offset = 0;
   return (
-    <svg width="148" height="148" viewBox="0 0 148 148">
-      <circle cx="74" cy="74" r={R} fill="none" stroke="#f0f0f4" strokeWidth="18" />
+    <svg width="200" height="200" viewBox="0 0 200 200">
+      <circle cx="100" cy="100" r={R} fill="none" stroke="#f0f0f4" strokeWidth="22" />
       {stages.map((s, i) => {
         const len = (s.value / sum) * C;
-        const el = (
+        const currentOffset = stages.slice(0, i).reduce((a, st) => a + (st.value / sum) * C, 0);
+        return (
           <circle
-            key={i} cx="74" cy="74" r={R} fill="none"
-            stroke={s.color} strokeWidth="18"
+            key={i} cx="100" cy="100" r={R} fill="none"
+            stroke={s.color} strokeWidth="22"
             strokeDasharray={`${len} ${C - len}`}
-            strokeDashoffset={-offset}
-            transform="rotate(-90 74 74)"
+            strokeDashoffset={-currentOffset}
+            transform="rotate(-90 100 100)"
           />
         );
-        offset += len;
-        return el;
       })}
-      <text x="74" y="70" textAnchor="middle" fontSize="22" fontWeight="700" fill="#16161d">{total}</text>
-      <text x="74" y="88" textAnchor="middle" fontSize="10" fill="#9b9bab">{label}</text>
+      <text x="100" y="94" textAnchor="middle" fontSize="32" fontWeight="700" fill="#16161d">{total}</text>
+      <text x="100" y="118" textAnchor="middle" fontSize="13" fill="#9b9bab">{label}</text>
     </svg>
   );
 }
@@ -1310,7 +1308,13 @@ export default function DashboardLayout() {
   // Real metrics derived from the user's contacts
   const statusCounts = useMemo(() => {
     const m: Record<string, number> = { New: 0, Contacted: 0, 'Follow up': 0, Converted: 0, Lost: 0 };
-    contacts.forEach(c => { m[c.status] = (m[c.status] || 0) + 1; });
+    contacts.forEach(c => {
+      let st = c.status;
+      if (!st || !m.hasOwnProperty(st)) {
+        st = 'New';
+      }
+      m[st] = (m[st] || 0) + 1;
+    });
     return m;
   }, [contacts]);
   const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;

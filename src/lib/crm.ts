@@ -87,6 +87,10 @@ export interface EventType {
   defaultLayout?: string;
   formSettings?: any;
   location?: string;
+  eventColor?: string;
+  interfaceLang?: string;
+  interface_lang?: string;
+  event_color?: string;
   createdAt?: number;
 }
 export async function listEventTypes(uid: string): Promise<EventType[]> {
