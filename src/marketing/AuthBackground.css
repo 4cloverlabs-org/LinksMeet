@@ -1,0 +1,158 @@
+/* AuthBackground.css */
+
+.auth-story-bg {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Floating background bubbles */
+.story-floating-bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 70%);
+  animation: floatBubble 10s ease-in-out infinite alternate;
+}
+.story-floating-bubble.b1 { width: 400px; height: 400px; top: -5%; right: -100px; }
+.story-floating-bubble.b2 { width: 500px; height: 500px; bottom: -150px; left: -100px; animation-delay: -3s; }
+.story-floating-bubble.b3 { width: 300px; height: 300px; top: 40%; left: 30%; animation-delay: -7s; }
+
+@keyframes floatBubble {
+  0% { transform: translateY(0) scale(1); }
+  100% { transform: translateY(-40px) scale(1.1); }
+}
+
+/* Shared Solid Card Styles */
+.real-ui {
+  position: absolute;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.4);
+}
+
+/* --- BOOKING WIDGET --- */
+.story-booking-widget {
+  top: 65%;
+  left: 50%;
+  width: 480px;
+  transform: translate(-50%, -50%) rotate(-1deg);
+  animation: floatWidget 10s ease-in-out infinite;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes floatWidget {
+  0%, 100% { transform: translate(-50%, -50%) rotate(-1deg); }
+  50% { transform: translate(-50%, calc(-50% - 20px)) rotate(-1deg); }
+}
+
+.w-header {
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.w-avatar {
+  width: 32px; height: 32px; border-radius: 50%; background: #7d3bec; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700;
+}
+.w-title { font-size: 0.85rem; font-weight: 700; color: #111827; margin-bottom: 2px; }
+.w-subtitle { font-size: 0.65rem; color: #6b7280; font-weight: 500; }
+
+.w-divider { height: 1px; background: #f3f4f6; width: 100%; }
+
+.w-body {
+  padding: 20px 24px;
+  display: flex;
+  gap: 24px;
+}
+
+/* Left side */
+.w-left { flex: 1.2; border-right: 1px solid #f3f4f6; padding-right: 24px; }
+.w-month { font-size: 0.75rem; font-weight: 700; color: #111827; margin-bottom: 12px; text-align: center; }
+.w-days-row { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 8px; text-align: center; font-size: 0.55rem; color: #9ca3af; font-weight: 600; }
+.w-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.w-day { 
+  aspect-ratio: 1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: #374151; font-weight: 500; 
+}
+.w-empty { visibility: hidden; }
+
+/* Right side */
+.w-right { flex: 1; display: flex; flex-direction: column; }
+.w-time-title { font-size: 0.7rem; font-weight: 600; color: #111827; margin-bottom: 12px; }
+.w-time-list { display: flex; flex-direction: column; gap: 8px; }
+.w-time-btn {
+  border: 1px solid #d1d5db; border-radius: 6px; padding: 6px; text-align: center; font-size: 0.65rem; font-weight: 600; color: #374151;
+}
+
+/* Animation Targets */
+.target-day { animation: dayClickAnim 9s infinite; }
+@keyframes dayClickAnim {
+  0%, 17% { background: transparent; color: #374151; }
+  17.1%, 85% { background: #7d3bec; color: white; }
+  100% { background: transparent; color: #374151; }
+}
+
+.target-time { animation: timeClickAnim 9s infinite; }
+@keyframes timeClickAnim {
+  0%, 31% { border-color: #d1d5db; background: transparent; color: #374151; transform: translateX(0); }
+  31.1%, 85% { border-color: #7d3bec; background: #7d3bec; color: white; transform: translateX(-10px); }
+  100% { border-color: #d1d5db; background: transparent; color: #374151; transform: translateX(0); }
+}
+
+.target-confirm {
+  margin-top: 12px;
+  background: #111827; color: white; text-align: center; font-size: 0.65rem; font-weight: 600; padding: 8px; border-radius: 6px;
+  animation: confirmBtnAnim 9s infinite;
+}
+@keyframes confirmBtnAnim {
+  0%, 31% { opacity: 0; transform: translateY(10px); }
+  32%, 85% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(10px); }
+}
+
+/* Success Overlay */
+.w-success-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.95);
+  border-radius: 16px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  animation: successAnim 9s infinite;
+  backdrop-filter: blur(4px);
+}
+.w-check { width: 40px; height: 40px; border-radius: 50%; background: #10b981; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; margin-bottom: 12px; }
+.w-success-text { font-size: 1rem; font-weight: 700; color: #111827; }
+
+@keyframes successAnim {
+  0%, 45% { opacity: 0; transform: scale(0.95); pointer-events: none; }
+  46%, 85% { opacity: 1; transform: scale(1); pointer-events: auto; }
+  100% { opacity: 0; transform: scale(0.95); pointer-events: none; }
+}
+
+/* Mock Cursor */
+.mock-cursor {
+  position: absolute;
+  top: 0; left: 0;
+  z-index: 20;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+  animation: scheduleCursor 9s ease-in-out infinite;
+}
+
+@keyframes scheduleCursor {
+  0% { opacity: 0; transform: translate(150px, 350px); }
+  10% { opacity: 1; transform: translate(150px, 250px); }
+  15% { transform: translate(var(--x1), var(--y1)) scale(1); }
+  17% { transform: translate(var(--x1), var(--y1)) scale(0.85); }
+  19% { transform: translate(var(--x1), var(--y1)) scale(1); }
+  27% { transform: translate(var(--x2), var(--y2)) scale(1); }
+  31% { transform: translate(var(--x2), var(--y2)) scale(0.85); }
+  33% { transform: translate(var(--x2), var(--y2)) scale(1); }
+  41% { transform: translate(var(--x3), var(--y3)) scale(1); }
+  45% { transform: translate(var(--x3), var(--y3)) scale(0.85); }
+  47% { transform: translate(var(--x3), var(--y3)) scale(1); }
+  60% { opacity: 1; transform: translate(calc(var(--x3) + 100px), calc(var(--y3) + 50px)) scale(1); }
+  85%, 100% { opacity: 0; transform: translate(calc(var(--x3) + 100px), calc(var(--y3) + 50px)) scale(1); }
+}
