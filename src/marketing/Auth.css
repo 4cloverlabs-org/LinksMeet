@@ -11,10 +11,10 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 40px;
+  padding: 30px 40px;
   background: #ffffff;
   position: relative;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .cc-auth-right {
@@ -64,7 +64,7 @@
   align-items: center;
   font-size: 0.85rem;
   color: #6B7280;
-  padding-top: 40px;
+  padding-top: 20px;
 }
 .cc-auth-footer a {
   color: #6B7280;
@@ -79,7 +79,7 @@
 .cc-auth-form-container {
   max-width: 420px;
   width: 100%;
-  margin: 7vh auto auto auto;
+  margin: auto auto;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -97,13 +97,13 @@
   color: #6B7280;
   font-size: 0.95rem;
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 /* Inputs */
 .cc-auth-form label {
   display: block;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
 }
 .cc-auth-form label span {
   display: block;
