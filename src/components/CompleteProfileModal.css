@@ -280,16 +280,16 @@
   border-radius: 8px;
   font-weight: 700;
   font-size: 0.78rem;
-  background: #eff6ff;
-  color: #2563eb;
-  border: 1px solid #dbeafe;
+  background: #f3e8ff;
+  color: #7d3bec;
+  border: 1px solid #e9d5ff;
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
 }
 
 .cpm-btn-generate:hover:not(:disabled) {
-  background: #dbeafe;
+  background: #e9d5ff;
 }
 
 .cpm-bio-box {
@@ -449,7 +449,7 @@
 }
 
 .cpm-btn-primary:hover:not(:disabled) {
-  background: #0A54DB;
+  background: #6228ba;
   transform: translateY(-1px);
   box-shadow: 0 6px 18px rgba(125, 59, 236, 0.35);
 }

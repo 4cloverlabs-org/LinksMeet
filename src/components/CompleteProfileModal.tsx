@@ -317,18 +317,21 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
                     disabled={isAnalyzing}
                     style={{ padding: '6px 14px' }}
                   >
-                    {isAnalyzing ? <Loader2 size={13} className="crm-spin" /> : <Sparkles size={13} color="#2563eb" />}
+                    {isAnalyzing ? <Loader2 size={13} className="crm-spin" /> : <Sparkles size={13} color="#7d3bec" />}
                     {isAnalyzing ? 'Analyzing...' : 'AI Analyze'}
                   </button>
                 </div>
 
-                <div style={{ background: '#f8fafc', border: '2px solid #E5E7EB', borderRadius: 14, padding: '10px 14px', marginTop: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#2563eb', fontWeight: 700, fontSize: '0.82rem' }}>
-                    <Sparkles size={15} color="#2563eb" /> AI Brand Extraction
+                <div style={{ background: '#ffffff', border: '1px solid #E5E7EB', borderRadius: '8px', padding: '12px 16px', marginTop: '12px', display: 'flex', alignItems: 'flex-start', gap: '12px', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>
+                  <div style={{ background: '#f3e8ff', padding: '6px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Sparkles size={14} color="#7d3bec" />
                   </div>
-                  <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                    Click <b>AI Analyze</b> to automatically extract target audience & brand tone.
-                  </span>
+                  <div>
+                    <div style={{ color: '#111827', fontWeight: 600, fontSize: '0.85rem', marginBottom: '3px' }}>AI Brand Extraction</div>
+                    <div style={{ fontSize: '0.8rem', color: '#6B7280', lineHeight: 1.4 }}>
+                      Click <b style={{color: '#374151', fontWeight: 600}}>AI Analyze</b> to automatically extract your target audience and brand tone.
+                    </div>
+                  </div>
                 </div>
               </div>
 

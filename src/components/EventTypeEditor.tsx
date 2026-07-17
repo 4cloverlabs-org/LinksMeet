@@ -1231,7 +1231,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
                 {/* Banner Pill below Preview Card */}
                 <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
-                  <div style={{ background: '#eff6ff', border: '1px solid #dbeafe', color: '#7d3bec', padding: '10px 20px', borderRadius: '9999px', fontSize: '0.84rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 2px 8px rgba(125, 59, 236, 0.08)' }}>
+                  <div style={{ background: `${eventColor}15`, border: `1px solid ${eventColor}30`, color: eventColor, padding: '10px 20px', borderRadius: '9999px', fontSize: '0.84rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', boxShadow: `0 2px 8px ${eventColor}14` }}>
                     <Info size={16} /> Save changes to preview all updates.
                   </div>
                 </div>
@@ -1251,7 +1251,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   <button
                     type="button"
                     onClick={() => applyPresetSchedule('business')}
-                    style={{ border: '1px solid #bfdbfe', background: '#ffffff', color: '#7d3bec', padding: '8px 16px', borderRadius: '8px', fontWeight: 600, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}
+                    style={{ border: `1px solid ${eventColor}50`, background: '#ffffff', color: eventColor, padding: '8px 16px', borderRadius: '8px', fontWeight: 600, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}
                   >
                     <Edit2 size={14} /> Reset to 9am-5pm
                   </button>
@@ -1531,11 +1531,11 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   </div>
 
                   {/* Soft Blue Available Hours Pill */}
-                  <div style={{ background: '#eff6ff', border: '1px solid #dbeafe', borderRadius: '10px', padding: '14px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                    <Clock size={18} color="#7d3bec" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <div style={{ background: `${eventColor}15`, border: `1px solid ${eventColor}30`, borderRadius: '10px', padding: '14px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                    <Clock size={18} color={eventColor} style={{ flexShrink: 0, marginTop: '2px' }} />
                     <div>
-                      <div style={{ fontWeight: 600, color: '#1e40af', fontSize: '0.85rem', marginBottom: '2px' }}>Your available hours</div>
-                      <div style={{ color: '#1e3a8a', fontSize: '0.82rem' }}>{getAvailabilitySummary()}</div>
+                      <div style={{ fontWeight: 600, color: eventColor, fontSize: '0.85rem', marginBottom: '2px' }}>Your available hours</div>
+                      <div style={{ color: `${eventColor}cc`, fontSize: '0.82rem' }}>{getAvailabilitySummary()}</div>
                     </div>
                   </div>
 
@@ -1543,7 +1543,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
                 {/* Times shown pill below card */}
                 <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
-                  <div style={{ background: '#eff6ff', border: '1px solid #dbeafe', color: '#7d3bec', padding: '8px 18px', borderRadius: '9999px', fontSize: '0.82rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ background: `${eventColor}15`, border: `1px solid ${eventColor}30`, color: eventColor, padding: '8px 18px', borderRadius: '9999px', fontSize: '0.82rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                     <Globe size={15} /> Times shown in Asia/Kolkata (GMT +05:30) <ChevronDown size={14} />
                   </div>
                 </div>
@@ -1665,7 +1665,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                 </div>
 
                 <div style={{ marginTop: '32px' }}>
-                  <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', color: '#7d3bec', padding: '10px 24px', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ background: `${eventColor}15`, border: `1px solid ${eventColor}30`, color: eventColor, padding: '10px 24px', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                     <Info size={16} /> Save changes to preview all updates
                   </div>
                 </div>
@@ -2017,7 +2017,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                 </div>
 
                 <div style={{ marginTop: '32px' }}>
-                  <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', color: '#7d3bec', padding: '10px 24px', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ background: `${eventColor}15`, border: `1px solid ${eventColor}30`, color: eventColor, padding: '10px 24px', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                     <Info size={16} /> Save changes to preview all updates
                   </div>
                 </div>
@@ -2262,7 +2262,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                 </div>
 
                 <div style={{ marginTop: '32px' }}>
-                  <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', color: '#7d3bec', padding: '10px 24px', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ background: `${eventColor}15`, border: `1px solid ${eventColor}30`, color: eventColor, padding: '10px 24px', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                     <Info size={16} /> Save changes to preview all updates
                   </div>
                 </div>
@@ -2420,7 +2420,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                 </div>
 
                 <div style={{ marginTop: '32px' }}>
-                  <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', color: '#7d3bec', padding: '10px 24px', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ background: `${eventColor}15`, border: `1px solid ${eventColor}30`, color: eventColor, padding: '10px 24px', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                     <Info size={16} /> Save changes to preview all updates
                   </div>
                 </div>
