@@ -79,7 +79,7 @@
 .cc-auth-form-container {
   max-width: 420px;
   width: 100%;
-  margin: auto auto;
+  margin: 15vh auto auto auto;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -285,3 +285,49 @@
   font-size: 0.85rem; line-height: 1.5; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px;
 }
 .cc-auth-notice code { background: rgba(125,59,236,0.1); padding: 2px 6px; border-radius: 4px; }
+
+/* Small Screen Height Optimizations */
+@media (max-height: 800px) {
+  .cc-auth-left {
+    padding: 20px 30px;
+  }
+  .cc-auth-form-container h1 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+  }
+  .cc-auth-sub {
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+  }
+  .cc-auth-form label {
+    margin-bottom: 8px;
+  }
+  .cc-auth-form label span {
+    font-size: 0.75rem;
+    margin-bottom: 4px;
+  }
+  .cc-auth-form input[type="email"],
+  .cc-auth-form input[type="password"],
+  .cc-auth-form input[type="text"] {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+  .cc-auth-options {
+    margin-bottom: 16px;
+    font-size: 0.75rem;
+  }
+  .cc-btn-primary {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+  .cc-auth-divider {
+    margin: 16px 0;
+  }
+  .cc-oauth-grid {
+    margin-bottom: 16px;
+  }
+  .cc-auth-footer {
+    padding-top: 12px;
+    font-size: 0.75rem;
+  }
+}
