@@ -765,9 +765,19 @@ app.post('/api/bookings', async (req, res) => {
 
         try {
           // Send Beautiful Custom Emails via Gmail API
-        const ownerEmail = ownerData.email;
-        const ownerName = ownerData.first_name || 'LinksMeet';
-        const formattedTime = new Date(startTime).toLocaleString('en-US', { weekday: 'short', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+          let actualGmailEmail = ownerData.email;
+          try {
+            const profile = await gmailClient.users.getProfile({ userId: 'me' });
+            if (profile && profile.data && profile.data.emailAddress) {
+              actualGmailEmail = profile.data.emailAddress;
+            }
+          } catch (e) {
+            console.error("Could not fetch Gmail profile:", e.message);
+          }
+          
+          const ownerEmail = actualGmailEmail;
+          const ownerName = ownerData.first_name || 'LinksMeet';
+          const formattedTime = new Date(startTime).toLocaleString('en-US', { weekday: 'short', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
         // HTML-escaped copies for safe interpolation into the email bodies.
         const eBookerName = escapeHtml(bookerName);
@@ -930,7 +940,18 @@ async function sendEmailForUser(userId, to, subject, htmlBody) {
   }
 
   const gmail = google.gmail({ version: 'v1', auth: localOauth2Client });
-  const rawEmail = makeBody(to, ownerData.email, subject, htmlBody);
+  
+  let actualGmailEmail = ownerData.email;
+  try {
+    const profile = await gmail.users.getProfile({ userId: 'me' });
+    if (profile && profile.data && profile.data.emailAddress) {
+      actualGmailEmail = profile.data.emailAddress;
+    }
+  } catch (e) {
+    console.error("Could not fetch Gmail profile:", e.message);
+  }
+  
+  const rawEmail = makeBody(to, actualGmailEmail, subject, htmlBody);
   const res = await gmail.users.messages.send({ userId: 'me', requestBody: { raw: rawEmail } });
   return res.data;
 }
