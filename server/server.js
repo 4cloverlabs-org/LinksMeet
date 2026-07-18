@@ -1345,11 +1345,16 @@ if (supabase) {
 // Perfect Background Workflow Engine
 // ----------------------------------------------------
 if (process.env.NODE_ENV !== 'test') {
-  setInterval(async () => {
+  const inProgressWorkflows = new Set();
+  
+  const runWorkflowEngine = async () => {
     try {
       // 1. Fetch active workflows
       const { data: activeWorkflows } = await supabase.from('workflows').select('*').eq('is_active', true);
-      if (!activeWorkflows || activeWorkflows.length === 0) return;
+      if (!activeWorkflows || activeWorkflows.length === 0) {
+        setTimeout(runWorkflowEngine, 5000);
+        return;
+      }
 
       // 2. Fetch upcoming bookings
       const minDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -1360,10 +1365,19 @@ if (process.env.NODE_ENV !== 'test') {
         .gte('created_at', minDate);
       
       if (bookingsErr) console.error("Workflows Fetch Bookings Error:", bookingsErr);
-      if (!bookings || bookings.length === 0) return;
+      if (!bookings || bookings.length === 0) {
+        setTimeout(runWorkflowEngine, 5000);
+        return;
+      }
 
       for (const booking of bookings) {
         const executedWfs = booking.executed_workflows || [];
+        
+        // Track which template types have already fired for this booking
+        const executedTemplates = activeWorkflows
+          .filter(w => executedWfs.includes(w.id))
+          .map(w => w.template_name);
+          
         const eventTitle = booking.event_title || 'Event';
         const eventTypeSlug = booking.event_slug || '';
         const ownerData = booking.users || {};
@@ -1373,13 +1387,21 @@ if (process.env.NODE_ENV !== 'test') {
         for (const wf of activeWorkflows) {
           // Must belong to same user
           if (wf.user_id !== booking.user_id && wf.user_id !== ownerData.id) continue;
-          // Must not have already executed
+          
+          // Must not have already executed this exact workflow
           if (executedWfs.includes(wf.id)) continue;
+          
+          // Enforce ONLY ONE workflow of each template type per booking!
+          if (executedTemplates.includes(wf.template_name)) continue;
+          
+          // Concurrency lock
+          const lockKey = `${booking.id}_${wf.id}`;
+          if (inProgressWorkflows.has(lockKey)) continue;
           
           // Must match event type if filter is applied
           if (wf.action_payload?.applyToAll === false) {
              const targetSlugs = wf.action_payload?.targetEventTypes || (wf.action_payload?.targetEventType ? [wf.action_payload.targetEventType] : []);
-             if (targetSlugs.length > 0 && !targetSlugs.includes(eventTypeSlug) && !targetSlugs.includes(eventTitle)) {
+             if (!targetSlugs.includes(eventTypeSlug) && !targetSlugs.includes(eventTitle)) {
                continue;
              }
           }
@@ -1407,6 +1429,7 @@ if (process.env.NODE_ENV !== 'test') {
           // If it's time to fire (or past due within reason)
           if (fireTimeMs && Date.now() >= fireTimeMs && Date.now() < fireTimeMs + (24 * 60 * 60 * 1000)) {
             console.log(`[WORKFLOW ENGINE] Firing workflow '${wf.template_name}' for booking ${booking.id}`);
+            inProgressWorkflows.add(lockKey);
             
             const eventDateObj = eventStartMs ? new Date(eventStartMs) : new Date(booking.created_at);
             const eventDateFull = eventDateObj.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
@@ -1426,27 +1449,36 @@ if (process.env.NODE_ENV !== 'test') {
                  
                  // Mark as executed
                  executedWfs.push(wf.id);
+                 executedTemplates.push(wf.template_name);
                  await supabase.from('bookings').update({ executed_workflows: executedWfs }).eq('id', booking.id);
                  await supabase.from('workflows').update({ runs: (wf.runs || 0) + 1 }).eq('id', wf.id);
                } catch (e) {
                  console.error(`Failed to send email for workflow ${wf.id}:`, e.message);
                  // Mark as executed even on failure to avoid infinite retry loops flooding the server
                  executedWfs.push(wf.id);
+                 executedTemplates.push(wf.template_name);
                  await supabase.from('bookings').update({ executed_workflows: executedWfs }).eq('id', booking.id);
                }
             } else {
                // non-email flows just mark as executed
                executedWfs.push(wf.id);
+               executedTemplates.push(wf.template_name);
                await supabase.from('bookings').update({ executed_workflows: executedWfs }).eq('id', booking.id);
                await supabase.from('workflows').update({ runs: (wf.runs || 0) + 1 }).eq('id', wf.id);
             }
+            
+            // Allow lock to clear after 5 mins just in case of crash, but DB should be updated
+            setTimeout(() => inProgressWorkflows.delete(lockKey), 5 * 60 * 1000);
           }
         }
       }
     } catch (err) {
       console.error("Workflow Engine Error:", err);
     }
-  }, 5000); // Check every 5 seconds for real-time responsiveness
+    setTimeout(runWorkflowEngine, 5000); // Queue next run
+  };
+  
+  runWorkflowEngine();
   console.log("Background Workflow Engine started...");
 }
 
