@@ -271,7 +271,7 @@ export default function DashboardLayout() {
   const [etDropdown, setEtDropdown] = useState<string | null>(null);
   
   const [userProfile, setUserProfile] = useState<any>(null);
-
+  const [googleConnected, setGoogleConnected] = useState(false);
   
   const [initCampaignLead, setInitCampaignLead] = useState<any>(null);
 
@@ -905,8 +905,6 @@ export default function DashboardLayout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, uid]);
 
-  // Google Integration State
-  const [googleConnected, setGoogleConnected] = useState(false);
 
   useEffect(() => {
     async function checkGoogle() {
