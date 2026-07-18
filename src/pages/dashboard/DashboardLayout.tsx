@@ -860,39 +860,12 @@ export default function DashboardLayout() {
     
     const bookingsSub = supabase.channel(`realtime_bookings_${uid}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'bookings', filter: `user_id=eq.${uid}` }, (payload) => {
-        const newBooking = payload.new;
-        setNotifs(prev => [
-          {
-            id: Date.now(),
-            icon: CalendarCheck,
-            title: 'New booking',
-            desc: `${newBooking.event_title} with ${newBooking.booker_name}`,
-            time: 'Just now',
-            read: false,
-            target: 'bookings'
-          },
-          ...prev
-        ]);
+        // Bookings state will be handled by the other listener. Backend handles notifications.
       })
       .subscribe();
 
     const contactsSub = supabase.channel(`realtime_contacts_${uid}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'contacts', filter: `user_id=eq.${uid}` }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          const newContact = payload.new;
-          setNotifs(prev => [
-            {
-              id: Date.now() + 1,
-              icon: UserPlus,
-              title: 'New contact added',
-              desc: `${newContact.name} joined your list`,
-              time: 'Just now',
-              read: false,
-              target: 'people'
-            },
-            ...prev
-          ]);
-        }
         
         // Refresh contacts data for all team members
         loadData();

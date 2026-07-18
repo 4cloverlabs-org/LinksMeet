@@ -894,6 +894,16 @@ app.post('/api/bookings', async (req, res) => {
 
     if (contactError) console.error("Supabase Contact Insert Error:", contactError);
 
+    // Create Notification
+    await supabase.from('notifications').insert({
+      user_id: ownerUid,
+      title: 'New Booking',
+      description: `${eventTitle} with ${bookerName} (${bookerEmail})`,
+      target: 'bookings',
+      type: 'Booking',
+      is_read: false
+    });
+
     // Workflows are now handled perfectly by the real-time background engine.
 
     res.json({ success: true, booking: newBooking, calendarSuccess });
@@ -1319,7 +1329,17 @@ if (supabase) {
         if (idx === -1) idx = 0;
         
         if (idx >= steps.length) {
-          await supabase.from('campaigns').update({ status: 'Completed', steps, next_run_at: null }).eq('id', camp.id);
+          await Promise.all([
+            supabase.from('campaigns').update({ status: 'Completed', steps, next_run_at: null }).eq('id', camp.id),
+            supabase.from('notifications').insert({
+              user_id: camp.user_id,
+              title: 'Campaign Completed',
+              description: `${camp.name} successfully finished executing all steps for ${camp.recipient_email}.`,
+              target: 'campaigns',
+              type: 'Campaign',
+              is_read: false
+            })
+          ]);
           return;
         }
 
@@ -1375,6 +1395,16 @@ if (supabase) {
                   delivery_status: 'Delivered',
                   spam_status: 'Passed',
                   stage: step.title || 'Email'
+                }),
+                supabase.from('notifications').insert({
+                  user_id: camp.user_id,
+                  title: idx === 0 ? 'Campaign Started' : 'Follow-up Sent',
+                  description: idx === 0 
+                    ? `First message sent to ${camp.recipient_email} for ${camp.name}` 
+                    : `Follow-up message sent to ${camp.recipient_email} for ${camp.name}`,
+                  target: 'campaigns',
+                  type: 'Campaign',
+                  is_read: false
                 })
               ]);
             } catch (err) {
