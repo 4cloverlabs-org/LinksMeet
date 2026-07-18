@@ -489,13 +489,6 @@ export default function DashboardLayout() {
     }
   }, [googleConnected, userProfile, uid]);
 
-  const handleCreateWorkflow = (template: any) => {
-    const newWf = { id: crypto.randomUUID(), ...template, active: true, runs: 0, createdAt: Date.now() };
-    setMyWorkflows([newWf, ...myWorkflows]);
-    setToast('Workflow created successfully!');
-    setTimeout(() => setToast(null), 3000);
-    setView('workflows');
-  };
 
   const [manageApp, setManageApp] = useState<typeof APPS[0] | null>(null);
 
