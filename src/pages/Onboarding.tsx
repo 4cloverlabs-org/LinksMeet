@@ -52,7 +52,7 @@ export default function Onboarding() {
           setBrandDesc(profile?.brand_description || '');
           setProfilePic(profile?.profile_picture || profile?.avatar_url || googleAvatar);
           
-          if (profile?.google_tokens?.access_token || profile?.google_tokens?.refresh_token) {
+          if (profile?.google_tokens?.refresh_token) {
             setGoogleConnected(true);
           }
         }

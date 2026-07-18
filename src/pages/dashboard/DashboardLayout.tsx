@@ -878,7 +878,7 @@ export default function DashboardLayout() {
       if (uid && uid !== 'anon') {
         try {
           const { data } = await supabase.from('users').select('google_tokens').eq('id', uid).single();
-          if (data?.google_tokens?.access_token || data?.google_tokens?.refresh_token) {
+          if (data?.google_tokens?.refresh_token) {
             setGoogleConnected(true);
           } else {
             setGoogleConnected(false);
