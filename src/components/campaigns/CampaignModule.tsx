@@ -54,40 +54,56 @@ export const CampaignModule: React.FC<CampaignModuleProps> = ({ initLead, onInit
   const [autoStartPrompt, setAutoStartPrompt] = useState<string | undefined>();
   const processedLeadId = React.useRef<string | null>(null);
 
+  const [showBrandPrompt, setShowBrandPrompt] = useState(false);
+  const [pendingLead, setPendingLead] = useState<any>(null);
+  const [tempBrandUrl, setTempBrandUrl] = useState(brandInfo?.url || '');
+  const [tempBrandDesc, setTempBrandDesc] = useState(brandInfo?.desc || '');
+
+  const generateCampaign = (lead: any, brand: any) => {
+    const newCamp: Campaign = {
+      id: crypto.randomUUID(),
+      name: `Campaign for ${lead.name}`,
+      status: 'Draft',
+      recipientEmail: lead.email || '',
+      recipientName: lead.name || '',
+      createdAt: Date.now(),
+      steps: []
+    };
+    
+    let prompt = '';
+    if (brand && (brand.url || brand.desc)) {
+      prompt += `You are writing on behalf of our company. Here is our company profile: ${brand.desc} (Website: ${brand.url}).\n`;
+    }
+
+    if (lead.company) {
+      prompt += `This is a lead named ${lead.name || 'Unknown'} (Email: ${lead.email}). They submitted these notes: "${lead.company}". Write a highly personalized 3-step sequence reminding them about our company and services based on their notes.`;
+    } else if (lead.source && lead.source.startsWith('Booking: ')) {
+      const eventTitle = lead.source.replace('Booking: ', '');
+      prompt += `This is a lead named ${lead.name || 'Unknown'} (Email: ${lead.email}). They just booked a service inquiry for: "${eventTitle}". Write a highly personalized 3-step follow-up sequence reminding them about our company and services in relation to this inquiry.`;
+    } else {
+      prompt += `This is a lead named ${lead.name || 'Unknown'} (Email: ${lead.email}). Write a highly personalized 3-step follow-up sequence to remind them about our company and introduce our services.`;
+    }
+    setAutoStartPrompt(prompt);
+    
+    campaignEngine.saveCampaign(newCamp);
+    setCampaigns(campaignEngine.getCampaigns());
+    setActiveCampaignId(newCamp.id);
+    setTab('builder');
+    
+    if (onInitConsumed) onInitConsumed();
+  };
+
   useEffect(() => {
     if (initLead && processedLeadId.current !== initLead.id) {
       processedLeadId.current = initLead.id;
-      const newCamp: Campaign = {
-        id: crypto.randomUUID(),
-        name: `Campaign for ${initLead.name}`,
-        status: 'Draft',
-        recipientEmail: initLead.email || '',
-        recipientName: initLead.name || '',
-        createdAt: Date.now(),
-        steps: []
-      };
       
-      let prompt = '';
-      if (brandInfo && (brandInfo.url || brandInfo.desc)) {
-        prompt += `You are writing on behalf of our company. Here is our company profile: ${brandInfo.desc} (Website: ${brandInfo.url}).\n`;
+      if (!brandInfo || (!brandInfo.url && !brandInfo.desc)) {
+        setPendingLead(initLead);
+        setShowBrandPrompt(true);
+        return;
       }
-
-      if (initLead.company) {
-        prompt += `This is a lead named ${initLead.name || 'Unknown'} (Email: ${initLead.email}). They submitted these notes: "${initLead.company}". Write a highly personalized 3-step sequence reminding them about our company and services based on their notes.`;
-      } else if (initLead.source && initLead.source.startsWith('Booking: ')) {
-        const eventTitle = initLead.source.replace('Booking: ', '');
-        prompt += `This is a lead named ${initLead.name || 'Unknown'} (Email: ${initLead.email}). They just booked a service inquiry for: "${eventTitle}". Write a highly personalized 3-step follow-up sequence reminding them about our company and services in relation to this inquiry.`;
-      } else {
-        prompt += `This is a lead named ${initLead.name || 'Unknown'} (Email: ${initLead.email}). Write a highly personalized 3-step follow-up sequence to remind them about our company and introduce our services.`;
-      }
-      setAutoStartPrompt(prompt);
       
-      campaignEngine.saveCampaign(newCamp);
-      setCampaigns(campaignEngine.getCampaigns());
-      setActiveCampaignId(newCamp.id);
-      setTab('builder');
-      
-      if (onInitConsumed) onInitConsumed();
+      generateCampaign(initLead, brandInfo);
     }
   }, [initLead, brandInfo, onInitConsumed]);
 
@@ -161,6 +177,70 @@ export const CampaignModule: React.FC<CampaignModuleProps> = ({ initLead, onInit
                   setDeleteModalCampaign(null);
                 }} style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: '#ef4444', color: '#ffffff', fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Trash2 size={16} /> Delete
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+        
+        {showBrandPrompt && createPortal(
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999 }}>
+            <div style={{ background: '#ffffff', borderRadius: '16px', width: '90%', maxWidth: '440px', padding: '28px', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }}>
+              <h3 style={{ margin: '0 0 16px', fontSize: '1.2rem', fontWeight: 700, color: '#0f172a' }}>Personalize Your AI Campaigns</h3>
+              <p style={{ fontSize: '0.95rem', color: '#475569', lineHeight: 1.5, margin: '0 0 24px' }}>
+                To generate accurate, personalized follow-ups for your leads, please provide a brief description of your business or services.
+              </p>
+              
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>Website URL (Optional)</label>
+                <input 
+                  value={tempBrandUrl}
+                  onChange={e => setTempBrandUrl(e.target.value)}
+                  placeholder="https://yourcompany.com"
+                  style={{ boxSizing: 'border-box', width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.95rem' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>Brand Description (Required)</label>
+                <textarea 
+                  value={tempBrandDesc}
+                  onChange={e => setTempBrandDesc(e.target.value)}
+                  placeholder="We are a digital marketing agency helping SaaS founders scale..."
+                  rows={4}
+                  style={{ boxSizing: 'border-box', width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.95rem', resize: 'vertical' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                <button 
+                  onClick={() => {
+                    setShowBrandPrompt(false);
+                    generateCampaign(pendingLead, { url: '', desc: '' });
+                  }} 
+                  style={{ padding: '10px 18px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#334155', fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer' }}
+                >
+                  Skip for now
+                </button>
+                <button 
+                  disabled={!tempBrandDesc.trim()}
+                  onClick={async () => {
+                    const { supabase } = await import('../../lib/supabase');
+                    if (user) {
+                      await supabase.from('users').update({ 
+                        website_url: tempBrandUrl,
+                        brand_description: tempBrandDesc
+                      }).eq('id', user.id);
+                    }
+                    const newBrandInfo = { url: tempBrandUrl, desc: tempBrandDesc };
+                    setBrandInfo(newBrandInfo);
+                    setShowBrandPrompt(false);
+                    generateCampaign(pendingLead, newBrandInfo);
+                  }} 
+                  style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: '#2563eb', color: '#ffffff', fontWeight: 600, fontSize: '0.88rem', cursor: !tempBrandDesc.trim() ? 'not-allowed' : 'pointer', opacity: !tempBrandDesc.trim() ? 0.6 : 1 }}
+                >
+                  Save & Generate
                 </button>
               </div>
             </div>
