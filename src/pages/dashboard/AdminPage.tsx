@@ -279,7 +279,7 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
     <div className="admin-page-container">
       {/* Top Tabs */}
       <div className="admin-tabs-container">
-        {['Profile Settings', 'Preferences', 'Billing & Plans', 'Security'].map(tab => (
+        {['Profile Settings', 'Preferences', 'Billing & Plans'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -430,117 +430,72 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
             </div>
           </div>
 
-          <div className="admin-card">
-            <div className="admin-card-head">
-              <h3>Notifications</h3>
-            </div>
-            
-            {[
-              { key: 'deals', tt: 'Deal alerts', ds: 'Get notified when a deal changes stage.' },
-              { key: 'weekly', tt: 'Weekly summary', ds: 'A digest of your pipeline every Monday.' },
-              { key: 'mentions', tt: 'Mentions', ds: 'When a teammate @mentions you.' },
-            ].map(n => (
-              <div key={n.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid #F3F4F6' }}>
-                <div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#111827' }}>{n.tt}</div>
-                  <div style={{ fontSize: '0.85rem', color: '#6B7280', marginTop: '4px' }}>{n.ds}</div>
-                </div>
-                <div 
-                  className={`admin-toggle ${notif[n.key as keyof typeof notif] ? 'on' : ''}`}
-                  onClick={() => {
-                    const newVal = { ...notif, [n.key]: !notif[n.key as keyof typeof notif] };
-                    if (setNotif) setNotif(newVal);
-                    updatePreference('notif', newVal);
-                  }}
-                >
-                  <div className="admin-toggle-knob" />
-                </div>
-              </div>
-            ))}
-          </div>
+
         </div>
       )}
 
       {/* Billing & Plans Tab */}
       {activeTab === 'Billing & Plans' && (
-        <div className="admin-cards-grid">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
           <div className="admin-card">
             <div className="admin-card-head">
-              <h3>Current Plan</h3>
+              <h3>Available Plans</h3>
             </div>
             
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '28px' }}>
-              <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'linear-gradient(135deg, var(--ac) 0%, var(--ac2) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: '0 8px 20px rgba(125, 59, 236, 0.2)' }}>
-                <Sparkles size={32} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
+              {/* Growth Plan */}
+              <div style={{ border: '1px solid #E5E7EB', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>Growth</div>
+                <div style={{ fontSize: '0.9rem', color: '#6B7280', marginBottom: '20px', minHeight: '40px' }}>Built for growing teams that need more scale and insights.</div>
+                <div style={{ fontSize: '2rem', fontWeight: 800, color: '#111827', marginBottom: '24px' }}>$39<span style={{ fontSize: '0.9rem', fontWeight: 500, color: '#6B7280' }}>/mo</span></div>
+                <button className="admin-btn" style={{ width: '100%', marginBottom: '24px' }} onClick={() => { if (setToast) { setToast('Redirecting to checkout...'); setTimeout(() => setToast(null), 3000); } }}>Get Started</button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                   {['Up to 5 Users', '20 AI Campaigns per month', 'Dynamic Audience Targeting', 'Email, Ads & Social Auto-Templates', 'Performance Insights Dashboard', '5 User Workspace'].map((feat, i) => (
+                     <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.85rem', color: '#374151' }}>
+                       <Check size={16} color="#10B981" style={{ flexShrink: 0, marginTop: '2px' }} /> <span>{feat}</span>
+                     </div>
+                   ))}
+                </div>
               </div>
-              <div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#111827', letterSpacing: '-0.02em' }}>Pro Tier</div>
-                <div style={{ fontSize: '0.95rem', color: '#6B7280', fontWeight: 500, marginTop: '2px' }}>$49 / month per user</div>
+
+              {/* Pro Plan */}
+              <div style={{ border: '2px solid var(--ac, #000)', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', position: 'relative', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                <div style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', background: 'var(--ac, #000)', color: '#fff', fontSize: '0.75rem', fontWeight: 700, padding: '4px 12px', borderRadius: '999px', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Recommended</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>Pro</div>
+                <div style={{ fontSize: '0.9rem', color: '#6B7280', marginBottom: '20px', minHeight: '40px' }}>All the power. For serious marketers and small agencies.</div>
+                <div style={{ fontSize: '2rem', fontWeight: 800, color: '#111827', marginBottom: '24px' }}>$99<span style={{ fontSize: '0.9rem', fontWeight: 500, color: '#6B7280' }}>/mo</span></div>
+                <button className="admin-btn primary" style={{ width: '100%', marginBottom: '24px' }} onClick={() => { if (setToast) { setToast('Redirecting to checkout...'); setTimeout(() => setToast(null), 3000); } }}>Get Started</button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                   {['Unlimited Campaigns', 'Unlimited Team Members', 'AI-Performance Predictions', 'A/B Testing Recommendations', 'Performance Insights Dashboard', 'Priority Chat & Email Support'].map((feat, i) => (
+                     <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.85rem', color: '#374151' }}>
+                       <Check size={16} color="#10B981" style={{ flexShrink: 0, marginTop: '2px' }} /> <span>{feat}</span>
+                     </div>
+                   ))}
+                </div>
               </div>
-            </div>
-            
-            <div style={{ background: '#F9FAFB', padding: '20px', borderRadius: '12px', border: '1px solid #E5E7EB', marginBottom: '28px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem' }}>
-                <span style={{ color: '#6B7280', fontWeight: 500 }}>Next billing date</span>
-                <span style={{ fontWeight: 700, color: '#111827' }}>Oct 1, 2026</span>
+
+              {/* Enterprise Plan */}
+              <div style={{ border: '1px solid #E5E7EB', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>Enterprise</div>
+                <div style={{ fontSize: '0.9rem', color: '#6B7280', marginBottom: '20px', minHeight: '40px' }}>Tailored AI marketing infrastructure for large teams.</div>
+                <div style={{ fontSize: '2rem', fontWeight: 800, color: '#111827', marginBottom: '24px' }}>Custom</div>
+                <button className="admin-btn" style={{ width: '100%', marginBottom: '24px' }} onClick={() => { if (setToast) { setToast('Contacting sales...'); setTimeout(() => setToast(null), 3000); } }}>Get Started</button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                   {['Dedicated Onboarding', 'Custom Integrations', 'Performance Insights Dashboard', 'SLA & Security Compliance', 'Priority Chat & Email Support', 'VIP Support & Strategy Calls'].map((feat, i) => (
+                     <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.85rem', color: '#374151' }}>
+                       <Check size={16} color="#10B981" style={{ flexShrink: 0, marginTop: '2px' }} /> <span>{feat}</span>
+                     </div>
+                   ))}
+                </div>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                <span style={{ color: '#6B7280', fontWeight: 500 }}>Payment method</span>
-                <span style={{ fontWeight: 700, color: '#111827' }}>Visa ending in 4242</span>
-              </div>
-            </div>
-            
-            <div style={{ display: 'flex', gap: '16px' }}>
-              <button className="admin-btn" style={{ flex: 1 }} onClick={() => { if (setToast) { setToast('No past invoices found.'); setTimeout(() => setToast(null), 3000); } }}>
-                View Invoices
-              </button>
-              <button className="admin-btn primary" style={{ flex: 1 }} onClick={() => { if (setToast) { setToast('Billing portal opening soon...'); setTimeout(() => setToast(null), 3000); } }}>
-                Manage Billing
-              </button>
+
             </div>
           </div>
         </div>
       )}
 
-      {/* Security Tab */}
-      {activeTab === 'Security' && (
-        <div className="admin-cards-grid">
-          <div className="admin-card">
-            <div className="admin-card-head">
-              <h3>Security Settings</h3>
-            </div>
-            
-            <div className="admin-input-group">
-              <label>Current Password</label>
-              <input type="password" placeholder="••••••••" className="admin-input" />
-            </div>
-            <div className="admin-input-group">
-              <label>New Password</label>
-              <input type="password" placeholder="••••••••" className="admin-input" />
-            </div>
-            <button className="admin-btn primary" onClick={() => { if (setToast) { setToast('Password updated successfully! 🔒'); setTimeout(() => setToast(null), 3000); } }} style={{ width: '100%', marginTop: '8px' }}>
-              Update Password
-            </button>
-          </div>
 
-          <div className="admin-card">
-            <div className="admin-card-head">
-              <h3>Two-Factor Authentication</h3>
-            </div>
-            
-            <p style={{ fontSize: '0.95rem', color: '#6B7280', lineHeight: 1.6, marginBottom: '28px' }}>
-              Add an extra layer of security to your account. Once enabled, you'll be required to enter both your password and an authentication code from your mobile device.
-            </p>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: '12px' }}>
-              <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#111827' }}>Authenticator App</div>
-              <button className="admin-btn" style={{ padding: '8px 16px' }} onClick={() => { if (setToast) { setToast('2FA setup instructions sent to your email! 🛡️'); setTimeout(() => setToast(null), 3000); } }}>
-                Enable 2FA
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Delete Account Confirmation Modal */}
       {showDeleteConfirm && (
