@@ -1,44 +1,102 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../lib/AuthContext';
+import { Sparkles, User, Globe, Calendar, Mail, CheckCircle2, Loader2, Check, AlertCircle, Copy, MessageCircle, Twitter, Linkedin, Github, Youtube, PieChart, Briefcase, Zap, Building2, ChevronLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { Sparkles, Calendar, Globe, User, Loader2 } from 'lucide-react';
-import { campaignEngine } from '../components/campaigns/campaignEngine';
 import { API_BASE_URL } from '../lib/config';
+import { campaignEngine } from '../components/campaigns/campaignEngine';
 import './Onboarding.css';
 
 export default function Onboarding() {
-  const { user } = useAuth();
   const navigate = useNavigate();
+  const [step, setStep] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('google_connected') === 'true' || localStorage.getItem('sm_onboarding_step_3') === 'true') {
+      return 3;
+    }
+    return 1;
+  });
   
-  const [step, setStep] = useState(1);
-  const [plan, setPlan] = useState<'personal' | 'business'>('personal');
-  
-  // Step 2 state
-  const [profilePic, setProfilePic] = useState(user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '');
-  const [name, setName] = useState(user?.user_metadata?.full_name || user?.user_metadata?.name || user?.user_metadata?.first_name || '');
-  const [username, setUsername] = useState(user?.email ? user.email.split('@')[0].replace(/[^a-zA-Z0-9_-]/g, '') : '');
+  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
-  
-  // Step 4 state
+  const [profilePic, setProfilePic] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [brandDesc, setBrandDesc] = useState('');
+  const [disconnectedLocally, setDisconnectedLocally] = useState(false);
+  
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  
+  const [googleConnected, setGoogleConnected] = useState(false);
+  const [userId, setUserId] = useState<string>('');
 
   useEffect(() => {
-    // If they already have a username, they might have completed it? 
-    // We rely on RequireAuth to route them here if they haven't completed onboarding.
+    const loadUserData = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setUserId(user.id);
+          const meta = user.user_metadata || {};
+          const authEmail = user.email;
+          
+          const googleAvatar = meta.avatar_url || meta.picture || meta.avatar || '';
+          const googleName = meta.full_name || meta.name || '';
+          
+          const { data: profile } = await supabase.from('users').select('*').eq('id', user.id).single();
+          
+          setName(profile?.first_name || profile?.full_name || profile?.name || googleName);
+          setUsername(profile?.username || (authEmail ? authEmail.split('@')[0].replace(/[^a-zA-Z0-9_-]/g, '') : ''));
+          setBio(profile?.bio || '');
+          setWebsiteUrl(profile?.website_url || '');
+          setBrandDesc(profile?.brand_description || '');
+          setProfilePic(profile?.profile_picture || profile?.avatar_url || googleAvatar);
+          
+          if (profile?.google_tokens?.access_token || profile?.google_tokens?.refresh_token) {
+            setGoogleConnected(true);
+          }
+        }
+      } catch (e) {
+        console.error('Error loading user data:', e);
+      }
+    };
+    loadUserData();
   }, []);
 
-  const handleFinish = async () => {
-    if (!username) {
-      setError("Username is required");
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('google_connected') === 'true' || localStorage.getItem('sm_onboarding_step_3') === 'true') {
+      localStorage.removeItem('sm_onboarding_step_3');
+      setGoogleConnected(true);
+      setStep(3);
+    }
+  }, []);
+
+  const isGoogleConnected = !disconnectedLocally && googleConnected;
+
+  const handleAnalyze = async () => {
+    if (!websiteUrl) {
+      setError("Please enter your Website URL first to analyze.");
       return;
     }
-    
+    setError('');
+    setIsAnalyzing(true);
+    try {
+      const data = await campaignEngine.scrapeUrlMetadata(websiteUrl);
+      const formattedDesc = `Company Overview: ${data.companyOverview || 'N/A'}\nIndustry: ${data.industry || 'N/A'}\nProducts & Services: ${data.productsAndServices || 'N/A'}\nTarget Audience: ${data.targetAudience || 'N/A'}\nValue Proposition: ${data.valueProposition || 'N/A'}\nBrand Voice: ${data.brandVoice || 'N/A'}\nUnique Selling Points: ${data.uniqueSellingPoints || 'N/A'}\nIdeal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
+      setBrandDesc(formattedDesc);
+    } catch (err: any) {
+      setError("Failed to analyze website: " + err.message);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const handleFinish = async () => {
+    if (step === 1 && !username.trim()) {
+      setError("Username is required.");
+      return;
+    }
     setSaving(true);
     setError('');
     try {
@@ -52,11 +110,11 @@ export default function Onboarding() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          first_name: name,
-          username,
-          bio,
-          website_url: websiteUrl,
-          brand_description: brandDesc,
+          first_name: name.trim(),
+          username: username.trim(),
+          bio: bio.trim(),
+          website_url: websiteUrl.trim(),
+          brand_description: brandDesc.trim(),
           profile_picture: profilePic
         })
       });
@@ -66,276 +124,220 @@ export default function Onboarding() {
 
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Something went wrong while completing your profile.');
     } finally {
       setSaving(false);
     }
   };
 
-  const renderStep1 = () => (
-    <div className="onb-step onb-step-1">
-      <h2>Select plan</h2>
-      <p className="onb-sub">To personalize your experience, what do you plan to use this for?</p>
-      
-      <div className="onb-plan-options">
-        <div 
-          className={`onb-plan-card ${plan === 'personal' ? 'active' : ''}`}
-          onClick={() => setPlan('personal')}
-        >
-          <div className="onb-plan-header">
-            <h4>Personal</h4>
-            <div className="onb-radio">{plan === 'personal' && <div className="onb-radio-dot" />}</div>
-          </div>
-          <p>Good for individuals who are just starting out and simply want the essentials.</p>
-        </div>
-        
-        <div 
-          className={`onb-plan-card ${plan === 'business' ? 'active' : ''}`}
-          onClick={() => setPlan('business')}
-        >
-          <div className="onb-plan-header">
-            <h4>For business</h4>
-            <div className="onb-radio">{plan === 'business' && <div className="onb-radio-dot" />}</div>
-          </div>
-          <p>Set up your personal profile first, then start a Teams trial for your business.</p>
-        </div>
-      </div>
-      
-      <div className="onb-actions" style={{ justifyContent: 'flex-end' }}>
-        <button className="onb-btn-primary" onClick={() => setStep(2)}>Continue</button>
-      </div>
-    </div>
-  );
-
-  const renderStep2 = () => (
-    <div className="onb-step onb-step-2">
-      <h2>Add your details</h2>
-      <p className="onb-sub">Let's set up your personal account</p>
-      
-      {error && <div className="onb-error">{error}</div>}
-
-      <div className="onb-form-group">
-        <label>Profile picture</label>
-        <div className="onb-avatar-row">
-          <div className="onb-avatar-preview">
-            {profilePic ? <img src={profilePic} alt="Profile" /> : <span>{name ? name[0]?.toUpperCase() : 'U'}</span>}
-          </div>
-          <button className="onb-btn-outline" onClick={() => setProfilePic('https://api.dicebear.com/7.x/avataaars/svg?seed=' + Math.random())}>
-            Upload / Generate
-          </button>
-        </div>
-        <span className="onb-hint">Recommended size 64x64px</span>
-      </div>
-
-      <div className="onb-form-group">
-        <label>Your name</label>
-        <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="John Doe" />
-      </div>
-
-      <div className="onb-form-group">
-        <label>Username</label>
-        <div className="onb-input-prefix">
-          <span>linksmeet.com/</span>
-          <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="johndoe" />
-        </div>
-      </div>
-
-      <div className="onb-form-group">
-        <label>Bio</label>
-        <textarea rows={4} value={bio} onChange={e => setBio(e.target.value)} placeholder="Add a short bio..."></textarea>
-      </div>
-      
-      <div className="onb-actions" style={{ justifyContent: 'space-between' }}>
-        <button className="onb-btn-ghost" onClick={() => setStep(1)}>Back</button>
-        <button className="onb-btn-primary" onClick={() => {
-          if (!username) setError("Username is required");
-          else { setError(''); setStep(3); }
-        }}>Continue</button>
-      </div>
-    </div>
-  );
-
-  const renderStep3 = () => (
-    <div className="onb-step onb-step-3">
-      <h2>Connect your calendar</h2>
-      <p className="onb-sub">Connect your calendar to prevent double bookings and conflicts</p>
-      
-      <div className="onb-calendar-grid">
-        <div className="onb-cal-card">
-          <div className="onb-cal-icon"><Calendar size={24} color="#4285F4" /></div>
-          <h4>Google Calendar</h4>
-          <button className="onb-btn-outline">Connect</button>
-        </div>
-        <div className="onb-cal-card">
-          <div className="onb-cal-icon"><Calendar size={24} color="#0078D4" /></div>
-          <h4>Outlook Calendar</h4>
-          <button className="onb-btn-outline">Connect</button>
-        </div>
-        <div className="onb-cal-card">
-          <div className="onb-cal-icon"><Calendar size={24} color="#000000" /></div>
-          <h4>Apple Calendar</h4>
-          <button className="onb-btn-outline">Connect</button>
-        </div>
-      </div>
-      
-      <div className="onb-actions" style={{ justifyContent: 'space-between' }}>
-        <button className="onb-btn-ghost" onClick={() => setStep(2)}>Back</button>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button className="onb-btn-ghost" onClick={() => setStep(4)}>Skip for now</button>
-          <button className="onb-btn-primary" onClick={() => setStep(4)}>Continue</button>
-        </div>
-      </div>
-    </div>
-  );
-
-  const handleAnalyze = async () => {
-    if (!websiteUrl) {
-      setError("Please enter a Website URL first to analyze.");
-      return;
-    }
-    setError('');
-    setIsAnalyzing(true);
-    try {
-      const data = await campaignEngine.scrapeUrlMetadata(websiteUrl);
-      const formattedDesc = `Company Overview: ${data.companyOverview || 'N/A'}
-Industry: ${data.industry || 'N/A'}
-Products & Services: ${data.productsAndServices || 'N/A'}
-Target Audience: ${data.targetAudience || 'N/A'}
-Value Proposition: ${data.valueProposition || 'N/A'}
-Brand Voice: ${data.brandVoice || 'N/A'}
-Unique Selling Points: ${data.uniqueSellingPoints || 'N/A'}
-Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}
-Messaging Style: ${data.messagingStyle || 'N/A'}
-Business Goals: ${data.businessGoals || 'N/A'}`;
-      setBrandDesc(formattedDesc);
-    } catch (err: any) {
-      setError("Failed to analyze website: " + err.message);
-    } finally {
-      setIsAnalyzing(false);
-    }
+  const handleConnectGoogle = () => {
+    setDisconnectedLocally(false);
+    localStorage.setItem('sm_onboarding_step_3', 'true');
+    window.location.href = `${API_BASE_URL}/auth/google?uid=${userId}&origin=${encodeURIComponent(window.location.origin)}`;
   };
 
-  const renderStep4 = () => (
-    <div className="onb-step onb-step-4">
-      <h2>Set up your business</h2>
-      <p className="onb-sub">We'll use this to generate perfect follow-up emails for your leads</p>
-      
-      {error && <div className="onb-error">{error}</div>}
-
-      <div className="onb-form-group">
-        <label>Website URL</label>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <input style={{ flex: 1 }} type="url" value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} placeholder="https://example.com" />
-          <button 
-            className="onb-btn-outline" 
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }} 
-            onClick={handleAnalyze}
-            disabled={isAnalyzing}
-          >
-            {isAnalyzing ? <Loader2 size={14} className="crm-spin" /> : <Sparkles size={14} color="#7d3bec" />}
-            {isAnalyzing ? 'Analyzing...' : 'Analyze'}
-          </button>
+  return (
+    <div className="onb-ui-wrapper">
+      {/* Left Sidebar */}
+      <div className="onb-ui-sidebar">
+        <div className="onb-ui-brand">
+          <img src="/LinksMeet-without-bg.png" alt="LinksMeet" /> LinksMeet
+        </div>
+        
+        <div className="onb-ui-support-list">
+          <div className="onb-ui-progress-tracker">
+            <div className="onb-ui-step-item done">
+              <div className="step-circle"><Check size={14} strokeWidth={3} /></div>
+              <div className="step-line"></div>
+              <div className="step-content">
+                <h4>Account created</h4>
+                <p>You're successfully registered.</p>
+              </div>
+            </div>
+            
+            <div className={`onb-ui-step-item ${step === 1 ? 'active' : step > 1 ? 'done' : ''}`}>
+              <div className="step-circle">{step > 1 ? <Check size={14} strokeWidth={3} /> : <span className="step-dot"></span>}</div>
+              <div className="step-line"></div>
+              <div className="step-content">
+                <h4>Personal details</h4>
+                <p>Set up your profile and bio.</p>
+              </div>
+            </div>
+            
+            <div className={`onb-ui-step-item ${step === 2 ? 'active' : step > 2 ? 'done' : ''}`}>
+              <div className="step-circle">{step > 2 ? <Check size={14} strokeWidth={3} /> : <span className="step-dot"></span>}</div>
+              <div className="step-line"></div>
+              <div className="step-content">
+                <h4>Company & brand</h4>
+                <p>Train AI for your sequences.</p>
+              </div>
+            </div>
+            
+            <div className={`onb-ui-step-item ${step === 3 ? 'active' : ''}`}>
+              <div className="step-circle"><span className="step-dot"></span></div>
+              <div className="step-content">
+                <h4>Connect calendar</h4>
+                <p>Sync your Google workspace.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="onb-ui-socials">
+          <Twitter size={18} />
+          <Linkedin size={18} />
+          <Github size={18} />
+          <Youtube size={18} />
         </div>
       </div>
 
-      <div className="onb-form-group">
-        <label>Brand & Services Description</label>
-        <textarea 
-          rows={7} 
-          value={brandDesc} 
-          onChange={e => setBrandDesc(e.target.value)} 
-          placeholder="Describe your brand tone, target audience, and the services you provide..."
-        ></textarea>
-      </div>
-      
-      <div className="onb-actions" style={{ justifyContent: 'space-between' }}>
-        <button className="onb-btn-ghost" disabled={saving} onClick={() => setStep(3)}>Back</button>
-        <button className="onb-btn-primary" disabled={saving} onClick={handleFinish}>
-          {saving ? 'Saving...' : 'Finish Setup'}
-        </button>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="onb-layout">
-      {/* LinksMeet Branding */}
-      <div style={{ position: 'absolute', top: '32px', left: '32px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.2rem', fontWeight: 700, color: '#0f172a', zIndex: 10 }}>
-        <img src="/LinksMeet-without-bg.png" alt="LinksMeet" style={{ width: '28px', height: '28px', objectFit: 'contain', borderRadius: '6px' }} />
-        LinksMeet
-      </div>
-
-      <div className="onb-left" style={{ paddingTop: '80px' }}>
-        {step === 1 && renderStep1()}
-        {step === 2 && renderStep2()}
-        {step === 3 && renderStep3()}
-        {step === 4 && renderStep4()}
-      </div>
-      <div className="onb-right">
-        {step === 1 && (
-          <div className="onb-graphic">
-            <div className="onb-circles">
-              <div className="onb-circle onb-c1"></div>
-              <div className="onb-circle onb-c2"></div>
-              <div className="onb-circle onb-c3"></div>
-              <div className="onb-circle onb-c4">
-                <User size={24} />
+      {/* Right Content */}
+      <div className="onb-ui-main">
+        <div className="onb-ui-content-box">
+          
+          {step === 1 && (
+            <div className="onb-ui-step-anim">
+              <div className="onb-ui-icon-header">
+                <div className="onb-ui-icon-circle"><User size={24} color="#6b7280" /></div>
               </div>
-            </div>
-          </div>
-        )}
-        {step === 2 && (
-          <div className="onb-preview">
-            <div className="onb-browser-bar">
-              <span>linksmeet.com/{username || 'username'}</span>
-            </div>
-            <div className="onb-preview-content">
-              <div className="onb-avatar-preview lg">
-                {profilePic ? <img src={profilePic} alt="Profile" /> : <span>{name ? name[0]?.toUpperCase() : 'U'}</span>}
-              </div>
-              <h3>{name || 'Your Name'}</h3>
-              <p>{bio || 'Add your bio here'}</p>
+              <h1 className="onb-ui-title">Complete your profile</h1>
+              <p className="onb-ui-subtitle">Let's get your workspace set up with your personal details.</p>
               
-              <div className="onb-event-list">
-                <div className="onb-event-item">
-                  <div>
-                    <h5>15 Min Meeting</h5>
-                    <span>15 mins</span>
+              {error && <div className="onb-ui-error"><AlertCircle size={16} />{error}</div>}
+
+              <div className="onb-ui-form">
+                <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
+                  <div className="onb-ui-field" style={{ flexShrink: 0 }}>
+                    <label>Profile Picture</label>
+                    <div className="onb-ui-avatar-row" style={{ marginLeft: '22px' }}>
+                      <div className="onb-ui-avatar">
+                        {profilePic ? <img src={profilePic} alt="Profile" /> : <span>{name ? name[0]?.toUpperCase() : 'A'}</span>}
+                      </div>
+                    </div>
                   </div>
-                  <button className="onb-btn-outline sm">Book now</button>
+
+                  <div className="onb-ui-field" style={{ flex: 1 }}>
+                    <label>Your Full Name</label>
+                    <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Jane Cooper" className="onb-ui-input" style={{ marginTop: '12px' }} />
+                  </div>
                 </div>
-                <div className="onb-event-item">
-                  <div>
-                    <h5>30 Min Meeting</h5>
-                    <span>30 mins</span>
+
+                <div className="onb-ui-field">
+                  <label>Scheduling URL</label>
+                  <div className="onb-ui-input-prefix">
+                    <span className="prefix">linksmeet.com/</span>
+                    <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="janecooper" />
                   </div>
-                  <button className="onb-btn-outline sm">Book now</button>
+                </div>
+                
+                <div className="onb-ui-field">
+                  <label>Short Bio</label>
+                  <textarea rows={3} value={bio} onChange={e => setBio(e.target.value)} placeholder="Tell bookers a bit about yourself..." className="onb-ui-input" />
                 </div>
               </div>
             </div>
+          )}
+
+          {step === 2 && (
+            <div className="onb-ui-step-anim">
+              <div className="onb-ui-icon-header">
+                <div className="onb-ui-icon-circle"><Globe size={24} color="#6b7280" /></div>
+              </div>
+              <h1 className="onb-ui-title">Company & Brand</h1>
+              <p className="onb-ui-subtitle">We use this to train our AI for your follow-up email sequences.</p>
+              
+              {error && <div className="onb-ui-error"><AlertCircle size={16} />{error}</div>}
+
+              <div className="onb-ui-form">
+                <div className="onb-ui-field">
+                  <label>Company Website URL</label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input type="url" value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} placeholder="https://yourcompany.com" className="onb-ui-input" />
+                    <button type="button" className="onb-ui-btn-outline" onClick={handleAnalyze} disabled={isAnalyzing} style={{ flexShrink: 0 }}>
+                      {isAnalyzing ? <Loader2 size={16} className="crm-spin" /> : <Sparkles size={16} />}
+                      {isAnalyzing ? 'Analyzing...' : 'AI Analyze'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="onb-ui-field">
+                  <label>Brand & Services Description</label>
+                  <textarea rows={6} value={brandDesc} onChange={e => setBrandDesc(e.target.value)} placeholder="Describe your target audience and brand tone..." className="onb-ui-input" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="onb-ui-step-anim">
+              <div className="onb-ui-icon-header">
+                <div className="onb-ui-icon-circle"><Calendar size={24} color="#6b7280" /></div>
+              </div>
+              <h1 className="onb-ui-title">Connect your calendar</h1>
+              <p className="onb-ui-subtitle">Sync your Google Workspace to prevent double-bookings and automate emails.</p>
+              
+              <div className="onb-ui-form">
+                <div className="onb-ui-cal-grid">
+                  <div className={`onb-ui-cal-card ${isGoogleConnected ? 'active' : ''}`} onClick={handleConnectGoogle}>
+                    <div className="cal-header">
+                      <div className="cal-icon"><Calendar size={20} /></div>
+                      <div className="cal-radio"><div className="dot"></div></div>
+                    </div>
+                    <h4>Google Calendar</h4>
+                    <p>I need my schedule synced.</p>
+                  </div>
+
+                  <div className={`onb-ui-cal-card ${isGoogleConnected ? 'active' : ''}`} onClick={handleConnectGoogle}>
+                    <div className="cal-header">
+                      <div className="cal-icon"><Mail size={20} /></div>
+                      <div className="cal-radio"><div className="dot"></div></div>
+                    </div>
+                    <h4>Gmail / Workspace</h4>
+                    <p>I need to send emails.</p>
+                  </div>
+                </div>
+
+                {isGoogleConnected && (
+                  <div style={{ textAlign: 'center', marginTop: '24px' }}>
+                    <button type="button" onClick={() => { setDisconnectedLocally(true); setGoogleConnected(false); }} className="onb-ui-disconnect">
+                      Disconnect Account
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Footer Actions */}
+          <div className="onb-ui-footer">
+            {step > 1 ? (
+              <button type="button" className="onb-ui-btn-back" onClick={() => { setError(''); setStep(step - 1); }}>
+                <ChevronLeft size={16} /> Go back
+              </button>
+            ) : (
+              <div></div> // Empty div for flex space-between alignment
+            )}
+            
+            {step < 3 ? (
+              <button 
+                type="button" 
+                className="onb-ui-btn-next" 
+                disabled={(step === 2 && !brandDesc.trim()) || isAnalyzing}
+                onClick={() => {
+                  if (step === 1 && !username.trim()) { setError("Username is required."); return; }
+                  setError(''); setStep(step + 1);
+                }}>
+                Continue
+              </button>
+            ) : (
+              <button type="button" className="onb-ui-btn-next" onClick={handleFinish} disabled={saving}>
+                {saving ? <Loader2 size={16} className="crm-spin" /> : null}
+                {saving ? 'Saving...' : 'Finish Setup'}
+              </button>
+            )}
           </div>
-        )}
-        {step === 3 && (
-          <div className="onb-preview calendar-preview">
-             <div className="onb-cal-header">
-               <span>Jun 28 - Jul 4, 2026</span>
-             </div>
-             <div className="onb-cal-grid-lines">
-               <div className="onb-cal-col"></div>
-               <div className="onb-cal-col"></div>
-               <div className="onb-cal-col"></div>
-               <div className="onb-cal-col"></div>
-               <div className="onb-cal-col"></div>
-             </div>
-          </div>
-        )}
-        {step === 4 && (
-          <div className="onb-graphic ai-graphic">
-             <Sparkles size={48} color="#7d3bec" />
-             <h3>AI Powered CRM</h3>
-             <p>Your brand details will perfectly tailor automatic email sequences for your inbound leads.</p>
-          </div>
-        )}
+          
+        </div>
       </div>
     </div>
   );

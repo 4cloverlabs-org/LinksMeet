@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Mail, Send, CheckCircle2, ChevronDown, Trash2, Bold, Italic, Underline as UnderlineIcon, Link2, List, Image as ImageIcon, Smile, Eye, ArrowLeft, Pause, Edit2, LayoutGrid, Hourglass, Play, Sparkles } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Plus, Mail, Send, CheckCircle2, ChevronDown, Trash2, Bold, Italic, Underline as UnderlineIcon, Link2, List, Image as ImageIcon, Smile, Eye, ArrowLeft, Pause, Edit2, LayoutGrid, Hourglass, Play, Sparkles, AlertCircle } from 'lucide-react';
 import { campaignEngine, type Campaign, type CampaignStep } from './campaignEngine';
 import { useAuth } from '../../lib/AuthContext';
 import { AICampaignStudio } from './AICampaignStudio';
@@ -45,6 +46,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
   const [campaigns, setCampaigns] = useState<Campaign[]>(campaignEngine.getCampaigns());
   const [selectedStepId, setSelectedStepId] = useState<string>('');
   const [showAIModal, setShowAIModal] = useState<boolean>(false);
+  const [deleteModalStep, setDeleteModalStep] = useState<number | null>(null);
 
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [promptState, setPromptState] = useState<{ type: 'link' | 'image', selection: Range | null } | null>(null);
@@ -124,7 +126,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
     handleUpdateCamp({ steps: newSteps });
   };
 
-  const handleDeleteStep = (index: number) => {
+  const performDeleteStep = (index: number) => {
     const newSteps = [...activeCamp.steps];
     newSteps.splice(index, 1);
     handleUpdateCamp({ steps: newSteps });
@@ -137,6 +139,10 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
       setSelectedStepId('');
     }
     showToast('Step deleted');
+  };
+
+  const handleDeleteStep = (index: number) => {
+    setDeleteModalStep(index);
   };
 
   const handleAddFollowUp = () => {

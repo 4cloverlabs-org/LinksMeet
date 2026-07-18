@@ -25,7 +25,6 @@ import '../../pages/CrmDashboard.css';
 import CampaignModule from '../../components/campaigns/CampaignModule';
 import WorkflowEditor, { type WorkflowDraft } from '../../components/WorkflowEditor';
 import EventTypeEditor from '../../components/EventTypeEditor';
-import CompleteProfileModal from '../../components/CompleteProfileModal';
 
 type View =
   | 'dashboard' | 'eventTypes' | 'bookings' | 'people' | 'teams'
@@ -118,12 +117,12 @@ const WORKFLOWS = [
 
 const APPS = [
   { nm: 'Google Meet', cat: 'Conferencing', ds: 'Auto-add Meet links to bookings.', logo: 'https://upload.wikimedia.org/wikipedia/commons/9/9b/Google_Meet_icon_%282020%29.svg' },
-  { nm: 'Zoom', cat: 'Conferencing', ds: 'Host meetings over Zoom.', logo: 'https://cdn.worldvectorlogo.com/logos/zoom-app.svg' },
-  { nm: 'Stripe', cat: 'Payments', ds: 'Collect payments at booking.', logo: 'https://cdn.worldvectorlogo.com/logos/stripe-4.svg' },
-  { nm: 'Slack', cat: 'Messaging', ds: 'Get notified in your channels.', logo: 'https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg' },
-  { nm: 'Zapier', cat: 'Automation', ds: 'Connect 5,000+ apps.', logo: 'https://cdn.worldvectorlogo.com/logos/zapier-1.svg' },
-  { nm: 'Salesforce', cat: 'CRM', ds: 'Sync contacts and deals.', logo: 'https://cdn.worldvectorlogo.com/logos/salesforce-2.svg' },
-  { nm: 'HubSpot', cat: 'CRM', ds: 'Two-way contact sync.', logo: 'https://cdn.worldvectorlogo.com/logos/hubspot-1.svg' },
+  { nm: 'Zoom', cat: 'Conferencing', ds: 'Host meetings over Zoom.', logo: 'https://cdn.worldvectorlogo.com/logos/zoom-app.svg', comingSoon: true },
+  { nm: 'Stripe', cat: 'Payments', ds: 'Collect payments at booking.', logo: 'https://cdn.worldvectorlogo.com/logos/stripe-4.svg', comingSoon: true },
+  { nm: 'Slack', cat: 'Messaging', ds: 'Get notified in your channels.', logo: 'https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg', comingSoon: true },
+  { nm: 'Zapier', cat: 'Automation', ds: 'Connect 5,000+ apps.', logo: 'https://cdn.worldvectorlogo.com/logos/zapier-1.svg', comingSoon: true },
+  { nm: 'Salesforce', cat: 'CRM', ds: 'Sync contacts and deals.', logo: 'https://cdn.worldvectorlogo.com/logos/salesforce-2.svg', comingSoon: true },
+  { nm: 'HubSpot', cat: 'CRM', ds: 'Two-way contact sync.', logo: 'https://cdn.worldvectorlogo.com/logos/hubspot-1.svg', comingSoon: true },
   { nm: 'Google Calendar', cat: 'Calendar', ds: 'Check for conflicts in real time.', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg' },
 ];
 
@@ -275,7 +274,7 @@ export default function DashboardLayout() {
   const [etDropdown, setEtDropdown] = useState<string | null>(null);
   
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(false);
+
   
   const [initCampaignLead, setInitCampaignLead] = useState<any>(null);
 
@@ -730,9 +729,6 @@ export default function DashboardLayout() {
             avatar_url: supaProfile.avatar_url || supaProfile.profile_picture || googleAvatar,
             full_name: supaProfile.full_name || supaProfile.first_name || supaProfile.name || googleName
           });
-          if (supaProfile.onboarding_completed !== true && !shouldSkipOnboarding) {
-            setIsOnboardingModalOpen(true);
-          }
         } else if (supaErr && (supaErr.code === 'PGRST116' || !supaProfile)) {
           // Brand new user whose DB row hasn't finished generating yet
           const defaultProfile = { 
@@ -743,7 +739,6 @@ export default function DashboardLayout() {
             name: googleName
           };
           setUserProfile(defaultProfile);
-          if (!shouldSkipOnboarding) setIsOnboardingModalOpen(true);
         }
 
         // 2. Also fetch from Express API to keep backend synchronized
@@ -761,12 +756,6 @@ export default function DashboardLayout() {
             const profileData = data.user || data;
             if (profileData) {
               setUserProfile(prev => ({ ...prev, ...profileData }));
-              
-              const justAccepted = localStorage.getItem('sm_just_accepted_invite');
-              const isTeamWorkspace = activeWorkspaceId && user?.id && activeWorkspaceId !== user.id;
-              if (profileData.onboarding_completed !== true && !justAccepted && !isTeamWorkspace) {
-                setIsOnboardingModalOpen(true);
-              }
             }
           }
         }
@@ -1632,7 +1621,7 @@ export default function DashboardLayout() {
           
         <div className="crm-content" style={view === 'campaigns' ? { display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', background: '#FFFFFF', padding: 0 } : { display: 'flex', flexDirection: 'column', flex: 1, background: '#FFFFFF' }}>
           <Outlet context={{
-            user, uid, activeRole, canEdit, userProfile, displayName, firstName, userInitials, toast, setToast, sideOpen, setSideOpen, search, setSearch, notif, setNotif, setView, setIsOnboardingModalOpen, setUserProfile, contacts, eventTypes, bookings, myWorkflows, installedApps, handleCreateWorkflow, logoutAndGo, exportContactsCSV, showContactForm, setShowContactForm, cForm, setCForm, blankContact, contactErr, setContactErr, submitContact, savingContact, changeStatus, setEditingEvent, editingEvent, etTab, setEtTab, googleConnected, handleConnectGoogle, bookingTab, setBookingTab, joinMeeting, cancelBooking, leadsTab, setLeadsTab, peopleTab: 'contacts', setPeopleTab: () => {}, appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp, teamMembers: allTeamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember, updateMember, editingWorkflow, setEditingWorkflow, setAvailIsDefault, availIsDefault, saveAvailability, availSchedule, setAvailSchedule, tzOpen, tzSearch, TIMEZONES, availPrefs, setTzOpen, setTzSearch, setAvailPrefs, followUps, statusCounts, addedThisWeek, ACCENT_SOFT, ACCENT, contactsLoading, STATUS_META, statusStages, filteredContacts, Donut, avColor, initials, removeContact, fileInputRef, handleUploadFile, CONTACT_STATUSES, setInitCampaignLead, EmptyState, handleSaveWorkflow, setMyWorkflows, API_BASE_URL, showWorkflowTypeModal, setShowWorkflowTypeModal, handleSelectType, appCats, filteredApps, connectingApps, filteredBookings, toggleEventType, etDropdown, setEtDropdown, addEventType: handleAddEventType, deleteEventType: handleDeleteEventType, initCampaignLead
+            user, uid, activeRole, canEdit, userProfile, displayName, firstName, userInitials, toast, setToast, sideOpen, setSideOpen, search, setSearch, notif, setNotif, setView, setUserProfile, contacts, eventTypes, bookings, myWorkflows, installedApps, handleCreateWorkflow, logoutAndGo, exportContactsCSV, showContactForm, setShowContactForm, cForm, setCForm, blankContact, contactErr, setContactErr, submitContact, savingContact, changeStatus, setEditingEvent, editingEvent, etTab, setEtTab, googleConnected, handleConnectGoogle, bookingTab, setBookingTab, joinMeeting, cancelBooking, leadsTab, setLeadsTab, peopleTab: 'contacts', setPeopleTab: () => {}, appCat, setAppCat, appsTab, setAppsTab, handleConnectApp, handleManageApp, teamMembers: allTeamMembers, showInviteModal, setShowInviteModal, inviteEmail, setInviteEmail, inviteRole, setInviteRole, handleInviteSubmit, removeMember, updateMember, editingWorkflow, setEditingWorkflow, setAvailIsDefault, availIsDefault, saveAvailability, availSchedule, setAvailSchedule, tzOpen, tzSearch, TIMEZONES, availPrefs, setTzOpen, setTzSearch, setAvailPrefs, followUps, statusCounts, addedThisWeek, ACCENT_SOFT, ACCENT, contactsLoading, STATUS_META, statusStages, filteredContacts, Donut, avColor, initials, removeContact, fileInputRef, handleUploadFile, CONTACT_STATUSES, setInitCampaignLead, EmptyState, handleSaveWorkflow, setMyWorkflows, API_BASE_URL, showWorkflowTypeModal, setShowWorkflowTypeModal, handleSelectType, appCats, filteredApps, connectingApps, filteredBookings, toggleEventType, etDropdown, setEtDropdown, addEventType: handleAddEventType, deleteEventType: handleDeleteEventType, initCampaignLead
           }} />
         </div>
         </div>
@@ -1773,22 +1762,6 @@ export default function DashboardLayout() {
         </div>
       )}
 
-      <CompleteProfileModal
-        isOpen={isOnboardingModalOpen}
-        onClose={() => setIsOnboardingModalOpen(false)}
-        userProfile={userProfile}
-        userEmail={user?.email}
-        userMetadata={user?.user_metadata}
-        googleConnected={googleConnected}
-        onConnectGoogle={handleConnectGoogle}
-        onDisconnectGoogle={handleDisconnectGoogle}
-        onComplete={(updatedUser) => {
-          setUserProfile(updatedUser);
-          setIsOnboardingModalOpen(false);
-          setToast('Profile completed successfully! 🎉');
-          setTimeout(() => setToast(null), 3000);
-        }}
-      />
 
       </div>
     </div>

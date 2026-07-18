@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Bell, ChevronDown, Edit2, CheckCircle2, Save, Loader2, Sparkles } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { ArrowLeft, Bell, ChevronDown, Edit2, CheckCircle2, Save, Loader2, Sparkles, AlertCircle, Trash2 } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
 import { campaignEngine, type Campaign } from './campaignEngine';
 import { CampaignList } from './CampaignList';
@@ -24,6 +25,7 @@ export interface CampaignModuleProps {
 export const CampaignModule: React.FC<CampaignModuleProps> = ({ initLead, onInitConsumed, userProfile, canEdit = true, changeStatus, contacts }) => {
   const { user } = useAuth();
   const [activeCampaignId, setActiveCampaignId] = useState<string | null>(null);
+  const [deleteModalCampaign, setDeleteModalCampaign] = useState<Campaign | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>(campaignEngine.getCampaigns());
   const [tab, setTab] = useState<'builder' | 'sent' | 'conversations' | 'analytics' | 'settings'>('builder');
   const [, setUnreadReplies] = useState(0);
@@ -130,17 +132,41 @@ export const CampaignModule: React.FC<CampaignModuleProps> = ({ initLead, onInit
           }}
           onDelete={(id) => {
             const campToDel = campaigns.find(c => c.id === id);
-            if (campToDel && changeStatus && contacts) {
-              const contact = contacts.find((c: any) => c.email === campToDel.recipientEmail);
-              if (contact) {
-                changeStatus(contact.id, 'New');
-              }
-            }
-            campaignEngine.deleteCampaign(id);
-            setCampaigns(campaignEngine.getCampaigns());
+            if (campToDel) setDeleteModalCampaign(campToDel);
           }}
         />
         <ReplyPopupNotification onOpenConversation={() => setTab('conversations')} />
+        
+        {deleteModalCampaign && createPortal(
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999 }} onClick={() => setDeleteModalCampaign(null)}>
+            <div style={{ background: '#ffffff', borderRadius: '16px', width: '90%', maxWidth: '440px', padding: '28px', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }} onClick={e => e.stopPropagation()}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', color: '#ef4444' }}>
+                <AlertCircle size={24} />
+                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700, color: '#0f172a' }}>Delete Campaign?</h3>
+              </div>
+              <p style={{ fontSize: '0.95rem', color: '#475569', lineHeight: 1.5, margin: '0 0 24px' }}>
+                Are you sure you want to delete the campaign <strong>{deleteModalCampaign.name}</strong>? This action cannot be undone and any running sequences will be permanently stopped.
+              </p>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                <button onClick={() => setDeleteModalCampaign(null)} style={{ padding: '10px 18px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#334155', fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer' }}>Cancel</button>
+                <button onClick={() => {
+                  if (changeStatus && contacts) {
+                    const contact = contacts.find((c: any) => c.email === deleteModalCampaign.recipientEmail);
+                    if (contact) {
+                      changeStatus(contact.id, 'New');
+                    }
+                  }
+                  campaignEngine.deleteCampaign(deleteModalCampaign.id);
+                  setCampaigns(campaignEngine.getCampaigns());
+                  setDeleteModalCampaign(null);
+                }} style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: '#ef4444', color: '#ffffff', fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Trash2 size={16} /> Delete
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
       </div>
     );
   }

@@ -555,9 +555,22 @@ class CampaignEngine {
   // AI Scraper with Groq API
   public async scrapeUrlMetadata(url: string) {
     try {
+      let websiteText = '';
+      try {
+        const scrapeRes = await fetch(`${API_BASE_URL}/api/scrape?url=${encodeURIComponent(url)}`);
+        if (scrapeRes.ok) {
+          const scrapeData = await scrapeRes.json();
+          websiteText = scrapeData.text;
+        }
+      } catch (e) {
+        console.warn("Could not scrape website directly, falling back to URL-only analysis", e);
+      }
+      
+      const promptContext = websiteText ? `Here is the actual scraped text from the website:\n${websiteText.substring(0, 4000)}\n\n` : '';
+
       const rawJson = await callGroqAI(
-        "You are an AI web intelligence analyzer. Extract and infer realistic B2B sales intelligence for the provided target URL/company. Return ONLY valid JSON with keys: companyOverview, industry, productsAndServices, targetAudience, valueProposition, brandVoice, uniqueSellingPoints, idealCustomerProfile, messagingStyle, businessGoals. Do NOT wrap in markdown backticks or extra text.",
-        `Analyze this URL or company name for cold outreach: ${url}`
+        "You are an AI web intelligence analyzer. Extract and infer realistic B2B sales intelligence for the provided target URL/company based on the scraped text provided. Return ONLY valid JSON with keys: companyOverview, industry, productsAndServices, targetAudience, valueProposition, brandVoice, uniqueSellingPoints, idealCustomerProfile, messagingStyle, businessGoals. Do NOT wrap in markdown backticks or extra text.",
+        `${promptContext}Analyze this URL or company name for cold outreach: ${url}`
       );
       const cleaned = rawJson.replace(/```json|```/g, '').trim();
       return JSON.parse(cleaned);

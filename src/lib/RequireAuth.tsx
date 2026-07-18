@@ -24,11 +24,14 @@ export default function RequireAuth({ children }: { children: ReactNode }) {
       .single()
       .then(({ data, error }) => {
         if (!mounted) return;
-        if (!error && data) {
-          if (location.pathname === '/onboarding') {
-            navigate('/dashboard', { replace: true });
-          }
+        const isCompleted = data?.onboarding_completed === true;
+
+        if (!isCompleted && location.pathname !== '/onboarding') {
+          navigate('/onboarding', { replace: true });
+        } else if (isCompleted && location.pathname === '/onboarding') {
+          navigate('/dashboard', { replace: true });
         }
+        
         setProfileLoading(false);
       });
 

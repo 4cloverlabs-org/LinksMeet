@@ -70,7 +70,7 @@ export default function AdminPage() {
   const { 
     user, uid, userProfile, displayName, firstName, userInitials,
     toast, setToast, notif, setNotif, logoutAndGo,
-    setIsOnboardingModalOpen, setUserProfile
+    setUserProfile
   } = ctx || {};
 
   const [name, setName] = useState('');
@@ -332,7 +332,7 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
 
       {/* Grid Cards - Profile Settings */}
       {activeTab === 'Profile Settings' && (
-        <div className="admin-cards-grid">
+        <div className="admin-cards-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
         
         {/* Personal Information Card */}
         <div className="admin-card">
@@ -363,10 +363,8 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
             <input className="admin-input" value={bio} onChange={e => setBio(e.target.value)} placeholder="e.g. Founder at Acme Corp" disabled={!isEditingPersonal} />
           </div>
         </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
           
-          {/* Brand Information */}
+        {/* Brand Information */}
           <div className="admin-card">
             <div className="admin-card-head">
               <h3><Globe size={18} color="var(--ac)" /> Brand information</h3>
@@ -388,46 +386,9 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
             
             <div className="admin-input-group">
                <label>Company Details & Brand Description</label>
-               <textarea className="admin-textarea" value={brandDesc} onChange={e => setBrandDesc(e.target.value)} placeholder="Extracted AI details..." disabled={!isEditingBrand} />
+               <textarea className="admin-textarea" value={brandDesc} onChange={e => setBrandDesc(e.target.value)} placeholder="Extracted AI details..." disabled={!isEditingBrand} style={{ minHeight: '200px', resize: 'vertical' }} />
             </div>
           </div>
-          
-          {/* Account Actions */}
-          <div className="admin-card">
-            <div className="admin-card-head">
-              <h3><AlertCircle size={18} color="var(--ac)" /> Account actions</h3>
-            </div>
-
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <div style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 600 }}>Profile Setup Score</div>
-                <div style={{ color: 'var(--ac)', fontSize: '1rem', fontWeight: 800 }}>{progress}%</div>
-              </div>
-              <div className="admin-progress-wrap">
-                <div className="admin-progress-fill" style={{ width: `${progress}%` }} />
-              </div>
-            </div>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-               <button className="admin-btn" onClick={handleGenerateAvatar}>
-                 <RefreshCw size={15} /> Change Avatar
-               </button>
-               {setIsOnboardingModalOpen ? (
-                 <button className="admin-btn wizard" onClick={() => setIsOnboardingModalOpen(true)}>
-                   <Sparkles size={15} /> Setup Wizard
-                 </button>
-               ) : <div />}
-               <button className="admin-btn primary" onClick={handleSave} disabled={saving} style={{ gridColumn: '1 / -1', marginTop: '12px' }}>
-                  {saving ? <Loader2 size={18} className="cpm-spin" /> : <Check size={18} />}
-                  {saving ? 'Saving Changes...' : 'Save Profile Changes'}
-               </button>
-               <button className="admin-btn danger" onClick={() => { setShowDeleteConfirm(true); setDeleteConfirmText(''); }} style={{ gridColumn: '1 / -1' }}>
-                  <LogOut size={16} /> Delete Account
-               </button>
-            </div>
-          </div>
-
-        </div>
       </div>
       )}
 

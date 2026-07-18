@@ -18,6 +18,34 @@ app.get('/', (req, res) => {
   res.send('LinksMeet API Server is running');
 });
 
+// Basic web scraper for AI metadata analysis
+app.get('/api/scrape', async (req, res) => {
+  const { url } = req.query;
+  if (!url) return res.status(400).json({ error: 'URL is required' });
+  try {
+    const formattedUrl = url.startsWith('http') ? url : `https://${url}`;
+    const response = await fetch(formattedUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+      signal: AbortSignal.timeout(5000)
+    });
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const html = await response.text();
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    const bodyHtml = bodyMatch ? bodyMatch[1] : html;
+    let text = bodyHtml
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (text.length > 5000) text = text.substring(0, 5000);
+    res.json({ text });
+  } catch (error) {
+    console.error("Scraping error:", error);
+    res.status(500).json({ error: 'Failed to scrape URL' });
+  }
+});
+
 // Strip CR/LF to prevent email header injection; collapse to a single line.
 const sanitizeHeader = (s) => String(s == null ? '' : s).replace(/[\r\n]+/g, ' ').trim();
 // Escape values that get interpolated into HTML email bodies (prevents injection).

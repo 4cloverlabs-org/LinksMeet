@@ -65,6 +65,10 @@ export default function AppsPage() {
                               <button className="crm-btn crm-btn-ghost" style={{ width: '100%' }} disabled>
                                 <Loader2 size={14} className="crm-spin-ic" /> Connecting...
                               </button>
+                            ) : a.comingSoon ? (
+                              <button className="crm-btn crm-btn-ghost" style={{ width: '100%', opacity: 0.6, cursor: 'not-allowed' }} disabled>
+                                Coming soon
+                              </button>
                             ) : (
                               <button className="crm-btn crm-btn-ghost" style={{ width: '100%' }} onClick={() => handleConnectApp(a)}>
                                 <Plus size={14} /> Connect
