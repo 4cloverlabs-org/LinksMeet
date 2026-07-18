@@ -767,12 +767,13 @@ app.post('/api/bookings', async (req, res) => {
           // Send Beautiful Custom Emails via Gmail API
           let actualGmailEmail = ownerData.email;
           try {
-            const profile = await gmailClient.users.getProfile({ userId: 'me' });
-            if (profile && profile.data && profile.data.emailAddress) {
-              actualGmailEmail = profile.data.emailAddress;
+            const oauth2Api = google.oauth2({ version: 'v2', auth: localOauth2Client });
+            const profile = await oauth2Api.userinfo.get();
+            if (profile && profile.data && profile.data.email) {
+              actualGmailEmail = profile.data.email;
             }
           } catch (e) {
-            console.error("Could not fetch Gmail profile:", e.message);
+            console.error("Could not fetch Google profile:", e.message);
           }
           
           const ownerEmail = actualGmailEmail;
@@ -943,12 +944,13 @@ async function sendEmailForUser(userId, to, subject, htmlBody) {
   
   let actualGmailEmail = ownerData.email;
   try {
-    const profile = await gmail.users.getProfile({ userId: 'me' });
-    if (profile && profile.data && profile.data.emailAddress) {
-      actualGmailEmail = profile.data.emailAddress;
+    const oauth2Api = google.oauth2({ version: 'v2', auth: localOauth2Client });
+    const profile = await oauth2Api.userinfo.get();
+    if (profile && profile.data && profile.data.email) {
+      actualGmailEmail = profile.data.email;
     }
   } catch (e) {
-    console.error("Could not fetch Gmail profile:", e.message);
+    console.error("Could not fetch Google profile:", e.message);
   }
   
   const rawEmail = makeBody(to, actualGmailEmail, subject, htmlBody);
