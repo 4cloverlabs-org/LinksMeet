@@ -11,6 +11,21 @@ export default function Login() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || '/dashboard';
+  
+  const [rawNonce, setRawNonce] = useState('');
+  const [hashedNonce, setHashedNonce] = useState('');
+
+  useEffect(() => {
+    const array = new Uint32Array(8);
+    crypto.getRandomValues(array);
+    const generatedRaw = Array.from(array).map(n => n.toString(16).padStart(8, '0')).join('');
+    setRawNonce(generatedRaw);
+    
+    crypto.subtle.digest('SHA-256', new TextEncoder().encode(generatedRaw)).then((hashBuffer) => {
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      setHashedNonce(hashArray.map(b => b.toString(16).padStart(2, '0')).join(''));
+    });
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -92,25 +107,28 @@ export default function Login() {
           <div className="cc-auth-divider"><span>Or Login With</span></div>
 
           <div className="cc-oauth-grid" style={{ justifyContent: 'center' }}>
-            <GoogleLogin
-              onSuccess={async (credentialResponse) => {
-                if (!credentialResponse.credential) return;
-                setErr('');
-                setBusy(true);
-                try {
-                  await signInWithGoogle(credentialResponse.credential);
-                  navigate(from, { replace: true });
-                } catch (e) {
-                  setErr(authErrorMessage(e));
-                  setBusy(false);
-                }
-              }}
-              onError={() => {
-                setErr('Google Login Failed');
-              }}
-              useOneTap
-              width="100%"
-            />
+            {hashedNonce && (
+              <GoogleLogin
+                nonce={hashedNonce}
+                onSuccess={async (credentialResponse) => {
+                  if (!credentialResponse.credential) return;
+                  setErr('');
+                  setBusy(true);
+                  try {
+                    await signInWithGoogle(credentialResponse.credential, rawNonce);
+                    navigate(from, { replace: true });
+                  } catch (e) {
+                    setErr(authErrorMessage(e));
+                    setBusy(false);
+                  }
+                }}
+                onError={() => {
+                  setErr('Google Login Failed');
+                }}
+                useOneTap
+                width="100%"
+              />
+            )}
           </div>
 
           <p className="cc-auth-alt">Don't Have An Account? <Link to="/signup">Register Now.</Link></p>

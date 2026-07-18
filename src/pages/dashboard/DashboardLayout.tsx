@@ -441,8 +441,14 @@ export default function DashboardLayout() {
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       
-      // Replace optimistic data with real data
-      setMyWorkflows(prev => prev.map(w => w.id === tempId ? data : w));
+      // Replace optimistic data with real data or remove it if realtime already inserted it
+      setMyWorkflows(prev => {
+        const alreadyExists = prev.some(w => w.id === data.id);
+        if (alreadyExists) {
+          return prev.filter(w => w.id !== tempId).map(w => w.id === data.id ? data : w);
+        }
+        return prev.map(w => w.id === tempId ? data : w);
+      });
       setToast(draft.is_active ? 'Workflow saved and activated!' : 'Workflow saved successfully!');
       setTimeout(() => setToast(null), 3000);
     } catch (err: any) {

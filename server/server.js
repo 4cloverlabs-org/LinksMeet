@@ -645,6 +645,16 @@ app.put('/api/workflows/:id', requireAuth, async (req, res) => {
   }
 });
 
+app.delete('/api/workflows/:id', requireAuth, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('workflows').delete().eq('id', req.params.id).eq('user_id', req.userId);
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ----------------------------------------------------
 // 3. Booking Endpoint (Creates GCal Event & Sends Emails)
 // ----------------------------------------------------
@@ -722,16 +732,21 @@ app.post('/api/bookings', async (req, res) => {
           }
         };
 
-        const gcalRes = await calendar.events.insert({
-          calendarId: 'primary',
-          resource: event,
-          conferenceDataVersion: 1,
-          sendUpdates: 'all' // Native Google Calendar invite sent to the booker!
-        });
+        try {
+          const gcalRes = await calendar.events.insert({
+            calendarId: 'primary',
+            resource: event,
+            conferenceDataVersion: 1,
+            sendUpdates: 'all' // Native Google Calendar invite sent to the booker!
+          });
+          meetLink = gcalRes.data.hangoutLink || null;
+          calendarSuccess = true;
+        } catch (gcalErr) {
+          console.error("Google Calendar API Error:", gcalErr.message);
+        }
 
-        meetLink = gcalRes.data.hangoutLink || null;
-
-        // Send Beautiful Custom Emails via Gmail API
+        try {
+          // Send Beautiful Custom Emails via Gmail API
         const ownerEmail = ownerData.email;
         const ownerName = ownerData.first_name || 'LinksMeet';
         const formattedTime = new Date(startTime).toLocaleString('en-US', { weekday: 'short', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' });
@@ -811,9 +826,11 @@ app.post('/api/bookings', async (req, res) => {
           await gmailClient.users.messages.send({ userId: 'me', requestBody: { raw: tmRaw } });
         }
         
-        calendarSuccess = true;
-      } catch (gcalErr) {
-        console.error("Google API Error:", gcalErr.message);
+        } catch (gmailErr) {
+          console.error("Gmail API Error in Booking:", gmailErr.message);
+        }
+      } catch (authErr) {
+        console.error("Google Auth Error:", authErr.message);
       }
     }
 
@@ -1408,18 +1425,20 @@ if (process.env.NODE_ENV !== 'test') {
                  await sendEmailForUser(wf.user_id, bookerEmail, subject, customHtml);
                  
                  // Mark as executed
-                 const newExecuted = [...executedWfs, wf.id];
-                 await supabase.from('bookings').update({ executed_workflows: newExecuted }).eq('id', booking.id);
-                 await supabase.from('workflows').update({ runs: wf.runs + 1 }).eq('id', wf.id);
+                 executedWfs.push(wf.id);
+                 await supabase.from('bookings').update({ executed_workflows: executedWfs }).eq('id', booking.id);
+                 await supabase.from('workflows').update({ runs: (wf.runs || 0) + 1 }).eq('id', wf.id);
                } catch (e) {
                  console.error(`Failed to send email for workflow ${wf.id}:`, e.message);
-                 // We don't mark as executed if it failed due to disconnect, we can retry later or it will just fail again
+                 // Mark as executed even on failure to avoid infinite retry loops flooding the server
+                 executedWfs.push(wf.id);
+                 await supabase.from('bookings').update({ executed_workflows: executedWfs }).eq('id', booking.id);
                }
             } else {
                // non-email flows just mark as executed
-               const newExecuted = [...executedWfs, wf.id];
-               await supabase.from('bookings').update({ executed_workflows: newExecuted }).eq('id', booking.id);
-               await supabase.from('workflows').update({ runs: wf.runs + 1 }).eq('id', wf.id);
+               executedWfs.push(wf.id);
+               await supabase.from('bookings').update({ executed_workflows: executedWfs }).eq('id', booking.id);
+               await supabase.from('workflows').update({ runs: (wf.runs || 0) + 1 }).eq('id', wf.id);
             }
           }
         }

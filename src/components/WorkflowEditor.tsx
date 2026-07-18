@@ -19,6 +19,50 @@ interface WorkflowEditorProps {
   eventTypes: any[];
 }
 
+
+const CustomSelect = ({ value, options, onChange }: { value: string, options: string[], onChange: (v: string) => void }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setIsOpen(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <div 
+        onClick={() => setIsOpen(!isOpen)}
+        className="wf-input"
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', padding: '12px 16px', background: '#fff', border: '1px solid #E5E7EB', borderRadius: '8px', minHeight: '42px', transition: 'border-color 0.2s' }}
+        onMouseEnter={e => e.currentTarget.style.borderColor = '#D1D5DB'}
+        onMouseLeave={e => e.currentTarget.style.borderColor = '#E5E7EB'}
+      >
+        <span style={{ fontSize: '14px', color: '#111827', fontWeight: 500 }}>{value}</span>
+        <ChevronDown size={18} color="#9CA3AF" style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+      </div>
+      {isOpen && (
+        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', background: '#fff', border: '1px solid #E5E7EB', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 10, padding: '8px' }}>
+          <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {options.map(opt => (
+              <div 
+                key={opt}
+                onClick={() => { onChange(opt); setIsOpen(false); }}
+                style={{ padding: '10px 12px', borderRadius: '8px', background: value === opt ? '#F3E8FF' : 'transparent', color: value === opt ? '#7d3bec' : '#374151', fontSize: '14px', fontWeight: value === opt ? 500 : 400, cursor: 'pointer', transition: 'background 0.2s' }}
+                onMouseEnter={e => { if(value !== opt) e.currentTarget.style.background = '#F9FAFB' }}
+                onMouseLeave={e => { if(value !== opt) e.currentTarget.style.background = 'transparent' }}
+              >
+                {opt}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTypes }: WorkflowEditorProps) {
   const [draft, setDraft] = useState<WorkflowDraft>(initialDraft);
   const [isActive, setIsActive] = useState(!!initialDraft.is_active);
@@ -163,15 +207,11 @@ export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTy
           <div className="wf-block-content">
             <div className="wf-form-group">
               <label>When</label>
-              <div className="wf-select-wrapper">
-                <select value={when} onChange={e => setWhen(e.target.value)} className="wf-input">
-                  <option>Before event starts</option>
-                  <option>After event ends</option>
-                  <option>When event is scheduled</option>
-                  <option>When event is cancelled</option>
-                </select>
-                <ChevronDown size={14} className="wf-select-icon" />
-              </div>
+              <CustomSelect 
+                value={when} 
+                onChange={setWhen} 
+                options={['Before event starts', 'After event ends', 'When event is scheduled', 'When event is cancelled']} 
+              />
             </div>
 
             {when.includes('Before') || when.includes('After') ? (
@@ -179,13 +219,12 @@ export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTy
                 <label>How long {when.toLowerCase()}?</label>
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <input type="number" className="wf-input" value={delayValue} onChange={e => setDelayValue(Number(e.target.value))} style={{ flex: 1 }} />
-                  <div className="wf-select-wrapper" style={{ width: '120px' }}>
-                    <select className="wf-input" value={delayUnit} onChange={e => setDelayUnit(e.target.value)}>
-                      <option value="minutes">minutes</option>
-                      <option value="hours">hours</option>
-                      <option value="days">days</option>
-                    </select>
-                    <ChevronDown size={14} className="wf-select-icon" />
+                  <div style={{ width: '120px' }}>
+                    <CustomSelect 
+                      value={delayUnit} 
+                      onChange={setDelayUnit} 
+                      options={['minutes', 'hours', 'days']} 
+                    />
                   </div>
                 </div>
               </div>
@@ -300,26 +339,42 @@ export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTy
                   <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', background: '#fff', border: '1px solid #E5E7EB', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 10, padding: '8px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       {[
-                        { value: 'email', label: 'Send email to attendees' },
-                        { value: 'sms', label: 'Send SMS to attendees' },
-                        { value: 'voice', label: 'AI Voice Call to attendees' }
+                        { value: 'email', label: 'Send email to attendees', comingSoon: false },
+                        { value: 'sms', label: 'Send SMS to attendees', comingSoon: true },
+                        { value: 'voice', label: 'AI Voice Call to attendees', comingSoon: true }
                       ].map(opt => {
                         const isSelected = draft.action_type === opt.value;
                         return (
                           <div 
                             key={opt.value}
                             onClick={() => {
+                              if (opt.comingSoon) return;
                               setDraft({...draft, action_type: opt.value});
                               if (opt.value === 'sms') { setBody('Reminder: {EVENT_NAME} is at {EVENT_DATE_ddd, h:mma}.'); }
                               if (opt.value === 'voice') { setBody('Hi {ATTENDEE}. This is an AI calling to remind you about {EVENT_NAME}.'); }
                               if (opt.value === 'email') { setBody('Hi {ATTENDEE},\n\nThis is a reminder about your upcoming event.'); setSubject('Reminder: {EVENT_NAME}'); }
                               setIsActionDropdownOpen(false);
                             }}
-                            style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '8px', background: isSelected ? '#F3E8FF' : 'transparent', cursor: 'pointer', transition: 'background 0.2s', fontSize: '14px', color: isSelected ? '#7d3bec' : '#374151', fontWeight: isSelected ? 500 : 400 }} 
-                            onMouseEnter={e => { if(!isSelected) e.currentTarget.style.background = '#F9FAFB' }} 
-                            onMouseLeave={e => { if(!isSelected) e.currentTarget.style.background = 'transparent' }}
+                            style={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'space-between',
+                              padding: '10px 12px', 
+                              borderRadius: '8px', 
+                              background: isSelected ? '#F3E8FF' : 'transparent', 
+                              cursor: opt.comingSoon ? 'not-allowed' : 'pointer', 
+                              transition: 'background 0.2s', 
+                              fontSize: '14px', 
+                              color: isSelected ? '#7d3bec' : (opt.comingSoon ? '#9CA3AF' : '#374151'), 
+                              fontWeight: isSelected ? 500 : 400 
+                            }} 
+                            onMouseEnter={e => { if(!isSelected && !opt.comingSoon) e.currentTarget.style.background = '#F9FAFB' }} 
+                            onMouseLeave={e => { if(!isSelected && !opt.comingSoon) e.currentTarget.style.background = 'transparent' }}
                           >
-                            {opt.label}
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>{opt.label}</span>
+                            {opt.comingSoon && (
+                              <span style={{ fontSize: '10px', fontWeight: 600, background: '#F3F4F6', color: '#6B7280', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Coming soon</span>
+                            )}
                           </div>
                         );
                       })}
@@ -418,9 +473,7 @@ export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTy
           </div>
         </div>
         
-        <div style={{ padding: '24px 0', display: 'flex', justifyContent: 'center' }}>
-          <button className="wf-btn-outline" style={{ background: '#fff' }}>Add action</button>
-        </div>
+        <div style={{ padding: '24px 0' }}></div>
 
       </div>
     </div>

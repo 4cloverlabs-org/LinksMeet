@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useState, useEffect, type FormEvent } from 'react';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth, authErrorMessage } from '../lib/AuthContext';
 import { GoogleLogin } from '@react-oauth/google';
 import AuthBackground from './AuthBackground';
@@ -8,6 +8,23 @@ import './Auth.css';
 export default function Signup() {
   const { signUp, signInWithGoogle, configured } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as any)?.from?.pathname || '/dashboard';
+  const [rawNonce, setRawNonce] = useState('');
+  const [hashedNonce, setHashedNonce] = useState('');
+
+  useEffect(() => {
+    const array = new Uint32Array(8);
+    crypto.getRandomValues(array);
+    const generatedRaw = Array.from(array).map(n => n.toString(16).padStart(8, '0')).join('');
+    setRawNonce(generatedRaw);
+    
+    crypto.subtle.digest('SHA-256', new TextEncoder().encode(generatedRaw)).then((hashBuffer) => {
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      setHashedNonce(hashArray.map(b => b.toString(16).padStart(2, '0')).join(''));
+    });
+  }, []);
+
   const [searchParams] = useSearchParams();
   const initialEmail = searchParams.get('email') || '';
   const [form, setForm] = useState({ name: '', email: initialEmail, password: '' });
@@ -24,7 +41,7 @@ export default function Signup() {
     setBusy(true);
     try {
       await signUp(form.name.trim(), form.email.trim(), form.password);
-      navigate('/dashboard', { replace: true });
+      navigate(from, { replace: true });
     } catch (e) {
       setErr(authErrorMessage(e));
     } finally {
@@ -86,25 +103,29 @@ export default function Signup() {
           <div className="cc-auth-divider"><span>Or Register With</span></div>
 
           <div className="cc-oauth-grid" style={{ justifyContent: 'center' }}>
-            <GoogleLogin
-              onSuccess={async (credentialResponse) => {
-                if (!credentialResponse.credential) return;
-                setErr('');
-                setBusy(true);
-                try {
-                  await signInWithGoogle(credentialResponse.credential);
-                  navigate('/dashboard', { replace: true });
-                } catch (e) {
-                  setErr(authErrorMessage(e));
-                  setBusy(false);
-                }
-              }}
-              onError={() => {
-                setErr('Google Signup Failed');
-              }}
-              useOneTap
-              width="100%"
-            />
+            {hashedNonce && (
+              <GoogleLogin
+                nonce={hashedNonce}
+                onSuccess={async (credentialResponse) => {
+                  if (!credentialResponse.credential) return;
+                  setErr('');
+                  setBusy(true);
+                  try {
+                    await signInWithGoogle(credentialResponse.credential, rawNonce);
+                    navigate(from, { replace: true });
+                  } catch (e) {
+                    setErr(authErrorMessage(e));
+                    setBusy(false);
+                  }
+                }}
+                onError={() => {
+                  setErr('Google Signup Failed');
+                }}
+                useOneTap
+                width="100%"
+                text="signup_with"
+              />
+            )}
           </div>
 
           <p className="cc-auth-alt">Already have an account? <Link to="/login">Log in</Link></p>

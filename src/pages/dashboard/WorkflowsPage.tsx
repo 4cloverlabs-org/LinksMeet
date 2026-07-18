@@ -370,7 +370,10 @@ export default function WorkflowsPage() {
                     const token = sessionData?.session?.access_token || '';
                     await fetch(`${API_BASE_URL}/api/workflows/${workflowToDelete.id}`, {
                        method: 'DELETE',
-                       headers: { 'Authorization': `Bearer ${token}` } 
+                       headers: { 
+                         'Authorization': `Bearer ${token}`,
+                         'x-workspace-id': uid || ''
+                       } 
                     });
                     setToast('Workflow deleted successfully.');
                     setTimeout(() => setToast(null), 3000);

@@ -233,8 +233,9 @@ export default function BookingPage() {
     try {
       // Create a proper start/end time for the backend
       // selectedDate is a number (e.g., 25), selectedTime is a string (e.g., "09:00am")
-      const timePart = selectedTime.substring(0, 5);
-      const ampm = selectedTime.substring(5).toLowerCase();
+      const ampmMatch = selectedTime.match(/([a-zA-Z]+)$/);
+      const ampm = ampmMatch ? ampmMatch[1].toLowerCase() : '';
+      const timePart = selectedTime.replace(/([a-zA-Z]+)$/, '').trim();
       let [hStr, mStr] = timePart.split(':');
       let hr = parseInt(hStr, 10);
       const min = parseInt(mStr, 10);

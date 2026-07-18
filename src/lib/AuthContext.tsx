@@ -22,7 +22,7 @@ interface AuthContextValue {
   setNeedsWorkspaceSelection: (val: boolean) => void;
   signUp: (name: string, email: string, password: string) => Promise<void>;
   logIn: (email: string, password: string) => Promise<void>;
-  signInWithGoogle: (idToken: string) => Promise<void>;
+  signInWithGoogle: (idToken: string, nonce?: string) => Promise<void>;
   logOut: () => Promise<void>;
 }
 
@@ -200,10 +200,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (data.user) setUser(data.user);
   };
 
-  const signInWithGoogle = async (idToken: string) => {
+  const signInWithGoogle = async (idToken: string, nonce?: string) => {
     const { error, data } = await supabase.auth.signInWithIdToken({
       provider: 'google',
       token: idToken,
+      nonce: nonce,
     });
     if (error) {
       if (error.message && error.message.includes('Unacceptable audience in id_token')) {
