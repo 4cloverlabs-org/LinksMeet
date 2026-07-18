@@ -389,6 +389,31 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
                <textarea className="admin-textarea" value={brandDesc} onChange={e => setBrandDesc(e.target.value)} placeholder="Extracted AI details..." disabled={!isEditingBrand} style={{ minHeight: '200px', resize: 'vertical' }} />
             </div>
           </div>
+          
+          {/* Action Buttons */}
+          <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px', padding: '24px', background: '#fff', borderRadius: '12px', border: '1px solid #E5E7EB' }}>
+            <div>
+              <h3 style={{ margin: '0 0 4px', fontSize: '1rem', color: '#111827' }}>Account Actions</h3>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: '#6B7280' }}>Save your changes or permanently delete your account.</p>
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button 
+                onClick={() => setShowDeleteConfirm(true)}
+                style={{ padding: '8px 16px', background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#EF4444', borderRadius: '8px', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer' }}
+              >
+                Delete Account
+              </button>
+              <button 
+                onClick={handleSave}
+                disabled={saving}
+                className="admin-btn primary"
+                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
+                {saving && <Loader2 size={16} className="cpm-spin" />}
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
       </div>
       )}
 
