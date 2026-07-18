@@ -298,7 +298,6 @@ export default function DashboardLayout() {
   }, [showProfileMenu]);
 
 
-  const [connectingApps, setConnectingApps] = useState<string[]>([]);
 
   const handleCreateWorkflow = (template: any) => {
     if (!template) {
