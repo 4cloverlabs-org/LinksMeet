@@ -231,9 +231,12 @@ app.get('/auth/google/callback', async (req, res) => {
     
     // Save tokens securely in Supabase
     if (supabase) {
+      const { data: existingUser } = await supabase.from('users').select('google_tokens').eq('id', uid).single();
+      const existingRefreshToken = existingUser?.google_tokens?.refresh_token;
+
       const { error } = await supabase.from('users').update({
         google_tokens: {
-          refresh_token: tokens.refresh_token || null,
+          refresh_token: tokens.refresh_token || existingRefreshToken || null,
           access_token: tokens.access_token,
           expiry_date: tokens.expiry_date
         }
@@ -719,7 +722,7 @@ app.post('/api/bookings', async (req, res) => {
             tokens.expiry_date = credentials.expiry_date;
             await supabase.from('users').update({ google_tokens: tokens }).eq('id', ownerUid);
           } catch (err) {
-            if (err.message && err.message.includes('invalid_grant')) {
+            if (err.message && (err.message.includes('invalid_grant') || err.message.includes('unauthorized_client'))) {
               await supabase.from('users').update({ google_tokens: null }).eq('id', ownerUid);
               throw new Error("Gmail session expired. Please reconnect.");
             }
@@ -918,7 +921,7 @@ async function sendEmailForUser(userId, to, subject, htmlBody) {
       tokens.expiry_date = credentials.expiry_date;
       await supabase.from('users').update({ google_tokens: tokens }).eq('id', userId);
     } catch (err) {
-      if (err.message && err.message.includes('invalid_grant')) {
+      if (err.message && (err.message.includes('invalid_grant') || err.message.includes('unauthorized_client'))) {
         await supabase.from('users').update({ google_tokens: null }).eq('id', userId);
         throw new Error("Gmail session expired. Please reconnect.");
       }
