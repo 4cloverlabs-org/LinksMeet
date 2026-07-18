@@ -126,10 +126,7 @@ const APPS = [
   { nm: 'Google Calendar', cat: 'Calendar', ds: 'Check for conflicts in real time.', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg' },
 ];
 
-const INSTALLED = [
-  { nm: 'Google Calendar', cat: 'Calendar', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg' },
-  { nm: 'Google Meet', cat: 'Conferencing', logo: 'https://upload.wikimedia.org/wikipedia/commons/9/9b/Google_Meet_icon_%282020%29.svg' },
-];
+const INSTALLED: any[] = [];
 
 const TRANSACTIONS = [
   { name: 'Logan Mitchell', event: 'Product Demo', amt: '$120.00', tag: 'green', tagLabel: 'Paid' },
@@ -300,8 +297,7 @@ export default function DashboardLayout() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showProfileMenu]);
 
-  // Apps State
-  const [installedApps, setInstalledApps] = useState(INSTALLED);
+
   const [connectingApps, setConnectingApps] = useState<string[]>([]);
 
   const handleCreateWorkflow = (template: any) => {
@@ -463,14 +459,69 @@ export default function DashboardLayout() {
     }
   };
 
+  // Apps State
+  const [installedApps, setInstalledApps] = useState<any[]>([]);
+  const [connectingApps, setConnectingApps] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (googleConnected && userProfile) {
+      const prefs = userProfile.preferences || {};
+      const apps = [];
+      if (prefs.installed_google_calendar) {
+        apps.push({ nm: 'Google Calendar', cat: 'Calendar', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg' });
+      }
+      if (prefs.installed_google_meet) {
+        apps.push({ nm: 'Google Meet', cat: 'Conferencing', logo: 'https://upload.wikimedia.org/wikipedia/commons/9/9b/Google_Meet_icon_%282020%29.svg' });
+      }
+      setInstalledApps(apps);
+    } else {
+      setInstalledApps([]);
+    }
+  }, [googleConnected, userProfile]);
+
+  useEffect(() => {
+    const pendingApp = localStorage.getItem('sm_connecting_app');
+    if (pendingApp && uid && googleConnected) {
+      const prefs = { ...(userProfile?.preferences || {}), [pendingApp]: true };
+      supabase.from('users').update({ preferences: prefs }).eq('id', uid);
+      setUserProfile((prev: any) => ({ ...prev, preferences: prefs }));
+      localStorage.removeItem('sm_connecting_app');
+    }
+  }, [googleConnected, userProfile, uid]);
+
+  const handleCreateWorkflow = (template: any) => {
+    const newWf = { id: crypto.randomUUID(), ...template, active: true, runs: 0, createdAt: Date.now() };
+    setMyWorkflows([newWf, ...myWorkflows]);
+    setToast('Workflow created successfully!');
+    setTimeout(() => setToast(null), 3000);
+    setView('workflows');
+  };
+
   const [manageApp, setManageApp] = useState<typeof APPS[0] | null>(null);
 
   const handleConnectApp = (app: typeof APPS[0]) => {
     if (installedApps.some(a => a.nm === app.nm) || connectingApps.includes(app.nm)) return;
     
-    // Connect in real-time via backend OAuth routes
     if (app.nm.includes('Google')) {
-      handleConnectGoogle();
+      const prefKey = app.nm === 'Google Calendar' ? 'installed_google_calendar' : 'installed_google_meet';
+      if (googleConnected) {
+        if (uid && uid !== 'anon') {
+           const prefs = { ...(userProfile?.preferences || {}), [prefKey]: true };
+           supabase.from('users').update({ preferences: prefs }).eq('id', uid);
+           setUserProfile((prev: any) => ({ ...prev, preferences: prefs }));
+        }
+        setInstalledApps(prev => {
+          const exists = prev.some(a => a.nm === app.nm);
+          return exists ? prev : [...prev, { nm: app.nm, cat: app.cat, logo: app.logo }];
+        });
+        setToast(`${app.nm} connected successfully!`);
+        setTimeout(() => setToast(null), 3000);
+        setView('apps');
+        setAppsTab('installed');
+      } else {
+        localStorage.setItem('sm_connecting_app', prefKey);
+        handleConnectGoogle();
+      }
       return;
     }
     
@@ -891,6 +942,16 @@ export default function DashboardLayout() {
     checkGoogle();
   }, [uid]);
 
+  useEffect(() => {
+    const connectingAppKey = localStorage.getItem('sm_connecting_app');
+    if (googleConnected && userProfile && uid && uid !== 'anon' && connectingAppKey) {
+       const prefs = { ...(userProfile.preferences || {}), [connectingAppKey]: true };
+       supabase.from('users').update({ preferences: prefs }).eq('id', uid);
+       setUserProfile(prev => ({ ...prev, preferences: prefs }));
+       localStorage.removeItem('sm_connecting_app');
+    }
+  }, [googleConnected, userProfile, uid]);
+
   const handleConnectGoogle = () => {
     localStorage.setItem('sm_onboarding_step_3', 'true');
     // Pass our origin so the backend returns us to this exact domain (keeps the session).
@@ -918,9 +979,17 @@ export default function DashboardLayout() {
     setInstalledApps(prev => {
       const nextApps = prev.filter(a => a.nm !== manageApp.nm);
       
-      // If we just disconnected a Google app, and no Google apps are left, wipe tokens
-      if (manageApp.nm.includes('Google') && !nextApps.some(a => a.nm.includes('Google'))) {
-        handleDisconnectGoogle();
+      if (manageApp.nm.includes('Google')) {
+        const prefKey = manageApp.nm === 'Google Calendar' ? 'installed_google_calendar' : 'installed_google_meet';
+        if (uid && uid !== 'anon') {
+           const prefs = { ...(userProfile?.preferences || {}), [prefKey]: false };
+           supabase.from('users').update({ preferences: prefs }).eq('id', uid);
+           setUserProfile(prev => ({ ...prev, preferences: prefs }));
+        }
+
+        if (!nextApps.some(a => a.nm.includes('Google'))) {
+          handleDisconnectGoogle();
+        }
       }
       
       return nextApps;
