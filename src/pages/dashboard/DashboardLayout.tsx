@@ -637,7 +637,7 @@ export default function DashboardLayout() {
             email: inviteEmail,
             role: inviteRole,
             teamMemberId: data.id,
-            ownerName: displayName,
+            ownerName: displayName || firstName || 'Workspace Owner',
             frontendUrl: window.location.origin
           })
         });

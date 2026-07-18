@@ -711,6 +711,21 @@ app.post('/api/bookings', async (req, res) => {
           refresh_token: tokens.refresh_token,
           access_token: tokens.access_token 
         });
+
+        if (tokens.expiry_date && Date.now() > (tokens.expiry_date - 60000) && tokens.refresh_token) {
+          try {
+            const { credentials } = await localOauth2Client.refreshAccessToken();
+            tokens.access_token = credentials.access_token;
+            tokens.expiry_date = credentials.expiry_date;
+            await supabase.from('users').update({ google_tokens: tokens }).eq('id', ownerUid);
+          } catch (err) {
+            if (err.message && err.message.includes('invalid_grant')) {
+              await supabase.from('users').update({ google_tokens: null }).eq('id', ownerUid);
+              throw new Error("Gmail session expired. Please reconnect.");
+            }
+            throw err;
+          }
+        }
         const calendar = google.calendar({ version: 'v3', auth: localOauth2Client });
         gmailClient = google.gmail({ version: 'v1', auth: localOauth2Client });
 
@@ -885,14 +900,20 @@ async function sendEmailForUser(userId, to, subject, htmlBody) {
   const tokens = ownerData.google_tokens;
   if (!tokens.access_token && !tokens.refresh_token) throw new Error("Invalid Gmail tokens.");
 
-  oauth2Client.setCredentials({
+  const localOauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3001/auth/google/callback'
+  );
+
+  localOauth2Client.setCredentials({
     refresh_token: tokens.refresh_token,
     access_token: tokens.access_token,
   });
 
   if (tokens.expiry_date && Date.now() > (tokens.expiry_date - 60000) && tokens.refresh_token) {
     try {
-      const { credentials } = await oauth2Client.refreshAccessToken();
+      const { credentials } = await localOauth2Client.refreshAccessToken();
       tokens.access_token = credentials.access_token;
       tokens.expiry_date = credentials.expiry_date;
       await supabase.from('users').update({ google_tokens: tokens }).eq('id', userId);
@@ -905,7 +926,7 @@ async function sendEmailForUser(userId, to, subject, htmlBody) {
     }
   }
 
-  const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+  const gmail = google.gmail({ version: 'v1', auth: localOauth2Client });
   const rawEmail = makeBody(to, ownerData.email, subject, htmlBody);
   const res = await gmail.users.messages.send({ userId: 'me', requestBody: { raw: rawEmail } });
   return res.data;
@@ -933,7 +954,11 @@ app.post('/api/team/send-invite', requireAuth, async (req, res) => {
   try {
     const { email, role, teamMemberId, ownerName, frontendUrl: clientUrl } = req.body;    
     const productionOrigin = process.env.FRONTEND_URL || (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',')[0].trim() : null);
-    const frontendUrl = productionOrigin || clientUrl || 'http://localhost:5173';
+    let frontendUrl = productionOrigin || clientUrl || 'http://localhost:5173';
+    
+    if (frontendUrl && !frontendUrl.startsWith('http')) {
+      frontendUrl = `https://${frontendUrl}`;
+    }
     
     const acceptLink = `${frontendUrl}/accept-invite?id=${teamMemberId}&action=accept`;
     const declineLink = `${frontendUrl}/accept-invite?id=${teamMemberId}&action=decline`;
@@ -1025,7 +1050,7 @@ app.get('/api/team/workspaces', requireAuth, async (req, res) => {
   try {
     const { data: teamData, error: teamErr } = await supabase.from('team_members')
       .select('user_id, role, users!team_members_user_id_fkey(first_name)')
-      .eq('email', req.userEmail)
+      .ilike('email', req.userEmail)
       .eq('status', 'Active');
       
     if (teamErr) throw teamErr;
