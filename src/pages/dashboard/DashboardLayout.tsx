@@ -272,7 +272,8 @@ export default function DashboardLayout() {
   
   const [userProfile, setUserProfile] = useState<any>(null);
   const [googleConnected, setGoogleConnected] = useState(false);
-  
+  const [avatarError, setAvatarError] = useState(false);
+
   const [initCampaignLead, setInitCampaignLead] = useState<any>(null);
 
   const [myWorkflows, setMyWorkflows] = useState<any[]>([]);
@@ -1539,8 +1540,8 @@ export default function DashboardLayout() {
               )}
               <div className="crm-userbox" style={{ marginTop: 8 }} onClick={() => setShowProfileMenu(!showProfileMenu)}>
                 <div className="crm-userbox-avatar-wrapper">
-                  {(user?.user_metadata?.avatar_url || user?.user_metadata?.picture) ? (
-                    <img src={user.user_metadata.avatar_url || user.user_metadata.picture} alt="avatar" className="crm-userbox-avatar" />
+                  {(!avatarError && (userProfile?.profile_picture || userProfile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture)) ? (
+                    <img src={userProfile?.profile_picture || userProfile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture} alt="avatar" className="crm-userbox-avatar" onError={() => setAvatarError(true)} />
                   ) : (
                     <div className="crm-userbox-avatar" style={{ background: '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <User size={20} color="#9CA3AF" />

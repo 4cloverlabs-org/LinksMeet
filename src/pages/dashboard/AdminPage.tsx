@@ -79,6 +79,7 @@ export default function AdminPage() {
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [brandDesc, setBrandDesc] = useState('');
   const [profilePic, setProfilePic] = useState('');
+  const [avatarError, setAvatarError] = useState(false);
   
   const [timezone, setTimezone] = useState('(GMT+05:30) India Standard Time (IST)');
   const [language, setLanguage] = useState('English (US)');
@@ -160,8 +161,9 @@ export default function AdminPage() {
   const handleGenerateAvatar = () => {
     const seeds = ['Felix', 'Aneka', 'Oliver', 'Bob', 'Mimi', 'Sophia', 'Lucas', 'Emma', 'Alex', 'Jack', 'Maya', 'Leo'];
     const randomSeed = seeds[Math.floor(Math.random() * seeds.length)] + '-' + Math.floor(Math.random() * 1000);
-    const newAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(randomSeed)}`;
+    const newAvatar = `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(randomSeed)}`;
     setProfilePic(newAvatar);
+    setAvatarError(false);
   };
 
   const handleAnalyze = async () => {
@@ -294,7 +296,7 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
       <div className="admin-header-card">
         <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flex: '1 1 300px' }}>
           <div className="admin-avatar-wrap">
-            {profilePic ? <img src={profilePic} alt="Avatar" /> : (userInitials || <User size={32} />)}
+            {(!avatarError && profilePic) ? <img src={profilePic} alt="Avatar" onError={() => setAvatarError(true)} /> : (userInitials || <User size={32} />)}
           </div>
           <div>
             <h2 style={{ margin: '0 0 6px 0', fontSize: '24px', color: '#111827', fontWeight: 800, letterSpacing: '-0.02em' }}>
