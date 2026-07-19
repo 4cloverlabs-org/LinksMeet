@@ -1061,21 +1061,30 @@ app.post('/api/team/send-invite', requireAuth, async (req, res) => {
     
     const subject = `You've been invited to join ${ownerName}'s team on LinksMeet`;
     const htmlBody = `
-      <div style="font-family: 'Inter', Helvetica, sans-serif; max-width: 550px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #ffffff;">
-        <div style="background: #0E61F3; padding: 24px; text-align: center;">
-          <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 600;">Team Invitation</h1>
+      <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 550px; margin: 40px auto; border: 1px solid #eaedf2; border-radius: 12px; overflow: hidden; background: #ffffff; box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
+        <div style="background: #ffffff; padding: 32px 24px 24px 24px; text-align: center; border-bottom: 1px solid #eaedf2;">
+          <img src="https://linksmeet.com/LinksMeet-without-bg.png" alt="LinksMeet" style="height: 48px; object-fit: contain; margin-bottom: 16px;" />
+          <h1 style="color: #0f172a; margin: 0; font-size: 24px; font-weight: 700;">Team Invitation</h1>
         </div>
-        <div style="padding: 32px 24px;">
-          <p style="color: #334155; font-size: 16px; margin-top: 0;">Hi,</p>
-          <p style="color: #475569; font-size: 15px; line-height: 1.5;"><strong>${escapeHtml(ownerName)}</strong> has invited you to join their team on LinksMeet as a <strong>${escapeHtml(role)}</strong>.</p>
+        <div style="padding: 40px 32px;">
+          <p style="color: #334155; font-size: 16px; margin-top: 0; margin-bottom: 16px;">Hi there,</p>
+          <p style="color: #475569; font-size: 16px; line-height: 1.6; margin-bottom: 32px;">
+            <strong>${escapeHtml(ownerName)}</strong> has invited you to join their team workspace on LinksMeet as a <strong>${escapeHtml(role)}</strong>. 
+            By accepting, you will be able to collaborate on scheduling and view team events.
+          </p>
           
-          <div style="text-align: center; margin-top: 32px; margin-bottom: 16px; display: flex; justify-content: center; gap: 16px;">
-            <a href="${finalAcceptLink}" style="background: #0E61F3; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 15px; display: inline-block;">Accept Invitation</a>
-            <a href="${finalDeclineLink}" style="background: #ffffff; color: #475569; border: 1px solid #cbd5e1; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 15px; display: inline-block;">Decline</a>
-          </div>
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 16px; margin-bottom: 16px;">
+            <tr>
+              <td align="center">
+                <a href="${finalAcceptLink}" style="background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 15px; display: inline-block; margin-right: 12px; border: 1px solid #2563eb;">Accept Invitation</a>
+                <a href="${finalDeclineLink}" style="background-color: #ffffff; color: #475569; border: 1px solid #cbd5e1; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 15px; display: inline-block;">Decline</a>
+              </td>
+            </tr>
+          </table>
         </div>
-        <div style="background: #f1f5f9; padding: 16px; text-align: center; border-top: 1px solid #e2e8f0;">
-          <p style="margin: 0; color: #64748b; font-size: 12px;">Powered by <strong>LinksMeet</strong></p>
+        <div style="background: #f8fafc; padding: 24px; text-align: center; border-top: 1px solid #eaedf2;">
+          <p style="margin: 0 0 8px 0; color: #64748b; font-size: 13px;">This invitation was sent from LinksMeet.</p>
+          <p style="margin: 0; color: #94a3b8; font-size: 12px;">&copy; ${new Date().getFullYear()} LinksMeet Inc. All rights reserved.</p>
         </div>
       </div>
     `;
