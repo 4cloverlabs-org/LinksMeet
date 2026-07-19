@@ -295,8 +295,8 @@ Ideal Customer Profile: ${data.idealCustomerProfile || 'N/A'}`;
       {/* Header Card */}
       <div className="admin-header-card">
         <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flex: '1 1 300px' }}>
-          <div className="admin-avatar-wrap">
-            {(!avatarError && profilePic) ? <img src={profilePic} alt="Avatar" onError={() => setAvatarError(true)} /> : (userInitials || <User size={32} />)}
+          <div className="admin-avatar-wrap" onClick={handleGenerateAvatar} style={{ cursor: 'pointer' }} title="Click to generate new avatar">
+            {(!avatarError && profilePic) ? <img src={profilePic} alt="Avatar" referrerPolicy="no-referrer" onError={() => setAvatarError(true)} /> : (userInitials || <User size={32} />)}
           </div>
           <div>
             <h2 style={{ margin: '0 0 6px 0', fontSize: '24px', color: '#111827', fontWeight: 800, letterSpacing: '-0.02em' }}>
