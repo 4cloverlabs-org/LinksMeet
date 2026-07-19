@@ -252,7 +252,6 @@ export default function DashboardLayout() {
     }
   };
   const cancelBooking = async (id: string) => {
-    if (!window.confirm('Are you sure you want to cancel this booking?')) return;
     setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b));
     try {
       await updateBooking(uid, id, { status: 'cancelled' });
