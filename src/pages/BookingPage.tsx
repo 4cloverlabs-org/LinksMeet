@@ -73,6 +73,7 @@ export default function BookingPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [hostName, setHostName] = useState('');
+  const [hostTimezone, setHostTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [eventType, setEventType] = useState<EventType | null>(null);
   const interfaceLang = eventType?.interfaceLang || eventType?.interface_lang || 'English';
   const eventColor = eventType?.eventColor || eventType?.event_color || '#7d3bec';
@@ -135,6 +136,9 @@ export default function BookingPage() {
           if (res.ok) {
             const uData = await res.json();
             fetchedHostName = uData.firstName || uData.name || 'LinksMeet Host';
+            if (uData.timezone) {
+              setHostTimezone(uData.timezone);
+            }
           }
         } catch (e) {
           console.warn("Public profile lookup failed, using fallback host name.");
@@ -168,9 +172,8 @@ export default function BookingPage() {
             setCurrentLayout(defLayout as any);
             
             // Fetch bookings
-            // We fall back to fetching 'slot' if start_time is missing since bookings table didn't have start_time originally
             const { data: bData } = await supabase.from('bookings')
-              .select('slot')
+              .select('slot, start_time, end_time, status')
               .eq('user_id', uid);
             if (bData) setBookings(bData);
             setLoading(false);
@@ -336,29 +339,37 @@ export default function BookingPage() {
     let endHr = 17;
     
     const now = new Date();
-    const isToday = targetDate.getFullYear() === now.getFullYear() && targetDate.getMonth() === now.getMonth() && targetDate.getDate() === now.getDate();
     
     let currentMin = 0;
-    let hr = startHr;
+    let hr = 0; // Check all 24 hours of the booker's local day
     
-    while (hr < endHr) {
+    while (hr < 24) {
       const slotStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), hr, currentMin);
       const slotEnd = new Date(slotStart.getTime() + durMinutes * 60000);
       
-      if (!(isToday && slotStart < now)) {
-        const hasConflict = bookings.some(b => {
-          const bStart = new Date(b.start_time);
-          const bEnd = new Date(b.end_time);
-          return (slotStart < bEnd && slotEnd > bStart);
-        });
-        
-        if (!hasConflict) {
-          const ampm = hr >= 12 ? 'pm' : 'am';
-          const h = hr % 12 || 12;
-          const m = currentMin === 0 ? '00' : currentMin.toString().padStart(2, '0');
-          const time12 = `${h}:${m}${ampm}`;
-          const time24 = `${hr.toString().padStart(2, '0')}:${m}`;
-          slots.push({ time12, time24, sortKey: slotStart.getTime() });
+      // Convert slotStart to host's timezone to check their availability
+      const tzDate = new Date(slotStart.toLocaleString('en-US', { timeZone: hostTimezone }));
+      const hostHour = tzDate.getHours();
+      
+      // Only include if it falls within the host's 9-17 working hours in THEIR timezone
+      if (hostHour >= startHr && hostHour < endHr) {
+        if (!(slotStart < now)) {
+          const hasConflict = bookings.some(b => {
+            if (b.status === 'cancelled') return false;
+            if (!b.start_time || !b.end_time) return false;
+            const bStart = new Date(b.start_time);
+            const bEnd = new Date(b.end_time);
+            return (slotStart < bEnd && slotEnd > bStart);
+          });
+          
+          if (!hasConflict) {
+            const ampm = hr >= 12 ? 'pm' : 'am';
+            const h = hr % 12 || 12;
+            const m = currentMin === 0 ? '00' : currentMin.toString().padStart(2, '0');
+            const time12 = `${h}:${m}${ampm}`;
+            const time24 = `${hr.toString().padStart(2, '0')}:${m}`;
+            slots.push({ time12, time24, sortKey: slotStart.getTime() });
+          }
         }
       }
       

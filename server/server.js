@@ -486,9 +486,13 @@ app.get('/auth/:provider/callback', async (req, res) => {
 app.get('/api/public-profile/:uid', async (req, res) => {
   if (!supabase) return res.status(500).json({ error: "No db connection" });
   try {
-    const { data, error } = await supabase.from('users').select('first_name, google_tokens').eq('id', req.params.uid).single();
+    const { data, error } = await supabase.from('users').select('first_name, google_tokens, preferences').eq('id', req.params.uid).single();
     if (error || !data) return res.status(404).json({ error: "User not found" });
-    res.json({ firstName: data.first_name, hasGoogle: !!data.google_tokens });
+    res.json({ 
+      firstName: data.first_name, 
+      hasGoogle: !!data.google_tokens,
+      timezone: data.preferences?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
+    });
   } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
@@ -713,7 +717,17 @@ app.post('/api/bookings', async (req, res) => {
     const { data: teamMembers } = await supabase.from('team_members').select('*').eq('user_id', ownerUid).eq('status', 'Active');
     let selectedMember = null;
     if (teamMembers && teamMembers.length > 0) {
-      selectedMember = teamMembers[Math.floor(Math.random() * teamMembers.length)];
+      // Use round-robin logic based on total historical non-cancelled bookings
+      const { count: historicalBookings, error: countError } = await supabase
+        .from('bookings')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', ownerUid)
+        .neq('status', 'cancelled');
+        
+      const validCount = (!countError && historicalBookings != null) ? historicalBookings : 0;
+      
+      const teamIndex = validCount % teamMembers.length;
+      selectedMember = teamMembers[teamIndex];
     }
 
     const tokens = ownerData.google_tokens;
