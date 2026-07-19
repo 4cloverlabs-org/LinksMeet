@@ -930,7 +930,7 @@ export default function Landing() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
               <span>&copy; {new Date().getFullYear()} LinksMeet. All rights reserved.</span>
               <span style={{ color: '#888' }}>
-                Powered by <a href="https://4cloverlabs.com" target="_blank" rel="noopener noreferrer" style={{ color: '#0E61F3', textDecoration: 'none' }}>4CloverLabs</a>
+                by <a href="https://4cloverlabs.com" target="_blank" rel="noopener noreferrer" style={{ color: '#888', textDecoration: 'underline' }}>4CloverLabs</a>
               </span>
             </div>
             <div style={{ display: 'flex', gap: '20px' }}>
