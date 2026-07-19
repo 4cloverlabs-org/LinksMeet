@@ -165,32 +165,45 @@ const decodeOAuthState = (rawState) => {
 };
 
 // Helper to encode emails for Gmail API
-const makeBody = (to, from, subject, message, replyTo = null, bcc = null) => {
+const makeBody = (to, from, subject, message, replyTo = null, bcc = null, icsData = null) => {
   const cleanSubject = sanitizeHeader(subject);
   // Encode subject correctly for email headers to support emojis/special chars
   const encodedSubject = `=?utf-8?B?${Buffer.from(cleanSubject).toString('base64')}?=`;
+  const boundary = `----=_Part_${Date.now()}_${Math.random().toString(36).substring(2)}`;
 
-  const headers = [
-    "Content-Type: text/html; charset=\"UTF-8\"\n",
+  let headers = [
     "MIME-Version: 1.0\n",
-    "Content-Transfer-Encoding: 8bit\n",
     "To: ", sanitizeHeader(to), "\n",
     "From: ", sanitizeHeader(from), "\n",
     "Date: ", new Date().toUTCString(), "\n",
     "Message-ID: <", Date.now(), "-", Math.random().toString(36).substring(2), "@linksmeet.com>\n",
   ];
   
-  if (replyTo) {
-    headers.push("Reply-To: ", sanitizeHeader(replyTo), "\n");
-  }
-  if (bcc) {
-    headers.push("Bcc: ", sanitizeHeader(bcc), "\n");
-  }
-  headers.push("Subject: ", encodedSubject, "\n\n", message);
-  
-  const str = headers.join('');
+  if (replyTo) headers.push("Reply-To: ", sanitizeHeader(replyTo), "\n");
+  if (bcc) headers.push("Bcc: ", sanitizeHeader(bcc), "\n");
+  headers.push("Subject: ", encodedSubject, "\n");
 
-  return Buffer.from(str).toString("base64").replace(/\+/g, '-').replace(/\//g, '_');
+  let bodyStr = "";
+  if (icsData) {
+    headers.push(`Content-Type: multipart/mixed; boundary="${boundary}"\n\n`);
+    bodyStr += `--${boundary}\n`;
+    bodyStr += "Content-Type: text/html; charset=\"UTF-8\"\n";
+    bodyStr += "Content-Transfer-Encoding: 8bit\n\n";
+    bodyStr += message + "\n\n";
+    bodyStr += `--${boundary}\n`;
+    bodyStr += 'Content-Type: text/calendar; charset="UTF-8"; method=REQUEST\n';
+    bodyStr += 'Content-Disposition: attachment; filename="invite.ics"\n';
+    bodyStr += "Content-Transfer-Encoding: 8bit\n\n";
+    bodyStr += icsData + "\n\n";
+    bodyStr += `--${boundary}--\n`;
+  } else {
+    headers.push("Content-Type: text/html; charset=\"UTF-8\"\n");
+    headers.push("Content-Transfer-Encoding: 8bit\n\n");
+    bodyStr = message;
+  }
+  
+  const raw = headers.join('') + bodyStr;
+  return Buffer.from(raw).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 };
 
 // ----------------------------------------------------
@@ -875,6 +888,8 @@ app.post('/api/bookings', async (req, res) => {
       booker_name: bookerName,
       booker_email: bookerEmail,
       slot: slotStr,
+      start_time: startDate.toISOString(),
+      end_time: new Date(endTime).toISOString(),
       status: 'upcoming',
       meet_link: meetLink
     }).select().single();
@@ -917,7 +932,7 @@ app.post('/api/bookings', async (req, res) => {
 // ----------------------------------------------------
 // 4. Send Email Endpoint (Send Now)
 // ----------------------------------------------------
-async function sendEmailForUser(userId, to, subject, htmlBody) {
+async function sendEmailForUser(userId, to, subject, htmlBody, icsData = null) {
   const { data: ownerData, error: userError } = await supabase.from('users').select('email, google_tokens').eq('id', userId).single();
   if (userError || !ownerData || !ownerData.google_tokens) throw new Error("Gmail not connected for this account.");
   
@@ -963,7 +978,7 @@ async function sendEmailForUser(userId, to, subject, htmlBody) {
     console.error("Could not fetch Google profile:", e.message);
   }
   
-  const rawEmail = makeBody(to, actualGmailEmail, subject, htmlBody);
+  const rawEmail = makeBody(to, actualGmailEmail, subject, htmlBody, null, null, icsData);
   const res = await gmail.users.messages.send({ userId: 'me', requestBody: { raw: rawEmail } });
   return res.data;
 }
@@ -1525,10 +1540,33 @@ if (process.env.NODE_ENV !== 'test') {
             bodyTxt = bodyTxt.replace(/\{EVENT_NAME\}/g, eventTitle).replace(/\{ATTENDEE\}/g, bookerName).replace(/\{ORGANIZER\}/g, ownerData.first_name || 'Organizer').replace(/\{EVENT_DATE_ddd, MMM D, YYYY h:mma\}/g, eventDateFull).replace(/\{EVENT_DATE_ddd, h:mma\}/g, eventDateShort);
             
             if (wf.action_type === 'email' && bookerEmail) {
-               const customHtml = `<div style="font-family: sans-serif; padding: 20px; white-space: pre-wrap;">${bodyTxt}</div>`;
-               try {
-                 // Try to send email
-                 await sendEmailForUser(wf.user_id, bookerEmail, subject, customHtml);
+                 const customHtml = `<div style="font-family: sans-serif; padding: 20px; white-space: pre-wrap;">${bodyTxt}</div>`;
+                 
+                 let icsData = null;
+                 if (wf.action_payload && wf.action_payload.includeCalendarEvent && booking.start_time && booking.end_time) {
+                   const dtStamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                   const dtStart = new Date(booking.start_time).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                   const dtEnd = new Date(booking.end_time).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                   
+                   icsData = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//LinksMeet//Calendar//EN
+BEGIN:VEVENT
+UID:${booking.id}@linksmeet.com
+DTSTAMP:${dtStamp}
+DTSTART:${dtStart}
+DTEND:${dtEnd}
+SUMMARY:${eventTitle}
+DESCRIPTION:Scheduled via LinksMeet
+ORGANIZER;CN="${ownerData.first_name || 'Organizer'}":mailto:${ownerData.email}
+ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;RSVP=FALSE:mailto:${bookerEmail}
+END:VEVENT
+END:VCALENDAR`;
+                 }
+
+                 try {
+                   // Try to send email
+                   await sendEmailForUser(wf.user_id, bookerEmail, subject, customHtml, icsData);
                  
                  // Mark as executed
                  executedWfs.push(wf.id);

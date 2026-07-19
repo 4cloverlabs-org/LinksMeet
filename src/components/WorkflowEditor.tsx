@@ -108,6 +108,7 @@ export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTy
   const [body, setBody] = useState(draft.action_payload?.body || defaultBody);
 
   const [applyToAll, setApplyToAll] = useState(draft.action_payload?.applyToAll === true);
+  const [includeCalendarEvent, setIncludeCalendarEvent] = useState(draft.action_payload?.includeCalendarEvent === true);
   const [targetEventTypes, setTargetEventTypes] = useState<string[]>(Array.isArray(draft.action_payload?.targetEventTypes) ? draft.action_payload.targetEventTypes : (draft.action_payload?.targetEventType ? [draft.action_payload.targetEventType] : []));
   const [isEtDropdownOpen, setIsEtDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -160,7 +161,8 @@ export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTy
         subject,
         body,
         applyToAll,
-        targetEventTypes
+        targetEventTypes,
+        includeCalendarEvent
       }
     });
   };
@@ -466,7 +468,7 @@ export default function WorkflowEditor({ initialDraft, onSave, onCancel, eventTy
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0 0', marginTop: '16px', borderTop: '1px solid #E5E7EB' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#374151', cursor: 'pointer' }}>
-                <input type="checkbox" /> Include calendar event
+                <input type="checkbox" checked={includeCalendarEvent} onChange={e => setIncludeCalendarEvent(e.target.checked)} /> Include calendar event
               </label>
             </div>
             
