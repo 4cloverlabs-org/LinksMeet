@@ -145,9 +145,9 @@ const resolveFrontendUrl = (candidateOrigin) => {
   return fallback;
 };
 
-// Encode {uid, origin} into the OAuth state param (base64url JSON).
-const encodeOAuthState = (uid, origin) =>
-  Buffer.from(JSON.stringify({ uid: uid || '', origin: origin || null }), 'utf8').toString('base64url');
+// Encode {uid, origin, returnPath} into the OAuth state param (base64url JSON).
+const encodeOAuthState = (uid, origin, returnPath) =>
+  Buffer.from(JSON.stringify({ uid: uid || '', origin: origin || null, returnPath: returnPath || null }), 'utf8').toString('base64url');
 
 // Decode the state param. Falls back to treating the raw value as a plain
 // uid for backward compatibility with older links already in flight.
@@ -156,12 +156,16 @@ const decodeOAuthState = (rawState) => {
   try {
     const parsed = JSON.parse(Buffer.from(raw, 'base64url').toString('utf8'));
     if (parsed && typeof parsed === 'object' && parsed.uid) {
-      return { uid: String(parsed.uid), origin: parsed.origin ? String(parsed.origin) : null };
+      return { 
+        uid: String(parsed.uid), 
+        origin: parsed.origin ? String(parsed.origin) : null,
+        returnPath: parsed.returnPath ? String(parsed.returnPath) : null
+      };
     }
   } catch (e) {
     // Not encoded — legacy plain-uid state.
   }
-  return { uid: raw, origin: null };
+  return { uid: raw, origin: null, returnPath: null };
 };
 
 // Helper to encode emails for Gmail API
@@ -211,7 +215,7 @@ const makeBody = (to, from, subject, message, replyTo = null, bcc = null, icsDat
 // ----------------------------------------------------
 app.get('/auth/google', (req, res) => {
   console.log("GET /auth/google hit with query:", req.query);
-  const { uid, origin } = req.query; // LinksMeet user ID + initiating origin
+  const { uid, origin, returnPath } = req.query; // LinksMeet user ID + initiating origin + optional return path
   if (!uid) return res.status(400).send("User ID required");
 
   const url = oauth2Client.generateAuthUrl({
@@ -222,8 +226,8 @@ app.get('/auth/google', (req, res) => {
       'https://www.googleapis.com/auth/userinfo.email',
       'https://www.googleapis.com/auth/gmail.send'
     ],
-    // Carry the UID (who to save tokens for) and origin (where to return) in state.
-    state: encodeOAuthState(uid, origin)
+    // Carry the UID (who to save tokens for) and origin/returnPath (where to return) in state.
+    state: encodeOAuthState(uid, origin, returnPath)
   });
   console.log("Redirecting user to Google OAuth URL:", url);
   res.redirect(url);
@@ -232,7 +236,7 @@ app.get('/auth/google', (req, res) => {
 app.get('/auth/google/callback', async (req, res) => {
   console.log("OAuth Callback Hit with query:", req.query);
   const { code, state } = req.query;
-  const { uid, origin } = decodeOAuthState(state);
+  const { uid, origin, returnPath } = decodeOAuthState(state);
   if (!code || !uid) {
     console.log("Missing code or uid in callback");
     return res.status(400).send("Invalid callback");
@@ -267,12 +271,14 @@ app.get('/auth/google/callback', async (req, res) => {
     // Redirect back to the CRM Dashboard on the SAME origin the user started from.
     console.log("Redirecting to dashboard...");
     const frontendUrl = resolveFrontendUrl(origin);
-    res.redirect(`${frontendUrl}/dashboard?google_connected=true`);
+    const redirectTarget = returnPath ? `${frontendUrl}${returnPath}?google_connected=true` : `${frontendUrl}/dashboard?google_connected=true`;
+    res.redirect(redirectTarget);
   } catch (error) {
     console.error("Auth Error in callback:", error);
     if (error.message && error.message.includes('invalid_grant')) {
       const frontendUrl = resolveFrontendUrl(origin);
-      return res.redirect(`${frontendUrl}/dashboard?google_error=invalid_grant`);
+      const redirectTarget = returnPath ? `${frontendUrl}${returnPath}?google_error=invalid_grant` : `${frontendUrl}/dashboard?google_error=invalid_grant`;
+      return res.redirect(redirectTarget);
     }
     res.status(500).send("Authentication failed: " + error.message);
   }

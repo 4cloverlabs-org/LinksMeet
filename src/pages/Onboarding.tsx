@@ -133,7 +133,7 @@ export default function Onboarding() {
   const handleConnectGoogle = () => {
     setDisconnectedLocally(false);
     localStorage.setItem('sm_onboarding_step_3', 'true');
-    window.location.href = `${API_BASE_URL}/auth/google?uid=${userId}&origin=${encodeURIComponent(window.location.origin)}`;
+    window.location.href = `${API_BASE_URL}/auth/google?uid=${userId}&origin=${encodeURIComponent(window.location.origin)}&returnPath=${encodeURIComponent(window.location.pathname)}`;
   };
 
   return (

@@ -920,7 +920,7 @@ export default function DashboardLayout() {
     localStorage.setItem('sm_onboarding_step_3', 'true');
     // Pass our origin so the backend returns us to this exact domain (keeps the session).
     const origin = encodeURIComponent(window.location.origin);
-    window.location.href = `${API_BASE_URL}/auth/google?uid=${uid}&origin=${origin}`;
+    window.location.href = `${API_BASE_URL}/auth/google?uid=${uid}&origin=${origin}&returnPath=${encodeURIComponent(window.location.pathname)}`;
   };
   const handleDisconnectGoogle = async () => {
     localStorage.removeItem('sm_gmail_token');
