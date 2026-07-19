@@ -278,7 +278,7 @@ export default function Onboarding() {
               
               <div className="onb-ui-form">
                 <div className="onb-ui-cal-grid">
-                  <div className={`onb-ui-cal-card ${isGoogleConnected ? 'active' : ''}`} onClick={handleConnectGoogle}>
+                  <div className={`onb-ui-cal-card ${isGoogleConnected ? 'active' : ''}`} onClick={!isGoogleConnected ? handleConnectGoogle : undefined} style={{ cursor: isGoogleConnected ? 'default' : 'pointer' }}>
                     <div className="cal-header">
                       <div className="cal-icon"><Calendar size={20} /></div>
                       <div className="cal-radio"><div className="dot"></div></div>
@@ -287,7 +287,7 @@ export default function Onboarding() {
                     <p>I need my schedule synced.</p>
                   </div>
 
-                  <div className={`onb-ui-cal-card ${isGoogleConnected ? 'active' : ''}`} onClick={handleConnectGoogle}>
+                  <div className={`onb-ui-cal-card ${isGoogleConnected ? 'active' : ''}`} onClick={!isGoogleConnected ? handleConnectGoogle : undefined} style={{ cursor: isGoogleConnected ? 'default' : 'pointer' }}>
                     <div className="cal-header">
                       <div className="cal-icon"><Mail size={20} /></div>
                       <div className="cal-radio"><div className="dot"></div></div>

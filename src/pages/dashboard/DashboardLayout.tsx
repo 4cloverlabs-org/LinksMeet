@@ -466,10 +466,10 @@ export default function DashboardLayout() {
     if (googleConnected && userProfile) {
       const prefs = userProfile.preferences || {};
       const apps = [];
-      if (prefs.installed_google_calendar) {
+      if (prefs.installed_google_calendar !== false) {
         apps.push({ nm: 'Google Calendar', cat: 'Calendar', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg' });
       }
-      if (prefs.installed_google_meet) {
+      if (prefs.installed_google_meet !== false) {
         apps.push({ nm: 'Google Meet', cat: 'Conferencing', logo: 'https://upload.wikimedia.org/wikipedia/commons/9/9b/Google_Meet_icon_%282020%29.svg' });
       }
       setInstalledApps(apps);
