@@ -1,8 +1,20 @@
 # robots.txt for LinksMeet
+# https://linksmeet.com/
+
 User-agent: *
 Allow: /
 
-# Keep the private app + auth surfaces out of the index
+# Ensure search engines index standard marketing/content pages
+Allow: /pricing
+Allow: /about
+Allow: /contact
+Allow: /careers
+Allow: /blog
+Allow: /privacy-policy
+Allow: /terms-of-service
+Allow: /terms-and-conditions
+
+# Keep private application surfaces and authentication out of the index
 Disallow: /dashboard
 Disallow: /onboarding
 Disallow: /admin
@@ -19,4 +31,5 @@ Disallow: /help
 Disallow: /accept-invite
 Disallow: /success
 
+# Specify the Sitemap location for search engines
 Sitemap: https://linksmeet.com/sitemap.xml
