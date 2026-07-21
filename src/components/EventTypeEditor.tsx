@@ -572,21 +572,21 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
 
   // 1. External Link Handler
   const handleOpenPublicLink = () => {
-    const fullUrl = `${window.location.origin}/book/${uid || 'demo'}/${form.slug || '15min'}`;
+    const fullUrl = `${window.location.origin}/book/${uid || 'demo'}/${form.slug || '15min'}?primary=${encodeURIComponent(eventColor)}`;
     window.open(fullUrl, '_blank');
   };
 
   // 2. Copy Link Handler
   const handleCopyLink = () => {
-    const fullUrl = `${window.location.origin}/book/${uid || 'demo'}/${form.slug || '15min'}`;
+    const fullUrl = `${window.location.origin}/book/${uid || 'demo'}/${form.slug || '15min'}?primary=${encodeURIComponent(eventColor)}`;
     navigator.clipboard.writeText(fullUrl);
     triggerToast('Booking link copied to clipboard!');
   };
 
   // 3. Embed Code Generator & Copy
   const embedCodeSnippet = embedTab === 'inline'
-    ? `<iframe src="${window.location.origin}/book/${uid || 'demo'}/${form.slug || '15min'}" width="100%" height="700" frameborder="0" style="border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.06);"></iframe>`
-    : `<script src="https://linksmeet.ai/embed.js"></script>\n<button onclick="LinksMeet.openBooking('${form.slug || '15min'}')" style="background:#7d3bec;color:#fff;padding:12px 24px;border-radius:8px;border:none;font-weight:600;">Book a Meeting</button>`;
+    ? `<iframe src="${window.location.origin}/book/${uid || 'demo'}/${form.slug || '15min'}?primary=${encodeURIComponent(eventColor)}" width="100%" height="700" frameborder="0" style="border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.06);"></iframe>`
+    : `<script src="https://linksmeet.ai/embed.js"></script>\n<button onclick="LinksMeet.openBooking('${form.slug || '15min'}')" style="background:${eventColor};color:#fff;padding:12px 24px;border-radius:8px;border:none;font-weight:600;">Book a Meeting</button>`;
 
   const handleCopyEmbed = () => {
     navigator.clipboard.writeText(embedCodeSnippet);
@@ -1135,7 +1135,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   {/* Column 1: Left Info Pane */}
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                      <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#eff6ff', color: '#7d3bec', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: `${eventColor}15`, color: eventColor, fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {hostInitials}
                       </div>
                       <span style={{ fontSize: '0.88rem', fontWeight: 500, color: '#475569' }}>{hostName}</span>
@@ -1251,7 +1251,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   <button
                     type="button"
                     onClick={() => applyPresetSchedule('business')}
-                    style={{ border: `1px solid ${eventColor}50`, background: '#ffffff', color: eventColor, padding: '8px 16px', borderRadius: '8px', fontWeight: 600, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}
+                    style={{ border: `1px solid #7d3bec50`, background: '#ffffff', color: '#7d3bec', padding: '8px 16px', borderRadius: '8px', fontWeight: 600, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}
                   >
                     <Edit2 size={14} /> Reset to 9am-5pm
                   </button>
@@ -1377,7 +1377,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   {/* Top header inside right card */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#7d3bec', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: eventColor, color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <Calendar size={18} />
                       </div>
                       <span style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a' }}>Preview availability</span>
@@ -1472,12 +1472,12 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                           <button
                             type="button"
                             onClick={() => setTimeFormat('12h')}
-                            style={{ padding: '2px 6px', borderRadius: '4px', border: 'none', background: timeFormat === '12h' ? '#7d3bec' : 'transparent', color: timeFormat === '12h' ? '#ffffff' : '#64748b', fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer' }}
+                            style={{ padding: '2px 6px', borderRadius: '4px', border: 'none', background: timeFormat === '12h' ? eventColor : 'transparent', color: timeFormat === '12h' ? '#ffffff' : '#64748b', fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer' }}
                           >12h</button>
                           <button
                             type="button"
                             onClick={() => setTimeFormat('24h')}
-                            style={{ padding: '2px 6px', borderRadius: '4px', border: 'none', background: timeFormat === '24h' ? '#7d3bec' : 'transparent', color: timeFormat === '24h' ? '#ffffff' : '#64748b', fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer' }}
+                            style={{ padding: '2px 6px', borderRadius: '4px', border: 'none', background: timeFormat === '24h' ? eventColor : 'transparent', color: timeFormat === '24h' ? '#ffffff' : '#64748b', fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer' }}
                           >24h</button>
                         </div>
                       </div>
@@ -1518,7 +1518,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                                 borderRadius: '6px',
                                 fontSize: '0.8rem',
                                 fontWeight: 600,
-                                color: '#7d3bec',
+                                color: eventColor,
                                 cursor: 'pointer',
                                 flexShrink: 0
                               }}
@@ -1598,7 +1598,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   
                   {/* Preview Left: Details */}
                   <div style={{ width: '320px', borderRight: '2px solid #F5F5F5', padding: '32px 24px', background: '#ffffff' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#a855f7', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 700, marginBottom: '20px' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: eventColor, color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 700, marginBottom: '20px' }}>
                       {hostInitials}
                     </div>
                     <div style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600, marginBottom: '4px' }}>{hostName}</div>
@@ -1748,7 +1748,7 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                   
                   {/* Top Confirmation Section */}
                   <div style={{ padding: '40px 32px 32px', textAlign: 'center' }}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#7d3bec', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                    <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: eventColor, color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
                       {confRedirect ? <Link2 size={24} strokeWidth={3} /> : <Check size={24} strokeWidth={3} />}
                     </div>
                     <h2 style={{ margin: '0 0 12px', fontSize: '1.4rem', fontWeight: 700, color: '#0f172a' }}>{confRedirect ? 'Redirecting...' : 'This meeting is scheduled'}</h2>
@@ -1828,8 +1828,8 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
                       {/* Month */}
                       <div onClick={() => toggleLayout('Month')} style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}>
-                        <div style={{ width: '110px', height: '70px', border: allowedLayouts.includes('Month') ? `2px solid ${eventColor}` : '2px solid #F5F5F5', borderRadius: '8px', background: allowedLayouts.includes('Month') ? '#f8fafc' : '#ffffff', padding: '8px', position: 'relative' }}>
-                          <div style={{ width: '20px', height: '4px', background: eventColor, borderRadius: '2px', marginBottom: '8px' }}></div>
+                        <div style={{ width: '110px', height: '70px', border: allowedLayouts.includes('Month') ? `2px solid #7d3bec` : '2px solid #F5F5F5', borderRadius: '8px', background: allowedLayouts.includes('Month') ? '#f8fafc' : '#ffffff', padding: '8px', position: 'relative' }}>
+                          <div style={{ width: '20px', height: '4px', background: '#7d3bec', borderRadius: '2px', marginBottom: '8px' }}></div>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
                              <div style={{ height: '4px', background: '#cbd5e1', borderRadius: '2px' }}></div>
                              <div style={{ height: '4px', background: '#cbd5e1', borderRadius: '2px' }}></div>
@@ -1837,50 +1837,50 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                              <div style={{ height: '4px', background: '#cbd5e1', borderRadius: '2px' }}></div>
                              <div style={{ height: '4px', background: '#cbd5e1', borderRadius: '2px' }}></div>
                              <div style={{ height: '4px', background: '#cbd5e1', borderRadius: '2px' }}></div>
-                             <div style={{ height: '4px', background: eventColor, borderRadius: '2px' }}></div>
+                             <div style={{ height: '4px', background: '#7d3bec', borderRadius: '2px' }}></div>
                              <div style={{ height: '4px', background: '#cbd5e1', borderRadius: '2px' }}></div>
                           </div>
                         </div>
                         <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}>
-                          <input type="checkbox" checked={allowedLayouts.includes('Month')} readOnly style={{ accentColor: eventColor, cursor: 'pointer' }} /> Month {defaultLayout === 'Month' && <span style={{ color: '#64748b', fontWeight: 400 }}>(Default)</span>}
+                          <input type="checkbox" checked={allowedLayouts.includes('Month')} readOnly style={{ accentColor: '#7d3bec', cursor: 'pointer' }} /> Month {defaultLayout === 'Month' && <span style={{ color: '#64748b', fontWeight: 400 }}>(Default)</span>}
                         </label>
                       </div>
 
                       {/* Weekly */}
                       <div onClick={() => toggleLayout('Weekly')} style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}>
-                        <div style={{ width: '110px', height: '70px', border: allowedLayouts.includes('Weekly') ? `2px solid ${eventColor}` : '2px solid #F5F5F5', borderRadius: '8px', background: allowedLayouts.includes('Weekly') ? '#f8fafc' : '#ffffff', padding: '8px', display: 'flex', gap: '6px' }}>
+                        <div style={{ width: '110px', height: '70px', border: allowedLayouts.includes('Weekly') ? `2px solid #7d3bec` : '2px solid #F5F5F5', borderRadius: '8px', background: allowedLayouts.includes('Weekly') ? '#f8fafc' : '#ffffff', padding: '8px', display: 'flex', gap: '6px' }}>
                           <div style={{ flex: 1 }}>
-                            <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: `2px solid ${eventColor}`, marginBottom: '8px' }}></div>
+                            <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: `2px solid #7d3bec`, marginBottom: '8px' }}></div>
                             <div style={{ width: '80%', height: '2px', background: '#cbd5e1', borderRadius: '2px', marginBottom: '2px' }}></div>
                             <div style={{ width: '60%', height: '2px', background: '#cbd5e1', borderRadius: '2px' }}></div>
                           </div>
                           <div style={{ flex: 2, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2px' }}>
                              <div style={{ background: '#f1f5f9', borderRadius: '2px' }}></div>
                              <div style={{ background: '#f1f5f9', borderRadius: '2px' }}></div>
-                             <div style={{ background: eventColor, borderRadius: '2px' }}></div>
+                             <div style={{ background: '#7d3bec', borderRadius: '2px' }}></div>
                           </div>
                         </div>
                         <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}>
-                          <input type="checkbox" checked={allowedLayouts.includes('Weekly')} readOnly style={{ accentColor: eventColor, cursor: 'pointer' }} /> Weekly {defaultLayout === 'Weekly' && <span style={{ color: '#64748b', fontWeight: 400 }}>(Default)</span>}
+                          <input type="checkbox" checked={allowedLayouts.includes('Weekly')} readOnly style={{ accentColor: '#7d3bec', cursor: 'pointer' }} /> Weekly {defaultLayout === 'Weekly' && <span style={{ color: '#64748b', fontWeight: 400 }}>(Default)</span>}
                         </label>
                       </div>
 
                       {/* Column */}
                       <div onClick={() => toggleLayout('Column')} style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}>
-                        <div style={{ width: '110px', height: '70px', border: allowedLayouts.includes('Column') ? `2px solid ${eventColor}` : '2px solid #F5F5F5', borderRadius: '8px', background: allowedLayouts.includes('Column') ? '#f8fafc' : '#ffffff', padding: '8px', display: 'flex', gap: '8px' }}>
+                        <div style={{ width: '110px', height: '70px', border: allowedLayouts.includes('Column') ? `2px solid #7d3bec` : '2px solid #F5F5F5', borderRadius: '8px', background: allowedLayouts.includes('Column') ? '#f8fafc' : '#ffffff', padding: '8px', display: 'flex', gap: '8px' }}>
                           <div style={{ flex: 1 }}>
-                            <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: `2px solid ${eventColor}`, marginBottom: '8px' }}></div>
+                            <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: `2px solid #7d3bec`, marginBottom: '8px' }}></div>
                             <div style={{ width: '80%', height: '2px', background: '#cbd5e1', borderRadius: '2px', marginBottom: '2px' }}></div>
                             <div style={{ width: '60%', height: '2px', background: '#cbd5e1', borderRadius: '2px' }}></div>
                           </div>
                           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                            <div style={{ height: '4px', background: eventColor, borderRadius: '2px' }}></div>
-                            <div style={{ height: '4px', background: eventColor, borderRadius: '2px' }}></div>
-                            <div style={{ height: '4px', background: eventColor, borderRadius: '2px' }}></div>
+                            <div style={{ height: '4px', background: '#7d3bec', borderRadius: '2px' }}></div>
+                            <div style={{ height: '4px', background: '#7d3bec', borderRadius: '2px' }}></div>
+                            <div style={{ height: '4px', background: '#7d3bec', borderRadius: '2px' }}></div>
                           </div>
                         </div>
                         <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}>
-                          <input type="checkbox" checked={allowedLayouts.includes('Column')} readOnly style={{ accentColor: eventColor, cursor: 'pointer' }} /> Column {defaultLayout === 'Column' && <span style={{ color: '#64748b', fontWeight: 400 }}>(Default)</span>}
+                          <input type="checkbox" checked={allowedLayouts.includes('Column')} readOnly style={{ accentColor: '#7d3bec', cursor: 'pointer' }} /> Column {defaultLayout === 'Column' && <span style={{ color: '#64748b', fontWeight: 400 }}>(Default)</span>}
                         </label>
                       </div>
                     </div>
@@ -1893,13 +1893,13 @@ export default function EventTypeEditor({ uid, initialData, onClose, onSaved }: 
                     <h3 style={{ margin: '0 0 12px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Default view</h3>
                     
                     <div style={{ display: 'inline-flex', background: '#ffffff', border: '2px solid #F5F5F5', borderRadius: '8px', padding: '4px', marginBottom: '16px' }}>
-                      {allowedLayouts.includes('Month') && <button type="button" onClick={() => { setDefaultLayout('Month'); triggerToast('Set default view to Month'); }} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: defaultLayout === 'Month' ? `${eventColor}1a` : 'transparent', color: defaultLayout === 'Month' ? eventColor : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Month</button>}
-                      {allowedLayouts.includes('Weekly') && <button type="button" onClick={() => { setDefaultLayout('Weekly'); triggerToast('Set default view to Weekly'); }} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: defaultLayout === 'Weekly' ? `${eventColor}1a` : 'transparent', color: defaultLayout === 'Weekly' ? eventColor : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Weekly</button>}
-                      {allowedLayouts.includes('Column') && <button type="button" onClick={() => { setDefaultLayout('Column'); triggerToast('Set default view to Column'); }} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: defaultLayout === 'Column' ? `${eventColor}1a` : 'transparent', color: defaultLayout === 'Column' ? eventColor : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Column</button>}
+                      {allowedLayouts.includes('Month') && <button type="button" onClick={() => { setDefaultLayout('Month'); triggerToast('Set default view to Month'); }} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: defaultLayout === 'Month' ? `#7d3bec1a` : 'transparent', color: defaultLayout === 'Month' ? '#7d3bec' : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Month</button>}
+                      {allowedLayouts.includes('Weekly') && <button type="button" onClick={() => { setDefaultLayout('Weekly'); triggerToast('Set default view to Weekly'); }} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: defaultLayout === 'Weekly' ? `#7d3bec1a` : 'transparent', color: defaultLayout === 'Weekly' ? '#7d3bec' : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Weekly</button>}
+                      {allowedLayouts.includes('Column') && <button type="button" onClick={() => { setDefaultLayout('Column'); triggerToast('Set default view to Column'); }} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', background: defaultLayout === 'Column' ? `#7d3bec1a` : 'transparent', color: defaultLayout === 'Column' ? '#7d3bec' : '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Column</button>}
                     </div>
 
                     <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>
-                      You can manage this for all your event types in Settings -&gt; Appearance or <button type="button" onClick={() => triggerToast('Opening Override rules modal...')} style={{ background: 'none', border: 'none', color: eventColor, textDecoration:'none', fontWeight: 500, cursor: 'pointer', padding: 0 }}>Override</button> for this event only.
+                      You can manage this for all your event types in Settings -&gt; Appearance or <button type="button" onClick={() => triggerToast('Opening Override rules modal...')} style={{ background: 'none', border: 'none', color: '#7d3bec', textDecoration:'none', fontWeight: 500, cursor: 'pointer', padding: 0 }}>Override</button> for this event only.
                     </p>
                   </div>
 

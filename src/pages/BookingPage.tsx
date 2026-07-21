@@ -76,7 +76,9 @@ export default function BookingPage() {
   const [hostTimezone, setHostTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [eventType, setEventType] = useState<EventType | null>(null);
   const interfaceLang = eventType?.interfaceLang || eventType?.interface_lang || 'English';
-  const eventColor = eventType?.eventColor || eventType?.event_color || '#7d3bec';
+  const searchParams = new URLSearchParams(window.location.search);
+  const paramPrimary = searchParams.get('primary');
+  const eventColor = paramPrimary || eventType?.eventColor || eventType?.event_color || '#7d3bec';
   
   const [step, setStep] = useState<1 | 2>(1);
   const now = new Date();
@@ -99,10 +101,8 @@ export default function BookingPage() {
   // const [ownerHasGoogle, setOwnerHasGoogle] = useState(false);
   const [meetLink, setMeetLink] = useState('');
 
-  const searchParams = new URLSearchParams(window.location.search);
   const paramBg = searchParams.get('bg');
   const paramText = searchParams.get('text');
-  const paramPrimary = searchParams.get('primary');
 
   const customStyles = {
     '--w-bg': paramBg || (isEmbedded ? 'transparent' : '#fafafb'),
@@ -425,7 +425,7 @@ export default function BookingPage() {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                   <span style={{ fontWeight: 500, color: '#0f172a' }}>{hostName}</span>
-                  <span style={{ background: '#eff6ff', color: '#7d3bec', padding: '2px 8px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, marginLeft: '8px' }}>Host</span>
+                  <span style={{ background: `${eventColor}15`, color: eventColor, padding: '2px 8px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, marginLeft: '8px' }}>Host</span>
                 </div>
                 <div style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '2px' }}>lead@example.com</div>
 
@@ -439,7 +439,7 @@ export default function BookingPage() {
                 <span style={{ color: '#0f172a', fontWeight: 500 }}>{t(eventType?.location || 'Google Meet', interfaceLang)}</span>
                 <ExternalLink
                   size={16}
-                  color="#7d3bec"
+                  color={eventColor}
                   style={{ marginLeft: '8px', cursor: 'pointer' }}
                   onClick={() => { if (meetLink) window.open(meetLink, '_blank'); }}
                 />
@@ -500,14 +500,14 @@ export default function BookingPage() {
             Need to make a change?{' '}
             <span
               onClick={() => { setBookingStatus('idle'); setStep(1); }}
-              style={{ color: '#7d3bec', textDecoration: 'underline', textUnderlineOffset: '4px', textDecorationStyle: 'dotted', cursor: 'pointer', fontWeight: 500 }}
+              style={{ color: eventColor, textDecoration: 'underline', textUnderlineOffset: '4px', textDecorationStyle: 'dotted', cursor: 'pointer', fontWeight: 500 }}
             >
               Reschedule
             </span>
             {' '}or{' '}
             <span
               onClick={() => window.location.reload()}
-              style={{ color: '#7d3bec', textDecoration: 'underline', textUnderlineOffset: '4px', textDecorationStyle: 'dotted', cursor: 'pointer', fontWeight: 500 }}
+              style={{ color: eventColor, textDecoration: 'underline', textUnderlineOffset: '4px', textDecorationStyle: 'dotted', cursor: 'pointer', fontWeight: 500 }}
             >
               Cancel
             </span>
@@ -599,7 +599,7 @@ export default function BookingPage() {
           {/* Column 1: Left Info Pane */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
-              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#eff6ff', color: '#7d3bec', fontWeight: 700, fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: `${eventColor}15`, color: eventColor, fontWeight: 700, fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {hostName.substring(0, 2).toUpperCase()}
               </div>
               <span style={{ fontSize: '0.92rem', fontWeight: 500, color: '#475569' }}>{hostName}</span>
@@ -675,7 +675,7 @@ export default function BookingPage() {
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', fontSize: '0.72rem', fontWeight: 700, marginBottom: '10px' }}>
-                    <div style={{ color: '#7d3bec' }}>SUN</div>
+                    <div style={{ color: eventColor }}>SUN</div>
                     <div style={{ color: '#64748b' }}>MON</div>
                     <div style={{ color: '#64748b' }}>TUE</div>
                     <div style={{ color: '#64748b' }}>WED</div>
@@ -703,7 +703,7 @@ export default function BookingPage() {
                             height: '30px',
                             margin: '0 auto',
                             borderRadius: '50%',
-                            background: isSel ? '#7d3bec' : 'transparent',
+                            background: isSel ? eventColor : 'transparent',
                             color: isSel ? '#ffffff' : '#0f172a',
                             display: 'flex',
                             flexDirection: 'column',
@@ -733,9 +733,9 @@ export default function BookingPage() {
                           onClick={() => setSelectedDayTab(dayNum)}
                           style={{
                             padding: '8px 0',
-                            background: activeDay ? '#7d3bec' : '#ffffff',
-                            color: activeDay ? '#ffffff' : '#7d3bec',
-                            border: activeDay ? 'none' : '1px solid #bfdbfe',
+                            background: activeDay ? eventColor : '#ffffff',
+                            color: activeDay ? '#ffffff' : eventColor,
+                            border: activeDay ? 'none' : `1px solid ${eventColor}40`,
                             borderRadius: '8px',
                             fontWeight: 700,
                             fontSize: '0.85rem',
@@ -759,8 +759,8 @@ export default function BookingPage() {
                           onClick={() => setSelectedTime(t)}
                           style={{
                             padding: '8px 2px',
-                            background: activeTime ? '#7d3bec' : '#eff6ff',
-                            color: activeTime ? '#ffffff' : '#7d3bec',
+                            background: activeTime ? eventColor : `${eventColor}15`,
+                            color: activeTime ? '#ffffff' : eventColor,
                             border: 'none',
                             borderRadius: '8px',
                             fontWeight: 600,
@@ -787,12 +787,12 @@ export default function BookingPage() {
                       <button
                         type="button"
                         onClick={() => setTimeFormat('12h')}
-                        style={{ padding: '4px 10px', borderRadius: '6px', border: 'none', background: timeFormat === '12h' ? '#ffffff' : 'transparent', color: timeFormat === '12h' ? '#7d3bec' : '#64748b', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', boxShadow: timeFormat === '12h' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none' }}
+                        style={{ padding: '4px 10px', borderRadius: '6px', border: 'none', background: timeFormat === '12h' ? '#ffffff' : 'transparent', color: timeFormat === '12h' ? eventColor : '#64748b', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', boxShadow: timeFormat === '12h' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none' }}
                       >12h</button>
                       <button
                         type="button"
                         onClick={() => setTimeFormat('24h')}
-                        style={{ padding: '4px 10px', borderRadius: '6px', border: 'none', background: timeFormat === '24h' ? '#ffffff' : 'transparent', color: timeFormat === '24h' ? '#7d3bec' : '#64748b', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', boxShadow: timeFormat === '24h' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none' }}
+                        style={{ padding: '4px 10px', borderRadius: '6px', border: 'none', background: timeFormat === '24h' ? '#ffffff' : 'transparent', color: timeFormat === '24h' ? eventColor : '#64748b', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', boxShadow: timeFormat === '24h' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none' }}
                       >24h</button>
                     </div>
                   </div>
@@ -811,14 +811,14 @@ export default function BookingPage() {
                             alignItems: 'center',
                             gap: '12px',
                             padding: '14px 16px',
-                            background: selectedTime === slot.time12 ? '#eff6ff' : '#ffffff',
-                            border: selectedTime === slot.time12 ? '1px solid #7d3bec' : '1px solid #e2e8f0',
+                            background: selectedTime === slot.time12 ? `${eventColor}15` : '#ffffff',
+                            border: selectedTime === slot.time12 ? `1px solid ${eventColor}` : '1px solid #e2e8f0',
                             borderRadius: '10px',
                             cursor: 'pointer',
                             transition: 'all 0.15s ease'
                           }}
                         >
-                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#7d3bec', flexShrink: 0 }} />
+                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: eventColor, flexShrink: 0 }} />
                           <span style={{ fontSize: '0.92rem', fontWeight: 600, color: '#0f172a' }}>{timeStr}</span>
                         </div>
                         {selectedTime === slot.time12 && (
@@ -828,7 +828,7 @@ export default function BookingPage() {
                               padding: '0 20px',
                               borderRadius: '10px',
                               border: 'none',
-                              background: '#7d3bec',
+                              background: eventColor,
                               color: '#ffffff',
                               fontWeight: 700,
                               fontSize: '0.92rem',
@@ -1038,7 +1038,7 @@ export default function BookingPage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', fontSize: '0.9rem', color: '#0f172a' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                <CalendarIcon size={20} color="#7d3bec" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <CalendarIcon size={20} color={eventColor} style={{ flexShrink: 0, marginTop: '2px' }} />
                 <div style={{ lineHeight: 1.4, fontWeight: 500 }}>
                   <div>{new Date(currentYear, currentMonth, selectedDate).toLocaleDateString(getLocale(interfaceLang), { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</div>
                   <div style={{ color: '#475569', fontSize: '0.85rem' }}>{selectedTime || '4:45 pm'} - {calcEndTime(selectedTime || '4:45pm', eventType?.dur || '15m')}</div>
@@ -1046,15 +1046,15 @@ export default function BookingPage() {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 500 }}>
-                <Clock size={20} color="#7d3bec" style={{ flexShrink: 0 }} /> {parseInt(eventType?.dur || '15')}{t('m', interfaceLang)}
+                <Clock size={20} color={eventColor} style={{ flexShrink: 0 }} /> {parseInt(eventType?.dur || '15')}{t('m', interfaceLang)}
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 500 }}>
-                <Video size={20} color="#7d3bec" style={{ flexShrink: 0 }} /> {t(eventType?.location || 'Google Meet', interfaceLang)}
+                <Video size={20} color={eventColor} style={{ flexShrink: 0 }} /> {t(eventType?.location || 'Google Meet', interfaceLang)}
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 500 }}>
-                <Globe size={20} color="#7d3bec" style={{ flexShrink: 0 }} /> Asia/Calcutta
+                <Globe size={20} color={eventColor} style={{ flexShrink: 0 }} /> Asia/Calcutta
               </div>
             </div>
           </div>
@@ -1102,7 +1102,7 @@ export default function BookingPage() {
                   <button
                     type="button"
                     onClick={() => alert('Add guests feature coming soon')}
-                    style={{ background: 'none', border: 'none', color: '#7d3bec', fontWeight: 600, fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: 0 }}
+                    style={{ background: 'none', border: 'none', color: eventColor, fontWeight: 600, fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: 0 }}
                   >
                     <UserPlus size={18} /> Add guests
                   </button>
@@ -1110,7 +1110,7 @@ export default function BookingPage() {
               )}
 
               <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '8px 0 0', lineHeight: 1.5 }}>
-                By proceeding, you agree to LinksMeet's <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" style={{ color: '#7d3bec', fontWeight: 600, textDecoration: 'underline' }}>Terms of Service</a>, <a href="/terms-and-conditions" target="_blank" rel="noopener noreferrer" style={{ color: '#7d3bec', fontWeight: 600, textDecoration: 'underline' }}>Terms & Conditions</a> and <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color: '#7d3bec', fontWeight: 600, textDecoration: 'underline' }}>Privacy Policy</a>.
+                By proceeding, you agree to LinksMeet's <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" style={{ color: eventColor, fontWeight: 600, textDecoration: 'underline' }}>Terms of Service</a>, <a href="/terms-and-conditions" target="_blank" rel="noopener noreferrer" style={{ color: eventColor, fontWeight: 600, textDecoration: 'underline' }}>Terms & Conditions</a> and <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color: eventColor, fontWeight: 600, textDecoration: 'underline' }}>Privacy Policy</a>.
               </p>
               
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '20px', marginTop: '16px' }}>
@@ -1122,7 +1122,7 @@ export default function BookingPage() {
                 <button
                   type="submit"
                   disabled={bookingStatus === 'booking'}
-                  style={{ padding: '12px 32px', background: '#7d3bec', color: '#ffffff', border: 'none', borderRadius: '12px', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(125, 59, 236, 0.25)' }}
+                  style={{ padding: '12px 32px', background: eventColor, color: '#ffffff', border: 'none', borderRadius: '12px', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 4px 14px ${eventColor}40` }}
                 >
                   {bookingStatus === 'booking' ? <Loader2 size={18} className="crm-spin-ic" /> : t('Confirm', interfaceLang)}
                 </button>
