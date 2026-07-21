@@ -1770,7 +1770,7 @@ export default function DashboardLayout() {
           <div className="crm-modal" style={{ background: '#FFFFFF', borderRadius: '16px', width: '100%', maxWidth: '440px', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '24px' }}>{manageApp.logo}</span>
+                <img src={manageApp.logo} alt={manageApp.nm} style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
                 <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#111827' }}>Manage {manageApp.nm}</h3>
               </div>
               <button onClick={() => setManageApp(null)} style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer' }}><X size={20} /></button>
@@ -1779,16 +1779,6 @@ export default function DashboardLayout() {
               This integration is currently active and connected to your LinksMeet workspace. You can test the connection or disconnect it below.
             </p>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-              <button 
-                onClick={() => {
-                  setToast(`Connection test for ${manageApp.nm} passed! ✅`);
-                  setTimeout(() => setToast(null), 3000);
-                  setManageApp(null);
-                }} 
-                style={{ background: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', borderRadius: '8px', padding: '8px 16px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}
-              >
-                Test Connection
-              </button>
               <button 
                 onClick={confirmDisconnectApp} 
                 style={{ background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA', borderRadius: '8px', padding: '8px 16px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}
