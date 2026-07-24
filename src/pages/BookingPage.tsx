@@ -150,7 +150,7 @@ export default function BookingPage() {
       if (uid && slug) {
         try {
           const { data: etData } = await supabase.from('event_types')
-            .select('*')
+            .select('id, title, duration, dur, description, desc, slug, active, redirect_url, reply_to_email, allowed_layouts, default_layout, form_settings, location, event_color')
             .eq('user_id', uid)
             .eq('slug', slug)
             .limit(1)

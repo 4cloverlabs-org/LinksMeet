@@ -43,7 +43,7 @@ export default function Onboarding() {
           const googleAvatar = meta.avatar_url || meta.picture || meta.avatar || '';
           const googleName = meta.full_name || meta.name || '';
           
-          const { data: profile } = await supabase.from('users').select('*').eq('id', user.id).single();
+          const { data: profile } = await supabase.from('users').select('first_name, full_name, name, username, bio, website_url, brand_description, profile_picture, avatar_url, google_tokens').eq('id', user.id).single();
           
           setName(profile?.first_name || profile?.full_name || profile?.name || googleName);
           setUsername(profile?.username || (authEmail ? authEmail.split('@')[0].replace(/[^a-zA-Z0-9_-]/g, '') : ''));

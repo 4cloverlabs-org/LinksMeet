@@ -565,7 +565,7 @@ export default function DashboardLayout() {
 
   useEffect(() => {
     if (activeWorkspaceId && user && activeWorkspaceId !== user.id) {
-      supabase.from('users').select('*').eq('id', activeWorkspaceId).single().then(({ data }) => {
+      supabase.from('users').select('id, first_name, email, profile_picture, avatar_url, full_name, name').eq('id', activeWorkspaceId).single().then(({ data }) => {
         setWorkspaceOwnerProfile(data);
       });
     } else {
@@ -576,7 +576,7 @@ export default function DashboardLayout() {
   useEffect(() => {
     if (!uid) return;
     const fetchTeam = async () => {
-      const { data, error } = await supabase.from('team_members').select('*').eq('user_id', uid).order('created_at', { ascending: true });
+      const { data, error } = await supabase.from('team_members').select('id, email, role, name, status, avatar_url, user_id, created_at').eq('user_id', uid).order('created_at', { ascending: true }).limit(50);
       if (!error && data) {
         setTeamMembers(data);
       }
@@ -759,7 +759,7 @@ export default function DashboardLayout() {
         // 1. Query Supabase directly first (instant & bulletproof across new logins without waiting for Express headers!)
         const { data: supaProfile, error: supaErr } = await supabase
           .from('users')
-          .select('*')
+          .select('id, first_name, full_name, name, email, profile_picture, avatar_url, onboarding_completed, google_tokens')
           .eq('id', uid)
           .single();
 
@@ -1189,7 +1189,7 @@ export default function DashboardLayout() {
   
   const handleAddEventType = async (uid: string, data: any) => {
     await addEventType(uid, data);
-    const { data: fresh } = await supabase.from('event_types').select('*').eq('user_id', uid).order('created_at', { ascending: false });
+    const { data: fresh } = await supabase.from('event_types').select('id, title, duration, dur, description, desc, slug, active, redirect_url, reply_to_email, allowed_layouts, default_layout, form_settings, location, created_at').eq('user_id', uid).order('created_at', { ascending: false }).limit(50);
     if (fresh) {
       setEventTypes(fresh.map(d => ({
         id: d.id,
@@ -1542,7 +1542,7 @@ export default function DashboardLayout() {
             initialData={editingEvent === 'new' ? null : editingEvent}
             onClose={() => setEditingEvent(null)}
             onSaved={async (savedId?: string) => {
-              const { data: fresh } = await supabase.from('event_types').select('*').eq('user_id', uid).order('created_at', { ascending: false });
+              const { data: fresh } = await supabase.from('event_types').select('id, title, duration, dur, description, desc, slug, active, redirect_url, reply_to_email, allowed_layouts, default_layout, form_settings, location, created_at').eq('user_id', uid).order('created_at', { ascending: false }).limit(50);
               if (fresh && fresh.length > 0) {
                 setEventTypes(fresh.map(d => ({
                   id: d.id,

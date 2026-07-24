@@ -27,9 +27,9 @@ export interface Deal {
 
 // ---- Contacts ----
 export async function listContacts(uid: string): Promise<Contact[]> {
-  const { data, error } = await supabase.from('contacts').select('*').eq('user_id', uid).order('created_at', { ascending: false });
+  const { data, error } = await supabase.from('contacts').select('id, name, company, email, phone, status, source, next_follow_up, created_at').eq('user_id', uid).order('created_at', { ascending: false }).limit(100);
   if (error) throw error;
-  return data.map(d => ({ ...d, createdAt: new Date(d.created_at).getTime() }));
+  return data.map(d => ({ ...d, nextFollowUp: d.next_follow_up, createdAt: new Date(d.created_at).getTime() }));
 }
 export function listenContacts(uid: string, cb: (data: Contact[]) => void) {
   listContacts(uid).then(cb).catch(console.error);
@@ -95,7 +95,7 @@ export interface EventType {
 }
 export async function listEventTypes(uid: string): Promise<EventType[]> {
   try {
-    const { data, error } = await supabase.from('event_types').select('*').eq('user_id', uid).order('created_at', { ascending: true });
+    const { data, error } = await supabase.from('event_types').select('id, title, duration, dur, description, desc, slug, active, redirect_url, reply_to_email, allowed_layouts, default_layout, form_settings, location, created_at').eq('user_id', uid).order('created_at', { ascending: true }).limit(100);
     if (error) throw error;
     if (data && data.length > 0) {
       return data.map(d => ({
@@ -252,7 +252,7 @@ export interface Booking {
 }
 export async function listBookings(uid: string): Promise<Booking[]> {
   try {
-    const { data, error } = await supabase.from('bookings').select('*').eq('user_id', uid).order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('bookings').select('id, booker_name, booker_email, slot, event_title, status, meet_link, created_at').eq('user_id', uid).order('created_at', { ascending: false }).limit(100);
     if (error) throw error;
     if (data && data.length > 0) {
       return data.map(d => {
