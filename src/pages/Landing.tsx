@@ -112,6 +112,23 @@ const NotionLogo = () => (
 const ZapierLogo = () => (
   <img src="https://www.vectorlogo.zone/logos/zapier/zapier-icon.svg" width="36" height="36" alt="Zapier" />
 );
+const TeamsLogo = () => (
+  <img src="https://upload.wikimedia.org/wikipedia/commons/c/c9/Microsoft_Office_Teams_%282018%E2%80%93present%29.svg" width="36" height="36" alt="Microsoft Teams" />
+);
+const TrelloLogo = () => (
+  <img src="https://upload.wikimedia.org/wikipedia/en/8/8c/Trello_logo.svg" width="36" height="36" alt="Trello" />
+);
+const LoomLogo = () => (
+  <svg viewBox="0 0 24 24" width="36" height="36">
+    <path fill="#7d3bec" d="M12 2.5l2.4 2.4 3.4-.9.9 3.4 2.4 2.4-2.4 2.4-.9 3.4-3.4-.9L12 21.5l-2.4-2.4-3.4.9-.9-3.4-2.4-2.4 2.4-2.4.9-3.4 3.4.9L12 2.5z"/>
+  </svg>
+);
+const StripedLogo = () => (
+  <svg viewBox="0 0 24 24" width="36" height="36">
+    <rect width="24" height="24" rx="6" fill="#3b82f6"/>
+    <path d="M-2 10L14 -6M-2 20L22 -4M4 26L26 4M14 26L30 10" stroke="white" strokeWidth="2" opacity="0.8"/>
+  </svg>
+);
 const GoogleLogo = () => (
   <svg viewBox="0 0 48 48" width="36" height="36" aria-label="Google">
     <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.4 29.3 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.4 1.1 7.3 2.8l5.7-5.7C33.6 6.2 29.1 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.3-.4-3.5z" />
@@ -606,27 +623,28 @@ export default function Landing() {
             </FadeUp>
 
             <FadeUp delay={0.1}>
-              <div className="linksmeet-orbit-wrapper">
-                <div className="linksmeet-orbit-center">
-                  <div className="linksmeet-orbit-pulse"></div>
-                  <img src="/LinksMeet-without-bg.png" alt="LinksMeet" className="linksmeet-orbit-logo" />
+              <div className="linksmeet-integrations-marquee">
+                <div className="marquee-row marquee-left">
+                  {[...Array(4)].map((_, i) => (
+                    <React.Fragment key={`row1-${i}`}>
+                      <div className="integration-icon-box"><GoogleLogo /></div>
+                      <div className="integration-icon-box"><GmailLogo /></div>
+                      <div className="integration-icon-box"><OutlookLogo /></div>
+                      <div className="integration-icon-box"><SalesforceLogo /></div>
+                      <div className="integration-icon-box"><NotionLogo /></div>
+                    </React.Fragment>
+                  ))}
                 </div>
-
-                <div className="linksmeet-orbit linksmeet-orbit-inner">
-                  <div className="linksmeet-orbit-node" style={{ top: '0%', left: '50%' }}><SalesforceLogo /></div>
-                  <div className="linksmeet-orbit-node" style={{ top: '100%', left: '50%' }}><HubspotLogo /></div>
-                </div>
-
-                <div className="linksmeet-orbit linksmeet-orbit-middle">
-                  <div className="linksmeet-orbit-node" style={{ top: '50%', left: '0%' }}><GmailLogo /></div>
-                  <div className="linksmeet-orbit-node" style={{ top: '50%', left: '100%' }}><OutlookLogo /></div>
-                  <div className="linksmeet-orbit-node" style={{ top: '15%', left: '85%' }}><SlackLogo /></div>
-                </div>
-
-                <div className="linksmeet-orbit linksmeet-orbit-outer">
-                  <div className="linksmeet-orbit-node" style={{ top: '85%', left: '15%' }}><ZapierLogo /></div>
-                  <div className="linksmeet-orbit-node" style={{ top: '15%', left: '15%' }}><NotionLogo /></div>
-                  <div className="linksmeet-orbit-node" style={{ top: '85%', left: '85%' }}><GoogleLogo /></div>
+                <div className="marquee-row marquee-right" style={{ marginTop: '24px' }}>
+                  {[...Array(4)].map((_, i) => (
+                    <React.Fragment key={`row2-${i}`}>
+                      <div className="integration-icon-box"><HubspotLogo /></div>
+                      <div className="integration-icon-box"><NotionLogo /></div>
+                      <div className="integration-icon-box"><SlackLogo /></div>
+                      <div className="integration-icon-box"><ZapierLogo /></div>
+                      <div className="integration-icon-box"><GoogleLogo /></div>
+                    </React.Fragment>
+                  ))}
                 </div>
               </div>
             </FadeUp>

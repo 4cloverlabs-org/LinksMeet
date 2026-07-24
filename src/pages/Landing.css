@@ -1119,10 +1119,6 @@
   margin: 0 auto;
 }
 
-.linksmeet-operations-container {
-  /* Inherits standard .linksmeet-container 1120px max-width */
-}
-
 .linksmeet-operations-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1458,127 +1454,83 @@
 }
 
 /* =================================================================
-   Integrations (Concentric Orbit)
+   Integrations Marquee
    ================================================================= */
-.linksmeet-orbit-wrapper {
-  position: relative;
+.linksmeet-integrations-marquee {
   width: 100%;
-  max-width: 800px;
-  height: 600px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+  mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
 }
 
-.linksmeet-orbit-center {
-  position: absolute;
-  width: 100px;
-  height: 100px;
-  background: #fff;
-  border-radius: 50%;
+.marquee-row {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  width: max-content;
+  margin: 0 auto;
+}
+
+.marquee-left {
+  animation: scrollMarqueeLeft 25s linear infinite;
+}
+
+.marquee-right {
+  animation: scrollMarqueeRight 25s linear infinite;
+}
+
+@keyframes scrollMarqueeLeft {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes scrollMarqueeRight {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+
+.integration-icon-box {
+  width: 90px;
+  height: 90px;
+  background: #f7f7f7;
+  border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10;
-  box-shadow: 0 10px 30px rgba(109, 40, 217, 0.2);
-  border: 1px solid rgba(109, 40, 217, 0.1);
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
 }
 
-.linksmeet-orbit-logo {
-  width: 60px;
-  height: 60px;
-  object-fit: contain;
-  z-index: 2;
+.integration-icon-box:hover {
+  transform: translateY(-2px);
+  background: #f0f0f0;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.04);
 }
 
-.linksmeet-orbit-pulse {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: rgba(109, 40, 217, 0.2);
-  animation: orbitPulse 3s infinite;
-  z-index: 1;
-}
-
-@keyframes orbitPulse {
-  0% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
-  100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
-}
-
-.linksmeet-orbit {
-  position: absolute;
-  border-radius: 50%;
-  border: 1px dashed rgba(109, 40, 217, 0.3);
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  animation: spin linear infinite;
-}
-
-.linksmeet-orbit-inner {
-  width: 250px;
-  height: 250px;
-  animation-duration: 20s;
-}
-
-.linksmeet-orbit-middle {
-  width: 400px;
-  height: 400px;
-  animation-duration: 35s;
-  animation-direction: reverse;
-}
-
-.linksmeet-orbit-outer {
-  width: 550px;
-  height: 550px;
-  animation-duration: 50s;
-}
-
-@keyframes spin {
-  0% { transform: translate(-50%, -50%) rotate(0deg); }
-  100% { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
-.linksmeet-orbit-node {
-  position: absolute;
-  width: 56px;
-  height: 56px;
-  background: #fff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  border: 1px solid #f1f5f9;
-  transform: translate(-50%, -50%);
-  animation: counterSpin linear infinite;
-}
-
-.linksmeet-orbit-inner .linksmeet-orbit-node { animation-duration: 20s; }
-.linksmeet-orbit-middle .linksmeet-orbit-node { animation-duration: 35s; animation-direction: reverse; }
-.linksmeet-orbit-outer .linksmeet-orbit-node { animation-duration: 50s; }
-
-@keyframes counterSpin {
-  0% { transform: translate(-50%, -50%) rotate(0deg); }
-  100% { transform: translate(-50%, -50%) rotate(-360deg); }
-}
-
-.linksmeet-orbit-node svg {
-  width: 28px;
-  height: 28px;
+.integration-icon-box img,
+.integration-icon-box svg {
+  width: 44px;
+  height: 44px;
 }
 
 @media (max-width: 768px) {
-  .linksmeet-orbit-wrapper {
-    transform: scale(0.6);
-    margin-top: -100px;
-    margin-bottom: -100px;
+  .integration-icon-box {
+    width: 70px;
+    height: 70px;
+    border-radius: 16px;
+  }
+  .integration-icon-box img,
+  .integration-icon-box svg {
+    width: 32px;
+    height: 32px;
+  }
+  .marquee-row {
+    gap: 16px;
   }
 }
 
