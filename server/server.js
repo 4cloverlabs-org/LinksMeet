@@ -3,10 +3,20 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const { google } = require('googleapis');
 const { createClient } = require('@supabase/supabase-js');
+const rateLimit = require('express-rate-limit');
 
 dotenv.config();
 
 const app = express();
+
+// Set up rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(limiter);
 
 app.use(cors({
   origin: '*' // Allow all origins for the embedded widget
@@ -16,34 +26,6 @@ app.use(express.json({ limit: '100kb' }));
 // Health check endpoint
 app.get('/', (req, res) => {
   res.send('LinksMeet API Server is running');
-});
-
-// Basic web scraper for AI metadata analysis
-app.get('/api/scrape', async (req, res) => {
-  const { url } = req.query;
-  if (!url) return res.status(400).json({ error: 'URL is required' });
-  try {
-    const formattedUrl = url.startsWith('http') ? url : `https://${url}`;
-    const response = await fetch(formattedUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
-      signal: AbortSignal.timeout(5000)
-    });
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    const html = await response.text();
-    const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-    const bodyHtml = bodyMatch ? bodyMatch[1] : html;
-    let text = bodyHtml
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
-      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-    if (text.length > 5000) text = text.substring(0, 5000);
-    res.json({ text });
-  } catch (error) {
-    console.error("Scraping error:", error);
-    res.status(500).json({ error: 'Failed to scrape URL' });
-  }
 });
 
 // Strip CR/LF to prevent email header injection; collapse to a single line.
@@ -109,6 +91,53 @@ async function requireAuth(req, res, next) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 }
+
+// Basic web scraper for AI metadata analysis
+app.get('/api/scrape', requireAuth, async (req, res) => {
+  const { url } = req.query;
+  if (!url) return res.status(400).json({ error: 'URL is required' });
+  try {
+    const formattedUrl = url.startsWith('http') ? url : `https://${url}`;
+    
+    // SSRF Protection: Block internal and loopback addresses
+    try {
+      const parsed = new URL(formattedUrl);
+      const host = parsed.hostname.toLowerCase();
+      if (
+        host === 'localhost' || 
+        host === '127.0.0.1' || 
+        host === '169.254.169.254' || 
+        host === '::1' || 
+        host.endsWith('.internal') ||
+        host.endsWith('.local')
+      ) {
+        return res.status(403).json({ error: 'Fetching internal URLs is forbidden' });
+      }
+    } catch (e) {
+      return res.status(400).json({ error: 'Invalid URL format' });
+    }
+
+    const response = await fetch(formattedUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+      signal: AbortSignal.timeout(5000)
+    });
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const html = await response.text();
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    const bodyHtml = bodyMatch ? bodyMatch[1] : html;
+    let text = bodyHtml
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (text.length > 5000) text = text.substring(0, 5000);
+    res.json({ text });
+  } catch (error) {
+    console.error("Scraping error:", error);
+    res.status(500).json({ error: 'Failed to scrape URL' });
+  }
+});
 
 // Google OAuth Setup
 const oauth2Client = new google.auth.OAuth2(
