@@ -27,9 +27,9 @@ export interface Deal {
 
 // ---- Contacts ----
 export async function listContacts(uid: string): Promise<Contact[]> {
-  const { data, error } = await supabase.from('contacts').select('id, name, company, email, phone, status, source, next_follow_up, created_at').eq('user_id', uid).order('created_at', { ascending: false }).limit(100);
+  const { data, error } = await supabase.from('contacts').select('id, name, company, email, phone, status, source, created_at').eq('user_id', uid).order('created_at', { ascending: false }).limit(100);
   if (error) throw error;
-  return data.map(d => ({ ...d, nextFollowUp: d.next_follow_up, createdAt: new Date(d.created_at).getTime() }));
+  return data.map(d => ({ ...d, createdAt: new Date(d.created_at).getTime() }));
 }
 export function listenContacts(uid: string, cb: (data: Contact[]) => void) {
   listContacts(uid).then(cb).catch(console.error);

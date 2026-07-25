@@ -1925,9 +1925,11 @@
 @media (max-width: 1024px) {
   .linksmeet-legacy-grid-2,
   .linksmeet-workflows,
-  .linksmeet-pricing-grid { grid-template-columns: 1fr; }
+  .linksmeet-pricing-grid-4,
+  .linksmeet-pricing-grid { grid-template-columns: 1fr 1fr; }
   
   .linksmeet-legacy-grid-4 { grid-template-columns: 1fr 1fr; }
+  .linksmeet-grid-ui { grid-template-columns: 1fr 1fr; }
   
   .linksmeet-feature-block, .linksmeet-feature-block.reverse { flex-direction: column; gap: 40px; }
   .linksmeet-system-box { grid-template-columns: 1fr; }
@@ -1966,12 +1968,18 @@
   .linksmeet-hero-cta button { width: 100%; justify-content: center; }
   
   /* Generic typography and spacing */
-  .linksmeet-title, .linksmeet-system-title, .linksmeet-workflows-header h2 { font-size: 2rem; }
+  .linksmeet-title, .linksmeet-system-title, .linksmeet-workflows-header h2 { font-size: 2rem; text-align: center; }
   .linksmeet-container { padding: 0 16px; }
   .hero-wrapper { border-radius: 20px; }
   
-  /* 4-col grid to 1-col */
-  .linksmeet-legacy-grid-4 { grid-template-columns: 1fr; }
+  /* Grids to 1-col */
+  .linksmeet-legacy-grid-4,
+  .linksmeet-grid-ui,
+  .linksmeet-pricing-grid-4,
+  .linksmeet-pricing-grid { grid-template-columns: 1fr; }
+  
+  /* Pricing adjustments for mobile */
+  .linksmeet-pricing-box.premium { transform: scale(1); padding: 24px 20px; margin-top: 16px; margin-bottom: 16px; }
   
   /* Footer */
   .linksmeet-footer-grid { grid-template-columns: 1fr; gap: 32px; }
