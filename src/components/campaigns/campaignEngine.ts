@@ -211,8 +211,12 @@ class CampaignEngine {
   private startPolling() {
     this.fetchData();
     setInterval(() => {
+      // SMART POLLING: If the user is on another tab, pause polling to save massive background egress
+      if (typeof document !== 'undefined' && document.hidden) {
+        return;
+      }
       this.fetchData();
-    }, 5000); // UI poll every 5 seconds
+    }, 15000); // UI poll every 15 seconds instead of 5
   }
 
 

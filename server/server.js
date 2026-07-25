@@ -1188,7 +1188,7 @@ app.get('/api/team/workspaces', requireAuth, async (req, res) => {
 
 app.get('/api/campaigns', requireAuth, async (req, res) => {
   try {
-    const { data, error } = await supabase.from('campaigns').select('*').eq('user_id', req.userId).order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('campaigns').select('id, name, status, recipient_email, recipient_name, steps, active_step_index, created_at, next_run_at').eq('user_id', req.userId).order('created_at', { ascending: false }).limit(50);
     if (error) throw error;
     res.json(data);
   } catch (err) {
@@ -1269,7 +1269,7 @@ app.delete('/api/campaigns/:id', requireAuth, async (req, res) => {
 
 app.get('/api/logs', requireAuth, async (req, res) => {
   try {
-    const { data, error } = await supabase.from('campaign_logs').select('*').eq('user_id', req.userId).order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('campaign_logs').select('id, campaign_id, campaign_name, recipient, subject, sent_at, status, opens, clicks, replied, delivery_status, spam_status, stage, created_at').eq('user_id', req.userId).order('created_at', { ascending: false }).limit(200);
     if (error) throw error;
     // Map to frontend format
     const mapped = data.map(d => ({
@@ -1326,7 +1326,7 @@ app.post('/api/logs', requireAuth, async (req, res) => {
 
 app.get('/api/threads', requireAuth, async (req, res) => {
   try {
-    const { data, error } = await supabase.from('campaign_threads').select('*').eq('user_id', req.userId).order('updated_at', { ascending: false });
+    const { data, error } = await supabase.from('campaign_threads').select('id, lead_name, lead_email, subject, campaign_name, summary, messages, unread, updated_at').eq('user_id', req.userId).order('updated_at', { ascending: false }).limit(50);
     if (error) throw error;
     const mapped = data.map(d => ({
       id: d.id,
@@ -1400,7 +1400,7 @@ if (supabase) {
       // Only fetch 50 campaigns that are running and actually due for processing
       const { data: campaigns, error } = await supabase
         .from('campaigns')
-        .select('*')
+        .select('id, name, status, recipient_email, recipient_name, steps, active_step_index, next_run_at')
         .eq('status', 'Running')
         .or(`next_run_at.is.null,next_run_at.lte.${nowIso}`)
         .limit(50);
