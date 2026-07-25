@@ -878,10 +878,10 @@ export default function Landing() {
 
                   {/* Buttons */}
                   <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-                    <button className="linksmeet-btn linksmeet-btn-dark" onClick={goSignup} style={{ borderRadius: '40px', padding: '14px 32px', fontSize: '16px', backgroundColor: '#fff', border: 'none', color: '#111', fontWeight: 500 }}>
+                    <button className="linksmeet-btn linksmeet-btn-dark" onClick={goSignup} style={{ borderRadius: '10px', padding: '14px 32px', fontSize: '16px', backgroundColor: '#fff', border: 'none', color: '#111', fontWeight: 500 }}>
                       Start for free
                     </button>
-                    <button className="linksmeet-btn linksmeet-btn-ghost" onClick={goSignup} style={{ borderRadius: '40px', padding: '14px 32px', fontSize: '16px', backgroundColor: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.3)', color: '#fff', fontWeight: 400, backdropFilter: 'blur(8px)' }}>
+                    <button className="linksmeet-btn linksmeet-btn-ghost" onClick={goSignup} style={{ borderRadius: '10px', padding: '14px 32px', fontSize: '16px', backgroundColor: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.3)', color: '#fff', fontWeight: 400, backdropFilter: 'blur(8px)' }}>
                       Talk to sales
                     </button>
                   </div>
