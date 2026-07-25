@@ -18,6 +18,8 @@ export const AICampaignStudio: React.FC<AICampaignStudioProps> = ({ onApplySeque
   const [descInput, setDescInput] = useState(initPrompt || '');
   const [isScraping, setIsScraping] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [scrapedMetadata, setScrapedMetadata] = useState<any>(null);
+  const [hasGenerated, setHasGenerated] = useState(false);
 
   useEffect(() => {
     if (initPrompt) {
@@ -42,9 +44,12 @@ export const AICampaignStudio: React.FC<AICampaignStudioProps> = ({ onApplySeque
       setIsScraping(true);
       try {
         const scraped = await campaignEngine.scrapeUrlMetadata(urlInput.trim());
+        setScrapedMetadata(scraped);
         meta = { ...scraped, recipientEmail: recipientEmail || 'client@company.com' };
-      } catch {
-        meta = { companyName: 'Target Client', industry: 'SaaS', painPoints: 'Scaling operations', recipientEmail: recipientEmail || 'client@company.com' };
+      } catch (err: any) {
+        setIsScraping(false);
+        alert('Could not scrape the target URL. Please ensure the URL is correct or try switching to manual description.');
+        return;
       }
       setIsScraping(false);
     }
@@ -54,6 +59,7 @@ export const AICampaignStudio: React.FC<AICampaignStudioProps> = ({ onApplySeque
       const promptToUse = forcePrompt || (inputType === 'brand' ? descInput.trim() : '');
       const sequence = await campaignEngine.generateAISequence(meta, promptToUse);
       onApplySequence(sequence);
+      setHasGenerated(true);
       setActiveTab('Results');
     } catch (err: any) {
       alert(`Error generating sequence: ${err.message}`);
@@ -184,7 +190,7 @@ export const AICampaignStudio: React.FC<AICampaignStudioProps> = ({ onApplySeque
             </div>
 
             <button
-              onClick={handleGenerate}
+              onClick={() => handleGenerate()}
               disabled={isScraping || isGenerating || (inputType === 'url' ? !urlInput.trim() : !descInput.trim())}
               style={{
                 width: '100%', padding: '10px', fontSize: '0.88rem', fontWeight: 600, background: '#7d3bec', color: '#ffffff', border: 'none', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: (isScraping || isGenerating) ? 'not-allowed' : 'pointer', transition: 'all 0.15s ease', marginBottom: '24px'
@@ -219,8 +225,42 @@ export const AICampaignStudio: React.FC<AICampaignStudioProps> = ({ onApplySeque
       )}
 
       {activeTab === 'Results' && (
-        <div style={{ padding: '24px 0', textAlign: 'center', color: '#64748b', fontSize: '0.88rem' }}>
-          {isGenerating ? 'AI is working on your sequence...' : 'Run an analysis to see results here.'}
+        <div style={{ padding: '24px 0', color: '#334155', fontSize: '0.88rem' }}>
+          {isGenerating ? (
+            <div style={{ textAlign: 'center', color: '#64748b' }}>AI is working on your sequence...</div>
+          ) : scrapedMetadata ? (
+            <div style={{ textAlign: 'left', background: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.82rem' }}>
+              <h4 style={{ margin: '0 0 12px 0', fontSize: '0.9rem', color: '#0f172a' }}>Website Analysis Success</h4>
+              <div style={{ marginBottom: '8px' }}><strong>Company:</strong> {scrapedMetadata.companyOverview}</div>
+              <div style={{ marginBottom: '8px' }}><strong>Industry:</strong> {scrapedMetadata.industry}</div>
+              <div style={{ marginBottom: '8px' }}><strong>Value Proposition:</strong> {scrapedMetadata.valueProposition}</div>
+              <div style={{ marginBottom: '16px' }}><strong>Target Audience:</strong> {scrapedMetadata.targetAudience}</div>
+              <div style={{ color: '#16a34a', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '16px' }}>
+                <Check size={14} /> Campaign steps generated & applied to builder!
+              </div>
+
+              {scrapedMetadata._rawScrapedText && (
+                <details style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px' }}>
+                  <summary style={{ cursor: 'pointer', fontWeight: 600, color: '#334155', outline: 'none', userSelect: 'none' }}>View Raw Scraped Data</summary>
+                  <div style={{ marginTop: '8px', padding: '8px', background: '#f1f5f9', borderRadius: '4px', fontSize: '0.75rem', color: '#475569', overflowY: 'auto', maxHeight: '150px', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                    {scrapedMetadata._rawScrapedText}
+                  </div>
+                </details>
+              )}
+            </div>
+          ) : hasGenerated ? (
+            <div style={{ textAlign: 'center', background: '#f8fafc', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.88rem' }}>
+              <div style={{ display: 'inline-flex', justifyContent: 'center', alignItems: 'center', width: '40px', height: '40px', borderRadius: '50%', background: '#dcfce7', color: '#16a34a', marginBottom: '12px' }}>
+                <Check size={24} />
+              </div>
+              <h4 style={{ margin: '0 0 8px 0', fontSize: '1rem', color: '#0f172a' }}>Sequence Generated!</h4>
+              <p style={{ margin: 0, color: '#64748b' }}>
+                Your custom campaign steps have been successfully created and applied to the builder.
+              </p>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', color: '#64748b' }}>Run an analysis to see results here.</div>
+          )}
         </div>
       )}
 

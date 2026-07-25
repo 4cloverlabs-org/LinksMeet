@@ -47,6 +47,8 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
   const [selectedStepId, setSelectedStepId] = useState<string>('');
   const [showAIModal, setShowAIModal] = useState<boolean>(false);
   const [deleteModalStep, setDeleteModalStep] = useState<number | null>(null);
+  const [renameModalOpen, setRenameModalOpen] = useState(false);
+  const [newSequenceName, setNewSequenceName] = useState('');
 
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [promptState, setPromptState] = useState<{ type: 'link' | 'image', selection: Range | null } | null>(null);
@@ -239,11 +241,8 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
             </button>
             <button 
               onClick={() => {
-                const newName = prompt('Enter new sequence name:', activeCamp.name);
-                if (newName && newName.trim()) {
-                  handleUpdateCamp({ name: newName.trim() });
-                  showToast('Sequence name updated');
-                }
+                setNewSequenceName(activeCamp.name);
+                setRenameModalOpen(true);
               }}
               style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#ffffff', border: '1px solid #e2e8f0', color: '#7d3bec', fontWeight: 600, fontSize: '0.85rem', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.15s ease' }}
               onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
@@ -680,6 +679,54 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({ userEmail, cam
 
         </div>
       </div>
+
+      {renameModalOpen && createPortal(
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', width: '400px', maxWidth: '90%', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)' }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '1.25rem', color: '#0f172a', fontWeight: 700 }}>Rename Sequence</h3>
+            <input
+              type="text"
+              autoFocus
+              value={newSequenceName}
+              onChange={(e) => setNewSequenceName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  if (newSequenceName.trim()) {
+                    handleUpdateCamp({ name: newSequenceName.trim() });
+                    setRenameModalOpen(false);
+                    showToast('Sequence name updated');
+                  }
+                } else if (e.key === 'Escape') {
+                  setRenameModalOpen(false);
+                }
+              }}
+              style={{ width: '100%', padding: '10px 12px', fontSize: '0.95rem', color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: '8px', outline: 'none', marginBottom: '20px' }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button
+                onClick={() => setRenameModalOpen(false)}
+                style={{ padding: '8px 16px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (newSequenceName.trim()) {
+                    handleUpdateCamp({ name: newSequenceName.trim() });
+                    setRenameModalOpen(false);
+                    showToast('Sequence name updated');
+                  }
+                }}
+                disabled={!newSequenceName.trim()}
+                style={{ padding: '8px 16px', background: '#7d3bec', color: '#ffffff', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: newSequenceName.trim() ? 'pointer' : 'not-allowed', opacity: newSequenceName.trim() ? 1 : 0.6 }}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

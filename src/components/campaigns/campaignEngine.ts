@@ -566,60 +566,19 @@ class CampaignEngine {
         console.warn("Could not scrape website directly, falling back to URL-only analysis", e);
       }
       
-      const promptContext = websiteText ? `Here is the actual scraped text from the website:\n${websiteText.substring(0, 4000)}\n\n` : '';
+      const promptContext = websiteText ? `Here is the actual scraped text from the website:\n${websiteText.substring(0, 24000)}\n\n` : '';
 
       const rawJson = await callGroqAI(
-        "You are an AI web intelligence analyzer. Extract and infer realistic B2B sales intelligence for the provided target URL/company based on the scraped text provided. Return ONLY valid JSON with keys: companyOverview, industry, productsAndServices, targetAudience, valueProposition, brandVoice, uniqueSellingPoints, idealCustomerProfile, messagingStyle, businessGoals. Do NOT wrap in markdown backticks or extra text.",
+        "You are an AI web intelligence analyzer. Extract and infer B2B sales intelligence for the provided target URL/company based on the scraped text. Return ONLY valid JSON with keys: companyOverview, industry, productsAndServices, targetAudience, valueProposition, brandVoice, uniqueSellingPoints, idealCustomerProfile, messagingStyle, businessGoals. Do NOT wrap in markdown backticks or extra text. CRITICAL RULE: If the Body Content is sparse (e.g. 'enable JavaScript'), heavily utilize the Site Title, Description, and URL domain to INFER the company's industry and purpose. Only output 'N/A' if you absolutely cannot guess based on the provided context.",
         `${promptContext}Analyze this URL or company name for cold outreach: ${url}`
       );
       const cleaned = rawJson.replace(/```json|```/g, '').trim();
-      return JSON.parse(cleaned);
+      const parsed = JSON.parse(cleaned);
+      parsed._rawScrapedText = websiteText;
+      return parsed;
     } catch (err) {
-      console.warn("Groq scrape fallback used due to error:", err);
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate real-time delay
-      const cleanUrl = url.replace(/https?:\/\//, '').replace(/\/.*$/, '').toLowerCase();
-      if (cleanUrl.includes('stripe')) {
-        return {
-          companyOverview: 'Stripe is a global technology company building economic infrastructure for the internet.',
-          industry: 'Fintech & Payment Infrastructure',
-          productsAndServices: 'Payment processing, billing, invoicing, fraud prevention, corporate cards.',
-          targetAudience: 'Startups, E-commerce platforms, Enterprise developers',
-          valueProposition: 'Simplifying internet commerce with developer-first financial infrastructure.',
-          brandVoice: 'Professional, highly technical, direct, authoritative',
-          uniqueSellingPoints: 'Developer-first APIs, unified financial infrastructure, 99.999% uptime',
-          idealCustomerProfile: 'Fast-growing tech companies needing global payment solutions.',
-          messagingStyle: 'Concise, reliable, and focused on growth and engineering.',
-          businessGoals: 'Increase global GDP of the internet.'
-        };
-      } else if (cleanUrl.includes('linear')) {
-        return {
-          companyOverview: 'Linear is a purpose-built tool for software development and product management.',
-          industry: 'Productivity & Issue Tracking SaaS',
-          productsAndServices: 'Issue tracking, sprint planning, project management software.',
-          targetAudience: 'High-velocity product teams, engineers, designers',
-          valueProposition: 'Streamline software projects, sprints, tasks, and bug tracking seamlessly.',
-          brandVoice: 'Concise, design-forward, modern, efficient',
-          uniqueSellingPoints: 'Keyboard-first workflow, sub-50ms sync speed, pristine minimalist UX',
-          idealCustomerProfile: 'Product-led tech companies that value craft and speed.',
-          messagingStyle: 'Minimalist, fast-paced, and highly opinionated on productivity.',
-          businessGoals: 'Help teams build magical software faster.'
-        };
-      } else {
-        const parts = cleanUrl.split('.');
-        const name = parts[0] ? parts[0].charAt(0).toUpperCase() + parts[0].slice(1) : 'Target Company';
-        return {
-          companyOverview: `${name} is a rapidly growing B2B service provider.`,
-          industry: 'B2B Software & Digital Services',
-          productsAndServices: 'Digital automation, strategic consulting, cloud services.',
-          targetAudience: 'Operations leaders, growth executives, decision makers',
-          valueProposition: 'We automate manual processes to unlock your team\'s potential.',
-          brandVoice: 'Conversational, consultative, value-focused',
-          uniqueSellingPoints: 'AI-driven automation, seamless API integration, rapid ROI',
-          idealCustomerProfile: 'Mid-market businesses looking to modernize their operations.',
-          messagingStyle: 'Educational, empathetic, and ROI-driven.',
-          businessGoals: 'Drive efficiency and revenue growth for clients.'
-        };
-      }
+      console.warn("Groq scrape failed:", err);
+      throw new Error("Failed to analyze website. No valid data could be scraped.");
     }
   }
 

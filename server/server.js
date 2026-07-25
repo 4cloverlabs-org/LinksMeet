@@ -123,16 +123,29 @@ app.get('/api/scrape', requireAuth, async (req, res) => {
     });
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const html = await response.text();
+    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    const title = titleMatch ? titleMatch[1].trim() : '';
+    
+    const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["'][^>]*>/i) || 
+                      html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']description["'][^>]*>/i);
+    const description = descMatch ? descMatch[1].trim() : '';
+
+    const ogDescMatch = html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']+)["'][^>]*>/i) || 
+                        html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:description["'][^>]*>/i);
+    const ogDescription = ogDescMatch ? ogDescMatch[1].trim() : '';
+
     const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
     const bodyHtml = bodyMatch ? bodyMatch[1] : html;
-    let text = bodyHtml
+    let bodyText = bodyHtml
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
       .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
       .replace(/<[^>]+>/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
-    if (text.length > 5000) text = text.substring(0, 5000);
-    res.json({ text });
+      
+    let combinedText = `Site Title: ${title}\nDescription: ${description}\nOG Description: ${ogDescription}\nBody Content: ${bodyText}`;
+    if (combinedText.length > 25000) combinedText = combinedText.substring(0, 25000);
+    res.json({ text: combinedText });
   } catch (error) {
     console.error("Scraping error:", error);
     res.status(500).json({ error: 'Failed to scrape URL' });
