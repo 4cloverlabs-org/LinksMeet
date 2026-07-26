@@ -12,13 +12,7 @@ export default function Contact() {
         <div style={{ display: 'flex', justifyContent: 'center', width: '100%', marginTop: '40px' }}>
           {/* Form */}
           <div className="cc-contact-form cc-reveal" style={{ padding: 0, background: 'transparent', border: 'none', boxShadow: 'none', width: '100%', maxWidth: '800px' }}>
-            <iframe
-              src="https://linksmeet.com/book/674dd1d4-ee4a-4cd6-a761-9b7d3d82052e/30-minute-meeting?primary=%237d3bec"
-              width="100%"
-              height="700"
-              frameBorder="0"
-              style={{ borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
-            ></iframe>
+            <iframe src="https://linksmeet.com/book/674dd1d4-ee4a-4cd6-a761-9b7d3d82052e/30min?primary=%237d3bec" width="100%" height="700" frameBorder="0" style={{ borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}></iframe>
           </div>
         </div>
       </div>
