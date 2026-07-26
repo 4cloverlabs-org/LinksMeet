@@ -9,7 +9,6 @@ import BlogPost from './marketing/BlogPost';
 import About from './marketing/About';
 import Contact from './marketing/Contact';
 import Careers from './marketing/Careers';
-import Pricing from './marketing/Pricing';
 import Privacy from './marketing/Privacy';
 import Terms from './marketing/Terms';
 import TermsAndConditions from './marketing/TermsAndConditions';
@@ -52,7 +51,6 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/careers" element={<Careers />} />
-            <Route path="/pricing" element={<Pricing />} />
             <Route path="/privacy-policy" element={<Privacy />} />
             <Route path="/terms-of-service" element={<Terms />} />
             <Route path="/terms-and-conditions" element={<TermsAndConditions />} />

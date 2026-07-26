@@ -210,6 +210,17 @@ export default function Landing() {
 
   useEffect(() => {
     document.title = "LinksMeet — Scheduling & Meeting Automation";
+    
+    // Handle scrolling to hash on initial load from another page
+    if (window.location.hash) {
+      setTimeout(() => {
+        const id = window.location.hash.replace('#', '');
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 150);
+    }
   }, []);
 
   return (
@@ -228,7 +239,7 @@ export default function Landing() {
                   LinksMeet
                 </div>
                 <div className="linksmeet-nav-links">
-                  <a href="#about">About</a>
+                  <RouterLink to="/about">About</RouterLink>
                   <a href="#features">Features</a>
                   <a href="#pricing">Pricing</a>
                   <RouterLink to="/blog">Blog</RouterLink>
@@ -536,17 +547,17 @@ export default function Landing() {
           <div className="linksmeet-container">
             <FadeUp>
               <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-                <h2 className="linksmeet-system-title" style={{ marginBottom: '16px' }}>Get clear answers in 3 simple steps</h2>
-                <p style={{ fontSize: '1.2rem', color: '#64748b', maxWidth: '600px', margin: '0 auto', lineHeight: '1.6' }}>From data to clarity—uncover insights, take action, and grow smarter in three simple steps.</p>
+                <h2 className="linksmeet-system-title" style={{ marginBottom: '16px' }}>Seamless scheduling in 3 simple steps</h2>
+                <p style={{ fontSize: '1.2rem', color: '#64748b', maxWidth: '600px', margin: '0 auto', lineHeight: '1.6' }}>From connecting your calendar to hosting the meeting—eliminate the back-and-forth instantly.</p>
               </div>
             </FadeUp>
 
             <div className="linksmeet-grid-ui">
-              {/* Card 1: AI Powered Outreach */}
+              {/* Card 1: AI Powered Outreach -> Connect Calendar */}
               <FadeUp delay={0.1} className="linksmeet-grid-card">
                 <div className="grid-card-content">
-                  <h3>AI-Powered Outreach</h3>
-                  <p>AI automatically analyzes leads, generates personalized campaigns, and schedules follow-ups.</p>
+                  <h3>1. Connect your calendar</h3>
+                  <p>LinksMeet automatically syncs with your calendars to instantly determine your availability.</p>
                 </div>
                 <div className="grid-card-visual" style={{ minHeight: '200px', overflow: 'hidden' }}>
                   <div className="v1-ai-center">
@@ -555,19 +566,19 @@ export default function Landing() {
                       <path d="M18 14C18 14 18 17.5 22 18.5C18 19.5 18 23 18 23C18 23 18 19.5 14 18.5C18 17.5 18 14 18 14Z" fill="currentColor"/>
                     </svg>
                   </div>
-                  <div className="v1-ai-tag v1-tag-1">Analyze lead</div>
-                  <div className="v1-ai-tag v1-tag-2 highlight">Generate campaign</div>
-                  <div className="v1-ai-tag v1-tag-3">Schedule follow-up</div>
-                  <div className="v1-ai-tag v1-tag-4">Personalize email</div>
-                  <div className="v1-ai-tag v1-tag-5">Score prospect</div>
+                  <div className="v1-ai-tag v1-tag-1">Check availability</div>
+                  <div className="v1-ai-tag v1-tag-2 highlight">Sync calendar</div>
+                  <div className="v1-ai-tag v1-tag-3">Block conflicts</div>
+                  <div className="v1-ai-tag v1-tag-4">Detect timezone</div>
+                  <div className="v1-ai-tag v1-tag-5">Set buffers</div>
                 </div>
               </FadeUp>
 
-              {/* Card 2: Track User Behavior (Gauge) */}
+              {/* Card 2: Track User Behavior -> Share your link */}
               <FadeUp delay={0.2} className="linksmeet-grid-card">
                 <div className="grid-card-content">
-                  <h3>Track User Behavior</h3>
-                  <p>See what’s used, what’s dropped, and what keeps users engaged.</p>
+                  <h3>2. Share your link</h3>
+                  <p>Send your personalized booking page to clients, letting them pick a time effortlessly.</p>
                 </div>
                 <div className="grid-card-visual" style={{ paddingBottom: '20px' }}>
                   <div className="v2-gauge-container">
@@ -582,23 +593,23 @@ export default function Landing() {
                   </div>
                   {/* Floating Tags perfectly matching the image */}
                   <div className="v2-tag v2-tag-1">
-                    Low Engagement <span className="v2-badge-red">↓ 8%</span>
+                    Booking Friction <span className="v2-badge-red">↓ 95%</span>
                   </div>
                   <div className="v2-tag v2-tag-2">
-                    High Engagement <span className="v2-badge-blue">↑ 12%</span>
+                    Time Saved <span className="v2-badge-blue">↑ 10hrs/wk</span>
                   </div>
                 </div>
               </FadeUp>
 
-              {/* Card 3: Turn Insights Into Action (Envelope) */}
+              {/* Card 3: Turn Insights Into Action -> Meet effortlessly */}
               <FadeUp delay={0.3} className="linksmeet-grid-card">
                 <div className="grid-card-content">
-                  <h3>Turn Insights Into Action</h3>
-                  <p>Get clear, actionable recommendations to boost retention and grow MRR.</p>
+                  <h3>3. Meet effortlessly</h3>
+                  <p>We automatically send calendar invites, generate conferencing links, and handle reminders for you.</p>
                 </div>
                 <div className="grid-card-visual" style={{ paddingBottom: '20px', display: 'flex', justifyContent: 'center' }}>
                   <div style={{ position: 'relative', width: '85%', display: 'flex' }}>
-                    <img src="/envelope-icon.jpg" alt="Actionable Insights Envelope" style={{ width: '100%', height: 'auto', objectFit: 'contain' }} />
+                    <img src="/envelope-icon.jpg" alt="Calendar Invite Envelope" style={{ width: '100%', height: 'auto', objectFit: 'contain' }} />
                     {/* Guarantees the image perfectly adopts the #7d3bec hue/saturation while preserving whites/blacks */}
                     <div style={{ position: 'absolute', inset: 0, background: '#7d3bec', mixBlendMode: 'color', pointerEvents: 'none' }} />
                   </div>
@@ -913,7 +924,7 @@ export default function Landing() {
               <div className="linksmeet-footer-links">
                 <a href="#features">Scheduling</a>
                 <a href="#integrations">Integrations</a>
-                <RouterLink to="/pricing">Pricing</RouterLink>
+                <a href="#pricing">Pricing</a>
                 <RouterLink to="/login">Sign In</RouterLink>
               </div>
             </div>
