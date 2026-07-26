@@ -740,7 +740,7 @@ export default function BookingPage() {
                 </div>
 
                 {/* Column 3: Right Time Slots Pane matching Screenshot */}
-                <div style={{ display: 'flex', flexDirection: 'column', height: isEmbedded ? '100%' : 'auto' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', height: isEmbedded ? '100%' : '380px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px', flexShrink: 0 }}>
                     <span style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a' }}>
                       {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate % 7]} {selectedDate}
@@ -759,7 +759,7 @@ export default function BookingPage() {
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, overflowY: isEmbedded ? 'auto' : 'visible', paddingRight: isEmbedded ? '8px' : '0' }}>
+                  <div className="time-slot-container" style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, overflowY: 'auto', paddingRight: '8px' }}>
                     {availableSlots.length === 0 && <div style={{ color: '#64748b', fontSize: '0.9rem', textAlign: 'center', marginTop: '20px' }}>No available times on this date.</div>}
                     {availableSlots.map(slot => {
                       const timeStr = timeFormat === '12h' ? slot.time12 : slot.time24;

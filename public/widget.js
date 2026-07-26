@@ -101,6 +101,131 @@
       widget.innerHTML = '';
       widget.appendChild(iframe);
     });
+
+    // Initialize popup widgets
+    const popupWidgets = document.querySelectorAll('.linksmeet-popup-widget');
+    popupWidgets.forEach(widget => {
+      if (widget.hasAttribute('data-initialized')) return;
+      widget.setAttribute('data-initialized', 'true');
+
+      let iframeUrl = widget.getAttribute('data-url');
+      if (!iframeUrl) return;
+
+      const btnText = widget.getAttribute('data-text') || 'Book a meeting';
+      const btnColor = widget.getAttribute('data-color') || '#7d3bec';
+      const textColor = widget.getAttribute('data-text-color') || '#ffffff';
+
+      // Build the query string
+      const urlObj = new URL(iframeUrl);
+      urlObj.searchParams.append('primary', btnColor);
+
+      // Create Floating Button
+      const btn = document.createElement('button');
+      btn.innerHTML = btnText;
+      btn.style.position = 'fixed';
+      btn.style.bottom = '24px';
+      btn.style.right = '24px';
+      btn.style.backgroundColor = btnColor;
+      btn.style.color = textColor;
+      btn.style.border = 'none';
+      btn.style.borderRadius = '30px';
+      btn.style.padding = '14px 28px';
+      btn.style.fontSize = '16px';
+      btn.style.fontWeight = '600';
+      btn.style.cursor = 'pointer';
+      btn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+      btn.style.zIndex = '999998';
+      btn.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      btn.style.transition = 'transform 0.2s ease, box-shadow 0.2s ease';
+      
+      btn.onmouseover = () => {
+        btn.style.transform = 'translateY(-2px)';
+        btn.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+      };
+      btn.onmouseout = () => {
+        btn.style.transform = 'none';
+        btn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+      };
+
+      // Create Overlay
+      const overlay = document.createElement('div');
+      overlay.style.position = 'fixed';
+      overlay.style.top = '0';
+      overlay.style.left = '0';
+      overlay.style.width = '100vw';
+      overlay.style.height = '100vh';
+      overlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
+      overlay.style.zIndex = '999999';
+      overlay.style.display = 'none';
+      overlay.style.alignItems = 'center';
+      overlay.style.justifyContent = 'center';
+      overlay.style.backdropFilter = 'blur(4px)';
+
+      // Create Modal Container
+      const modal = document.createElement('div');
+      modal.style.width = '100%';
+      modal.style.maxWidth = '1060px'; // Matching the large layout width of booking page
+      modal.style.height = '90vh';
+      modal.style.maxHeight = '800px';
+      modal.style.backgroundColor = 'transparent';
+      modal.style.borderRadius = '20px';
+      modal.style.position = 'relative';
+      modal.style.overflow = 'hidden';
+      
+      // Responsive adjustments for mobile
+      if (window.innerWidth <= 768) {
+        modal.style.width = '100%';
+        modal.style.height = '100vh';
+        modal.style.maxHeight = 'none';
+        modal.style.borderRadius = '0';
+      }
+
+      // Close Button
+      const closeBtn = document.createElement('button');
+      closeBtn.innerHTML = '&times;';
+      closeBtn.style.position = 'absolute';
+      closeBtn.style.top = '16px';
+      closeBtn.style.right = '24px';
+      closeBtn.style.background = 'none';
+      closeBtn.style.border = 'none';
+      closeBtn.style.fontSize = '32px';
+      closeBtn.style.color = '#1a1a1a';
+      closeBtn.style.cursor = 'pointer';
+      closeBtn.style.zIndex = '10';
+      closeBtn.style.lineHeight = '1';
+
+      // Iframe
+      const iframe = document.createElement('iframe');
+      iframe.src = urlObj.toString();
+      iframe.style.width = '100%';
+      iframe.style.height = '100%';
+      iframe.style.border = 'none';
+      iframe.style.background = 'transparent';
+      iframe.setAttribute('allowtransparency', 'true');
+
+      modal.appendChild(closeBtn);
+      modal.appendChild(iframe);
+      overlay.appendChild(modal);
+
+      // Event Listeners
+      btn.onclick = () => {
+        overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+      };
+
+      const closePopup = () => {
+        overlay.style.display = 'none';
+        document.body.style.overflow = '';
+      };
+
+      closeBtn.onclick = closePopup;
+      overlay.onclick = (e) => {
+        if (e.target === overlay) closePopup();
+      };
+
+      document.body.appendChild(btn);
+      document.body.appendChild(overlay);
+    });
   };
 
   // Run init on load
