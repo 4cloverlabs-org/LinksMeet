@@ -46,8 +46,8 @@ const ScrollRevealGrid = ({ children, header }: { children: React.ReactNode, hea
   });
 
   return (
-    <div ref={containerRef} style={{ height: '300vh', position: 'relative' }}>
-      <div style={{ position: 'sticky', top: 0, height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', paddingTop: '20px', overflow: 'hidden' }}>
+    <div ref={containerRef} className="scroll-reveal-container" style={{ height: '300vh', position: 'relative' }}>
+      <div className="scroll-reveal-sticky" style={{ position: 'sticky', top: 0, height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', paddingTop: '20px', overflow: 'hidden' }}>
         {header && (
           <div style={{ width: '100%', maxWidth: '1600px', margin: '0 auto', padding: '0 20px', zIndex: 10 }}>
             {header}
@@ -72,7 +72,7 @@ const ScrollRevealGrid = ({ children, header }: { children: React.ReactNode, hea
               });
               
               return (
-                <motion.div key={index} style={{ opacity, y, height: '100%' }}>
+                <motion.div key={index} className="scroll-reveal-card" style={{ opacity, y, height: '100%' }}>
                   {child}
                 </motion.div>
               );

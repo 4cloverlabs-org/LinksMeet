@@ -173,7 +173,7 @@ export default function EventTypesPage() {
                                 </button>
                                 <button className="et-dd-btn" onClick={() => { 
                                   setEtDropdown(null); 
-                                  const code = `<!-- LinksMeet inline widget begin -->\n<div class="linksmeet-inline-widget" data-url="${window.location.origin}/book/${uid}/${e.slug}" style="min-width:320px;height:700px;"></div>\n<script type="text/javascript" src="${window.location.origin}/widget.js" async></script>\n<!-- LinksMeet inline widget end -->`;
+                                  const code = `<!-- LinksMeet inline widget begin -->\n<div class="linksmeet-inline-widget" data-url="${window.location.origin}/book/${uid}/${e.slug}" data-auto-sync="false" style="min-width:320px;height:700px;"></div>\n<script type="text/javascript" src="${window.location.origin}/widget.js" async></script>\n<!-- LinksMeet inline widget end -->`;
                                   navigator.clipboard?.writeText(code).catch(() => {});
                                   setToast('Embed code copied'); window.setTimeout(() => setToast(null), 1800);
                                 }}>

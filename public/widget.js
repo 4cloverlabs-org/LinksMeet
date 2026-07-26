@@ -37,46 +37,49 @@
       let bgColor = widget.getAttribute('data-background-color');
       let textColor = widget.getAttribute('data-text-color');
       let primaryColor = widget.getAttribute('data-primary-color');
+      const autoSync = widget.getAttribute('data-auto-sync') !== 'false';
 
-      // Auto-detect if not manually provided
-      if (!bgColor || !textColor) {
-        try {
-          const parentStyles = window.getComputedStyle(widget.parentElement || document.body);
-          
-          // Auto-detect text color
-          if (!textColor) {
-            textColor = parentStyles.color;
-          }
+      // Auto-detect if not manually provided and autoSync is enabled
+      if (autoSync) {
+        if (!bgColor || !textColor) {
+          try {
+            const parentStyles = window.getComputedStyle(widget.parentElement || document.body);
+            
+            // Auto-detect text color
+            if (!textColor) {
+              textColor = parentStyles.color;
+            }
 
-          // Auto-detect background color (walk up tree to find non-transparent background)
-          if (!bgColor) {
-            let currentEl = widget.parentElement;
-            let tempBg = parentStyles.backgroundColor;
-            while (currentEl && (tempBg === 'transparent' || tempBg === 'rgba(0, 0, 0, 0)' || !tempBg)) {
-              tempBg = window.getComputedStyle(currentEl).backgroundColor;
-              currentEl = currentEl.parentElement;
+            // Auto-detect background color (walk up tree to find non-transparent background)
+            if (!bgColor) {
+              let currentEl = widget.parentElement;
+              let tempBg = parentStyles.backgroundColor;
+              while (currentEl && (tempBg === 'transparent' || tempBg === 'rgba(0, 0, 0, 0)' || !tempBg)) {
+                tempBg = window.getComputedStyle(currentEl).backgroundColor;
+                currentEl = currentEl.parentElement;
+              }
+              if (tempBg && tempBg !== 'transparent' && tempBg !== 'rgba(0, 0, 0, 0)') {
+                bgColor = tempBg;
+              } else {
+                bgColor = '#ffffff';
+              }
             }
-            if (tempBg && tempBg !== 'transparent' && tempBg !== 'rgba(0, 0, 0, 0)') {
-              bgColor = tempBg;
-            } else {
-              bgColor = '#ffffff';
-            }
+          } catch (e) {
+            console.warn('LinksMeet Widget: Could not auto-detect styles.', e);
           }
-        } catch (e) {
-          console.warn('LinksMeet Widget: Could not auto-detect styles.', e);
         }
-      }
 
-      // Auto-detect primary accent color (look for first button or links on the page)
-      if (!primaryColor) {
-        try {
-          const link = document.querySelector('a, button');
-          if (link) {
-            primaryColor = window.getComputedStyle(link).color || window.getComputedStyle(link).backgroundColor;
+        // Auto-detect primary accent color (look for first button or links on the page)
+        if (!primaryColor) {
+          try {
+            const link = document.querySelector('a, button');
+            if (link) {
+              primaryColor = window.getComputedStyle(link).color || window.getComputedStyle(link).backgroundColor;
+            }
+          } catch (e) {}
+          if (!primaryColor || primaryColor === 'transparent' || primaryColor === 'rgba(0, 0, 0, 0)') {
+            primaryColor = '#006bff'; // Default fallback
           }
-        } catch (e) {}
-        if (!primaryColor || primaryColor === 'transparent' || primaryColor === 'rgba(0, 0, 0, 0)') {
-          primaryColor = '#006bff'; // Default fallback
         }
       }
 

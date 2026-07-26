@@ -716,3 +716,15 @@
     box-shadow: 0 4px 20px rgba(0,0,0,0.02);
   }
 }
+
+@media (max-width: 480px) {
+  .linksmeet-mockup-pill { padding: 8px; gap: 8px; }
+  .linksmeet-mockup-pill-title { font-size: 0.8rem; }
+  .linksmeet-mockup-pill-badge { padding: 4px 8px !important; font-size: 0.65rem; }
+}
+
+@media (max-width: 1024px) {
+  .scroll-reveal-container { height: auto !important; }
+  .scroll-reveal-sticky { position: relative !important; height: auto !important; overflow: visible !important; }
+  .scroll-reveal-card { opacity: 1 !important; transform: none !important; }
+}
