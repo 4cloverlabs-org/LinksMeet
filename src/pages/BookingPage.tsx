@@ -551,11 +551,11 @@ export default function BookingPage() {
     <div className={`bk-widget-page ${isEmbedded ? 'is-embedded' : ''}`} style={{ ...customStyles, height: isEmbedded ? '100vh' : 'auto', overflow: isEmbedded ? 'hidden' : 'visible', padding: isEmbedded ? '0' : undefined }}>
       {step === 1 ? (
         <div style={{ 
-          background: '#ffffff', border: isEmbedded ? 'none' : '1px solid #e2e8f0', borderRadius: isEmbedded ? '0' : '20px', 
-          padding: isEmbedded ? '20px' : '32px', boxShadow: isEmbedded ? 'none' : '0 8px 30px rgba(0,0,0,0.04)', 
-          maxWidth: '1060px', margin: isEmbedded ? '0 auto' : '40px auto', display: 'grid', 
+          background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '20px', 
+          padding: isEmbedded ? '24px' : '32px', boxShadow: '0 8px 30px rgba(0,0,0,0.04)', 
+          maxWidth: '1060px', margin: isEmbedded ? '20px auto' : '40px auto', display: 'grid', 
           gridTemplateColumns: currentLayout === 'Month' ? '1fr 1.45fr 1.15fr' : '1fr 2.6fr', gap: '32px',
-          height: isEmbedded ? '100%' : 'auto', overflowY: 'hidden'
+          height: isEmbedded ? 'calc(100% - 40px)' : 'auto', overflowY: 'hidden'
         }}>
 
           {/* Column 1: Left Info Pane */}
@@ -984,11 +984,11 @@ export default function BookingPage() {
         </div>
       ) : (
         <div style={{ 
-          background: '#ffffff', border: isEmbedded ? 'none' : '1px solid #e2e8f0', borderRadius: isEmbedded ? '0' : '20px', 
-          padding: isEmbedded ? '20px' : '32px', boxShadow: isEmbedded ? 'none' : '0 8px 30px rgba(0,0,0,0.04)', 
-          maxWidth: '1060px', margin: isEmbedded ? '0 auto' : '40px auto', display: 'grid', 
+          background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '20px', 
+          padding: isEmbedded ? '24px' : '32px', boxShadow: '0 8px 30px rgba(0,0,0,0.04)', 
+          maxWidth: '1060px', margin: isEmbedded ? '20px auto' : '40px auto', display: 'grid', 
           gridTemplateColumns: 'minmax(260px, 1fr) minmax(380px, 1.4fr)', gap: '48px', alignItems: 'start',
-          height: isEmbedded ? '100%' : 'auto', overflowY: isEmbedded ? 'auto' : 'visible'
+          height: isEmbedded ? 'calc(100% - 40px)' : 'auto', overflowY: isEmbedded ? 'auto' : 'visible'
         }}>
           
           {/* Left Column: Meeting Summary */}

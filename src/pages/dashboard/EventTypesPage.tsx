@@ -263,7 +263,7 @@ export default function EventTypesPage() {
               {/* Option 1 */}
               <button 
                 onClick={() => {
-                  const code = `<!-- LinksMeet inline widget begin -->\n<div class="linksmeet-inline-widget" data-url="${window.location.origin}/book/${uid}/${embedModalEvent.slug}" data-primary-color="${embedModalEvent.color}" data-auto-sync="false" style="min-width:320px;height:700px;"></div>\n<script type="text/javascript" src="${window.location.origin}/widget.js" async></script>\n<!-- LinksMeet inline widget end -->`;
+                  const code = `<!-- LinksMeet inline widget begin -->\n<div class="linksmeet-inline-widget" data-url="${window.location.origin}/book/${uid}/${embedModalEvent.slug}" data-primary-color="${embedModalEvent.eventColor || '#7d3bec'}" data-auto-sync="false" style="min-width:320px;height:700px;"></div>\n<script type="text/javascript" src="${window.location.origin}/widget.js" async></script>\n<!-- LinksMeet inline widget end -->`;
                   navigator.clipboard?.writeText(code).catch(() => {});
                   setCopiedType('inline');
                   window.setTimeout(() => {
@@ -291,7 +291,7 @@ export default function EventTypesPage() {
               {/* Option 2 */}
               <button 
                 onClick={() => {
-                  const code = `<!-- LinksMeet popup widget begin -->\n<div class="linksmeet-popup-widget" data-url="${window.location.origin}/book/${uid}/${embedModalEvent.slug}" data-text="Book a meeting" data-color="#7d3bec" data-text-color="#ffffff"></div>\n<script type="text/javascript" src="${window.location.origin}/widget.js" async></script>\n<!-- LinksMeet popup widget end -->`;
+                  const code = `<!-- LinksMeet popup widget begin -->\n<div class="linksmeet-popup-widget" data-url="${window.location.origin}/book/${uid}/${embedModalEvent.slug}" data-text="Book a meeting" data-color="${embedModalEvent.eventColor || '#7d3bec'}" data-text-color="#ffffff"></div>\n<script type="text/javascript" src="${window.location.origin}/widget.js" async></script>\n<!-- LinksMeet popup widget end -->`;
                   navigator.clipboard?.writeText(code).catch(() => {});
                   setCopiedType('floating');
                   window.setTimeout(() => {
