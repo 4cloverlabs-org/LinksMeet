@@ -231,8 +231,8 @@ export default function Landing() {
                   <a href="#about">About</a>
                   <a href="#features">Features</a>
                   <a href="#pricing">Pricing</a>
-                  <a href="#blog">Blog</a>
-                  <a href="#contact">Contact</a>
+                  <RouterLink to="/blog">Blog</RouterLink>
+                  <RouterLink to="/contact">Contact</RouterLink>
                 </div>
                 <div className="linksmeet-nav-actions">
                   <button className="linksmeet-btn" style={{ background: 'transparent', color: '#0f172a', fontWeight: 500, padding: '8px 16px' }} onClick={() => navigate('/login')}>Log in</button>

@@ -15,6 +15,7 @@ export interface Post {
   date: string;       // human-readable
   iso: string;        // YYYY-MM-DD for <time>
   readTime: string;
+  image: string;      // URL to blog art
   body: Block[];
 }
 
@@ -25,11 +26,12 @@ export const POSTS: Post[] = [
     excerpt:
       'Most deals don’t die from bad products — they die from forgotten details. Here’s a practical system for keeping every conversation connected.',
     category: 'Sales process',
-    author: 'The CloseCRM Team',
+    author: 'The LinksMeet Team',
     role: 'Product & Sales',
     date: 'June 3, 2026',
     iso: '2026-06-03',
     readTime: '6 min read',
+    image: '/blog/context.png',
     body: [
       { type: 'p', text: 'Ask any salesperson why a promising deal stalled and you’ll rarely hear “the product wasn’t good enough.” More often it’s something quieter: the follow-up that never went out, the objection nobody wrote down, the decision-maker who was mentioned once and then forgotten. Context leaks out of a sales process one small detail at a time.' },
       { type: 'p', text: 'The fix isn’t working harder or sending more reminders to yourself. It’s building a system where context is captured at the moment it appears and resurfaces exactly when you need it.' },
@@ -59,11 +61,12 @@ export const POSTS: Post[] = [
     excerpt:
       'A pipeline is only worth as much as its accuracy. The trick to keeping it current isn’t discipline — it’s design.',
     category: 'Pipeline',
-    author: 'The CloseCRM Team',
+    author: 'The LinksMeet Team',
     role: 'Product & Sales',
     date: 'May 21, 2026',
     iso: '2026-05-21',
     readTime: '5 min read',
+    image: '/blog/pipeline.png',
     body: [
       { type: 'p', text: 'Every sales leader has lived through the same quiet failure: a pipeline that looks impressive in a meeting and turns out to be fiction. Deals sit in “Proposal” for three months. “Closing this week” has meant this week for a quarter. The data is there — it’s just not true.' },
       { type: 'p', text: 'The instinct is to blame discipline and demand more updates. That rarely works. Accurate pipelines come from good design, not nagging.' },
@@ -89,11 +92,12 @@ export const POSTS: Post[] = [
     excerpt:
       'Scheduling a single call over email can take five messages and two days. Here’s what that actually costs a sales team — and how to get it back.',
     category: 'Productivity',
-    author: 'The CloseCRM Team',
+    author: 'The LinksMeet Team',
     role: 'Product & Sales',
     date: 'May 9, 2026',
     iso: '2026-05-09',
     readTime: '4 min read',
+    image: '/blog/booking.png',
     body: [
       { type: 'p', text: 'It feels trivial: “Does Tuesday work? How about 2pm? Actually, can we do Wednesday?” But multiply that thread across every prospect, every week, and the back-and-forth quietly becomes one of the biggest time sinks in a sales team’s day.' },
       { type: 'h2', text: 'Where the time really goes' },
@@ -118,11 +122,12 @@ export const POSTS: Post[] = [
     excerpt:
       'More fields don’t make a better CRM. They make a slower one. Here’s how to decide what’s worth recording.',
     category: 'Best practices',
-    author: 'The CloseCRM Team',
+    author: 'The LinksMeet Team',
     role: 'Product & Sales',
     date: 'April 24, 2026',
     iso: '2026-04-24',
     readTime: '5 min read',
+    image: '/blog/crm.png',
     body: [
       { type: 'p', text: 'There’s a temptation, when setting up a CRM, to track everything. Industry, company size, lead source, last touch, favorite color — if there’s a field for it, someone will want it filled in. But every field you add is a small tax on every interaction, and most of those fields are never looked at again.' },
       { type: 'h2', text: 'The test: will this change a decision?' },

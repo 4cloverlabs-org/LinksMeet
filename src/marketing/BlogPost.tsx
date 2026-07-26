@@ -1,6 +1,7 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { getPost, POSTS } from './posts';
+import './Blog.css';
 
 export default function BlogPost() {
   const { slug } = useParams();
@@ -24,8 +25,12 @@ export default function BlogPost() {
   return (
     <div className="cc-page">
       <article className="cc-article">
-        <Link to="/blog" className="cc-back"><ArrowLeft size={15} /> All articles</Link>
-        <span className="cc-blog-cat">{post.category}</span>
+        <div>
+          <Link to="/blog" className="cc-back"><ArrowLeft size={15} /> All articles</Link>
+        </div>
+        <div>
+          <span className="cc-blog-cat">{post.category}</span>
+        </div>
         <h1>{post.title}</h1>
         <div className="cc-blog-meta" style={{ marginTop: 12 }}>
           <span>{post.author}</span>
@@ -35,7 +40,7 @@ export default function BlogPost() {
           <span>{post.readTime}</span>
         </div>
 
-        <div className="cc-article-art" />
+        <div className="cc-article-art" style={{ backgroundImage: `url(${post.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
 
         <div className="cc-prose">
           {post.body.map((b, i) => {
@@ -49,8 +54,8 @@ export default function BlogPost() {
         {/* CTA */}
         <div className="cc-article-cta">
           <div>
-            <h3>Put this into practice with CloseCRM</h3>
-            <p>A clean, fast CRM that keeps every deal’s context in one place.</p>
+            <h3>Put this into practice with LinksMeet</h3>
+            <p>A simple, powerful scheduling tool that keeps every meeting's context in one place.</p>
           </div>
           <button className="cc-btn cc-btn-primary" onClick={() => navigate('/signup')}>Get started</button>
         </div>
@@ -62,7 +67,7 @@ export default function BlogPost() {
         <div className="cc-blog-grid">
           {more.map(p => (
             <Link to={`/blog/${p.slug}`} key={p.slug} className="cc-blog-card">
-              <div className="cc-blog-card-art" />
+              <div className="cc-blog-card-art" style={{ backgroundImage: `url(${p.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
               <div className="cc-blog-card-body">
                 <span className="cc-blog-cat">{p.category}</span>
                 <h3>{p.title}</h3>
