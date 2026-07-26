@@ -555,7 +555,7 @@ export default function BookingPage() {
           padding: isEmbedded ? '20px' : '32px', boxShadow: isEmbedded ? 'none' : '0 8px 30px rgba(0,0,0,0.04)', 
           maxWidth: '1060px', margin: isEmbedded ? '0 auto' : '40px auto', display: 'grid', 
           gridTemplateColumns: currentLayout === 'Month' ? '1fr 1.45fr 1.15fr' : '1fr 2.6fr', gap: '32px',
-          height: isEmbedded ? '100%' : 'auto', overflowY: isEmbedded ? 'auto' : 'visible'
+          height: isEmbedded ? '100%' : 'auto', overflowY: 'hidden'
         }}>
 
           {/* Column 1: Left Info Pane */}

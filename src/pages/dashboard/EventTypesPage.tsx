@@ -263,7 +263,7 @@ export default function EventTypesPage() {
               {/* Option 1 */}
               <button 
                 onClick={() => {
-                  const code = `<!-- LinksMeet inline widget begin -->\n<div class="linksmeet-inline-widget" data-url="${window.location.origin}/book/${uid}/${embedModalEvent.slug}" data-auto-sync="false" style="min-width:320px;height:700px;"></div>\n<script type="text/javascript" src="${window.location.origin}/widget.js" async></script>\n<!-- LinksMeet inline widget end -->`;
+                  const code = `<!-- LinksMeet inline widget begin -->\n<div class="linksmeet-inline-widget" data-url="${window.location.origin}/book/${uid}/${embedModalEvent.slug}" data-primary-color="${embedModalEvent.color}" data-auto-sync="false" style="min-width:320px;height:700px;"></div>\n<script type="text/javascript" src="${window.location.origin}/widget.js" async></script>\n<!-- LinksMeet inline widget end -->`;
                   navigator.clipboard?.writeText(code).catch(() => {});
                   setCopiedType('inline');
                   window.setTimeout(() => {
