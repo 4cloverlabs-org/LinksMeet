@@ -27,7 +27,8 @@ export default function Contact() {
           {/* Form */}
           <div className="cc-contact-form cc-reveal" style={{ padding: 0, background: 'transparent', border: 'none', boxShadow: 'none', width: '100%', maxWidth: '800px' }}>
             {/* LinksMeet inline widget begin */}
-            <div className="linksmeet-inline-widget" data-url="https://linksmeet.com/book/674dd1d4-ee4a-4cd6-a761-9b7d3d82052e/30min" data-auto-sync="false" style={{ minWidth: '320px', height: '700px' }}></div>
+            <div className="linksmeet-inline-widget" data-url="https://linksmeet.com/book/674dd1d4-ee4a-4cd6-a761-9b7d3d82052e/30min" data-primary-color="#7d3bec" data-auto-sync="false" style={{ minWidth: '320px', height: '700px' }}></div>
+            <script type="text/javascript" src="https://linksmeet.com/widget.js" async></script>
             {/* LinksMeet inline widget end */}
           </div>
         </div>

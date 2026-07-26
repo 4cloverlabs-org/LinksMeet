@@ -592,9 +592,9 @@ export default function BookingPage() {
             {currentLayout !== 'Month' && renderMiniCalendar()}
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', gridColumn: currentLayout === 'Month' ? 'span 2' : 'span 1' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', gridColumn: currentLayout === 'Month' ? 'span 2' : 'span 1', height: isEmbedded ? '100%' : 'auto', minHeight: 0 }}>
             {eventType?.allowedLayouts && eventType.allowedLayouts.length > 1 && (
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
                 <div style={{ display: 'inline-flex', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '4px' }}>
                   {eventType.allowedLayouts.map(layout => (
                     <button
@@ -611,7 +611,7 @@ export default function BookingPage() {
             )}
 
             {currentLayout === 'Month' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1.45fr 1.15fr', gap: '32px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.45fr 1.15fr', gap: '32px', flex: 1, minHeight: 0 }}>
                 {/* Column 2: Center Interactive Calendar Pane */}
                 <div style={{ borderRight: '1px solid #f1f5f9', paddingRight: '24px', borderLeft: '1px solid #f1f5f9', paddingLeft: '24px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
@@ -740,7 +740,7 @@ export default function BookingPage() {
                 </div>
 
                 {/* Column 3: Right Time Slots Pane matching Screenshot */}
-                <div style={{ display: 'flex', flexDirection: 'column', height: isEmbedded ? '100%' : '380px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', height: isEmbedded ? '100%' : '380px', minHeight: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px', flexShrink: 0 }}>
                     <span style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a' }}>
                       {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate % 7]} {selectedDate}
